@@ -132,9 +132,22 @@ def run_one(s, dry):
     t0 = time.time()
     rc = subprocess.call(cmd, shell=True, cwd=ANALYSIS)
     dt = (time.time() - t0) / 60
-    print(f"     {'done' if rc == 0 else 'FAILED'}  took {dt:.1f} min "
+    # Exit 0 is not completion.  The cache stage exited 0 while writing six
+    # of its twelve declared outputs, because --part defaults to one
+    # protocol; this reported "done" and the rebuild carried on with half a
+    # cache.  A stage is done when the files it promised exist.
+    missing = [o for o in s['outputs'] if not os.path.exists(path_of(o))]
+    ok = rc == 0 and not missing
+    print(f"     {'done' if ok else 'FAILED'}  took {dt:.1f} min "
           f"(recorded {s['minutes']} min)", flush=True)
-    return rc == 0
+    if rc == 0 and missing:
+        print(f"     exited 0 but {len(missing)} of {len(s['outputs'])} "
+              f"declared outputs are absent:", flush=True)
+        for m in missing[:6]:
+            print(f"       {m}", flush=True)
+        if len(missing) > 6:
+            print(f"       ... and {len(missing) - 6} more", flush=True)
+    return ok
 
 
 def main():
@@ -143,6 +156,11 @@ def main():
     ap.add_argument('--list', action='store_true')
     ap.add_argument('--plan', metavar='STAGE')
     ap.add_argument('--from', dest='from_tier', type=int)
+    ap.add_argument('--to', dest='to_tier', type=int,
+                    help='stop after this tier.  Use --to 5 for a raw-to-'
+                         'result rebuild: tier 6 re-exports the MCU header '
+                         'and would overwrite whatever is currently '
+                         'deployed with a freshly rebuilt one.')
     ap.add_argument('--force', action='store_true',
                     help='re-run stages even when their state is ok')
     ap.add_argument('--dry-run', action='store_true')
@@ -177,6 +195,8 @@ def main():
 
     if a.from_tier is not None:
         todo = [s for s in STAGES if s['tier'] >= a.from_tier]
+        if a.to_tier is not None:
+            todo = [s for s in todo if s['tier'] <= a.to_tier]
     else:
         if a.target not in BY_ID:
             print(f'  unknown stage: {a.target}.  Check with --list')

@@ -151,3 +151,24 @@ def test_paper_state_yaml_parses():
         p = os.path.join(ROOT, '.paper_state', name)
         if os.path.exists(p):
             assert yaml.safe_load(open(p, encoding='utf-8'))
+
+
+def test_run_one_fails_when_a_declared_output_is_absent(tmp_path):
+    """Exit 0 is not completion.
+
+    The cache stage exited 0 while writing six of its twelve declared
+    outputs, because build_uypydj_cache.py --part defaults to one protocol.
+    run.py reported "done" and the rebuild carried on with half a cache.
+    """
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    import run as runner
+
+    fake = {'id': 'fake', 'tier': 1, 'minutes': 0, 'measured': True,
+            'cmd': 'true', 'inputs': [],
+            'outputs': ['definitely_not_here_12345.csv'],
+            'why': 'test'}
+    assert runner.run_one(fake, dry=False) is False, \
+        'a stage that produced none of its declared outputs was reported done'
+
+    fake_ok = dict(fake, cmd='true', outputs=[])
+    assert runner.run_one(fake_ok, dry=False) is True

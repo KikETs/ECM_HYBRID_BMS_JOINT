@@ -36,7 +36,14 @@ CELLS = ['BOOST', 'BOOST_NEGPULSE', 'BOOST_NEGPULSE_1S', 'BOOST_REST',
 STAGES = [
     # ---- tier 1  raw -> cache -------------------------------------------
     dict(id='cache', tier=1, minutes=210, measured=False,
-         cmd='{py} build_uypydj_cache.py --raw ../raw/UYPYDJ --cache cache_t',
+         # TWO invocations.  --part defaults to Fifteen_Drive_Cycles, so a
+         # single call writes six of the twelve declared outputs and the six
+         # *_HPPC.npz are never built.  The stage still exited 0, and run.py
+         # reported it done - found by the 2026-08-27 raw-to-result rebuild.
+         cmd='{py} build_uypydj_cache.py --raw ../raw/UYPYDJ --cache cache_t '
+             '--part Fifteen_Drive_Cycles && '
+             '{py} build_uypydj_cache.py --raw ../raw/UYPYDJ --cache cache_t '
+             '--part HPPC',
          inputs=['../raw/UYPYDJ'],
          outputs=[f'cache_t/uypydj_{c}_{p}.npz'
                   for c in CELLS for p in ('Fifteen_Drive_Cycles', 'HPPC')],
