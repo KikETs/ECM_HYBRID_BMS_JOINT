@@ -1,28 +1,29 @@
 # ============================================================
-#  공개 저장소에 올리지 않는 것
+#  Not published to the public repository
 # ============================================================
 
-# --- 원본 데이터 (24 GB) — DATA.md 의 DOI 로 받는다 ---
+# --- Raw data (24 GB) — fetch via the DOIs in DATA.md ---
 raw/
 
-# --- 제3자 저작물 ---
-# 참조 논문 PDF (Elsevier).  DOI 로 인용만 한다.
+# --- Third-party material ---
+# Reference paper PDFs (Elsevier).  Cited by DOI only.
 docs/*.pdf
-# 데이터셋에 딸려 온 문서 사본.  원본 배포처의 라이선스를 따르므로
-# 여기서 재배포하지 않는다.  저자 연락처 같은 개인정보도 들어 있다.
+# Document copies shipped with the datasets.  They follow the original
+# distributor's licence, so they are not redistributed here.  They also
+# contain personal data such as author contact details.
 docs/UYPYDJ/
 docs/RPCWBY/
 docs/Mendeley/
 
-# --- 파생 캐시 (5 GB) — repro/run.py 로 다시 만든다 ---
+# --- Derived caches (5 GB) — rebuilt by repro/run.py ---
 analysis/cache/
 analysis/cache_t/
 analysis/backup_pretemp/
 
-# --- 빌드 산출물 (절대 경로가 박힌다) ---
+# --- Build artefacts (they embed absolute paths) ---
 mcu/fw_sop/Build/
 
-# --- 탐색 흔적: 임계 경로가 아니다 (repro/run.py --exploratory) ---
+# --- Exploratory traces: not on the critical path (repro/run.py --exploratory) ---
 analysis/runs/
 analysis/runs_soh/
 analysis/runs_soh_drive/
@@ -35,7 +36,7 @@ analysis/runs_trim_a8x*/
 analysis/runs_trim_*_v3/
 analysis/runs_trim_a8_v3/
 
-# --- 중간 산출: repro 가 다시 만든다 ---
+# --- Intermediate outputs: repro rebuilds them ---
 analysis/ev_*.csv
 analysis/sop_amps_eval*.csv
 analysis/results/eval/
@@ -46,3 +47,6 @@ analysis/sop_mcu_bench.csv
 
 __pycache__/
 *.pyc
+
+# --- Local Korean originals kept for diffing after translation ---
+docs/_ko_backup/

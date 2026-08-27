@@ -1,354 +1,393 @@
-# SOH 의존 SOP — 확장 설계
+# SOH-dependent SOP — extension design
 
-작성 2026-08-15. 전제 사실은 `docs/findings.md`에 있고, 여기서는 그 사실들이
-설계를 어떻게 강제하는지만 다룬다.
-
----
-
-## 0. 한 문장 요약
-
-선행연구는 (SOC, T, P) → V를 학습하고 이진탐색으로 SOP를 낸다. 확장은 **SOH를
-입력으로 추가하는 것이 아니라**, 셀의 최근 실측 응답에서 상태 벡터를 뽑아
-전압 모델을 조건화하는 것이다. 이유는 §1.
+Written 2026-08-15. The premises live in `docs/findings.md`; this document
+only covers how those facts force the design.
 
 ---
 
-## 1. 소박한 확장이 실패하는 이유
+## 0. One-sentence summary
 
-가장 자연스러운 확장은 입력을 (SOC, T, P, **SOH**)로 늘리는 것이다. 이건 이미
-가진 데이터가 반박한다.
-
-`findings.md` §4: 같은 SOH 0.75에서 여섯 셀의 10 s 방전저항이 26.6~64.1 mΩ으로
-**2.41배** 흩어진다. 그중 **1.58배는 같은 프로토콜의 두 셀 사이 차이**다.
-
-SOH가 같은데 저항이 1.6배 다른 두 셀이 있으면, SOH를 조건으로 받는 모델은
-둘의 평균을 학습하고 양쪽 모두에서 틀린다. SOP는 전압 한계까지의 여유로
-정의되므로 저항 오차가 그대로 SOP 오차가 된다.
-
-**ECM 분해가 이유를 말해준다** (`findings.md` §4.3.1). 여섯 셀의 옴 저항 R0는
-전 구간에서 1.05배 이내로 같고, 산포는 거의 전부 전하이동 저항 R1에서 온다 —
-SOH 0.75에서 5.58배. 용량 손실과 계면 열화가 서로 다른 기구를 따르기 때문이며,
-SOH는 전자만 측정한다.
-
-**그리고 이것이 z가 잡아야 할 대상을 특정해준다.** R1의 시상수는 0.15~1.05초로
-짧다. 부하가 걸리는 즉시 전압 응답에 나타나므로, 펄스 직전 몇 분의 실측
-(V, I, T)만으로 관측 가능하다. 문맥 인코더가 원리적으로 접근할 수 없는 양을
-요구하는 설계가 아니라는 뜻이다.
-
-**그래도 이 변형은 만들어서 돌린다.** 예측된 실패를 보이는 것이 근거가 되고,
-SOH ≥ 0.92 구간에서는 실제로 잘 동작할 것이기 때문이다(그 구간은 여섯 셀이
-2~4 % 안에서 일치한다). "어디까지 쓸 수 있는가"가 결과물의 일부다.
+The prior work learns (SOC, T, P) → V and finds SOP by binary search. The
+extension is **not to add SOH as an input** but to draw a state vector from
+the cell's recent measured response and condition the voltage model on it.
+The reason is §1.
 
 ---
 
-## 2. 모델 — 문맥 인코더로 조건화
+## 1. Why the naive extension fails
+
+The natural extension is to widen the input to (SOC, T, P, **SOH**). The
+data we already have refutes it.
+
+`findings.md` §4: at the same SOH 0.75 the 10 s discharge resistance of six
+cells spreads over 26.6–64.1 mΩ, a factor of **2.41**. Of that, **1.58×
+sits between two cells running the same protocol.**
+
+If two cells have the same SOH and resistances differing by 1.6×, a model
+conditioned on SOH learns their average and is wrong on both. SOP is
+defined as the headroom to a voltage limit, so resistance error becomes SOP
+error directly.
+
+**The ECM decomposition says why** (`findings.md` §4.3.1). The ohmic
+resistance R0 of the six cells agrees within 1.05× everywhere; almost all
+the spread comes from the charge-transfer resistance R1 — 5.58× at SOH
+0.75. Capacity fade and interfacial degradation follow different
+mechanisms, and SOH measures only the first.
+
+**And that pins down what z has to capture.** R1's time constant is short,
+0.15–1.05 s. It appears in the voltage response as soon as load is applied,
+so it is observable from a few minutes of measured (V, I, T) before the
+pulse. The design does not ask the context encoder for something it cannot
+in principle reach.
+
+**This variant is still built and run.** Showing a predicted failure is
+evidence, and above SOH 0.92 it should actually work well — the six cells
+agree within 2–4 % there. "How far can it be used" is part of the result.
+
+---
+
+## 2. Model — conditioning through a context encoder
 
 ```
-        실측 이력 (V, I, T)                     후보 펄스 궤적
-        최근 W_ctx 초, 펄스 이전               (SOC, T, P), 200 s
+        measured history (V, I, T)             candidate pulse trajectory
+        last W_ctx seconds, before the pulse   (SOC, T, P), 200 s
               │                                      │
         ┌─────▼─────┐                          ┌─────▼─────┐
-        │ 문맥 인코더│ ──► z (8~16차원) ──────► │  전압 LSTM │ ──► V(t+τ)
-        │  GRU 1층  │                          │ 2층×256   │
-        └───────────┘                          └───────────┘
+        │  context  │ ──► z (8–16 dims) ─────► │  voltage  │ ──► V(t+τ)
+        │ encoder,  │                          │   LSTM,   │
+        │ 1-layer   │                          │  2×256    │
+        │   GRU     │                          └───────────┘
+        └───────────┘
 ```
 
-- **z는 펄스 이전의 실측값만으로 계산되고, 이진탐색 동안 고정된다.**
-- 따라서 이진탐색은 여전히 **후보당 단일 순전파**다. 이게 핵심 제약이다.
+- **z is computed only from measurements before the pulse, and is frozen
+  during the binary search.**
+- The search therefore remains **one forward pass per candidate**. That is
+  the binding constraint.
 
-### 2.1 왜 과거 전압을 전압 LSTM에 직접 넣지 않는가
+### 2.1 Why past voltage is not fed to the voltage LSTM directly
 
-선행연구가 입력을 (SOC, T, P)로만 둔 것은 우아한 이유가 있다. 가상의 정전력
-펄스에 대해 이 셋은 **전부 미리 계산 가능**하다. 그래서 후보 전력마다 궤적을
-만들어 한 번 순전파하면 끝난다.
+The prior work's choice of (SOC, T, P) alone has an elegant reason: for a
+hypothetical constant-power pulse all three are **known in advance**. Build
+the trajectory for each candidate power, run one forward pass, done.
 
-과거 전압을 입력에 넣으면 펄스 구간의 전압은 예측값이어야 하고, τ초를
-자기회귀로 굴려야 한다. 오차가 누적되고, 교사강요 누출이 들어올 자리가 생긴다.
-(같은 함정을 DCT 논문 재현에서 이미 겪었다.)
+Putting past voltage in the input means the voltage during the pulse has to
+be predicted, rolling autoregressively for τ seconds. Error accumulates, and
+a place opens for teacher-forcing leakage. (The same trap was already hit
+while reproducing the DCT paper.)
 
-문맥 인코더는 과거 전압의 정보를 쓰면서 이 구조를 깨지 않는다. z가 펄스
-시작 시점에 고정되기 때문이다.
+The context encoder uses the information in past voltage without breaking
+that structure, because z is frozen at the pulse's start.
 
-### 2.2 비교할 변형
+### 2.2 Variants to compare
 
-| | 조건 입력 | 검증하려는 것 |
+| | Conditioning input | What it tests |
 |---|---|---|
-| **M0** | 없음 (선행연구 그대로) | 기준선 |
-| **M1** | SOH 스칼라 | §1의 예측된 실패 |
-| **M2** | 학습된 z | 셀 개체차를 흡수하는가 |
-| **M3** | z + SOH | 둘이 상보적인가 |
+| **M0** | none (prior work as published) | baseline |
+| **M1** | SOH scalar | the failure §1 predicts |
+| **M2** | learned z | does it absorb cell-to-cell spread |
+| **M3** | z + SOH | are the two complementary |
 
 ---
 
-## 3. 데이터 파이프라인 — 146 TB 문제
+## 3. Data pipeline — the 146 TB problem
 
-UYPYDJ 전량은 약 **6,100만 샘플**이다. 현재 코드처럼 윈도를 명시적으로 전개하면
+All of UYPYDJ is about **61 million samples**. Materialising windows the
+way the current code does gives
 
 ```
 61e6 × 200 × 3 × 4 B = 146 TB
 ```
 
-불가능하다. 현재 방식이 978k 윈도(2.35 GB)에서 통했던 건 데이터가 작아서였다.
+Impossible. The current approach worked at 978 k windows (2.35 GB) because
+the data was small.
 
-### 3.1 해법 — 시계열만 보관하고 윈도는 뷰로
+### 3.1 Solution — keep the series, make windows a view
 
 ```
-61e6 × 3 × 4 B = 732 MB      ← 카드에 그대로 올라간다
+61e6 × 3 × 4 B = 732 MB      ← fits on the card as-is
 ```
 
-파일별 연속 배열을 GPU에 두고 `Tensor.unfold(0, 200, 1)`로 **복사 없는 뷰**를
-만든 뒤, 배치 인덱스로만 gather한다. 윈도가 파일 경계를 넘지 않도록 (파일 id,
-오프셋) 전역 인덱스를 따로 둔다.
+Put the contiguous per-file arrays on the GPU, build a **copy-free view**
+with `Tensor.unfold(0, 200, 1)`, and gather by batch index alone. A separate
+global index of (file id, offset) keeps windows from crossing file
+boundaries.
 
-이건 성능 최적화가 아니라 **실현 가능성 문제**다.
+This is not a performance optimisation but a **feasibility** matter.
 
-**구현 완료 — `analysis/windows.py::WindowSet`.** 실측:
+**Implemented — `analysis/windows.py::WindowSet`.** Measured:
 
-| | 값 |
+| | Value |
 |---|---|
-| 기존 `build_windows`와 동일성 | 원시 X·Y 완전 일치, 스케일 후 최대차 0.000e+00 |
-| UYPYDJ CC zip (578만 샘플) | 시계열 92 MB, 윈도 577만 개 (전개 시 13.8 GB) |
-| 배치 gather (5000 윈도) | **0.80 ms** — LSTM 스텝 82 ms 대비 약 1 % |
-| 그룹 홀드아웃 | 시계열 복사 없이 인덱스만 분리 |
+| identical to the old `build_windows` | raw X·Y exact, max difference after scaling 0.000e+00 |
+| UYPYDJ CC zip (5.78 M samples) | series 92 MB, 5.77 M windows (13.8 GB if materialised) |
+| batch gather (5000 windows) | **0.80 ms** — about 1 % of the 82 ms LSTM step |
+| group holdout | index split only, no series copy |
 
-스케일러에서 함정이 하나 있었다. 저장된 시계열에는 어떤 윈도도 닿지 않는
-샘플이 있다 — 각 파일의 첫 W개 전압은 타깃이 된 적이 없다. 원시 시계열로
-스케일러를 맞추면 기존 경로와 범위가 달라지고, 실측된 차이는 스케일된 타깃에서
-1.7e-2였다. 이는 반올림 오차가 아니라 **보고되는 RMSE의 조용한 재보정**이다.
-실제로 등장하는 위치만으로 맞추도록 고쳤다(`covered_mask`).
+There was one trap in the scaler. The stored series contains samples no
+window ever touches — the first W voltages of each file are never a target.
+Fitting the scaler on the raw series changes the range relative to the old
+path, and the measured difference in the scaled target was 1.7e-2. That is
+not rounding: it is a **silent recalibration of the reported RMSE**. Fixed
+to fit only on positions that actually occur (`covered_mask`).
 
-### 3.2 스트라이드 — 인접 윈도는 99.5 % 중복
+### 3.2 Stride — adjacent windows overlap 99.5 %
 
-1 Hz에서 인접 윈도는 200개 중 199개를 공유한다. 전량을 쓸 이유가 없다.
+At 1 Hz, adjacent windows share 199 of 200 samples. There is no reason to
+use them all.
 
-| 스트라이드 | 윈도 수 | 에폭 시간(추정) | 1000 ep |
+| Stride | Windows | Epoch time (est.) | 1000 ep |
 |---:|---:|---:|---:|
-| 1 | 61.0 M | 17 분 | 12 일 |
-| 10 | 6.1 M | 104 초 | 29 시간 |
-| **30** | **2.0 M** | **34 초** | **9.5 시간** |
+| 1 | 61.0 M | 17 min | 12 days |
+| 10 | 6.1 M | 104 s | 29 h |
+| **30** | **2.0 M** | **34 s** | **9.5 h** |
 
-(현재 978k 윈도 = 16.7 s/epoch 실측에서 선형 외삽)
+(linearly extrapolated from the measured 16.7 s/epoch at 978 k windows)
 
-**스트라이드 30으로 시작한다.** 매 에폭 오프셋을 무작위로 흔들면 여러 에폭에
-걸쳐 결국 전량을 보게 되므로 정보 손실도 없다.
+**Start at stride 30.** Jittering the offset each epoch means the whole set
+is eventually seen across epochs, so nothing is lost.
 
-### 3.3 학습에 넣을 것
+### 3.3 What goes into training
 
-| 출처 | 역할 | 온도 | SOH |
+| Source | Role | Temperature | SOH |
 |---|---|---|---|
-| UYPYDJ 구동사이클 | 노화 축의 주 데이터 | 25 °C | 1.00→0.69 |
-| UYPYDJ HPPC | 고전류 구간 (±34 A) | 25 °C | 1.00→0.69 |
-| Mendeley 구동사이클 | 온도 축 | 6개 | 신품 |
-| RPCWBY Test#3 (2s/30s) | 고전류 × 온도 | 6개 | 신품 |
+| UYPYDJ drive cycles | main data on the aging axis | 25 °C | 1.00→0.69 |
+| UYPYDJ HPPC | the high-current region (±34 A) | 25 °C | 1.00→0.69 |
+| Mendeley drive cycles | the temperature axis | 6 values | fresh |
+| RPCWBY Test#3 (2s/30s) | high current × temperature | 6 values | fresh |
 
-구동사이클은 SOP 전류 한계를 방문하지 **않는다**. 노화 캠페인에서 실측한 전력
-분포(캐시 전량, 37배 서브샘플):
+Drive cycles do **not** visit the SOP current limit. The power distribution
+measured in the aging campaign (whole cache, subsampled 37×):
 
-| 전력 [W] | 구동사이클 | HPPC |
+| Power [W] | Drive cycle | HPPC |
 |---|---:|---:|
-| −140 ~ −100 | **0.000 %** | 1.355 % |
-| −100 ~ −70 | 0.154 % | 3.566 % |
-| +60 ~ +130 | 0.050 % | 3.789 % |
-| 최대 방전전력 | **−86.9 W** | **−130.3 W** |
+| −140 to −100 | **0.000 %** | 1.355 % |
+| −100 to −70 | 0.154 % | 3.566 % |
+| +60 to +130 | 0.050 % | 3.789 % |
+| peak discharge power | **−86.9 W** | **−130.3 W** |
 
-구동사이클의 최대 방전전력이 86.9 W에서 멈춘다. |P| > 100 W 샘플이 **0개**다.
-"드물다"가 아니라 **없다** — SOP는 정의상 그 영역의 양이므로, HPPC 없이는
-노화 축에서 SOP를 학습할 근거가 아예 없다. 선행연구가 신품에서 Test#3을 넣은
-것과 같은 논리이고, 결핍의 정도는 더 심하다.
+Drive-cycle peak discharge power stops at 86.9 W. There are **zero** samples
+with |P| > 100 W. Not rare — **absent**. SOP is by definition a quantity in
+that region, so without HPPC there is no basis at all for learning SOP on
+the aging axis. Same logic as the prior work including Test#3 for fresh
+cells, and the deficit here is worse.
 
-Test#3의 **10 s 런은 학습에 넣지 않는다.** 선행연구의 검증 규약이며, 우리도
-동일하게 남긴다.
-
----
-
-## 4. held-out 설계 — 셀 단위로 자른다
-
-**프로토콜 하나 = 셀 하나다.** `findings.md` §4.1이 보인 개체차 때문에, 같은
-셀의 다른 사이클로 검증하면 개체차를 이미 본 상태가 되어 일반화를 과대평가한다.
-
-따라서 **leave-one-cell-out**: 5개 셀로 학습, 6번째 셀 전체로 검증. 6-fold.
-
-이것이 답하는 질문은 정확히 이것이다 — *처음 보는 셀이 노화됐을 때 그 SOP를
-맞출 수 있는가.* M1(SOH 스칼라)이 여기서 무너지고 M2(z)가 버틴다면 §1의 주장이
-실증된다.
-
-온도 일반화는 별도로, 기존대로 Mendeley에서 온도 홀드아웃으로 본다. 두 축을
-동시에 검증할 데이터는 없다(§5).
+Test#3's **10 s runs are not used for training.** That is the prior work's
+validation protocol and it is kept.
 
 ---
 
-## 5. 주장할 수 있는 것과 없는 것
+## 4. Held-out design — cut by cell
 
-| | 검증 가능 | 근거 |
+**One protocol is one cell.** Because of the cell-to-cell spread shown in
+`findings.md` §4.1, validating on other cycles of the same cell means the
+spread has already been seen and generalisation is overstated.
+
+So **leave-one-cell-out**: train on five cells, validate on the whole sixth.
+6-fold.
+
+The question this answers is exactly the right one — *given an unseen cell
+that has aged, can its SOP be predicted.* If M1 (SOH scalar) breaks here and
+M2 (z) holds, §1's claim is demonstrated.
+
+Temperature generalisation is handled separately, as before, by a
+temperature holdout on Mendeley. There is no data that validates both axes
+at once (§5).
+
+---
+
+## 5. What can and cannot be claimed
+
+| | Verifiable | Basis |
 |---|---|---|
-| 25 °C, SOC ≳ 0.33에서 SOH 전 구간 SOP | **가능** | UYPYDJ 6셀, leave-one-cell-out |
-| 신품에서 6개 온도 SOP | **가능** | Mendeley + Test#3 |
-| **노화된 셀의 저 SOC SOP** | **불가능** | §5.1 |
-| **노화된 셀의 저온 SOP** | **불가능** | 그런 파일이 없다 |
+| SOP across all SOH at 25 °C, SOC ≳ 0.33 | **yes** | UYPYDJ 6 cells, leave-one-cell-out |
+| SOP at six temperatures, fresh | **yes** | Mendeley + Test#3 |
+| **SOP of an aged cell at low SOC** | **no** | §5.1 |
+| **SOP of an aged cell at low temperature** | **no** | no such file exists |
 
-네 번째는 데이터의 구조적 한계다(`findings.md` §1.1). 모델은 숫자를 내겠지만
-그 숫자는 검증되지 않은 외삽이며, 결과물에 그렇게 표시한다.
+The fourth is a structural limit of the data (`findings.md` §1.1). The model
+will emit a number, but that number is unvalidated extrapolation and is
+marked as such in the results.
 
-### 5.1 저 SOC × 저 SOH는 측정 자체가 없다
+### 5.1 Low SOC × low SOH is simply not measured
 
-HPPC가 도달한 최저 SOC를 SOH 구간별로 보면(방전 10 s, 정격 축):
+The lowest SOC HPPC reaches, by SOH band (discharge 10 s, rated axis):
 
-| SOH 구간 | n | 최저 SOC | 5퍼센타일 |
+| SOH band | n | lowest SOC | 5th percentile |
 |---|---:|---:|---:|
-| 0.95~1.00 | 2080 | 0.056 | 0.090 |
-| 0.90~0.95 | 2808 | 0.091 | 0.136 |
-| 0.85~0.90 | 2808 | 0.149 | 0.183 |
-| 0.80~0.85 | 2392 | 0.196 | 0.229 |
-| 0.75~0.80 | 2236 | 0.228 | 0.275 |
-| 0.65~0.75 | 2184 | **0.288** | 0.325 |
+| 0.95–1.00 | 2080 | 0.056 | 0.090 |
+| 0.90–0.95 | 2808 | 0.091 | 0.136 |
+| 0.85–0.90 | 2808 | 0.149 | 0.183 |
+| 0.80–0.85 | 2392 | 0.196 | 0.229 |
+| 0.75–0.80 | 2236 | 0.228 | 0.275 |
+| 0.65–0.75 | 2184 | **0.288** | 0.325 |
 
-HPPC 프로토콜이 *용량의 몇 %* 단위로 SOC를 내리기 때문에, 정격 축에서 보면
-같은 단계 수가 노화와 함께 점점 좁은 구간만 덮는다. 구동사이클도 하단이
-0.087에서 멈추고 노화와 함께 올라간다.
+The HPPC protocol steps SOC down in *percent of capacity*, so on the rated
+axis the same number of steps covers a progressively narrower band as the
+cell ages. Drive cycles also bottom out at 0.087 and rise with age.
 
-**SOP가 가장 빡빡한 곳이 정확히 저 SOC인데, 노화 후반부에는 그 영역의 측정이
-아예 없다.** 여섯 셀 전부 동일하므로 셀을 바꿔도 메워지지 않는다.
+**SOP is tightest exactly at low SOC, and late in life there is no
+measurement there at all.** All six cells behave the same way, so changing
+cells does not fill it.
 
-따라서 SOH < 0.80에서 SOC < 0.29에 대한 SOP 예측은 검증 불가능한 외삽이다.
-결과 표에 해당 칸을 비우거나 외삽으로 표시한다 — BYD 쪽에서 외삽된 격자칸
-하나를 근거로 "통과" 판정을 냈다가 뒤집은 전례가 있다.
+SOP predictions for SOC < 0.29 at SOH < 0.80 are therefore unverifiable
+extrapolation. Those cells in the result tables are left blank or flagged as
+extrapolated — there is precedent in this project for a "pass" verdict being
+issued on one extrapolated grid cell and then reversed.
 
-완화책이 하나 있다: Mendeley에서 얻은 온도 의존성과 UYPYDJ에서 얻은 SOH
-의존성이 **곱으로 분리된다**는 가정을 명시적으로 세우고, 그 가정이 신품 데이터
-안에서 성립하는지만이라도 검사한다(온도별로 R(SOH=1)의 비가 일정한가). 성립을
-확인해도 노화 구간으로의 외삽은 여전히 가정이지만, 근거 없는 외삽과 검사된
-가정은 다르다.
+There is one mitigation: state explicitly the assumption that the
+temperature dependence from Mendeley and the SOH dependence from UYPYDJ
+**separate multiplicatively**, then at least check that the assumption holds
+within the fresh data (is the ratio of R(SOH=1) across temperatures
+constant?). Confirming it still leaves extrapolation into the aged range an
+assumption, but a checked assumption is not the same as an unfounded one.
 
 ---
 
-## 6. SOP 검증 기준값
+## 6. SOP validation reference
 
-문제: **노화된 상태의 SOP 실측이 없다.** Test#3 SOP 런은 신품뿐이다.
+The problem: **there is no measured SOP for an aged cell.** The Test#3 SOP
+runs are fresh only.
 
-해결: HPPC에서 기준값을 만든다. 이미 추출한 `uypydj_hppc_resistance.csv`에
-(SOH, SOC, τ, rate_rank) → R이 있으므로, 표준 ECM 방식으로
+The fix: build a reference from HPPC. The already-extracted
+`uypydj_hppc_resistance.csv` holds (SOH, SOC, τ, rate_rank) → R, so by the
+standard ECM route
 
 ```
 I*(τ) = (OCV(SOC) − V_min) / R(τ, SOC, SOH)
-SOP(τ) = V_min × I*(τ)            (전류·전력 정격으로 클리핑)
+SOP(τ) = V_min × I*(τ)            (clipped by current and power ratings)
 ```
 
-OCV는 UYPYDJ의 OCV_0.05C 테스트에서 SOH별로 가져온다.
-**추출 완료 — `analysis/uypydj_ocv.py` → `uypydj_ocv.csv` (곡선 133개, 11,686행).**
+OCV comes per SOH from UYPYDJ's OCV_0.05C test.
+**Extracted — `analysis/uypydj_ocv.py` → `uypydj_ocv.csv` (133 curves,
+11,686 rows).**
 
-시험은 0.05C(±0.150 A) 만충→방전→충전을 60초 간격 41시간에 걸쳐 수행한다.
-두 다리를 공통 SOC 격자에서 평균해 pseudo-OCV를 만든다 — 0.05C에서 IR 강하는
-작고 두 다리에서 **부호가 반대**라 평균이 이를 1차적으로 상쇄한다.
+The test runs 0.05C (±0.150 A) full → discharge → charge over 41 hours at
+60 s intervals. The two legs are averaged on a common SOC grid to give a
+pseudo-OCV — at 0.05C the IR drop is small and has **opposite sign** on the
+two legs, so the average cancels it to first order.
 
-**신품 OCV 재사용이 왜 안 되는지, 크기로:**
+**Why fresh OCV cannot be reused, quantified:**
 
-| 고정 SOC | 상관 r | SOH 1.00 → 0.70일 때 OCV |
+| Fixed SOC | Correlation r | OCV, SOH 1.00 → 0.70 |
 |---|---:|---:|
 | 0.5 | 0.899 | **−149.8 mV** |
 | 0.8 | 0.908 | **−157.1 mV** |
-| 0.2 | 0.855 | −444.8 mV (아래 주의) |
+| 0.2 | 0.855 | −444.8 mV (see caveat) |
 
-150 mV는 기준값에 그대로 실린다. 참고로 재현 중인 전압 모델의 오차가 40 mV대이므로,
-신품 OCV를 쓰면 **모델 오차보다 큰 계통 오차**를 기준값에 심게 된다.
+150 mV lands directly in the reference. For scale, the voltage model being
+reproduced has error in the 40 mV range, so using fresh OCV plants a
+**systematic error larger than the model error** in the reference.
 
-**두 가지 한계를 명시한다:**
+**Two limits are stated explicitly:**
 
-1. SOC 0.2의 −444.8 mV는 순수한 노화 효과가 아니다. 노화 셀은 그 근처에서
-   이미 전압 하한에 닿는다 — OCV 곡선의 하단이 SOH 0.95↑에서 0.020인데
-   SOH 0.70~0.80에서는 0.190이다(§5.1의 공백과 같은 현상). SOC 0.5/0.8의
-   약 −150 mV가 순수 노화 효과에 가깝다.
-2. pseudo-OCV 평균은 **저 SOC에서 약해진다.** 히스테리시스 중앙값이 SOC
-   0~0.1에서 108.9 mV로, 다른 구간(44~56 mV)의 2배다. 곡선이 가파른 구간이라
-   SOC 정렬 오차가 전압 차로 증폭된다. 이 구간의 기준값은 그만큼 신뢰도를
-   낮춰 표시한다.
+1. The −444.8 mV at SOC 0.2 is not a pure aging effect. An aged cell already
+   reaches the voltage floor near there — the bottom of the OCV curve is
+   0.020 above SOH 0.95 but 0.190 at SOH 0.70–0.80 (the same phenomenon as
+   the gap in §5.1). The roughly −150 mV at SOC 0.5 and 0.8 is closer to the
+   pure aging effect.
+2. The pseudo-OCV average **weakens at low SOC.** Median hysteresis is
+   108.9 mV over SOC 0–0.1, twice the 44–56 mV of other bands. The curve is
+   steep there, so SOC alignment error is amplified into voltage difference.
+   The reference in that band is marked less reliable accordingly.
 
-이 기준값은 **ECM 가정에 의존하므로 절대적 진실이 아니다.** 그래서 두 가지를
-같이 본다:
+This reference **depends on ECM assumptions and is therefore not ground
+truth.** So two things are watched together:
 
-1. **직접 지표(가정 없음)**: held-out 셀의 HPPC 펄스에 대한 전압 예측 오차.
-   SOP가 의존하는 물리량 자체이고, 실측과 직접 비교된다.
-2. **간접 지표(ECM 기준)**: 위 식으로 낸 SOP와 모델 이진탐색 SOP의 차이.
+1. **Direct metric (assumption-free)**: voltage prediction error on the
+   held-out cell's HPPC pulses. That is the physical quantity SOP depends
+   on, compared directly against measurement.
+2. **Indirect metric (ECM-based)**: the difference between the SOP from the
+   formula above and the model's binary-search SOP.
 
-1번이 주 지표, 2번은 해석용이다.
+The first is the primary metric; the second is for interpretation.
 
-### 6.1 기준값 산출 완료 — `analysis/sop_reference.py` → `sop_reference.csv` (6,594행)
+### 6.1 Reference produced — `analysis/sop_reference.py` → `sop_reference.csv` (6,594 rows)
 
-교과서 형태 `SOP = V_min · I*` 를 그대로 쓰면 두 곳에서 틀린다.
+Using the textbook form `SOP = V_min · I*` directly is wrong in two places.
 
-**첫째, 저항이 하나가 아니다.** 전류 수준별로 다르므로(§findings 3.2) 풀이를
-자기일관적으로 반복한다 — 구한 전류에 가장 가까운 측정 rate의 R을 쓰고, 다시
-풀고, 고정점까지.
+**First, there is not one resistance.** It differs by current level
+(`findings` §3.2), so the solve is iterated self-consistently — use the R of
+the measured rate nearest the current obtained, solve again, to a fixed
+point.
 
-**둘째, 무엇이 제약인지 먼저 판별해야 한다.** 이 셀은 중간 SOC에서 전압이 아니라
-**전류 정격(35 A)에 먼저 걸린다** (전체 행의 82.7 %). 그 경우 단자전압은 하한보다
-한참 높으므로 `V_min · I`는 SOP를 과소평가한다. 제한 전류에서의 실제 단자전압을
-계산하면 두 경우가 모두 처리되고, 전압이 제약일 때 원래 식으로 환원된다.
+**Second, which limit binds has to be decided first.** At mid SOC this cell
+hits the **current rating (35 A) before voltage** (82.7 % of all rows).
+There the terminal voltage sits well above the floor, so `V_min · I`
+understates SOP. Computing the actual terminal voltage at the limiting
+current handles both cases and reduces to the original formula when voltage
+is the binding limit.
 
-**결과 (10 s, SOC 0.5, W):**
+**Result (10 s, SOC 0.5, W):**
 
 | SOH | 0.95 | 0.90 | 0.85 | 0.80 | 0.75 |
 |---|---:|---:|---:|---:|---:|
-| 여섯 셀 평균 | 115.0 | 109.8 | 105.9 | 99.9 | 82.2 |
-| **셀 간 최대/최소** | **1.00×** | 1.01× | 1.03× | 1.09× | **1.41×** |
+| six-cell mean | 115.0 | 109.8 | 105.9 | 99.9 | 82.2 |
+| **max/min across cells** | **1.00×** | 1.01× | 1.03× | 1.09× | **1.41×** |
 
-저항에서 본 2.41배가 SOP에서는 1.41배로 완화된다(전압 여유가 완충한다). 그래도
-**SOH를 알아도 SOP를 41 % 이내로밖에 좁히지 못한다.** §1의 주장이 최종 목표량에서
-그대로 확인된 셈이다.
+The 2.41× seen in resistance eases to 1.41× in SOP (voltage headroom
+buffers it). Even so, **knowing SOH pins SOP down only to within 41 %.**
+§1's claim reappears in the final quantity of interest.
 
-**한계 — 행마다 플래그로 기록:**
+**Limits — flagged per row:**
 
-노화 셀에서는 사이클러가 상위 펄스 전류를 클램프하는데 정격은 35 A다. 그래서
-전체의 84.8 %가 rate 외삽을 포함한다. 이를 보완해 각 행에
-**`SOP_measured_floor_W`** 를 함께 낸다 — 실제로 인가된 최대 펄스만으로 계산한
-값이라 rate 외삽이 전혀 없는 하한이다 (SOH 0.75에서 66.5~77.8 W).
+In aged cells the cycler clamps the upper pulse currents while the rating is
+35 A, so 84.8 % of rows involve rate extrapolation. To offset that, each row
+also carries **`SOP_measured_floor_W`** — computed from the largest pulse
+actually applied, so it contains no rate extrapolation at all (66.5–77.8 W
+at SOH 0.75).
 
-**다만 ECM으로 재보니 이 외삽의 영향은 작다.** 측정 최고 전류의 중앙값은
-29.6 A로 35 A와 가깝고, R(I)를 멱함수로 맞춰 35 A로 외삽하면 R1이 +1.8 %,
-R2가 −8.4 % 움직인다(부호가 섞여 있어 한쪽으로 치우친 편향도 아니다). R0는
-전류 의존성이 1.02배로 사실상 없다. 즉 "84.8 %가 외삽"이라는 플래그는 건수를
-셀 뿐 크기를 말하지 않으며, 실제 크기는 10 % 이내다.
+**Re-measuring with the ECM, though, shows the extrapolation matters
+little.** The median highest measured current is 29.6 A, close to 35 A, and
+fitting R(I) as a power law and extrapolating to 35 A moves R1 by +1.8 % and
+R2 by −8.4 % (mixed signs, so not even a one-way bias). R0's current
+dependence is 1.02×, effectively none. The "84.8 % extrapolated" flag counts
+occurrences, not magnitude, and the magnitude is within 10 %.
 
 ---
 
-## 7. 단계와 계산 예산
+## 7. Stages and compute budget
 
-| 단계 | 내용 | 예상 |
+| Stage | Contents | Estimate |
 |---|---|---|
-| **S1** | 윈도 뷰 파이프라인 (§3.1) + 기존 결과 재현으로 검증 | 반나절 |
-| **S2** | UYPYDJ 로더를 학습 경로에 연결, 25 °C 단일 셀로 파일럿 | 데이터 계층 **완료**, 학습 연결 남음 |
-| **S3** | M0/M1 을 1개 fold로 비교 (셀 1개 홀드아웃) | 각 9.5 h |
-| **S4** | 문맥 인코더 구현, M2/M3 를 같은 fold로 | 각 9.5 h |
-| **S5** | 이긴 변형만 6-fold 전체 | 6 × 9.5 h |
-| **S6** | SOP 기준값 산출 및 §6 두 지표 평가 | 반나절 |
+| **S1** | window-view pipeline (§3.1), validated by reproducing existing results | half a day |
+| **S2** | connect the UYPYDJ loader to the training path, pilot on one 25 °C cell | data layer **done**, training link remaining |
+| **S3** | compare M0/M1 on one fold (one cell held out) | 9.5 h each |
+| **S4** | implement the context encoder, M2/M3 on the same fold | 9.5 h each |
+| **S5** | full 6-fold for the winning variant only | 6 × 9.5 h |
+| **S6** | produce the SOP reference and evaluate the two metrics of §6 | half a day |
 
-S5를 전 변형에 돌리면 4 × 6 × 9.5 h = 228시간이라 불가능하다. **1개 fold로
-먼저 걸러내고 이긴 것만 전체를 돈다.** 단일 fold 결과로 변형을 고르는 것은
-그 자체로 선택 편향이므로, 최종 보고에는 6-fold 결과만 쓴다.
+Running S5 for every variant is 4 × 6 × 9.5 h = 228 hours, which is not
+possible. **Screen on one fold first and run the full set only for the
+winner.** Choosing a variant from a single fold is itself a selection bias,
+so only 6-fold results go into the final report.
 
-S1이 선행 조건이다 — 그것 없이는 UYPYDJ를 학습에 넣을 수 없다.
+S1 is the precondition — without it UYPYDJ cannot enter training at all.
 
-### 7.1 S2 데이터 계층 실측 (`build_uypydj_cache.py`, `windows.load_uypydj_cells`)
+### 7.1 S2 data layer, measured (`build_uypydj_cache.py`, `windows.load_uypydj_cells`)
 
-| | 값 |
+| | Value |
 |---|---|
-| 캐시 | 셀당 `.npz` 1개, 575개 런 / **55.08 M 샘플** / 1.6 GB |
-| 윈도 (stride 30) | **1,830,526** — 설계 추정 1.86 M과 일치 |
-| GPU 적재 | 시계열 881 MB, gather 0.60 ms |
-| 셀별 균형 | 231 k ~ 330 k 윈도 (BOOST_REST가 최소) |
-| leave-one-cell-out | `by_group()`으로 분할 확인 (1,504,790 / 325,736) |
+| cache | one `.npz` per cell, 575 runs / **55.08 M samples** / 1.6 GB |
+| windows (stride 30) | **1,830,526** — matches the 1.86 M design estimate |
+| GPU residency | series 881 MB, gather 0.60 ms |
+| per-cell balance | 231 k – 330 k windows (BOOST_REST lowest) |
+| leave-one-cell-out | split verified with `by_group()` (1,504,790 / 325,736) |
 
-캐시 생성 과정에서 온도 채널 결함 8개 파일을 발견해 규칙으로 처리했다 —
-`findings.md` §7.1. 결함 처리 전 캐시는 폐기하고 다시 만들었다.
+Building the cache turned up eight files with a defective temperature
+channel, handled by rule — `findings.md` §7.1. The pre-fix cache was
+discarded and rebuilt.
 
 ---
 
-## 7.6 실행 결과 — leave-one-cell-out 6-fold 완료 (2026-08-18)
+## 7.6 Results — leave-one-cell-out, 6-fold complete (2026-08-18)
 
-M0/M1/M2를 §2.2대로 구현해 여섯 셀 전부에 대해 돌렸다. 지표는 held-out 셀의
-드라이브사이클 전압 RMSE, 은닉 256×2, 학습 5셀 / 검증 1셀, stride 60,
-HPPC 비율 0.5, 마일스톤은 전체 epoch의 20 %(§5.2의 함정을 피해 startup에 인쇄).
+M0/M1/M2 were implemented as in §2.2 and run over all six cells. The metric
+is drive-cycle voltage RMSE on the held-out cell; hidden 256×2, train on
+five cells and validate on one, stride 60, HPPC fraction 0.5, milestones at
+20 % of total epochs (printed at startup to avoid the trap in §5.2).
 
-| 홀드아웃 | M1 (SOH 스칼라) | M2 (문맥 z) | 개선 |
+| Holdout | M1 (SOH scalar) | M2 (context z) | Gain |
 |---|---:|---:|---:|
 | BOOST | 23.32 | 22.41 | +3.9 % |
 | CC_CELL2 | 25.37 | 22.59 | +11.0 % |
@@ -356,111 +395,126 @@ HPPC 비율 0.5, 마일스톤은 전체 epoch의 20 %(§5.2의 함정을 피해 
 | CC | 33.92 | 24.92 | +26.5 % |
 | BOOST_NEGPULSE | 36.21 | 20.98 | +42.1 % |
 | **BOOST_REST** | **52.45** | **24.43** | **+53.4 %** |
-| **평균** | | | **+26.3 %** |
+| **mean** | | | **+26.3 %** |
 
-**여섯 셀 전부에서 M2가 앞선다.** 부호가 뒤집힌 fold가 없다.
+**M2 leads on all six cells.** No fold flips sign.
 
-(참고로 M0 — 조건 입력 없음 — 은 단일 fold에서 53.44 mV였다. 나이 정보 자체가
-필수라는 것이 먼저 확인된 셈이고, 그 위에서 M1과 M2를 가른다.)
+(For reference M0 — no conditioning input — was 53.44 mV on a single fold.
+That age information is necessary at all is established first; M1 versus M2
+is decided on top of it.)
 
-### 결정적인 패턴: M1이 나쁠수록 M2가 더 많이 메운다
+### The decisive pattern: the worse M1 is, the more M2 recovers
 
-M1 23.3 → 개선 3.9 %, M1 52.5 → 개선 53.4 %. 그리고 **M2는 셀에 관계없이
-20.98~24.92 mV로 수렴**하는 반면 M1은 23.32~52.45로 2.2배 흩어진다.
+M1 23.3 → 3.9 % gain, M1 52.5 → 53.4 % gain. And **M2 converges to
+20.98–24.92 mV regardless of cell** while M1 spreads 23.32–52.45, a factor
+of 2.2.
 
-이것이 주장 그 자체다. SOH 스칼라로 잘 잡히지 않는 셀일수록 최근 응답이 담는 정보가
-크고, 조건화를 그쪽으로 바꾸면 셀 간 성능 편차가 사라진다.
+That is the claim itself. The less well a cell is captured by an SOH scalar,
+the more information its recent response carries, and moving the
+conditioning there removes the cell-to-cell performance spread.
 
-BOOST_REST는 이 프로젝트에서 다섯 번 튄 셀이다 — SOH CNN에서 유일하게 나빴고
-(2.76 %p 대 나머지 0.63~1.23), 저항 산포의 최저값(R1 4.79 mΩ)이며, hybrid 팔의
-pooled 게이트에서 유일한 실패(k_s 1.038)이고, hybrid A0가 148.9 mV로 최악이었다.
-M1에서도 52.45 mV로 최악인데, **M2가 24.43으로 다른 셀 수준까지 끌어올린다.**
+BOOST_REST is the cell that has stood out five times in this project: the
+only bad one in the SOH CNN (2.76 %p against 0.63–1.23 for the rest), the
+minimum of the resistance spread (R1 4.79 mΩ), the only failure of the
+hybrid arm's pooled gate (k_s 1.038), and the worst hybrid A0 at 148.9 mV.
+It is worst in M1 too at 52.45 mV, and **M2 lifts it to 24.43, the level of
+the other cells.**
 
-### 사전 기준과의 대조
+### Against the pre-registered criterion
 
-M2를 돌리기 전에 적어둔 판정 기준은 "단일 fold에서 < 22 mV(M1 대비 13 % 이상)면
-주장 성립, 22~27 mV면 판정 불가로 6-fold 필요"였다. 첫 fold가 22.59로 판정 불가
-구간에 떨어졌고, 그래서 6-fold를 돌렸다. **평균 +26.3 %, 6/6 일관**이면 기준을
-넘는다. 기준을 결과에 맞춰 옮기지 않았다.
+The criterion written down before running M2 was: "under 22 mV on a single
+fold (13 % or better against M1) supports the claim; 22–27 mV is
+undecidable and requires 6-fold." The first fold landed at 22.59, in the
+undecidable band, so the 6-fold was run. **A mean of +26.3 % with 6/6
+consistency** clears the bar. The bar was not moved to fit the result.
 
-### 아직 하지 않은 비교
+### A comparison not yet made
 
-Hybrid 팔(`sop_hybrid_spec.md` §7.5)은 **측정 HPPC 펄스 ΔV**로 평가되고 이 표는
-**드라이브사이클 전압**이다. 두 숫자를 나란히 놓으면 안 된다. 같은 축의 비교는
-rung A13에서만 성립한다.
-
----
-
-## 8. 착수 전 확인할 것
-
-- [ ] 교정 스케줄 재현 실행이 끝나고 21.54 mV에 얼마나 접근하는지 (진행 중).
-      재현이 안 되면 확장의 기준선이 흔들린다.
-- [ ] 베이스라인(구동사이클만)도 교정 스케줄로 재실행 — 현재 45.61 vs 43.93은
-      둘 다 오류 상태의 값이다.
-- [x] **확인 완료 — 안 덮는다.** §5.1 참조. HPPC 최저 SOC가 SOH 1.00에서
-      0.056이지만 SOH 0.70에서는 0.288까지만 내려간다. 저 SOC × 저 SOH는
-      측정 공백이며, 이 조합은 검증 불가 영역으로 표시하고 진행한다.
+The hybrid arm (`sop_hybrid_spec.md` §7.5) is scored on **measured HPPC
+pulse ΔV**, while this table is **drive-cycle voltage**. The two numbers
+must not be placed side by side. A comparison on one axis exists only at
+rung A13.
 
 ---
 
-## 7.7 크기 축 — 어디까지 줄여도 되는가, 그리고 그 답이 셀마다 다르다는 것
+## 8. To check before starting
 
-`/tmp/run_size.sh`. 은닉 256(§7.6) 아래로 128과 64를 두 셀에 대해 돌렸다.
-CC_CELL2는 중간 fold, BOOST_REST는 §7.6에서 M1이 가장 나빴던 fold다.
-나머지는 6-fold와 동일한 초매개변수.
+- [ ] whether the calibration-schedule reproduction run finishes and how
+      close it lands to 21.54 mV (in progress). If it does not reproduce,
+      the extension's baseline is unstable.
+- [ ] rerun the baseline (drive cycles only) on the calibration schedule
+      too — the present 45.61 vs 43.93 are both values from an error state.
+- [x] **Checked — it does not cover it.** See §5.1. The lowest HPPC SOC is
+      0.056 at SOH 1.00 but only 0.288 at SOH 0.70. Low SOC × low SOH is a
+      measurement gap; that combination is marked unverifiable and work
+      proceeds.
 
-| 은닉 | 파라미터 (M1/M2) | CC_CELL2 M1 | M2 | BOOST_REST M1 | M2 |
+---
+
+## 7.7 The size axis — how far it can shrink, and that the answer differs by cell
+
+`/tmp/run_size.sh`. Below hidden 256 (§7.6), 128 and 64 were run on two
+cells. CC_CELL2 is a middling fold; BOOST_REST is the fold where M1 was
+worst in §7.6. Everything else matches the 6-fold hyperparameters.
+
+| Hidden | Parameters (M1/M2) | CC_CELL2 M1 | M2 | BOOST_REST M1 | M2 |
 |---:|---:|---:|---:|---:|---:|
 | 256 | 1,057,793 / 1,078,729 | 25.37 | **22.59** | 52.45 | **24.43** |
 | 128 | 266,753 / 284,105 | 26.49 | 26.91 | 51.22 | **28.20** |
 | 64 | 67,841 / 83,401 | **27.02** | 30.12 | 57.27 | **31.39** |
 
-### M2 의 가치는 크기가 아니라 셀이 정한다
+### The value of M2 is set by the cell, not by the size
 
-CC_CELL2 만 보면 "작아지면 문맥 인코더가 손해"라는 결론이 나온다 — 256 에서
-11 % 이기던 것이 128 에서 1.6 % 지고 64 에서 11 % 진다. **BOOST_REST 에서는
-전혀 그렇지 않다.** 은닉 64 에서도 57.27 → 31.39 로 45 % 이긴다.
+Looking at CC_CELL2 alone gives the conclusion "the context encoder costs
+you once the model is small" — an 11 % win at 256 becomes a 1.6 % loss at
+128 and an 11 % loss at 64. **BOOST_REST does not behave that way at all.**
+Even at hidden 64 it wins 45 %, 57.27 → 31.39.
 
-가르는 것은 M1 의 성적이다. SOH 스칼라로 잘 잡히는 셀(M1 이 25~27 mV)에서는
-문맥 인코더가 쓰는 용량이 작은 모델에서 순손실이 되고, 잘 안 잡히는 셀
-(M1 이 51~57 mV)에서는 크기와 무관하게 크게 이긴다. §7.6 에서 관찰한
-"M1 이 나쁠수록 M2 의 개선이 크다"가 크기를 줄여도 그대로 유지된다.
+What separates them is M1's score. On cells an SOH scalar captures well
+(M1 at 25–27 mV) the capacity the context encoder consumes is a net loss in
+a small model; on cells it captures badly (M1 at 51–57 mV) it wins large
+regardless of size. The observation from §7.6 — the worse M1 is, the larger
+M2's gain — survives the size reduction.
 
-### 배치 관점에서 이것이 뜻하는 것
+### What this means for deployment
 
-최악 셀 기준으로 보면 **은닉 64 의 M2(83,401 파라미터)가 은닉 256 의
-M1(1,057,793)보다 낫다** — 31.39 대 52.45 mV. 13배 작은 모델이 최악 경우를
-40 % 개선한다. 평균이 아니라 최악을 보장해야 하는 쪽이 BMS 이므로 이 비교가
-맞는 비교다.
+Judged on the worst cell, **M2 at hidden 64 (83,401 parameters) beats M1 at
+hidden 256 (1,057,793)** — 31.39 against 52.45 mV. A 13× smaller model
+improves the worst case by 40 %. A BMS has to guarantee the worst case
+rather than the average, so that is the right comparison.
 
-### S32K344 급(160 MHz Cortex-M7 · 4 MB 플래시 · 512 KB RAM · 가속기 없음) 예산
+### Budget for an S32K344-class part (160 MHz Cortex-M7, 4 MB flash, 512 KB RAM, no accelerator)
 
-순환부는 스트리밍으로 돌린다고 본다. 상태를 이어가는 방식과 200 샘플을 매번
-재생하는 방식이 28.80 대 28.77 mV 로 사실상 동일하다는 것을 이 프로젝트가 이미
-확인했으므로, 200 샘플 창은 학습 시점의 구성이지 런타임 버퍼가 아니다.
+The recurrent part is assumed to run streaming. This project already
+confirmed that carrying state forward and replaying 200 samples each time
+give 28.80 against 28.77 mV, effectively identical, so the 200-sample window
+is a training-time construction rather than a runtime buffer.
 
-| 은닉 64 | M1 | M2 |
+| Hidden 64 | M1 | M2 |
 |---|---:|---:|
-| int8 가중치 | 66.3 KB (플래시 1.62 %) | 81.4 KB (1.99 %) |
-| 상태 RAM (fp32) | 1.0 KB (0.195 %) | 1.2 KB (0.244 %) |
-| 1 Hz 스트리밍 | 66,624 MAC/s (0.042 %) | 68,416 MAC/s (0.043 %) |
-| 문맥 인코더 1회 | — | 2,573,312 MAC ≈ 16 ms |
+| int8 weights | 66.3 KB (1.62 % of flash) | 81.4 KB (1.99 %) |
+| state RAM (fp32) | 1.0 KB (0.195 %) | 1.2 KB (0.244 %) |
+| 1 Hz streaming | 66,624 MAC/s (0.042 %) | 68,416 MAC/s (0.043 %) |
+| one context-encoder pass | — | 2,573,312 MAC ≈ 16 ms |
 
-**순환부는 예산 문제가 아니다.** 가중치가 플래시의 2 %, 상태가 RAM 의 0.25 %,
-연산이 코어의 0.04 % 다. 은닉 256 이어도 int8 1,053 KB 로 플래시 25 % 이니 여전히
-들어간다 — 막히는 것은 저장이 아니라 RAM 이고, 그것도 스트리밍이면 4 KB 다.
+**The recurrent part is not a budget problem.** Weights are 2 % of flash,
+state is 0.25 % of RAM, compute is 0.04 % of the core. Even hidden 256 fits
+at int8 1,053 KB, 25 % of flash — what binds is RAM, not storage, and even
+that is 4 KB when streaming.
 
-**비용은 전부 문맥 인코더 한 곳에 몰려 있다.** 200 샘플 GRU 한 번이 2.57 M MAC,
-1 MAC/사이클 가정에서 약 16 ms 다. 매 스텝 돌릴 수 없다. 다행히 그럴 필요가 없다 —
-z 는 셀의 최근 응답을 요약한 것이고 초 단위로 변하지 않으므로, 수십 초에 한 번
-갱신하고 그 사이에는 캐시된 z 를 쓰면 된다. 이것이 M2 를 배치할 때의 실제 설계
-결정이며, 갱신 주기를 얼마나 늘려도 성능이 유지되는지는 아직 재지 않았다.
+**The whole cost sits in one place, the context encoder.** One GRU pass over
+200 samples is 2.57 M MAC, about 16 ms at one MAC per cycle. It cannot run
+every step. Fortunately it need not — z summarises the cell's recent
+response and does not change on a per-second scale, so it can be refreshed
+every few tens of seconds with a cached z in between. That is the real
+design decision when deploying M2, and how far the refresh interval can be
+stretched before performance degrades has not been measured.
 
-### 아직 재지 않은 것
+### Not yet measured
 
-- int8 양자화 후의 실제 RMSE. 위 표의 저장량은 int8 기준이지만 정확도는
-  fp32 학습 결과다. 양자화 손실은 측정하지 않았다.
-- z 갱신 주기를 늘렸을 때의 성능 저하.
-- 은닉 64 의 나머지 4 개 fold. 두 셀에서 방향이 갈렸으므로, 크기 축의 결론을
-  일반화하려면 6-fold 가 필요하다.
-
+- Actual RMSE after int8 quantisation. The storage figures above are int8
+  but the accuracy is from fp32 training. Quantisation loss was not
+  measured.
+- Degradation as the z refresh interval lengthens.
+- The remaining four folds at hidden 64. The two cells disagreed in
+  direction, so generalising the size-axis conclusion needs the full 6-fold.

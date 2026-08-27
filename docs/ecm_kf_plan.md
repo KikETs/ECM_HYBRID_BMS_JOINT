@@ -1,51 +1,54 @@
-# ECM + 칼만필터 기반 SOC / SOH / SOP — 설계
+# ECM + Kalman filter SOC / SOH / SOP — design
 
-작성 2026-08-15. 데이터 사실은 `findings.md`, 특히 §4.3(ECM 분해)에 있다.
+Written 2026-08-15. The data facts live in `findings.md`, in particular
+§4.3 (ECM decomposition).
 
-**목표를 다시 적는다.** SOH별로 추정한 ECM 파라미터를 써서 SOC(칼만필터 기반),
-SOH, SOP를 함께 추정한다. LSTM 전압모델 + 이진탐색(`soh_extension_design.md`)은
-비교 기준선으로 남기고, 이 문서가 주 경로다.
+**Restating the goal.** Use ECM parameters identified per SOH to estimate
+SOC (Kalman), SOH and SOP together. The LSTM voltage model plus binary
+search (`soh_extension_design.md`) stays as a comparison baseline; this
+document is the main path.
 
 ---
 
-## 0. 이 데이터셋이 원래 그 용도다
+## 0. This dataset was built for exactly this
 
-UYPYDJ readme가 인용하는 관련 논문:
+The paper the UYPYDJ readme cites:
 
 > J. Duque, P. J. Kollmeyer, M. Naguib, A. Emadi, "Battery **Dual Extended
 > Kalman Filter State of Charge and Health Estimation** Strategy for Traction
 > Applications," IEEE ITEC 2022.
 
-데이터 제작자들이 DEKF SOC/SOH 추정을 위해 설계한 캠페인이다. 30사이클마다 HPPC,
-60사이클마다 OCV, 매 특성화마다 0.5C/1C/2C 용량 시험이 들어 있는 이유가 그것이다.
+The people who made the data designed the campaign for DEKF SOC/SOH
+estimation. That is why there is an HPPC every 30 cycles, an OCV every 60,
+and 0.5C/1C/2C capacity tests at every characterisation.
 
 ---
 
-## 1. 구조
+## 1. Structure
 
 ```
-   측정 (V, I, T)
+   measurement (V, I, T)
         │
-        ├─────────────► ECM 파라미터 모델  θ(SOC, SOH) = {R0, R1, τ1, R2, τ2}
-        │                                  OCV(SOC, SOH),  Q(SOH)
+        ├─────────────► ECM parameter model  θ(SOC, SOH) = {R0, R1, τ1, R2, τ2}
+        │                                    OCV(SOC, SOH),  Q(SOH)
         │                                        │
         ▼                                        ▼
    ┌─────────────────────────────────────────────────────┐
    │  Dual EKF                                            │
-   │    상태  x = [SOC, V1, V2]        ← 빠른 동특성       │
-   │    파라미터 φ = [Q, R0 배율]       ← 느린 열화        │
+   │    state x = [SOC, V1, V2]        ← fast dynamics     │
+   │    param φ = [Q, R0 multiplier]   ← slow degradation  │
    └─────────────────────────────────────────────────────┘
         │                                        │
         ▼                                        ▼
-      SOC 추정                                 SOH 추정
+      SOC estimate                            SOH estimate
         └──────────────┬─────────────────────────┘
                        ▼
-        SOP(τ) : V(τ) = V_lim 이 되는 I* 를 ECM으로 풀이
-                 — V1, V2 의 **현재 값**에서 전파하므로
-                   최근 운전 이력이 반영된다
+        SOP(τ) : solve the ECM for the I* that drives V(τ) to V_lim
+                 — propagated from the **current** V1, V2, so recent
+                   driving history is carried in
 ```
 
-### 1.1 상태 방정식 (2RC)
+### 1.1 State equations (2RC)
 
 ```
 SOC_{k+1} = SOC_k − η · I_k · Δt / Q(SOH)
@@ -53,92 +56,100 @@ V1_{k+1}  = V1_k · e^(−Δt/τ1) + R1 · (1 − e^(−Δt/τ1)) · I_k
 V2_{k+1}  = V2_k · e^(−Δt/τ2) + R2 · (1 − e^(−Δt/τ2)) · I_k
 ```
 
-측정 방정식:
+Measurement equation:
 
 ```
 V_k = OCV(SOC_k, SOH) − V1_k − V2_k − R0 · I_k
 ```
 
-부호 규약은 이 프로젝트 전체와 동일하게 **음수 = 방전**이다.
+The sign convention is the project's: **negative means discharge**.
 
-### 1.2 SOP를 룩업이 아니라 ECM으로 푸는 이유
+### 1.2 Why SOP is solved through the ECM rather than looked up
 
-선행연구가 룩업 테이블을 비판한 지점이 "최근 동적 운전 조건을 반영하지 못한다"
-는 것이었다. ECM은 그 문제가 없다 — V1, V2가 현재 상태를 들고 있으므로,
-같은 SOC·SOH라도 **직전에 무엇을 했는지**에 따라 SOP가 달라진다. 정지 상태에서
-출발할 때와 이미 방전 중일 때의 차이가 자동으로 나온다.
+The criticism prior work levels at lookup tables is that they cannot
+reflect recent dynamic operating conditions. The ECM does not have that
+problem — V1 and V2 hold the present state, so at the same SOC and SOH the
+SOP depends on **what happened just before**. Starting from rest and
+starting mid-discharge come out different on their own.
 
 ```
 V(τ) = OCV(SOC) − V1(τ) − V2(τ) − I·R0 = V_lim
-  단  V1(τ) = V1(0)·e^(−τ/τ1) + R1(1−e^(−τ/τ1))·I     (V2도 동일)
-→ I* 에 대해 선형이므로 닫힌 해가 있다
+  with  V1(τ) = V1(0)·e^(−τ/τ1) + R1(1−e^(−τ/τ1))·I     (V2 likewise)
+→ linear in I*, so there is a closed form
 ```
 
 ---
 
-## 2. 이미 준비된 것
+## 2. Already in place
 
-| | 내용 | 상태 |
+| | Contents | Status |
 |---|---|---|
-| ECM 파라미터 | `uypydj_ecm.csv` 27,891행, 6셀 × SOH 0.68~1.00 × SOC 0.06~1.00 × 전류 4수준 × 충·방전 | 완료 |
-| OCV | `uypydj_ocv.csv` SOH별 133곡선, SOC 격자 100점 | 완료 |
-| 용량 Q(SOH) | 캐시의 `CAP` 컬럼 (0.5C 방전 실측) | 완료 |
-| 구동사이클 | 캐시 55.08 M 샘플, SOH 라벨 포함, 정격 SOC 축 | 완료 |
-| SOP 기준값 | `sop_reference.csv` (정적 ECM 기준) | 완료 |
-| LSTM 기준선 | 29.92 mV (24조건 27.81 mV) | 완료 |
+| ECM parameters | `uypydj_ecm.csv`, 27,891 rows, 6 cells × SOH 0.68–1.00 × SOC 0.06–1.00 × 4 current levels × charge and discharge | done |
+| OCV | `uypydj_ocv.csv`, 133 curves by SOH, 100-point SOC grid | done |
+| Capacity Q(SOH) | `CAP` column in the cache (measured 0.5C discharge) | done |
+| Drive cycles | 55.08 M samples cached, SOH labelled, rated SOC axis | done |
+| SOP reference | `sop_reference.csv` (static ECM baseline) | done |
+| LSTM baseline | 29.92 mV (27.81 mV over 24 conditions) | done |
 
-## 3. 만들어야 하는 것
+## 3. To be built
 
-| 단계 | 내용 |
+| Step | Contents |
 |---|---|
-| **E1** | θ(SOC, SOH) 연속 표면 — 이산 격자를 보간/적합 |
-| **E2** | 구동사이클 개루프 시뮬레이션으로 ECM 검증 (전압 RMSE) |
-| **E3** | SOC용 EKF |
-| **E4** | SOH 추정 (Q, R0 배율) — dual EKF 또는 RLS |
-| **E5** | ECM 기반 SOP + 기준값·LSTM과 비교 |
-| **T1~T4** | 열모델 (§3.5) — E2 검증에 연성으로 들어감 |
+| **E1** | continuous θ(SOC, SOH) surface — interpolate or fit the discrete grid |
+| **E2** | validate the ECM by open-loop drive-cycle simulation (voltage RMSE) |
+| **E3** | EKF for SOC |
+| **E4** | SOH estimation (Q, R0 multiplier) — dual EKF or RLS |
+| **E5** | ECM-based SOP, compared against the reference and the LSTM |
+| **T1–T4** | thermal model (§3.5) — couples into the E2 validation |
 
-**E2가 관문이다.** ECM이 구동사이클 전압을 재현하지 못하면 그 위의 KF는 의미가
-없다. 그리고 이 수치는 LSTM의 29.92 mV와 **직접 비교 가능**하다 — 선행연구도
-LSTM/ECM/EM을 같은 축에서 비교한다.
+**E2 is the gate.** If the ECM cannot reproduce drive-cycle voltage, no
+Kalman filter on top of it means anything. And that number is **directly
+comparable** to the LSTM's 29.92 mV — the prior work also compares
+LSTM/ECM/EM on one axis.
 
 ---
 
-## 3.5 열모델 — 전기·열 연성
+## 3.5 Thermal model — electro-thermal coupling
 
-ECM 파라미터는 온도에 강하게 의존하므로 열모델 없이는 온도가 변하는 구간에서
-틀린다. 특히 이 캠페인은 급속충전이라 자가발열이 크다.
+ECM parameters depend strongly on temperature, so without a thermal model
+they are wrong wherever temperature moves. This campaign is fast charging,
+so self-heating is large.
 
-### 3.5.1 구조
+### 3.5.1 Structure
 
 ```
-발열      Q_gen = I²·R_total(SOC,SOH,T)  +  I·T·(dOCV/dT)
-                 └─ 줄열 (지배적)          └─ 엔트로피항
-열용량    C_th · dT_cell/dt = Q_gen − (T_cell − T_amb) / R_th
+heat        Q_gen = I²·R_total(SOC,SOH,T)  +  I·T·(dOCV/dT)
+                    └─ Joule (dominant)       └─ entropic term
+capacity    C_th · dT_cell/dt = Q_gen − (T_cell − T_amb) / R_th
 ```
 
-ECM 쪽으로 되먹임: θ(SOC, SOH, T) — 아레니우스 형태
+Feedback into the ECM: θ(SOC, SOH, T), Arrhenius form
 
 ```
 R(T) = R_ref · exp( Ea/R_g · (1/T − 1/T_ref) )
 ```
 
-### 3.5.2 이 데이터로 식별 가능한 것과 아닌 것
+### 3.5.2 What this data can and cannot identify
 
-**가능 — C_th, R_th.** UYPYDJ는 챔버가 25 °C 고정이지만 **셀 온도는 22~44 °C를
-오간다**(`findings.md` §1.1). 급속충전 중 발열하고 구동사이클·휴지 중 냉각하는
-과정이 그대로 기록돼 있다. 전류와 저항을 알면 Q_gen을 계산할 수 있으므로,
-측정된 T 궤적에서 C_th와 R_th를 회귀로 뽑을 수 있다. 오히려 강제 온도 변화가
-없어 **순수한 자가발열 응답**이라 식별에 유리하다.
+**Can — C_th, R_th.** UYPYDJ holds the chamber at 25 °C, but **cell
+temperature swings 22–44 °C** (`findings.md` §1.1). Heating during fast
+charge and cooling through drive cycles and rests is recorded as it
+happened. Q_gen follows from current and resistance, so C_th and R_th can
+be regressed out of the measured T trajectory. The absence of forced
+temperature changes helps rather than hurts: the response is **pure
+self-heating**.
 
-**측정됨 — 저항 수준에서는 대체로 분리되고, SOP 수준에서는 안 된다.**
+**Measured — separability roughly holds at the resistance level and breaks
+at the SOP level.**
 
-이 절은 원래 "Ea가 노화와 무관하다고 가정, 검증 불가능"이라 적었다. RPCWBY
-Test#1·#2가 두 온도 × 전 노화구간을 주므로 **검증 가능했다.** 결과는 두 층으로
-나뉘고, 둘을 구분하지 않으면 잘못 읽는다.
+This section originally said "Ea is assumed independent of aging, and that
+cannot be checked." RPCWBY Test#1 and #2 give two temperatures across the
+whole aging range, so it **could** be checked. The answer has two layers,
+and reading them together misleads.
 
-**층 1 — 저항비는 완만하다.** 양쪽 온도가 모두 30 A 전류제한인 지점만 골라
-(같은 전류에서 비교해야 한다) 10 s 저항을 SOP에서 역산하면:
+**Layer 1 — the resistance ratio moves gently.** Taking only the points
+where both temperatures are at the 30 A current limit (the comparison has
+to be at equal current) and inverting the 10 s resistance out of SOP:
 
 | SOH | 1.000 | 0.935 | 0.886 | 0.832 | 0.777 |
 |---|---:|---:|---:|---:|---:|
@@ -146,161 +157,183 @@ Test#1·#2가 두 온도 × 전 노화구간을 주므로 **검증 가능했다.
 | R(10 °C) | 17.44 | 20.80 | 29.49 | 34.44 | 41.12 mΩ |
 | **R10/R25** | 1.335 | 1.386 | **1.483** | 1.435 | 1.357 |
 
-비율이 1.33 → 1.48로 11 % 오르고 다시 내려온다. Test#2가 독립적으로 같은 곡선
-(1.306 → 1.476 → 1.452)을 준다. **분리 가능은 대략 성립하며, 오차 11 % 수준의
-SOH 보정을 붙이면 된다.** 국소 Ea로는 12.5 → 18.4 → 14.3 kJ/mol.
+The ratio rises 11 % from 1.33 to 1.48 and comes back down. Test#2 gives
+the same curve independently (1.306 → 1.476 → 1.452). **Separability
+roughly holds, and an SOH correction at the 11 % level covers it.** Local
+Ea runs 12.5 → 18.4 → 14.3 kJ/mol.
 
-**층 2 — SOP비는 무너진다. 그러나 저항 때문이 아니다.**
+**Layer 2 — the SOP ratio collapses. But not because of resistance.**
 
 | cycle | 1 | 1299 | 1428 | 1541 | 1769 | 1994 |
 |---|---:|---:|---:|---:|---:|---:|
-| 25 °C 제한 | 전류 | 전류 | 전류 | 전류 | 전류 | 전류 |
-| 10 °C 제한 | 전류 | 전류 | 전류 | **전압** | 전압 | 전압 |
+| 25 °C limit | current | current | current | current | current | current |
+| 10 °C limit | current | current | current | **voltage** | voltage | voltage |
 | SOP10/SOP25 | 0.961 | 0.888 | 0.880 | **0.821** | 0.710 | 0.532 |
 
-SOC 0.5 기준. cycle 1541에서 저온 쪽이 전류 정격(30 A)을 유지하지 못하고 전압
-하한에 먼저 걸리기 시작하며, 그 순간부터 비율이 급락한다. 25 °C는 끝까지
-전류제한이다.
+At SOC 0.5. From cycle 1541 the cold side can no longer hold the 30 A
+current rating and hits the voltage floor first; the ratio falls away from
+that moment. 25 °C stays current-limited throughout.
 
-**이것이 ECM 경로를 지지하는 근거다.** 완만한 저항 변화가 전압 하한과 만나
-비선형으로 증폭되는 현상이고, 전압 한계를 명시적으로 푸는 모델에서는 **자동으로
-재현된다.** 룩업 테이블이나 SOH 스칼라 보정으로는 이 전환을 표현할 수 없다.
+**This is the argument for the ECM path.** A gentle resistance change meets
+a voltage floor and is amplified non-linearly, and a model that solves the
+voltage limit explicitly **reproduces the transition for free**. A lookup
+table or a scalar SOH correction cannot express it.
 
-> **정정 이력.** 이 절은 한때 "SOP 비율이 0.96 → 0.53으로 붕괴하므로 분리 가능
-> 가정은 기각"이라고 적었다. 과장이었다. 붕괴하는 것은 SOP이고, 그 원인은 저항의
-> 온도 의존성이 노화와 함께 변해서가 아니라 제한 영역이 바뀌기 때문이다. 두
-> 온도에서 **같은 전류**로 비교하지 않은 것이 원인이었다.
-
----
-
-## 4. 미리 못 박아 둘 제약
-
-**온도.** UYPYDJ는 25 °C 단일 조건이다(`findings.md` §1.1). 따라서 이 경로에서
-얻는 θ(SOC, SOH)에는 **온도 의존성이 없다.** Mendeley HPPC가 6개 온도를 주지만
-신품뿐이다. 선택지는 둘뿐이고, 어느 쪽이든 명시한다:
-
-1. 25 °C에 한정해 SOC/SOH/SOP를 하고, 온도 확장은 범위 밖으로 선언
-2. θ(SOC, SOH, T) = θ(SOC, SOH) · g(T) 처럼 **분리 가능**을 가정하고,
-   g(T)를 Mendeley 신품 데이터에서 얻은 뒤 그 가정이 신품 안에서 성립하는지만
-   검사 — 노화 구간으로의 외삽은 여전히 가정으로 남는다
-
-**저 SOC × 저 SOH.** HPPC가 SOH 0.70에서 SOC 0.29 아래로 내려가지 않는다
-(`findings.md` §4.4). θ 표면의 그 영역은 외삽이며, SOP가 가장 빡빡한 곳이
-하필 거기다. 결과에 반드시 표시한다.
-
-**셀 개체차.** 같은 SOH에서 R1이 최대 5.58배 다르다(`findings.md` §4.3.1).
-θ를 여섯 셀 평균으로 만들면 어느 셀에서도 맞지 않는다. **셀별 θ**를 쓰거나,
-θ를 EKF가 온라인으로 적응시키게 해야 한다 — 후자가 실제 BMS의 방식이고,
-dual EKF의 파라미터 쪽이 하는 일이 정확히 그것이다.
+> **Correction history.** This section once said "the SOP ratio collapses
+> from 0.96 to 0.53, so separability is rejected." That was an overstatement.
+> What collapses is SOP, and the cause is not that the temperature
+> dependence of resistance changes with aging but that the limiting regime
+> changes. The mistake was comparing the two temperatures at unequal current.
 
 ---
 
-## EKF 개선 — 이력 항 (2026-08-22)
+## 4. Constraints to pin down in advance
 
-### 왜 건드렸나
+**Temperature.** UYPYDJ is a single 25 °C condition (`findings.md` §1.1).
+The θ(SOC, SOH) obtained on this path therefore has **no temperature
+dependence**. Mendeley HPPC gives six temperatures but only for fresh
+cells. There are two options and either must be stated:
 
-SOP 를 암페어로 재고 나서 상태 추정 오차를 전파해 보니, 하이브리드 보정의 이득
-(7.26 → 4.94 A)보다 **SOC 추정 오차가 만드는 손실이 컸다** — 계통 SOC 2 % 만으로
-4.94 → 14.23 A. 저항 보정보다 SOC 를 먼저 고치는 것이 우선이다.
+1. restrict SOC/SOH/SOP to 25 °C and declare temperature extension out of
+   scope
+2. assume **separability**, θ(SOC, SOH, T) = θ(SOC, SOH) · g(T), take g(T)
+   from the fresh Mendeley data, and check only that the assumption holds
+   within fresh cells — extrapolation into the aged range stays an
+   assumption
 
-`sop_hybrid_spec.md` §11.3 과 함께 읽어야 한다: R_eff 는 SOC 0.30~0.40 에서 26 %
-꺾이고(0.05 당 −13.5 %, −14.9 %) 그 위로는 ±5 % 안에서 평탄하다. 그래서 그
-무릎에서의 SOC 오차가 SOP 로 그대로 넘어간다.
+**Low SOC × low SOH.** HPPC does not go below SOC 0.29 at SOH 0.70
+(`findings.md` §4.4). That region of the θ surface is extrapolation, and it
+is exactly where SOP is tightest. It must be marked in every result.
 
-### 진단 — 추측하지 않고 쟀다
+**Cell-to-cell spread.** At the same SOH, R1 differs by up to 5.58×
+(`findings.md` §4.3.1). A θ averaged over six cells fits none of them.
+Either use **per-cell θ**, or let the EKF adapt θ online — the latter is
+what a real BMS does, and it is exactly the job of the parameter side of a
+dual EKF.
 
-기존 필터의 측정 모델은 `y = OCV + I·R0 + V1 + V2` 로, 이 프로젝트의 개루프
-ECM 에는 있는 Plett 이력 항 `M(SOC,SOH)·h` 가 빠져 있었다(그 항이 개루프 오차를
-50.62 → 37.13 mV 로 줄인 항이다).
+---
 
-**잔차가 이력 상태와 상관된다:**
+## EKF improvement — the hysteresis term (2026-08-22)
 
-| SOH | 전압 잔차 | 잔차 vs h |
+### Why this was touched
+
+After measuring SOP in amperes and propagating state-estimate error
+through it, the loss caused by **SOC error exceeded the gain from the
+hybrid correction** (7.26 → 4.94 A): a systematic 2 % SOC alone takes
+4.94 → 14.23 A. Fixing SOC comes before correcting resistance.
+
+Read with `sop_hybrid_spec.md` §11.3: R_eff bends 26 % across SOC
+0.30–0.40 (−13.5 % and −14.9 % per 0.05) and is flat within ±5 % above it.
+So SOC error at that knee passes straight into SOP.
+
+### Diagnosis — measured, not guessed
+
+The old filter's measurement model was `y = OCV + I·R0 + V1 + V2`, missing
+the Plett hysteresis term `M(SOC,SOH)·h` that the project's own open-loop
+ECM has — the term that cut open-loop error from 50.62 to 37.13 mV.
+
+**The residual correlates with the hysteresis state:**
+
+| SOH | voltage residual | residual vs h |
 |---|---:|---:|
 | 1.000 | 7.1 mV | +0.18 |
 | 0.923 | 17.0 | +0.57 |
 | 0.833 | 31.4 | **+0.80** |
 | 0.691 | 87.5 | **+0.81** |
 
-노화될수록 커진다. 칼만 게인은 그 잔차를 어딘가에 넣어야 하고, SOC 에 넣는다.
+It grows with age. The Kalman gain has to put that residual somewhere, and
+it puts it into SOC.
 
-**그리고 SOC 오차는 산포가 아니라 편향이다** — 모든 SOC 밴드에서 중앙 절대오차가
-|편향| 과 세 자리까지 같고, 부호는 일관되게 음수다. 방전 중 h < 0 이면 실제 전압이
-h 없는 모델보다 낮은데, 필터는 그것을 "생각보다 충전량이 적다" 로 읽는다.
-가장 나쁜 밴드가 SOC 0.3~0.4 (−0.031) 로, 하필 R_eff 무릎이다.
+**And the SOC error is a bias, not a spread** — in every SOC band the
+median absolute error equals |bias| to three digits, and the sign is
+consistently negative. Discharging with h < 0, the true voltage sits below
+what a model without h predicts, and the filter reads that as "less charge
+than I thought." The worst band is SOC 0.3–0.4 (−0.031), which is the
+R_eff knee.
 
-### 고친 방식 — h 는 추정하지 않고 전파한다
+### The fix — h is propagated, not estimated
 
-h 는 전류 이력으로 **완전히 결정**된다(Plett). 그래서 상태에 넣지 않고
-결정론적으로 전파하며 측정 예측에만 더한다:
+h is **fully determined** by current history (Plett). So it is not a state:
+it is propagated deterministically and added to the measurement prediction
+only.
 
     y = OCV(SOC,SOH) + M(SOC,SOH)·h + I·R0 + V1 + V2
     H[SOC] = dOCV/dSOC + (dM/dSOC)·h
 
-h 를 네 번째 상태로 **추정하는 경로도 구현해서 비교했고, 그쪽이 나쁘다.**
+**The path that estimates h as a fourth state was also implemented and
+compared, and it is worse.**
 
-| 설정 | 전체 RMSE | 최악 run | 전압 잔차 | SOC 0~0.4 | 0.4~0.6 | 0.6~1.05 |
+| Setting | overall RMSE | worst run | voltage residual | SOC 0–0.4 | 0.4–0.6 | 0.6–1.05 |
 |---|---:|---:|---:|---:|---:|---:|
-| 없음 (기존) | 0.0344 | 0.0753 | 47.1 mV | 0.0293 | 0.0259 | 0.0112 |
-| **h 결정론** | **0.0261** | **0.0594** | **33.3 mV** | **0.0196** | **0.0172** | **0.0100** |
-| h 상태화 | 0.0871 | 0.3144 | 91.8 mV | 0.0198 | 0.0180 | 0.0140 |
+| none (old) | 0.0344 | 0.0753 | 47.1 mV | 0.0293 | 0.0259 | 0.0112 |
+| **h deterministic** | **0.0261** | **0.0594** | **33.3 mV** | **0.0196** | **0.0172** | **0.0100** |
+| h as a state | 0.0871 | 0.3144 | 91.8 mV | 0.0198 | 0.0180 | 0.0140 |
 
-세 셀(CC, BOOST_REST, BOOST_NEGPULSE_1S) × 5 개 run, 초기 SOC 를 +0.20 틀리게
-주고 시작, 수렴 후(3000 s 이후)만 집계.
+Three cells (CC, BOOST_REST, BOOST_NEGPULSE_1S) × 5 runs, started with the
+initial SOC deliberately off by +0.20, scored only after convergence
+(beyond 3000 s).
 
-**결정론 h 는 모든 축에서 개선한다** — 전체 −24 %, 최악 run −21 %, 전압 잔차
-−29 %, 그리고 목표였던 SOC 0~0.4 구간에서 −33 %. 고 SOC 에서도 나빠지지 않는다.
+**Deterministic h improves every axis** — overall −24 %, worst run −21 %,
+voltage residual −29 %, and −33 % in the target SOC 0–0.4 band. High SOC
+does not get worse.
 
-**h 를 상태로 추정하면 저~중 SOC 개선은 비슷하지만 고 SOC 가 나빠지고 한 run 이
-발산한다**(SOC 오차 0.055 → 0.314, 잔차 336 mV). 자유도를 주면 이력이 아닌
-오차 — OCV 표 오차 같은 것 — 까지 흡수하기 때문이다. 두 경로를 모두 남겨두었고
-기본은 결정론(`--gamma 20`, `--estimate-h` 로 상태화).
+**Estimating h as a state gives a similar low-to-mid SOC gain but hurts
+high SOC and diverges on one run** (SOC error 0.055 → 0.314, residual
+336 mV). Given the freedom, it absorbs errors that are not hysteresis —
+OCV table error, for instance. Both paths are kept; the default is
+deterministic (`--gamma 20`, `--estimate-h` to make it a state).
 
-### 아직 확인하지 않은 것
+### Not yet checked
 
-- **이 개선이 SOP 로 얼마나 번역되는지.** → 이후 수행했다. 실제 EKF SOC 를 SOP
-  역산에 물리면 오라클 대비 4.03 → 4.04 A 로 사실상 변화가 없고
-  (`sop_end_to_end.csv`), 잔차 회귀는 3.38 A 다(`sop_hybrid_spec.md` §15.5).
-  §11.3 의 합성 오차 전파가 예측한 14 A 붕괴는 일어나지 않는다 — 합성한 계통
-  오프셋이 실제 필터 오차와 성질이 다르기 때문이다.
-- γ = 20 은 `ecm_simulate.py` 와 `sop_trim_features.py` 에서 쓰던 값을 그대로
-  가져왔다. EKF 안에서 다시 맞춰보지 않았다.
-- 세 셀만 봤다. 여섯 셀 전체는 돌리지 않았다.
+- **How much of this translates into SOP.** → Done afterwards. Feeding the
+  real EKF SOC into the SOP inversion gives 4.03 → 4.04 A against the
+  oracle, effectively no change (`sop_end_to_end.csv`), and the residual
+  regression is 3.38 A (`sop_hybrid_spec.md` §15.5). The 14 A collapse that
+  §11.3's synthetic error propagation predicted does not happen — the
+  synthetic systematic offset behaves differently from real filter error.
+- γ = 20 was carried over from `ecm_simulate.py` and
+  `sop_trim_features.py`. It was not re-tuned inside the EKF.
+- Only three cells were examined. All six were not run.
 
 ---
 
-## 노화 셀의 SOC 오차 — 세 번의 기각과 두 개의 개선 (2026-08-23)
+## SOC error in aged cells — three rejections and two improvements (2026-08-23)
 
-이력 항을 넣은 뒤에도 노화 셀의 SOC 오차가 남는다. 궤적으로 보면 신품은 1 시간
-뒤 |오차| 중앙 0.7 %p 인데 SOH 0.706 에서는 5.3 %p 다.
+Even with the hysteresis term, SOC error remains in aged cells. On a
+trajectory, a fresh cell is at median |error| 0.7 %p after an hour; at
+SOH 0.706 it is 5.3 %p.
 
-### 무엇이 원인이 아닌가
+### What the cause is not
 
-**(1) 편향이 아니다 — run 마다 부호가 뒤집힌다.** 궤적 하나만 보고 "한 방향으로
-치우쳤다" 고 적었는데, 여러 run 을 보면 CC run74 가 +0.0019, run99 가 −0.0507,
-BOOST_REST run54 가 +0.0519, run73 이 +0.0036 이다. 고정된 모델 오차는 이렇게
-못 한다.
+**(1) Not a bias — the sign flips run to run.** Written up from a single
+trajectory as "skewed one way," but across runs CC run74 is +0.0019,
+run99 is −0.0507, BOOST_REST run54 is +0.0519, run73 is +0.0036. A fixed
+model error cannot do that.
 
-**(2) OCV 도 저항도 아니다.** 홀드아웃 셀의 **자기** OCV 를 주고 pooled 저항을
-유지, 그 반대도 해봤다(둘 다 배포 불가능한 오라클이지만 어느 쪽이 문제인지는
-말해준다). 결과가 일관되지 않다 — BOOST_REST run54 는 자기 OCV 로 0.0524 →
-0.0088 로 크게 좋아지는데 run73 은 0.0271 → 0.0482 로 나빠진다.
+**(2) Not OCV and not resistance.** The holdout cell was given its **own**
+OCV with pooled resistance, and the reverse (both are undeployable oracles,
+but they say which term is at fault). The results do not agree —
+BOOST_REST run54 improves sharply on its own OCV, 0.0524 → 0.0088, while
+run73 gets worse, 0.0271 → 0.0482.
 
-**(3) 수렴 부족도 아니다.** R_volt 를 0.5/0.25/0.1 배로 낮춰 측정을 더 믿게 하면
-**12 개 조합 전부에서 나빠진다.** BOOST_REST run54 는 11,694 초에 수렴하지만
-마지막 20 % RMSE 가 0.0409 로 여전히 나쁘다 — 수렴할 곳 자체가 틀렸다.
+**(3) Not insufficient convergence.** Lowering R_volt to 0.5/0.25/0.1× so
+the filter trusts the measurement more makes **all twelve combinations
+worse.** BOOST_REST run54 converges at 11,694 s but its final-20 % RMSE is
+still 0.0409 — the place it converges to is wrong.
 
-셋을 합치면 남는 설명은 하나다: **노화 셀에서 pooled 측정 모델의 잔차가 저항이나
-OCV 어느 한 항이 아니라 구조적**이고, 그것은 §12.5 가 SOP 에서 확인한 "바닥
-50 mV, 2RC + pooled 표의 한계" 와 같은 뿌리다.
+Together these leave one explanation: **in aged cells the residual of the
+pooled measurement model is structural rather than resistance or OCV**, and
+that has the same root as the "50 mV floor, the limit of 2RC plus a pooled
+table" that §12.5 reached for SOP.
 
-### 개선 1 — 트림의 곱수를 측정 모델에 넣기 (5~7 %)
+### Improvement 1 — put the trim multipliers into the measurement model (5–7 %)
 
-SOP 팔이 이미 k_f, k_s 를 계산하는데 필터는 보정 없는 표를 쓰고 있었다. 같은
-보정을 측정 모델에 넣는다(k 는 run 사이클 이전의 마지막 특성화 값 — 그 run 이
-만든 k 를 쓰면 순환이다).
+The SOP arm already computes k_f and k_s while the filter was using the
+uncorrected table. Put the same correction into the measurement model (k
+comes from the last characterisation before the run — using the k that run
+produced would be circular).
 
-| 셀 run | SOH | k=1 | k 적용 | 개선 |
+| Cell run | SOH | k=1 | with k | gain |
 |---|---|---:|---:|---:|
 | CC 79 | 0.799 | 0.0463 | 0.0442 | +4.5 % |
 | CC 99 | 0.696 | 0.0584 | 0.0550 | +5.8 % |
@@ -308,18 +341,20 @@ SOP 팔이 이미 k_f, k_s 를 계산하는데 필터는 보정 없는 표를 �
 | BOOST_REST 73 | 0.691 | 0.0271 | 0.0253 | +6.6 % |
 | CC 0 | 1.000 | 0.0089 | 0.0089 | 0 % |
 
-**노화 구간에서만 듣는다.** 신품은 k 가 1 에 가까워 변화가 없다. k_f 가 1.23
-(CC 99) 또는 0.72(BOOST_REST 58)까지 벌어지는데도 5~7 % 라는 것이, 오차가 저항
-크기 문제가 아니라는 (2)(3)의 결론을 다시 확인한다.
+**It only works in the aged range.** Fresh cells have k near 1, so nothing
+changes. That k_f reaches 1.23 (CC 99) or 0.72 (BOOST_REST 58) and still
+only buys 5–7 % reconfirms the conclusion of (2) and (3): the error is not
+a matter of resistance magnitude.
 
-**그리고 보정을 넣어도 R_volt 는 여전히 못 내린다.**
+**And with the correction in place, R_volt still cannot be lowered.**
 
-### 개선 2 — 저전류에서만 갱신 (노화 셀에서 −26 %)
+### Improvement 2 — update only at low current (−26 % in aged cells)
 
-측정 모델의 오차는 **I·R 을 통해 들어온다.** 휴지에서는 y = OCV + M·h 로 저항 항이
-아예 없다. 그래서 |I| 가 임계 아래일 때만 갱신하고 나머지는 예측만 한다.
+The measurement model's error enters **through I·R**. At rest,
+y = OCV + M·h has no resistance term at all. So update only when |I| is
+under a threshold and predict otherwise.
 
-| 셀 run | SOH | k, R기본 | R x4 | **\|I\|<1 A 만** |
+| Cell run | SOH | k, R base | R ×4 | **\|I\|<1 A only** |
 |---|---|---:|---:|---:|
 | CC 0 | 1.000 | 0.0089 | **0.0078** | 0.0099 |
 | CC 39 | 0.902 | 0.0245 | **0.0208** | 0.0246 |
@@ -329,107 +364,129 @@ SOP 팔이 이미 k_f, k_s 를 계산하는데 필터는 보정 없는 표를 �
 | BOOST_REST 43 | 0.785 | 0.0279 | 0.0304 | **0.0217** |
 | BOOST_REST 58 | 0.740 | 0.0440 | 0.0468 | **0.0390** |
 
-**SOH > 0.85 에서는 R x4 가, SOH < 0.80 에서는 게이트가 이긴다.** 경계가 두 셀에서
-같다. 신품에서 게이트가 손해인 것은 R 오차가 작아 부하 중 갱신이 정보를 주기
-때문이고, 게이트를 걸면 표본만 줄어든다.
+**Above SOH 0.85, R ×4 wins; below SOH 0.80, the gate wins.** The boundary
+is the same in both cells. The gate loses on fresh cells because their R
+error is small enough that updating under load carries information, and
+gating only reduces the sample count.
 
-### 누적
+### Cumulative
 
-CC 의 최악 run(SOH 0.696):
+CC's worst run (SOH 0.696):
 
-| 단계 | RMSE |
+| Step | RMSE |
 |---|---:|
-| 이력 없음 | 0.0753 |
-| + 결정론적 이력 | 0.0584 |
-| + 트림 곱수 k | 0.0550 |
-| **+ \|I\|<1 A 게이트** | **0.0406** |
+| no hysteresis | 0.0753 |
+| + deterministic hysteresis | 0.0584 |
+| + trim multiplier k | 0.0550 |
+| **+ \|I\|<1 A gate** | **0.0406** |
 
-**5.8 %p 에서 4.1 %p 로.** 다만 정직하게: 노화 셀의 SOC 오차는 **잡히지 않았다.**
-신품의 0.7 %p 와는 여전히 6 배 차이다.
+**From 5.8 %p to 4.1 %p.** Honestly, though: the SOC error in aged cells
+is **not solved.** It is still 6× the fresh cell's 0.7 %p.
 
-### 배치에서 걸릴 것
+### What will bite in deployment
 
-게이트는 SOH 로 스케줄하면 되고 R_volt 가 이미 그 자리에 있다. 차량은 신호등과
-주차에서 휴지가 잦으므로 갱신 기회가 부족하지는 않을 것이다. 다만 **키온 직후
-장시간 고부하 주행**에서는 갱신이 거의 없어 쿨롱 카운팅에만 의존하게 되고, 그
-경우는 이 데이터로 확인할 수 없다 — 드라이브사이클의 휴지 비율이 실차와 같다는
-보장이 없다.
+The gate can be scheduled on SOH, and R_volt is already scheduled there.
+Vehicles rest often at lights and when parked, so update opportunities
+should not be scarce. But **a long high-load drive straight after key-on**
+gets almost no updates and falls back on coulomb counting, and that case
+cannot be checked with this data — there is no guarantee that the rest
+fraction of these drive cycles matches a real vehicle.
 
 ---
 
-## SOC 최종 — 아홉 번의 시도와 세 줄의 답 (2026-08-23)
+## SOC, final — nine attempts and three lines of answer (2026-08-23)
 
-### 결과
+### Result
 
-| 단계 | 전체 %p | 최악 run | SOH<0.80 |
+| Step | overall %p | worst run | SOH<0.80 |
 |---|---:|---:|---:|
-| 원본 EKF | 3.80 | 9.22 | 5.47 |
-| + 결정론적 이력 + 트림 곱수 k | 2.96 | 7.30 | 4.25 |
-| + R_volt x4 + \|I\|<1 A 게이트 | 2.12 | 5.10 | 2.93 |
-| **+ 저전류 30 초 유지** | **1.59** | **3.76** | **2.19** |
+| original EKF | 3.80 | 9.22 | 5.47 |
+| + deterministic hysteresis + trim multiplier k | 2.96 | 7.30 | 4.25 |
+| + R_volt ×4 + \|I\|<1 A gate | 2.12 | 5.10 | 2.93 |
+| **+ 30 s low-current hold** | **1.59** | **3.76** | **2.19** |
 
-**전체 −58 %, 최악 −59 %, 노화 구간 −60 %.** 셀별로 BOOST 4.10 → 1.07(−74 %),
-CC 4.60 → 1.15(−75 %), BNP_1S 5.18 → 1.65(−68 %). 6 셀 48 run.
+**Overall −58 %, worst −59 %, aged range −60 %.** Per cell: BOOST
+4.10 → 1.07 (−74 %), CC 4.60 → 1.15 (−75 %), BNP_1S 5.18 → 1.65 (−68 %).
+6 cells, 48 runs.
 
-### 배치 형태 — 새 상태도 새 학습 파라미터도 없다
+### Deployment form — no new state, no new learned parameter
 
-    y = OCV + M·h + I·(k_f·R0) + v1 + v2      h 는 결정론적 전파
-    갱신: |I| <= 1 A 가 30 초 이상 유지된 뒤에만
-    R_volt: SOH 스케줄 x 4
+    y = OCV + M·h + I·(k_f·R0) + v1 + v2      h propagated deterministically
+    update: only after |I| ≤ 1 A has held for 30 s
+    R_volt: SOH schedule × 4
 
-k_f, k_s 는 SOP 팔의 트림이 이미 계산하는 값을 직전 특성화 기준으로 가져온다.
+k_f and k_s are the values the SOP arm's trim already computes, taken from
+the most recent characterisation.
 
-### 마지막이자 가장 큰 한 걸음이 나온 경위
+### How the last and largest step came about
 
-전류 게이트까지 왔을 때 잔여 오차를 **참 SOC 로** 직접 쟀다 — 추정 오차가 아니라
-모델 오차를 보기 위해서다. 게이트가 통과시키는 샘플에서 V_meas − (OCV + M·h) 가
-SOC 0.4~0.7 구간에서 **−115~−142 mV**, 양 끝에서는 −10~−18 mV 였다.
+At the current-gate stage the remaining error was measured **against true
+SOC** — to see model error rather than estimation error. On the samples the
+gate lets through, V_meas − (OCV + M·h) was **−115 to −142 mV** across SOC
+0.4–0.7 and −10 to −18 mV at the ends.
 
-pooled OCV 를 의심했지만 홀드아웃 셀의 **자기** OCV 와의 차이는 +7~+34 mV 뿐이라
-pooling 탓이 아니었다. 남은 것은 내 측정에서 빠진 RC 항이었고, 그것이 곧 게이트의
-결함이었다 — `|I| < 1 A` 샘플의 대부분은 진짜 휴지가 아니라 주행 중 잠깐의
-저전류이고, tau2 ~ 8 s 이므로 직전 부하의 RC 전압이 남아 있다. 방전이라 음수고,
-그래서 잔차가 일관되게 음수였다.
+Pooled OCV was the suspect, but the difference against the holdout cell's
+**own** OCV was only +7 to +34 mV, so pooling was not the cause. What
+remained was a missing RC term in the measurement, and that turned out to
+be the gate's own defect: most `|I| < 1 A` samples are not real rest but a
+brief low-current moment while driving, and with tau2 ≈ 8 s the RC voltage
+from the preceding load is still there. Discharge makes it negative, which
+is why the residual was consistently negative.
 
-**30 초는 tau2 의 3.75 배**로 RC 가 97.6 % 감쇠하는 지점이다. 더 길게 잡으면 전체는
-미세하게 좋아지지만(600 s 에서 1.54) **최악 run 이 도로 나빠진다**(4.17) — 갱신
-기회가 20 % 로 줄어 쿨롱 카운팅 의존이 커지기 때문이다.
+**30 s is 3.75 × tau2**, the point where the RC has decayed 97.6 %. Holding
+longer improves the overall figure slightly (1.54 at 600 s) but **makes the
+worst run worse again** (4.17) — update opportunities fall to 20 %, so
+reliance on coulomb counting grows.
 
-### 기각된 것들 — 그리고 그 패턴
+### What was rejected — and the pattern in it
 
-| 방향 | 시도 | 결과 |
+| Direction | Attempt | Outcome |
 |---|---|---|
-| 모델을 고친다 | 자기 OCV·R 치환 | run 마다 부호 갈림 |
-| | 트림 곱수 k | 5~7 % 만 |
-| | 휴지 중 이력 완화 | 단조 악화 (2.12 → 2.24) |
-| | M 상한 (100~0 mV) | 단조 악화 (2.12 → 2.60) |
-| | gamma 조정 (5~160) | 0.02 %p, 무감 |
-| | 오프셋 상태 b (휴지) | 붕괴 (신품 42 %p) |
-| | 오프셋 상태 b (부하) | 더 붕괴 (12~34 %p) |
-| **모델을 언제 믿을지 고른다** | R_volt 키우기 | **개선** |
-| | 저전류 게이트 | **개선** |
-| | 휴지 30 초 유지 | **최대 개선** |
+| fix the model | substitute own OCV / R | sign varies run to run |
+| | trim multiplier k | only 5–7 % |
+| | relax hysteresis at rest | monotonically worse (2.12 → 2.24) |
+| | cap M (100–0 mV) | monotonically worse (2.12 → 2.60) |
+| | tune gamma (5–160) | 0.02 %p, insensitive |
+| | offset state b (at rest) | collapse (fresh 42 %p) |
+| | offset state b (under load) | worse collapse (12–34 %p) |
+| **choose when to trust the model** | raise R_volt | **improvement** |
+| | low-current gate | **improvement** |
+| | 30 s rest hold | **largest improvement** |
 
-**모델을 고치거나 보강하려는 일곱 번은 모두 실패했고, 언제 믿을지 고르는 세 번은
-모두 성공했다.** 노화 셀에서 2RC + pooled 표의 잔차는 어떤 파라미터화로도
-표현되지 않는다 — §12.5 가 SOP 에서 "바닥 50 mV" 로 도달한 것과 같은 지점이다.
+**All seven attempts to fix or augment the model failed, and all three
+attempts to choose when to trust it succeeded.** In aged cells the residual
+of 2RC plus a pooled table is not expressible in any parameterisation —
+the same place §12.5 reached for SOP with its "50 mV floor."
 
-### M 은 이력이 아니지만 잘라내면 안 된다
+> **[Retracted — see `sop_hybrid_spec.md` §30.2]** The benchmark behind
+> these numbers is circular: the label is `SOC = 1 + Ah/3.0` and the filter
+> prediction is `soc + I·dt/3600/3.0`, the same equation, with the filter
+> started at the exact initial SOC. Every one of the three successes
+> reduces reliance on voltage, and that benchmark rewards that
+> unconditionally — its optimum is "never use voltage at all" (pure coulomb
+> counting scores 0.12 %p against the adopted filter's 1.51 %p). The
+> pattern above is an artefact of the benchmark, not a finding about
+> models. The de-circularised numbers are in §30.4.
 
-`uypydj_ocv.csv` 의 hyst_mV 는 SOH 0.66~0.75 에서 중앙 184 mV, 최대 666 mV 다.
-NCA 21700 의 실제 이력은 10~30 mV 이고, 이 데이터셋 자신의 휴지 전압도 OCV 와
-최대 28.5 mV 차이다. C/20 시험이라 IR 은 3 mV 이므로, 나머지는 **충·방전 곡선이
-서로 다른 SOC 축 위에 있는 것**이고 저 SOC 의 급한 기울기가 그것을 수백 mV 로
-증폭한다.
+### M is not hysteresis, but it must not be cut
 
-그럼에도 상한을 걸면 단조로 나빠진다. 드라이브사이클은 h ~ −1 이라 M·h ~ −M 이
-되고, `OCV_V` 가 충·방전 중간값이므로 **그 항은 OCV 를 방전 분기로 옮기는
-보정**으로 작동한다. 이름이 틀렸을 뿐 기능은 옳다. (`ecm_surface.py:151` 이 이미
-`/2000` 으로 반폭을 쓰므로 계수 버그도 아니다.)
+`hyst_mV` in `uypydj_ocv.csv` is a median of 184 mV and a maximum of
+666 mV at SOH 0.66–0.75. Real hysteresis in an NCA 21700 is 10–30 mV, and
+this dataset's own rest voltage differs from OCV by at most 28.5 mV. The
+test is C/20 so IR accounts for 3 mV; the rest is **the charge and
+discharge curves sitting on different SOC axes**, which the steep low-SOC
+slope amplifies to hundreds of millivolts.
 
-### 남은 것
+Capping it nonetheless makes things monotonically worse. A drive cycle has
+h ≈ −1, so M·h ≈ −M, and since `OCV_V` is the midpoint of charge and
+discharge, **that term acts as a correction moving OCV onto the discharge
+branch**. Only the name is wrong; the function is right.
+(`ecm_surface.py:151` already uses `/2000` for the half-width, so it is not
+a coefficient bug either.)
 
-노화 셀 2.19 %p 는 신품 1.0 %p 의 2.2 배로 남는다. 다만 §15.5 에서 이 SOC 를
-실제로 SOP 에 물렸을 때 잔차 회귀가 3.38 A 로 무너지지 않았으므로, **SOC 는 SOP
-체인의 병목이 아니다.**
+### What remains
 
+The aged-cell 2.19 %p stands at 2.2× the fresh cell's 1.0 %p. But §15.5
+showed that when this SOC is actually fed into SOP the residual regression
+holds at 3.38 A rather than collapsing, so **SOC is not the bottleneck of
+the SOP chain.**

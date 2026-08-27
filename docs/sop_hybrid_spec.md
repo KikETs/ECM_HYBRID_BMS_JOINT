@@ -1,250 +1,278 @@
-# ΔV-Trim — hybrid SOP 팔 설계 명세
+# ΔV-Trim — design specification for the hybrid SOP arm
 
-작성 2026-08-17. 설계 근거는 `findings.md`와 `ecm_kf_plan.md`에 있고, 이 문서는
-**무엇을 만들 것인가**와 **왜 그 형태인가**만 다룬다.
+Written 2026-08-17. The design basis lives in `findings.md` and
+`ecm_kf_plan.md`; this document covers only **what to build** and **why that
+shape**.
 
-이 명세는 다중 에이전트 설계 검토(4개 독립안 × 2방향 적대 검토 × 종합)의 산출물을
-압축한 것이다. **에이전트가 낸 측정값은 그대로 받지 않고 재현했다** — 재현 결과는
-§2에 원 주장과 나란히 적는다.
+This specification condenses the output of a multi-agent design review
+(4 independent proposals × adversarial review in 2 directions × synthesis).
+**Measurements the agents produced were not taken as given but reproduced** —
+the reproductions appear in §2 beside the original claims.
 
 ---
 
-## 0. 목표
+## 0. Goal
 
-기존 BMS를 AI로 갈아엎지 않는다. SOC는 KF, 보호·밸런싱·SOE는 기존 방식 그대로 두고,
-**SOH와 SOP에만** AI를 넣는다. 그 상태에서 묻는다:
+Do not replace an existing BMS with AI. Leave SOC to the Kalman filter and
+protection, balancing and SOE as they are, and put AI into **SOH and SOP
+only**. Then ask:
 
-> AI 가속기가 없는 기존급 자동차 BMS MCU(S32K344급: 160 MHz Cortex-M7, 4 MB Flash,
-> 512 KB RAM)에서, 기존 BMS 태스크가 전부 돌아가는 채로 SOH·SOP AI를 추가했을 때
-> 메모리와 실시간 데드라인을 만족하는가?
+> On an existing-class automotive BMS MCU with no AI accelerator
+> (S32K344 class: 160 MHz Cortex-M7, 4 MB flash, 512 KB RAM), with all the
+> existing BMS tasks still running, does adding SOH and SOP AI meet the
+> memory and real-time deadlines?
 
-그 아래 하위 질문이 이 문서의 대상이다:
+The sub-question below it is this document's subject:
 
-> SOP를 NN이 직접 계산해야 하는가, 아니면 AI가 ECM 파라미터만 갱신하고 SOP는
-> 기존 방식으로 푸는 것으로 충분한가?
+> Does the SOP have to be computed by a neural network directly, or is it
+> enough for AI to update only the ECM parameters and solve SOP the
+> conventional way?
 
-두 팔을 같은 축에서 비교한다.
+The two arms are compared on one axis.
 
-| 팔 | 구성 | Flash (int8) |
+| Arm | Composition | Flash (int8) |
 |---|---|---|
-| **Full AI** | LSTM 전압모델 + 이진탐색 | 66 KB (h64) ~ 1,033 KB (h256) |
-| **Hybrid (본 문서)** | 12개 스칼라 → 작은 NN → 2RC 배율 → 닫힌 해 | 약 26 KB (표 17.5 + 모델 2.1 + 코드) |
+| **Full AI** | LSTM voltage model + binary search | 66 KB (h64) – 1,033 KB (h256) |
+| **Hybrid (this document)** | 12 scalars → small NN → 2RC multipliers → closed form | about 26 KB (table 17.5 + model 2.1 + code) |
 
 ---
 
-## 1. 구조
+## 1. Structure
 
 ```
-   드라이브사이클 잔차 r = V − V̂(pooled 2RC)
+   drive-cycle residual r = V − V̂(pooled 2RC)
                 │
                 ▼
-   12개 지수가중 스칼라 (O(1), 링버퍼 없음)
+   12 exponentially-weighted scalars (O(1), no ring buffer)
                 │
                 ▼
-   MLP 12-16-16-2  (514 파라미터)   ← 선형 12→2 (26개)와 반드시 나란히 보고
+   MLP 12-16-16-2  (514 parameters)   ← always reported beside linear 12→2 (26)
                 │
                 ▼
-   k_f (R0·R1 공통 배율),  k_s (R2 배율)
+   k_f (shared R0·R1 multiplier),  k_s (R2 multiplier)
                 │
                 ▼
-   2RC 닫힌 해 → SOP → 표 기반 포락선으로 클램프
+   2RC closed form → SOP → clamped by a table-based envelope
 ```
 
-### 1.1 왜 배율이 두 개뿐인가
+### 1.1 Why only two multipliers
 
-**R0와 R1을 하나로 묶는다.** τ1 중앙값이 0.244초라 가장 짧은 SOP 지평(τ=2 s)에서도
-e1 = exp(−2/0.244) = 2.7e−4이다. 즉 R0와 R1이 `den`에 **같은 가중으로** 들어가고
-분리 불가능하다. `ecm_refine.py`에서 m1이 음수로 간 실패를 클리핑이 아니라
-**구조적으로 삭제**한 것이다.
+**R0 and R1 are tied together.** The median τ1 is 0.244 s, so even at the
+shortest SOP horizon (τ = 2 s), e1 = exp(−2/0.244) = 2.7e−4. R0 and R1 enter
+`den` with **the same weight** and cannot be separated. This deletes
+**structurally** — rather than by clipping — the failure in `ecm_refine.py`
+where m1 went negative.
 
-**τ, OCV, M, R0 단독은 출력이 아니다.** τ는 온도에 비단조라 이미 보정을 포기했고
-(`ecm_temp_factor.py`), OCV와 M은 아래 손실 설계에서 기울기에 등장하지 않으며,
-R0 단독은 1 Hz에서 식별 불가인 동시에 셀 간 1.06배 이내로 같다.
+**τ, OCV, M and R0 alone are not outputs.** τ is non-monotone in temperature
+and its correction was already abandoned (`ecm_temp_factor.py`); OCV and M do
+not appear in the gradient under the loss below; and R0 alone is
+unidentifiable at 1 Hz while being within 1.06× across cells anyway.
 
-### 1.2 왜 손실이 절대 전압이 아니라 펄스 ΔV인가
+### 1.2 Why the loss is pulse ΔV rather than absolute voltage
 
-pooled OCV의 leave-one-out 오차가 SOH 0.76~0.80에서 **45~72 mV**인데, 저항 보정이
-움직이는 폭은 29 A에서 약 40 mV다. 절대 전압으로 학습하면 **OCV 표면의 오차가
-저항 경로로 흘러들어간다.**
+The leave-one-out error of the pooled OCV is **45–72 mV** at SOH 0.76–0.80,
+while the resistance correction moves about 40 mV at 29 A. Training on
+absolute voltage lets **error in the OCV surface flow into the resistance
+path.**
 
-라벨은 실측 HPPC 펄스 ΔV를 쓴다. 모든 피팅 펄스가 600초 이상 쉰 뒤라 v1 = v2 = 0이고
-ΔV가 근사가 아니라 정확하다.
+Labels use measured HPPC pulse ΔV. Every fitted pulse follows at least 600 s
+of rest, so v1 = v2 = 0 and ΔV is exact rather than approximate.
 
 ```
 ΔV̂(τ) = I_p · [ k_f·(R0n + R1n·(1−e1)) + k_s·R2n·(1−e2) ]
 ```
 
-OCVn, Mn, h가 **식에 없다.** 이것이 안전성 논거 전부다.
+OCVn, Mn and h are **absent from the equation.** That is the entire safety
+argument.
 
-**`sop_reference.csv`는 손실에 절대 넣지 않는다.** 그건 ECM 파생이라 자기 가정에
-자기를 맞추는 꼴이다. 평가에만 쓴다.
+**`sop_reference.csv` never enters the loss.** It is ECM-derived, so using it
+would fit assumptions to themselves. Evaluation only.
 
 ---
 
-## 2. 설계가 딛고 있는 측정 — 재현 결과 포함
+## 2. The measurements the design rests on — with reproductions
 
-| 항목 | 에이전트 주장 | 내 재현 | 판정 |
+| Item | Agent's claim | My reproduction | Verdict |
 |---|---|---|---|
-| τ1 중앙 / p95 / <1 s 비율 | 0.244 s / 0.730 / 99.1 % | 0.244 / 0.730 / 99.1 % | **일치** |
-| τ2 중앙 / p95 | 7.95 s / 24.6 s | 7.95 / 24.59 | **일치** |
-| 전압제한 비율 (τ=2 s / 10 s) | 9.5 % / 25.2 % | 9.5 % / 25.2 % | **일치** |
-| corr(k_fast, k_slow) | −0.802 | −0.687 | 방향 일치, 크기 차이 |
-| den 오차 RMS (τ=2/10/30 s) | 14.1 / 10.4 / 5.9 % | 15.8 / 12.4 / 7.7 % | 방향 일치, 내 값이 큼 |
-| `sop()` 결함 (b) 낙관 편향 | 18.5 %, max +7.35 % | 12.8 %, max +11.0 % | **결함 실재** |
+| τ1 median / p95 / fraction < 1 s | 0.244 s / 0.730 / 99.1 % | 0.244 / 0.730 / 99.1 % | **match** |
+| τ2 median / p95 | 7.95 s / 24.6 s | 7.95 / 24.59 | **match** |
+| voltage-limited fraction (τ = 2 s / 10 s) | 9.5 % / 25.2 % | 9.5 % / 25.2 % | **match** |
+| corr(k_fast, k_slow) | −0.802 | −0.687 | same direction, different magnitude |
+| den error RMS (τ = 2/10/30 s) | 14.1 / 10.4 / 5.9 % | 15.8 / 12.4 / 7.7 % | same direction, mine larger |
+| `sop()` defect (b), optimistic bias | 18.5 %, max +7.35 % | 12.8 %, max +11.0 % | **defect real** |
 
-뒤 두 항목의 차이는 SOH 구간 나누기 방식 차이(재현 n=95 대 원 36점)로 보이며,
-**결론의 방향은 같다.** den 오차가 내 재현에서 더 크게 나온 것은 보정의 여지가
-더 크다는 뜻이므로 설계에 불리하지 않다.
+The difference in the last two appears to be how the SOH range was binned
+(reproduction n = 95 against the original 36 points), and **the direction of
+the conclusion is the same.** A larger den error in my reproduction means
+more room for correction, which does not work against the design.
 
-**여기서 나오는 두 가지 설계 판단:**
+**Two design judgements follow:**
 
-- k_f와 k_s가 **반대로** 움직이므로 "노화 축을 따라 미끄러지는 단일 오프셋(Δs)"은
-  틀린 좌표계다. 노화는 R1과 R2를 같은 방향으로 옮기고, 셀 개체차는 반대로 옮긴다.
-- den 오차가 τ가 길수록 작아지므로(15.8 → 7.7 %) **τ=2 s가 보정의 값어치가 가장
-  큰 지평**이다. 30 s는 가장 작다. 직관과 반대다.
+- k_f and k_s move **in opposite directions**, so "a single offset (Δs)
+  sliding along the aging axis" is the wrong coordinate system. Aging moves
+  R1 and R2 the same way; cell-to-cell variation moves them oppositely.
+- The den error shrinks as τ grows (15.8 → 7.7 %), so **τ = 2 s is the
+  horizon where correction is worth the most.** 30 s is worth the least.
+  That is the opposite of intuition.
 
 ---
 
-## 3. 입력 — 12개 스칼라, 링버퍼 없음
+## 3. Inputs — 12 scalars, no ring buffer
 
-모든 지수가중은 `α = 1 − exp(−dt/600)`으로 **실제 dt**를 쓴다. 그래서 캐시에
-시간축이 필요하다(§6 참조).
+Every exponential weight uses `α = 1 − exp(−dt/600)` with the **actual dt**,
+which is why the cache needs a time axis (§6).
 
-| # | 채널 | 근거 |
+| # | Channel | Basis |
 |---|---|---|
-| 1 | `dR_fast = EW{I·r}/EW{I·I}` | 핵심 채널. I² 가중이 고전류 샘플을 자동 선택 |
-| 2 | `dR_slow = EW{Ĩ·r}/EW{Ĩ·Ĩ}` (Ĩ는 τ=8 s 저역통과) | 느린 가지 분리 |
-| 3 | `log10 EW{I·I}` | 여기 에너지 — 입력이자 게이트 |
-| 4 | `I_hi = EW{max(0,\|I\|−10)²}` | 고율 여기. 게이트가 키로 쓰는 양 |
-| 5 | 최근 600 s 중 \|I\|<0.5 A 비율 | 영역 |
-| 6 | 최근 300 s 중 \|I\|>5 A 비율 | 영역 |
-| 7~9 | SOC, SOH, T | 상태 |
-| 10 | I_rms | 특징이 식별된 전류 수준 |
-| 11~12 | R_fast_nom, R_slow_nom | 신경망이 내부에서 dR/R을 만들 수 있도록 |
+| 1 | `dR_fast = EW{I·r}/EW{I·I}` | the core channel; I² weighting selects high-current samples automatically |
+| 2 | `dR_slow = EW{Ĩ·r}/EW{Ĩ·Ĩ}` (Ĩ low-passed at τ = 8 s) | separates the slow branch |
+| 3 | `log10 EW{I·I}` | excitation energy — both an input and a gate |
+| 4 | `I_hi = EW{max(0,\|I\|−10)²}` | high-rate excitation; the quantity the gate keys on |
+| 5 | fraction of the last 600 s with \|I\| < 0.5 A | regime |
+| 6 | fraction of the last 300 s with \|I\| > 5 A | regime |
+| 7–9 | SOC, SOH, T | state |
+| 10 | I_rms | the current level at which the feature was identified |
+| 11–12 | R_fast_nom, R_slow_nom | so the network can form dR/R internally |
 
-정규화는 **학습 셀에서만** 뽑은 (µ, σ), ±4σ 클립, 12쌍 float32로 동결.
+Normalisation uses (µ, σ) taken **from the training cells only**, clipped at
+±4σ, frozen as 12 float32 pairs.
 
-**삭제한 것:** 히스테리시스 배율 k_h와 OCV 오프셋(ΔV 손실에서 기울기가 0이라 추정할
-것이 없다), 200×3 원시 링버퍼, 24차원 Mahalanobis OOD 검출기(측정상 실험실 범위의
-1.5배에서 이미 무력해져 **목표 영역에서 정확히 팔을 꺼버린다**).
+**Deleted:** the hysteresis multiplier k_h and the OCV offset (their gradient
+is zero under the ΔV loss, so there is nothing to estimate); the 200×3 raw
+ring buffer; and the 24-dimensional Mahalanobis OOD detector (measured to be
+useless already at 1.5× the lab range, so it **removes the arm precisely in
+the target region**).
 
 ---
 
-## 4. 출력과 배포 가드
+## 4. Outputs and deployment guards
 
 ```
-k_f = exp(0.470·tanh(u_f)) ∈ [0.625, 1.600]     R0, R1 공통
+k_f = exp(0.470·tanh(u_f)) ∈ [0.625, 1.600]     shared by R0, R1
 k_s = exp(0.588·tanh(u_s)) ∈ [0.555, 1.800]     R2
 ```
 
-경계는 **측정된 LOCO 요구치**(rank 3에서 0.70~1.28, 0.74~1.54)에 여유를 더한 값이다.
-드라이브사이클 능선 적합의 산포로 잡으면 30점 중 24점이 경계에 붙는다.
+The bounds are the **measured LOCO requirement** (0.70–1.28 and 0.74–1.54 at
+rank 3) plus margin. Setting them from the spread of the drive-cycle ridge
+fit puts 24 of 30 points on the boundary.
 
-가드 사슬:
+Guard chain:
 
 ```
 g = clip((I_hi − lo)/(hi − lo), 0, 1)
-k ← 1 + g·(k_raw − 1)                    출력에 곱하는 게이트
-k ← k + (k_new − k)·dt/300               슬루 (전력 한계의 계단 변화는 주행성 결함)
-SOP_out = clip(SOP_trim, SOP_pess, SOP_opt)   포락선은 표만으로 계산
+k ← 1 + g·(k_raw − 1)                    gate multiplying the output
+k ← k + (k_new − k)·dt/300               slew (step changes in power limit are a driveability defect)
+SOP_out = clip(SOP_trim, SOP_pess, SOP_opt)   the envelope comes from the table alone
 ```
 
-게이트를 **입력 채널이 아니라 출력에 곱하는** 이유: 보정을 가르치는 학습 창은 전부
-고여기 창이라 손실이 축소를 보상하지 않는다. 출력에 걸면 손실이 우회할 수 없다.
+The gate multiplies **the output rather than an input channel** because every
+training window that teaches the correction is a high-excitation window, so
+the loss would not compensate for shrinkage. On the output the loss cannot
+route around it.
 
-포락선을 **표만으로** 만드는 이유: 신경망 자신의 출력을 읽는 가드는 독립 채널이 아니다.
+The envelope comes **from the table alone** because a guard that reads the
+network's own output is not an independent channel.
 
 ---
 
-## 5. Ablation 사다리
+## 5. The ablation ladder
 
-전 rung 동일 fold·시드·손실, leave-one-cell-out. 주 지표는 held-out 펄스 ΔV RMSE
-(τ ∈ {2,10} s, rank 2/3), 보조는 `limited_by`와 SOH 구간별 부호 있는 den % 오차.
+Identical folds, seeds and loss at every rung, leave-one-cell-out. The
+primary metric is held-out pulse ΔV RMSE (τ ∈ {2,10} s, rank 2/3); the
+secondary is `limited_by` and the signed den % error per SOH band.
 
-| rung | 격리하는 것 | 이 결과가 나오면 주장이 **기각** |
+| Rung | What it isolates | Result that **rejects** the claim |
 |---|---|---|
-| A0 | k=1 pooled 표 (기준선) | — (den RMS 15.8 % @2 s) |
-| A1 | 셀당 상수 k_f (오라클) | A1 ≈ A4면 NVM에 상수 하나 저장하고 끝. 신경망 불필요 |
-| A2 | 오라클 (k_f,k_s) SOH 구간별 | A2가 A0를 못 이기면 **출력 자체가 틀린 것** — 중단 |
-| A3 | 선형 12→2, 26개 | A3 ≈ A4면 **A3를 출하**하고 "AI는 26개 숫자"라고 보고 |
-| A4 | MLP 514개 (제안) | A0와 시드 잡음 안에 있으면 팔을 접고 17.5 KB 표만 |
-| **A5** | 잔차 채널 1~6 제거 | **주 falsifier.** A5 ≈ A4면 보정은 상태·나이의 함수이고 표로 흡수해야 함 |
-| A6 | **다른 셀**의 특징을 같은 (SOC,SOH,T)에 주입 | A6 ≈ A4면 LOCO 결과가 인공물 |
-| A7 | k_s = k_f 로 묶기 | 둘 다 살아남으면 출력 하나로 축소 |
-| A8 | k_h, ΔV_oc 재추가 | 둘 중 하나라도 **도움이 되면** ΔV 손실에 누출이 있는 것 |
-| A9 | held-out에 ±30 mV OCV 오프셋 주입 후 재학습 | k_f·k_s가 **0.000**이 아니면 오프셋이 저항 경로에 남아 있음 |
-| A10 | \|I\|≤3 A 창에서 식별 → rank 3 펄스에서 평가 | A0보다 나쁘면 rate 전이 실패 |
-| **A10b** | **부하 상태 \|I\|>20 A 슬라이스에서 평가** | §7의 최대 위험을 직접 시험 (신설) |
-| A11 | 배포 가드 전부 켬, 콜드스타트, NVM 없음 | 게이트·슬루 후 A1로 내려앉으면 A1을 출하 |
-| A12 | 오라클 SOH × {A0, A4} 2×2 | CNN-SOH 행에서 이득이 사라지면 체인으로 배포 불가 |
-| A13 | hybrid 대 SOP LSTM (h64, h256) | 연구 질문 본체 |
+| A0 | k=1 pooled table (baseline) | — (den RMS 15.8 % at 2 s) |
+| A1 | per-cell constant k_f (oracle) | A1 ≈ A4 means store one constant in NVM and stop; no network needed |
+| A2 | oracle (k_f, k_s) per SOH band | if A2 cannot beat A0, **the output itself is wrong** — stop |
+| A3 | linear 12→2, 26 parameters | A3 ≈ A4 means **ship A3** and report "the AI is 26 numbers" |
+| A4 | MLP, 514 parameters (proposal) | inside seed noise of A0 means fold the arm and ship the 17.5 KB table |
+| **A5** | remove residual channels 1–6 | **the primary falsifier.** A5 ≈ A4 means the correction is a function of state and age and belongs in the table |
+| A6 | inject **another cell's** features at the same (SOC, SOH, T) | A6 ≈ A4 means the LOCO result is an artefact |
+| A7 | tie k_s = k_f | if both survive, reduce to one output |
+| A8 | re-add k_h and ΔV_oc | if either **helps**, there is leakage in the ΔV loss |
+| A9 | inject ±30 mV OCV offset into the holdout and retrain | if k_f·k_s is not **0.000**, the offset is leaking into the resistance path |
+| A10 | identify in \|I\| ≤ 3 A windows, evaluate on rank 3 pulses | worse than A0 means rate transfer fails |
+| **A10b** | **evaluate on the loaded \|I\| > 20 A slice** | tests §7's largest risk directly (new) |
+| A11 | all deployment guards on, cold start, no NVM | if gate and slew drop it to A1, ship A1 |
+| A12 | oracle SOH × {A0, A4}, 2×2 | if the gain vanishes in the CNN-SOH row, it cannot be deployed as a chain |
+| A13 | hybrid against the SOP LSTM (h64, h256) | the research question itself |
 
 ---
 
-## 6. 선행 조건 — 이미 처리한 것
+## 6. Preconditions — already handled
 
-| 항목 | 상태 |
+| Item | Status |
 |---|---|
-| `sop_from_ekf.py` 결함 (a)(b) | **수정 완료.** 전압제한 67건 전부 정확히 2.5 V |
-| 캐시 시간축 `t` | **추가 완료** (float64, `analysis/cache_t`) |
-| 고정점 미수렴 | 400건 중 346건 — 이분법 교체 필요 (`converged` 플래그로 노출) |
+| `sop_from_ekf.py` defects (a) and (b) | **fixed.** All 67 voltage-limited cases land at exactly 2.5 V |
+| cache time axis `t` | **added** (float64, `analysis/cache_t`) |
+| fixed-point non-convergence | 346 of 400 — needs replacing with bisection (exposed via the `converged` flag) |
 
-수정 과정에서 **내가 새 불일치를 만들었다**: 최종 전류로 θ만 다시 뽑고 전류는 이전
-지점에서 푼 값을 써서 11/200이 어긋났다. 같은 지점에서 풀고 보고하도록 재수정했다.
+While fixing it **I introduced a new inconsistency**: θ was re-taken at the
+final current while the current came from the solve at the previous point,
+and 11 of 200 disagreed. Re-fixed to solve and report at the same point.
 
 ---
 
-## 7. 남은 위험 — 순위
+## 7. Remaining risks, ranked
 
-### 1. 식별 영역과 라벨 영역이 다르다
+### 1. The identification regime differs from the label regime
 
-특징은 쉬지 않는 드라이브사이클에서, 라벨은 600초 이상 쉰 뒤 펄스에서 온다.
-`ecm_refine.py`가 기록하듯 **이 영역 간극이** 네 가지 대체 피팅을 전부 실패시킨
-원인이고, 같은 배율을 드라이브사이클 잔차로 맞추면 35.3 mV 대 35.3 mV로 이득이
-정확히 0이었다.
+Features come from drive cycles that never rest; labels come from pulses
+after 600 s or more of rest. As `ecm_refine.py` records, **this regime gap**
+is what defeated all four alternative fits, and fitting the same multiplier
+to drive-cycle residuals gave exactly zero gain, 35.3 mV against 35.3 mV.
 
-> **설계 검토는 "완화책은 새 측정뿐"이라고 결론냈다. 그건 틀렸다.**
+> **The design review concluded "the only mitigation is new measurement."
+> That is wrong.**
 >
-> 새 데이터 수집이 불가능하므로 기존 데이터에 정말 없는지 다시 셌다. 드라이브사이클
-> 에서 **\|I\| > 20 A 샘플이 136,960개**(전체의 0.25 %) 있고, SOH 전 구간에 분포하며
-> 노화될수록 오히려 많아진다(SOH 0.65~0.80 구간에 51,354개).
+> Collecting new data is impossible, so the existing data was recounted to
+> see whether it really is absent. Drive cycles contain **136,960 samples
+> with \|I\| > 20 A** (0.25 % of the total), distributed across the whole SOH
+> range and growing with age (51,354 of them in SOH 0.65–0.80).
 >
 > | SOH | >15 A | >20 A | >25 A |
 > |---|---:|---:|---:|
-> | 0.95~1.00 | 68,113 | 18,243 | 781 |
-> | 0.85~0.90 | 77,559 | 24,373 | 2,418 |
-> | 0.65~0.80 | 126,804 | 51,354 | 10,449 |
+> | 0.95–1.00 | 68,113 | 18,243 | 781 |
+> | 0.85–0.90 | 77,559 | 24,373 | 2,418 |
+> | 0.65–0.80 | 126,804 | 51,354 | 10,449 |
 >
-> 그래서 rung **A10b**를 넣는다: 부하 상태 고전류 순간만 골라 전압 예측 오차를 본다.
-> SOP 라벨은 없지만 **SOP가 의존하는 물리량을 부하 상태에서 직접 잰다.** A10보다
-> 강하다 — A10은 평가가 여전히 휴지 후 펄스인데, A10b는 평가 자체가 부하 상태다.
+> So rung **A10b** is added: pick only the high-current instants under load
+> and look at the voltage prediction error. There is no SOP label, but it
+> **measures the physical quantity SOP depends on, under load.** That is
+> stronger than A10 — A10 still evaluates on post-rest pulses, whereas A10b
+> evaluates under load.
 >
-> 이것으로 위험이 사라지지는 않는다. 다만 "검증 불가"에서 "검증했고 결과는 이렇다"로
-> 바뀐다.
+> This does not remove the risk. It moves it from "cannot be validated" to
+> "validated, and here is the result."
 
-### 2. 여섯 셀 중 하나를 특징이 못 읽는다
+### 2. One of the six cells is unreadable by the features
 
-CC_CELL2의 `dR_fast`가 생애 전체에서 −1.3~+2.7 mΩ에 머무는데 요구 k_fast는 0.83~0.88로
-내려간다. 보고된 r = +0.885는 나머지 다섯이 만든 값이다. n = 6에서 한 fold가 침묵하면
-증거의 17 %다. **셀별로 보고하고 절대 뭉치지 않는다.** 둘이 실패하면 정직한 결론은
-A1(셀당 상수 + NVM)이다.
+CC_CELL2's `dR_fast` stays within −1.3 to +2.7 mΩ across its whole life while
+the required k_fast falls to 0.83–0.88. The reported r = +0.885 is made by
+the other five. With n = 6, one silent fold is 17 % of the evidence.
+**Report per cell and never pool.** If two fail, the honest conclusion is A1
+(per-cell constant plus NVM).
 
-### 3. 이득 구간이 좁고, 그 안쪽이 측정 공백이다
+### 3. The gain band is narrow, and its interior is a measurement gap
 
-보정의 den 지렛대는 τ=2 s에서 15.8 %인데, SOP가 den에 민감한(전압제한) 행은 τ=2 s에서
-**9.5 %**뿐이고 그 행들의 SOC 중앙값은 0.31 — `SOC_FLOOR_OK = 0.29` 바로 위다.
-즉 (보정이 중요) × (SOP가 민감)의 곱이 **저 SOC × 저 SOH × 전압제한** 쐐기에서
-정점인데, 거기가 노화 HPPC에 측정이 없는 영역이다. 거부 규칙이 답하지 않아야 하는
-구간과 겹친다.
+The correction's den leverage is 15.8 % at τ = 2 s, but the rows where SOP is
+sensitive to den (voltage-limited) are only **9.5 %** at τ = 2 s, and their
+median SOC is 0.31 — just above `SOC_FLOOR_OK = 0.29`. So the product of
+(correction matters) × (SOP is sensitive) peaks in the **low SOC × low SOH ×
+voltage-limited** wedge, which is exactly where aged HPPC has no measurement.
+It overlaps the region the rejection rule says not to answer in.
 
 ---
 
-## 7.5 실행 결과 — 2026-08-17
+## 7.5 Results — 2026-08-17
 
-구현이 끝나 A0/A3/A4/A5를 6셀 leave-one-cell-out으로 돌렸다. 지표는 held-out 셀의
-**측정된 HPPC 펄스 ΔV RMSE** (τ ∈ {2,10} s, rank 2/3), λ_p = 1e−3, 시드 3개 평균.
+The implementation is complete and A0/A3/A4/A5 were run leave-one-cell-out
+over six cells. The metric is the held-out cell's **measured HPPC pulse ΔV
+RMSE** (τ ∈ {2,10} s, rank 2/3), λ_p = 1e−3, mean of three seeds.
 
-| 홀드아웃 | A0 (보정 없음) | A3 (선형 26개) | A4 (MLP 514개) | A5 (잔차 채널 제거) |
+| Holdout | A0 (uncorrected) | A3 (linear, 26) | A4 (MLP, 514) | A5 (residual channels removed) |
 |---|---:|---:|---:|---:|
 | BOOST | 61.7 | 46.0 | **43.9** | 55.2 |
 | BOOST_NEGPULSE | 88.5 | **54.9** | 56.7 | 70.5 |
@@ -252,102 +280,119 @@ A1(셀당 상수 + NVM)이다.
 | BOOST_REST | 148.9 | **74.9** | 83.0 | 103.9 |
 | CC | 74.4 | 57.9 | **57.8** | 72.3 |
 | CC_CELL2 | 66.7 | 55.7 | **52.7** | 57.9 |
-| **평균** | 86.0 | **57.1 (+33.5 %)** | 58.3 (+32.2 %) | 71.2 (+17.1 %) |
+| **mean** | 86.0 | **57.1 (+33.5 %)** | 58.3 (+32.2 %) | 71.2 (+17.1 %) |
 
-### 결론 1 — 26개 파라미터가 514개를 이긴다
+### Conclusion 1 — 26 parameters beat 514
 
-선형 판독기가 MLP보다 낫다. 6셀 중 3셀에서 앞서고, 가장 어려운 fold(BOOST_REST,
-A0가 148.9 mV)에서 74.9 대 83.0으로 크게 앞선다. §5의 사전 규칙이 발동한다:
+The linear reader beats the MLP. It leads on 3 of 6 cells and leads by a wide
+margin on the hardest fold (BOOST_REST, where A0 is 148.9 mV): 74.9 against
+83.0. §5's pre-registered rule fires:
 
-> A3 ≈ A4면 A3를 출하하고 "hybrid 팔의 AI는 26개 숫자"라고 보고한다.
+> A3 ≈ A4 means ship A3 and report "the AI in the hybrid arm is 26 numbers."
 
-**26개 파라미터는 float32로 0.1 KB다.** Full AI 팔의 66~1,033 KB와 네 자릿수 차이다.
+**26 parameters is 0.1 KB in float32.** Four orders of magnitude from the
+Full AI arm's 66–1,033 KB.
 
-비선형이 값을 못 하는 이유는 구조적이다. k_f − 1 ≈ dR_fast / R_fast_nom이 거의
-정의상 성립하므로, 배울 것이 애초에 선형 사상이다. 488개 파라미터는 그 위에
-과적합할 여지만 더한다 — 셀당 라벨이 387~533개뿐인 데이터에서.
+The reason non-linearity does not pay is structural. k_f − 1 ≈ dR_fast /
+R_fast_nom holds almost by definition, so what there is to learn is a linear
+map to begin with. The other 488 parameters only add room to overfit — on
+data with 387–533 labels per cell.
 
-### 결론 2 — 주 falsifier 통과
+### Conclusion 2 — the primary falsifier passes
 
-A5는 잔차 채널 6개를 0으로 두고 상태·나이(SOC, SOH, T, I_rms, R_nom)만 남긴 것이다.
-기각 조건은 "A5 ≈ A4면 보정은 상태·나이의 함수일 뿐이므로 표에 흡수해야 한다"였다.
+A5 zeroes the six residual channels and keeps only state and age (SOC, SOH,
+T, I_rms, R_nom). The rejection condition was "A5 ≈ A4 means the correction
+is only a function of state and age and should be absorbed into the table."
 
-결과는 **+17.1 % 대 +32.2 %로 절반**이다. 최근 응답의 잔차가 SOH·SOC가 담지 못하는
-정보를 실제로 담는다.
+The result is **+17.1 % against +32.2 %, half.** The residual of the recent
+response really does carry information that SOH and SOC do not.
 
-독립 측정과 일치한다:
+It agrees with an independent measurement:
 
 | | |
 |---|---:|
-| corr(SOH, 요구 k_f) | **−0.012** |
-| corr(dR_fast, 요구 k_f) | **+0.940** |
+| corr(SOH, required k_f) | **−0.012** |
+| corr(dR_fast, required k_f) | **+0.940** |
 
-(에이전트 설계 검토가 각각 +0.078과 +0.885이라 보고했고, 내가 재현하니 더 강했다.)
+(The agent design review reported +0.078 and +0.885; my reproduction was
+stronger.)
 
-A5가 그래도 +17.1 %를 내는 것은 pooled 표 자체가 SOH에 대해 계통 오차를 갖기
-때문이며, 그만큼은 표 갱신으로 흡수 가능한 몫이다.
+That A5 still gives +17.1 % is because the pooled table itself carries
+systematic error against SOH, and that share can be absorbed by updating the
+table.
 
-### 아직 하지 않은 비교
+### A comparison not yet made
 
-**두 팔의 지표가 다르다.** Full AI는 드라이브사이클 전압 RMSE(6-fold 중 2개 완료:
-M2가 22.6, 24.9 mV), hybrid는 HPPC 펄스 ΔV RMSE(57.1 mV)다. 같은 축에서 재려면
-rung A13이 필요하고 그것은 6-fold 종료 후에 가능하다. **지금 두 숫자를 나란히 놓고
-비교하면 안 된다.**
+**The two arms use different metrics.** Full AI is drive-cycle voltage RMSE
+(2 of 6 folds complete: M2 at 22.6 and 24.9 mV); the hybrid is HPPC pulse ΔV
+RMSE (57.1 mV). Measuring them on one axis requires rung A13, which is
+possible only after the 6-fold finishes. **The two numbers must not be placed
+side by side right now.**
 
-### 남은 rung
+### Remaining rungs
 
-A1(셀당 상수), A2(오라클 상한), A6(다른 셀 특징 주입), A7(k_s 묶기),
-A8~A9(손실 무결성), A10/A10b(rate·부하 전이), A11(배포 가드), A12(SOH 전파),
-A13(hybrid 대 LSTM).
+A1 (per-cell constant), A2 (oracle upper bound), A6 (foreign-cell feature
+injection), A7 (tying k_s), A8–A9 (loss integrity), A10/A10b (rate and load
+transfer), A11 (deployment guards), A12 (SOH propagation), A13 (hybrid
+against LSTM).
 
 ---
 
-## 7.6 Rung A13 — 두 팔을 한 축에서 비교하기
+## 7.6 Rung A13 — comparing the two arms on one axis
 
-`analysis/eval_a13.py`, `analysis/a13_psweep.py`. **결론: 6-fold leave-one-cell-out
-에서 26 파라미터 하이브리드가 1.08 M 파라미터 LSTM 을 24 % 이긴다.** 그 결론에
-도달하기까지 두 번의 잘못된 비교를 거쳤고, 왜 잘못이었는지가 결과의 일부다.
+`analysis/eval_a13.py`, `analysis/a13_psweep.py`. **Conclusion: over a 6-fold
+leave-one-cell-out, the 26-parameter hybrid beats the 1.08 M-parameter LSTM
+by 24 %.** Two wrong comparisons were made on the way there, and why they
+were wrong is part of the result.
 
-### 7.6.1 준비는 성립했다
+### 7.6.1 The setup holds
 
-레퍼런스 LSTM 을 하이브리드가 평가한 바로 그 펄스에 세웠다.
+The reference LSTM was placed on exactly the pulses the hybrid was evaluated
+on.
 
-- 펄스 인덱스를 캐시에서 재현해 `uypydj_hppc_resistance.csv` 와 대조 — 오차
-  0.24~7.9 µV, float32 저장 한계. (첫 시도는 키에 방향을 빼먹어 방전 라벨이
-  충전 샘플과 짝지어졌고 1.7 V 오차로 드러났다.)
-- 두 팔 모두 **살아남은 동일 집합에서 재채점**했다. A0/A3/A4 는 §7.5 와 완전히
-  동일하게 재현(85.97 / 57.11 / 58.26 mV) — 결정론적이다.
-- 문맥 창은 표적에서 200 샘플 앞에서 끝난다. HPPC 는 10 Hz 라 τ=10 s 가 100 샘플
-  (실측 중앙 100, 최대 101, 28,855 개 펄스)이므로 펄스 시작 99 샘플 앞에서 멈춘다.
-  20 Hz 보다 빠른 기록이면 이 설계는 깨진다.
+- Pulse indices were reproduced from the cache and checked against
+  `uypydj_hppc_resistance.csv` — error 0.24–7.9 µV, the float32 storage
+  limit. (The first attempt left direction out of the key, so discharge
+  labels were paired with charge samples and it showed up as a 1.7 V error.)
+- Both arms were **rescored on the identical surviving set.** A0/A3/A4
+  reproduce §7.5 exactly (85.97 / 57.11 / 58.26 mV) — it is deterministic.
+- The context window ends 200 samples before the target. HPPC is 10 Hz, so
+  τ = 10 s is 100 samples (measured median 100, max 101, over 28,855 pulses),
+  which stops 99 samples before the pulse starts. A logging rate faster than
+  20 Hz breaks this design.
 
-### 7.6.2 첫 번째 잘못된 비교 — 통화가 다르다
+### 7.6.2 The first wrong comparison — different currencies
 
-기록된 P 를 그대로 준 결과는 M1 32.6 mV, 하이브리드 A3 44.8 mV 로 LSTM 의 압승처럼
-보인다. **이 표로 순위를 주장하면 안 된다.** LSTM 의 입력 채널 P 는 기록상 V·I 이고
-하이브리드의 입력은 I 뿐이다. 같은 사건을 각자의 통화로 받았지만 통화의 정보량이
-다르다 — 하이브리드에게 P 를 주면 V = P/I 로 오차 0 을 낼 수 있다.
+Given the recorded P directly, M1 gives 32.6 mV against the hybrid A3's
+44.8 mV, which looks like a decisive LSTM win. **That table must not be used
+to claim a ranking.** The LSTM's P channel is V·I as recorded, while the
+hybrid's input is current only. They receive the same event in their own
+currencies, and the currencies carry different amounts of information — give
+the hybrid P and it can produce zero error via V = P/I.
 
-### 7.6.3 두 번째 잘못된 비교 — 정보를 빼면 분포 밖으로 나간다
+### 7.6.3 The second wrong comparison — removing information moves you out of distribution
 
-P 를 자기일관으로 푸는 질의(`isolve`: V ← f(P = V·I), 40 회 반복, 중앙 이동
-0.00 mV 로 수렴)에서 M1 은 32.6 → 162.6 mV 로 5 배 무너지고 M2 는 70.8 → 78.3 mV 로
-거의 그대로다. 이것을 "M1 이 P 에서 V 를 읽고 있었다" 로 읽고 싶어지지만,
-**`isolve1` 이 그 해석을 기각한다.** 표적 샘플의 P 하나만 자기일관으로 바꾸면 M1 은
-30.7 mV(0.94 배, 오히려 개선)다. 모델은 자기 표적을 읽지 않는다. `isolve` 가
-무너뜨린 것은 펄스 구간 ~100 개 샘플을 상수 V 로 뭉갠 궤적의 모양이고, 그 입력은
-실제 셀이 만들 수 없는 것이다. 162.6 mV 는 정보 부족과 분포 밖 민감도가 섞인
-값이며 **상한이지 추정치가 아니다.**
+Under a query that solves P self-consistently (`isolve`: V ← f(P = V·I), 40
+iterations, converged with a median move of 0.00 mV), M1 collapses 5×,
+32.6 → 162.6 mV, while M2 barely moves, 70.8 → 78.3 mV. It is tempting to
+read that as "M1 was reading V out of P," but **`isolve1` rejects that
+reading.** Making only the target sample's P self-consistent gives M1
+30.7 mV (0.94×, an improvement). The model does not read its own target.
+What `isolve` destroyed is the shape of a trajectory whose ~100 pulse samples
+were flattened to a constant V, and no real cell can produce that input. The
+162.6 mV mixes missing information with out-of-distribution sensitivity and
+is **an upper bound, not an estimate.**
 
-### 7.6.4 해결 — 입력 통화를 맞추고 재학습 (A13c)
+### 7.6.4 The fix — match the input currency and retrain (A13c)
 
-평가 시점에 정보를 빼앗는 대신 **애초에 P 대신 I 를 입력 채널로 학습**했다
-(`train_soh.py --feats SOC,T,I`). 이제 두 팔이 모두 전류를 받고 아무도 전압을
-받지 않는다. 나머지 초매개변수는 §7.6 의 6-fold 와 동일하다.
+Rather than removing information at evaluation time, the model was **trained
+with I instead of P as the input channel** from the start
+(`train_soh.py --feats SOC,T,I`). Now both arms receive current and neither
+receives voltage. Every other hyperparameter matches §7.6's 6-fold.
 
-먼저 확인할 것은 통화를 바꾼 대가다. 드라이브사이클 전압 RMSE:
+First, the cost of switching currency. Drive-cycle voltage RMSE:
 
-| 홀드아웃 | M1 (P) | M1 (I) | M2 (P) | M2 (I) |
+| Holdout | M1 (P) | M1 (I) | M2 (P) | M2 (I) |
 |---|---:|---:|---:|---:|
 | BOOST | 23.32 | 25.90 | 22.41 | 19.46 |
 | BOOST_NEGPULSE | 36.21 | 38.53 | 20.98 | 19.16 |
@@ -355,39 +400,42 @@ P 를 자기일관으로 푸는 질의(`isolve`: V ← f(P = V·I), 40 회 반�
 | BOOST_REST | 52.45 | 51.62 | 24.43 | 25.90 |
 | CC | 33.92 | 34.93 | 24.92 | 24.14 |
 | CC_CELL2 | 25.37 | 24.86 | 22.59 | 19.55 |
-| **평균** | **33.15** | **22.87** | **34.36** | **21.75** |
-| 표준편차 | 9.75 | 1.38 | 9.07 | 2.58 |
+| **mean** | **33.15** | **22.87** | **34.36** | **21.75** |
+| standard deviation | 9.75 | 1.38 | 9.07 | 2.58 |
 
-**M2 는 P 를 빼앗아도 오히려 좋아진다** (22.87 → 21.75 mV). P = V·I 는 전압 예측에
-필요하지 않았다. M1 은 반대로 조금 나빠져(33.15 → 34.36) §7.6.3 의 관찰 — M1 이
-P 채널에 더 기댄다 — 과 방향이 맞는다. 즉 이 비교는 LSTM 을 불구로 만들고 이긴
-것이 아니다.
+**M2 improves when P is taken away** (22.87 → 21.75 mV). P = V·I was not
+needed to predict voltage. M1 gets slightly worse (33.15 → 34.36), which
+matches the observation in §7.6.3 that M1 leans harder on the P channel. So
+this comparison did not win by crippling the LSTM.
 
-### 7.6.5 A13 6-fold — 측정 펄스 dV RMSE (mV)
+### 7.6.5 A13 6-fold — measured pulse dV RMSE (mV)
 
-| 방법 | BOOST | BOOST_NEGPULSE | BOOST_NEGPULSE_1S | BOOST_REST | CC | CC_CELL2 | 평균 |
+| Method | BOOST | BOOST_NEGPULSE | BOOST_NEGPULSE_1S | BOOST_REST | CC | CC_CELL2 | mean |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| **하이브리드 선형 (26)** | 32.7 | 38.8 | 46.9 | 62.6 | 41.5 | 46.4 | **44.8** |
-| 하이브리드 MLP (514) | 32.7 | 34.0 | 45.8 | 71.8 | 42.5 | 45.5 | **45.4** |
-| Full AI M2, I 입력 (1.08 M) | 48.7 | 51.7 | 51.3 | 99.6 | 60.4 | 40.3 | **58.7** |
-| Full AI M1, I 입력 (1.08 M) | 64.9 | 74.6 | 68.5 | 134.6 | 76.3 | 45.0 | **77.3** |
-| 보정 없는 pooled ECM | 60.9 | 88.5 | 76.0 | 148.9 | 73.1 | 66.7 | **85.7** |
+| **hybrid linear (26)** | 32.7 | 38.8 | 46.9 | 62.6 | 41.5 | 46.4 | **44.8** |
+| hybrid MLP (514) | 32.7 | 34.0 | 45.8 | 71.8 | 42.5 | 45.5 | **45.4** |
+| Full AI M2, I input (1.08 M) | 48.7 | 51.7 | 51.3 | 99.6 | 60.4 | 40.3 | **58.7** |
+| Full AI M1, I input (1.08 M) | 64.9 | 74.6 | 68.5 | 134.6 | 76.3 | 45.0 | **77.3** |
+| uncorrected pooled ECM | 60.9 | 88.5 | 76.0 | 148.9 | 73.1 | 66.7 | **85.7** |
 
-**여섯 셀 중 다섯에서 하이브리드가 이긴다.** 지는 것은 CC_CELL2 하나뿐이고,
-최악 셀 BOOST_REST 를 제외해도 하이브리드 41.3 대 M2 50.5 로 방향이 유지된다.
-파일럿 2 셀에서 본 22 % 우위가 6 셀에서 24 % 로 남았다.
+**The hybrid wins on five of six cells.** The one loss is CC_CELL2, and
+excluding the worst cell (BOOST_REST) keeps the direction: hybrid 41.3
+against M2's 50.5. The 22 % advantage seen in the 2-cell pilot holds at 24 %
+over six.
 
-**갈리는 방식이 일관된다.** 하이브리드의 최악은 62.6 mV, M2 의 최악은 99.6 mV 다.
-물리 모델이 바닥을 받치면 처음 보는 셀에서도 평균 대비 1.4 배 이상 나빠지지
-않는데, 순수 AI 는 2.5 배까지 벌어진다. BMS 는 평균이 아니라 최악을 보장해야
-하므로 이 대비가 배치 논지의 핵심이다.
+**The way they diverge is consistent.** The hybrid's worst is 62.6 mV, M2's
+is 99.6 mV. With a physical model underneath, an unseen cell is never worse
+than 1.4× the mean, while pure AI stretches to 2.5×. A BMS has to guarantee
+the worst case rather than the average, so that contrast is the core of the
+deployment argument.
 
-### 7.6.6 전류 민감도 — 부호는 완전하고 크기는 여전히 둔감하다
+### 7.6.6 Current sensitivity — the sign is perfect and the magnitude is still blunt
 
-마지막 샘플의 전류를 s 배 하고 응답 기울기를 본다. 0.1 s 섭동에 RC 가지는 반응하지
-못하므로(측정 τ1 중앙 0.244 s) 물리적 기대는 **I·R0** 다.
+Scale the last sample's current by s and look at the response slope. RC
+branches cannot respond to a 0.1 s perturbation (measured median τ1 0.244 s),
+so the physical expectation is **I·R0**.
 
-| 홀드아웃 | M1 부호 음수 | M1/기대 | M2 부호 음수 | M2/기대 |
+| Holdout | M1 sign negative | M1/expected | M2 sign negative | M2/expected |
 |---|---:|---:|---:|---:|
 | BOOST | 100 % | 0.68 | 100 % | 0.68 |
 | BOOST_NEGPULSE | 100 % | 0.71 | 100 % | 0.65 |
@@ -395,224 +443,254 @@ P 채널에 더 기댄다 — 과 방향이 맞는다. 즉 이 비교는 LSTM �
 | BOOST_REST | 100 % | 0.65 | 100 % | 0.52 |
 | CC | 100 % | 0.65 | 100 % | 0.64 |
 | CC_CELL2 | 100 % | 0.64 | 100 % | 0.62 |
-| **평균** | **100 %** | **0.67** | **100 %** | **0.62** |
+| **mean** | **100 %** | **0.67** | **100 %** | **0.62** |
 
-**12 개 조합 전부 100 % 의 펄스에서 부호가 옳다.** 에코가 구조적으로 불가능한
-I 입력에서 나온 값이라 해석에 군더더기가 없다.
+**All 12 combinations have the right sign on 100 % of pulses.** It comes from
+an I input where an echo is structurally impossible, so the reading needs no
+qualification.
 
-다만 물리 기대의 0.62~0.67 배로 **33~38 % 둔감하다.** 이분 탐색을 걸면 전압
-한계까지 필요한 전류를 과대평가하고, 따라서 **가용 전력을 낙관적으로 답한다.**
-이것은 P 입력·I 입력, M1·M2, 여섯 셀 전부에서 재현되었다 — 이 프로젝트에서 가장
-견고하게 확인된 결함이며, SOP 를 와트로 검증할 때 가장 먼저 확인해야 할 항목이다.
+But at 0.62–0.67 × the physical expectation it is **33–38 % blunt.** Run a
+binary search on it and it overstates the current needed to reach the voltage
+limit, and therefore **answers optimistically about available power.** This
+reproduced with P input and I input, in M1 and M2, and across all six cells —
+the most robustly confirmed defect in this project, and the first thing to
+check when validating SOP in watts.
 
-### 7.6.7 이 절이 주장하지 않는 것
+### 7.6.7 What this section does not claim
 
-- 지표는 **펄스 dV** 이지 SOP 가 아니다. (암페어 검증은 이후 §11 에서 수행했다 —
-  방전 4.94 A, 충전 2.05 A. 아래 두 항목은 그 작업 전의 서술이다.)
-- 하이브리드의 nominal 은 5 개 학습 셀에서 pooled 된 ECM 이다. 셀이 여섯 개뿐이고
-  프로토콜당 하나씩이므로, 우위가 셀 수에 따라 어떻게 변하는지는 알 수 없다.
-- 둔감함(0.62~0.67)의 원인은 규명하지 않았다. 학습 데이터의 전류 분포가 SOP 영역을
-  거의 덮지 않는 것이 유력한 가설이지만 확인하지 않았다.
+- The metric is **pulse dV**, not SOP. (The ampere validation was done later
+  in §11 — discharge 4.94 A, charge 2.05 A. The two items below were written
+  before that work.)
+- The hybrid's nominal is an ECM pooled over five training cells. With only
+  six cells, one per protocol, how the advantage scales with cell count is
+  unknown.
+- The cause of the bluntness (0.62–0.67) was not established. That the
+  training data's current distribution barely covers the SOP region is the
+  leading hypothesis, unconfirmed.
 
 ---
 
-## 7.7 스파이크 조사 — 41 개 사건을 전부 열거하고, 가드를 기각한 이유
+## 7.7 Spike investigation — enumerating all 41 events, and why the guard was rejected
 
-궤적 그림(`analysis/fig_a13_traj_value.png`, `..._error.png`)에서 하이브리드가
-간헐적으로 튀는 것이 보인다. 채택 전에 그것이 무엇인지 규명했다.
+The trajectory plots (`analysis/fig_a13_traj_value.png`, `..._error.png`)
+show the hybrid jumping intermittently. Before adopting it, what those jumps
+are was established.
 
-**정의는 오차가 아니라 곱수 위에서 잡았다.** k_f, k_s 는 모델이 실제로 내놓는
-값이고, 37 사이클 떨어진 두 특성화 사이에 셀 저항이 15 % 움직일 수는 없다.
-인접 |Δlog k_f| 의 셀별 중앙값은 0.013~0.029 이고, 임계 0.06 을 넘는 사건이
-여섯 셀 합쳐 **41 개**다.
+**The definition is on the multipliers, not on error.** k_f and k_s are what
+the model actually emits, and a cell's resistance cannot move 15 % between
+two characterisations 37 cycles apart. The per-cell median of adjacent
+|Δlog k_f| is 0.013–0.029, and events above a 0.06 threshold number **41**
+across all six cells.
 
-### 7.7.1 excitation 게이트는 무력하다
+### 7.7.1 The excitation gate is powerless
 
-`|Δlog k|` 와 exc 백분위의 **상관 r = +0.029**. 분포도 고르다 — 하위 20 % 에 7 개,
-중간에 18 개, 상위 20 % 에 16 개. CC_CELL2 의 마지막 점(exc 98 %)만 보면
-"여기가 과할 때 튄다" 로 읽히지만 41 개 전체에서는 성립하지 않고, BOOST 의
-cycle 150 과 CC 의 862·975 는 exc 2 % 에서 튄다. `TrimFeatures.excitation()` 은
-저정보 창을 거르는 용도이지 이 사건을 예측하지 못한다.
+Correlation between `|Δlog k|` and the excitation percentile is **r = +0.029**.
+The distribution is flat too — 7 events in the bottom 20 %, 18 in the middle,
+16 in the top 20 %. Looking only at CC_CELL2's last point (excitation 98 %)
+reads as "it jumps when excitation is excessive," but that does not hold over
+all 41, and BOOST's cycle 150 and CC's 862 and 975 jump at 2 % excitation.
+`TrimFeatures.excitation()` is there to filter low-information windows; it
+does not predict these events.
 
-### 7.7.2 절반은 스파이크가 아니라 진동이다
+### 7.7.2 Half of them are oscillation rather than spikes
 
-상향 20 개 / 하향 21 개로 균형이 맞고, 인접한 쌍이 반복 등장한다 — 올라갔다
-바로 내려온다 (BOOST 112/150, BNP 937/975, BNP_1S 1168/1206, CC 1387/1462,
-CC_CELL2 1056/1093 등). 추정기가 한 값 주위에서 흔들리는 것이지 한 방향으로
-어긋나는 것이 아니다.
+20 up and 21 down, balanced, with adjacent pairs recurring — up then straight
+back down (BOOST 112/150, BNP 937/975, BNP_1S 1168/1206, CC 1387/1462,
+CC_CELL2 1056/1093 and others). The estimator is wobbling about a value
+rather than drifting one way.
 
-**cycle 937 과 975 는 세 셀(BOOST, BNP, CC)에서 동시에 튄다.** 셀별 우연이
-아니라 그 시점의 시험 스케줄에 공통된 무언가가 있다는 뜻이다. 원인은 규명하지
-않았다.
+**Cycles 937 and 975 jump simultaneously in three cells (BOOST, BNP, CC).**
+That is not per-cell coincidence but something common to the test schedule at
+that time. The cause was not established.
 
-### 7.7.3 방향은 대체로 안전하지만 셀마다 다르다
+### 7.7.3 The direction is mostly safe but differs by cell
 
-보수(강하 과대) 26 개 / 낙관(과소) 15 개. 다만 **BOOST_REST 는 6/6 전부 보수**인
-반면 **BOOST_NEGPULSE_1S 는 5/7 이 낙관**이고 −105, −93 mV 가 섞여 있다. 낙관
-방향은 가용 전력을 실제보다 크게 부르므로 SOP 에서 위험한 쪽이다.
+26 conservative (overstating the drop) against 15 optimistic (understating).
+But **BOOST_REST is 6/6 conservative** while **BOOST_NEGPULSE_1S is 5/7
+optimistic**, including −105 and −93 mV. The optimistic direction calls
+available power higher than it is, which is the dangerous side for SOP.
 
-### 7.7.4 마지막 특성화에서 셋
+### 7.7.4 Three at the last characterisation
 
-BNP(1660, +78 mV), BOOST_REST(1350, +93), CC_CELL2(1806, +105). **셋 다 상향
-점프이고 셋 다 보수 방향이다.** 수명 말기에 저항이 실제로 급등하기 시작한
-신호일 수도, 추정기 노이즈일 수도 있다. 다음 측정이 없으므로 이 데이터로는
-구분할 수 없고, 셋이 같은 방향이라는 점은 우연 치고 좁다 — 가드로 눌러버리면
-진짜 신호였을 경우 그것을 버리게 된다.
+BNP (1660, +78 mV), BOOST_REST (1350, +93), CC_CELL2 (1806, +105). **All
+three are upward jumps and all three are conservative.** They could be the
+signal of resistance genuinely surging at end of life, or estimator noise.
+There is no next measurement, so this data cannot separate them, and three in
+the same direction is a narrow coincidence — suppressing them with a guard
+would throw the signal away if it was real.
 
-### 7.7.5 가드 실험과 그 기각
+### 7.7.5 The guard experiment and its rejection
 
-2-스트라이크 거부(한 번 튀면 보류, 다음 갱신이 같은 방향이면 전부 수용)를
-임계와 보류 정책에 대해 쓸었다. 전체 펄스 집합, 6 셀.
+A two-strike rejection (hold on one jump, accept everything if the next
+update goes the same way) was swept over thresholds and hold policies. Full
+pulse set, six cells.
 
-| 설정 | 평균 | 최악 셀 |
+| Setting | mean | worst cell |
 |---|---:|---:|
-| **가드 없음** | 45.4 | 62.6 |
-| thr 0.06, 직전값 유지 | **44.4** | **60.5** |
-| thr 0.15, 보수값 유지 | 44.8 | 62.6 |
-| thr 0.20, 직전값 유지 | 44.9 | 62.6 |
-| 중앙값 필터(3) | 44.2 | 64.3 |
+| **no guard** | 45.4 | 62.6 |
+| thr 0.06, hold previous | **44.4** | **60.5** |
+| thr 0.15, hold conservative | 44.8 | 62.6 |
+| thr 0.20, hold previous | 44.9 | 62.6 |
+| median filter (3) | 44.2 | 64.3 |
 
-**최선이 2.2 % 개선이다.** 41 개를 전부 잡아도 그만큼이다.
+**The best is a 2.2 % improvement.** Catching all 41 buys that much.
 
-세 가지가 드러났다.
+Three things emerged.
 
-1. **보수적 유지가 기대와 반대로 간다.** CC 는 45.2 → 41.6 으로 크게 좋아지는데
-   BOOST_REST 는 62.6 → 64.7 로 나빠진다. 이 셀은 스파이크가 전부 보수 방향이라,
-   보수 쪽으로 붙잡으면 이미 과대평가하던 것을 더 과대평가한다. 안전 규칙이
-   정확도를 깎는 전형이다.
-2. **임계를 올려도 이득이 없다.** 0.15~0.20 은 극단 6 개만 잡는데 평균이 0.06
-   설정보다 나쁘다. 3~6 배짜리 진동이 개별로는 작아도 수가 많다.
-3. **어떤 조합도 BOOST_REST 를 60.5 mV 아래로 내리지 못한다.** 이 셀의 문제는
-   스파이크가 아니라 §7.6.5 의 지속 편향(800 사이클 이후 +68.6 mV)이고, 가드는
-   편향을 건드리지 않는다.
+1. **Holding conservatively goes the opposite way from expectation.** CC
+   improves sharply, 45.2 → 41.6, while BOOST_REST worsens, 62.6 → 64.7. All
+   of that cell's spikes are conservative, so holding conservative
+   over-overestimates what was already overestimated. A textbook case of a
+   safety rule costing accuracy.
+2. **Raising the threshold buys nothing.** 0.15–0.20 catches only the six
+   extremes and the mean is worse than at 0.06. The 3–6× oscillations are
+   individually small but numerous.
+3. **No combination gets BOOST_REST below 60.5 mV.** That cell's problem is
+   not spikes but the sustained bias of §7.6.5 (+68.6 mV after cycle 800),
+   and a guard does not touch bias.
 
-중앙값 필터는 평균을 가장 많이 개선하지만 **최악 셀을 악화시킨다** — BOOST_REST 는
-노화가 빨라 k 가 실제로 움직이는데 인과 필터가 지연되기 때문이다. 평균이 좋아지고
-최악이 나빠지는 것은 BMS 에 틀린 거래다.
+The median filter improves the mean most but **worsens the worst cell** —
+BOOST_REST ages fast, so its k really is moving, and a causal filter lags.
+Improving the mean while worsening the worst is the wrong trade for a BMS.
 
-**결론: 가드 없이 채택한다.** 넣는다면 thr 0.06 + 직전값 유지가 평균과 최악을
-동시에 개선하는 유일한 설정이고, 이득은 2.2 % 라고 적는다. 어느 쪽이든 A13 의
-순위는 바뀌지 않는다 (44.4 대 M2 58.7).
+**Conclusion: adopt without a guard.** If one is added, thr 0.06 with
+hold-previous is the only setting that improves the mean and the worst
+together, and the gain is 2.2 %. Either way A13's ranking is unchanged
+(44.4 against M2's 58.7).
 
 ---
 
-## 8. MCU 예산 (S32K344급)
+## 8. MCU budget (S32K344 class)
 
-| 구성 | Flash | RAM |
+| Component | Flash | RAM |
 |---|---:|---:|
-| ECM 표 (rate축 4단, in-hull 비트마스크 포함) | 17.5 KB | DTCM 미러 권장 |
-| Trim MLP 514개 float32 | 2.1 KB | 활성 184 B |
-| 특징 전단 (12 EW + nominal 2RC + h) | — | 152 B |
-| SOH CNN int8 (공유) | 10.7 KB | 약 2.0 KB |
-| 코드 (.text 추정, map 파일로 대체할 것) | ~6 KB | — |
-| **합계** | **약 36 KB** | **약 3 KB + 스택** |
+| ECM table (4 rate steps, including the in-hull bitmask) | 17.5 KB | DTCM mirror recommended |
+| Trim MLP, 514 float32 | 2.1 KB | 184 B activations |
+| Feature front end (12 EW + nominal 2RC + h) | — | 152 B |
+| SOH CNN int8 (shared) | 10.7 KB | about 2.0 KB |
+| Code (.text estimate, to be replaced by the map file) | ~6 KB | — |
+| **total** | **about 36 KB** | **about 3 KB + stack** |
 
-계산: 1 Hz 특징 갱신 약 5 µs, 10 Hz SOP 12회 해 약 68 µs → **CPU 0.07 %**.
+Compute: about 5 µs for the 1 Hz feature update, about 68 µs for 12 SOP
+solves at 10 Hz → **0.07 % CPU**.
 
-**int8이 아니라 float32를 쓴다** — 출력이 2개뿐인 헤드에서 int8은 k_f에 5.2~11.4 mV/LSB를
-넣는데 이는 정확도 예산 전체보다 크다. 4 MB 중 1.5 KB를 아끼자고 할 일이 아니다.
+**float32 rather than int8** — with a head of only two outputs, int8 puts
+5.2–11.4 mV/LSB into k_f, which is larger than the entire accuracy budget.
+Not worth doing to save 1.5 KB out of 4 MB.
 
-**주의:** 위 Flash는 데이터 전용이다. libm, 솔버, CAN 패킹 등 `.text`는 map 파일로
-확인해야 하며, 표 조회 72회/틱이 상위 우선순위 태스크의 D-cache를 밀어내는
-간섭(cache-related preemption delay)은 별도 검증 대상이다. 이는 실현 가능성이 아니라
-**주장의 정확성**에 대한 지적이다.
+**Caution:** the flash above is data only. `.text` for libm, the solver, CAN
+packing and so on has to be confirmed from the map file, and the
+cache-related preemption delay from 72 table lookups per tick evicting a
+higher-priority task's D-cache is a separate item to validate. This is a
+point about **the accuracy of the claim**, not about feasibility.
 
 ---
 
-## 9. 파일 계획
+## 9. File plan
 
-| 파일 | 내용 |
+| File | Contents |
 |---|---|
-| `analysis/ecm_pool.py` | holdout을 뺀 pooled 표면. 파라미터 공간이 아니라 **응답 공간**에서 pooling (τ2에 비선형이라 (R2,τ2) 쌍 평균은 틀림). 빌드 게이트: SOH ≥ 0.97에서 k_f = k_s = 1.00 ± 0.03 |
-| `analysis/sop_trim_features.py` | 12개 EW 스칼라, O(1), dt 명시. `.update/.vector/.excitation/.serialize` |
-| `analysis/sop_trim_dataset.py` | 라벨(HPPC ΔV, rank 2/3, rest ≥ 5τ2) × 특징(**직전** 드라이브사이클) 짝짓기 |
-| `analysis/sop_trim.py` | `TrimMLP`(514) / `TrimLinear`(26), 닫힌 형태 디코더, LOCO |
-| `analysis/sop_guard.py` | 여기 게이트, 슬루, 표 기반 포락선, 거부 규칙 |
-| `analysis/sop_hybrid.py` | 11단계 이분법 SOP 해 (고정점 교체), e1/e2 사전계산 |
-| `analysis/eval_sop_trim.py` | ablation 사다리 구동 |
-| `analysis/mcu_budget.py` | 예산표를 **생성**한다 (주장하지 않는다) |
+| `analysis/ecm_pool.py` | pooled surface with the holdout removed. Pooling in **response space** rather than parameter space (it is non-linear in τ2, so averaging (R2, τ2) pairs is wrong). Build gate: k_f = k_s = 1.00 ± 0.03 at SOH ≥ 0.97 |
+| `analysis/sop_trim_features.py` | the 12 EW scalars, O(1), explicit dt. `.update/.vector/.excitation/.serialize` |
+| `analysis/sop_trim_dataset.py` | pairs labels (HPPC ΔV, rank 2/3, rest ≥ 5τ2) with features (the **preceding** drive cycle) |
+| `analysis/sop_trim.py` | `TrimMLP` (514) / `TrimLinear` (26), closed-form decoder, LOCO |
+| `analysis/sop_guard.py` | excitation gate, slew, table-based envelope, rejection rule |
+| `analysis/sop_hybrid.py` | 11-step bisection SOP solve (replacing the fixed point), e1/e2 precomputed |
+| `analysis/eval_sop_trim.py` | drives the ablation ladder |
+| `analysis/mcu_budget.py` | **generates** the budget table (does not assert it) |
 
-변경할 기존 파일: `ecm_surface.py`(merged fast branch + in-hull 비트마스크 내보내기),
-`windows.py`(ctx_len을 초 단위로 해석하도록 — 현재 HPPC 200샘플과 드라이브사이클
-200초를 같은 시간축인 양 섞고 있다).
+Existing files to change: `ecm_surface.py` (merged fast branch, export the
+in-hull bitmask) and `windows.py` (interpret ctx_len in seconds — it
+currently mixes HPPC's 200 samples and the drive cycle's 200 seconds as if
+they were the same time axis).
 
 ---
 
-## 10. 채택 결정 (2026-08-22)
+## 10. Adoption decision (2026-08-22)
 
-**SOP 팔의 기준은 하이브리드 선형(A3)으로 잡는다.**
+**The SOP arm's baseline is the hybrid linear (A3).**
 
 | | |
 |---|---|
-| 모델 | 12 특징 → 2 출력 선형 readout, **26 파라미터** |
-| 출력 | 저항 곱수 k_f (R0+R1), k_s (R2), 로그 공간에서 유계 |
-| 입력 | O(1) 지수가중 통계 12 개, 링버퍼 없음, 상태 14 개 (64 B NVM) |
-| nominal | leave-one-cell-out pooled 2RC ECM (응답공간 pooling) |
-| 성적 | 6-fold 측정 펄스 dV RMSE **44.8 mV** (보정 없는 ECM 85.7, Full AI M2 58.7) |
-| 최악 셀 | **62.6 mV** = 평균의 1.4 배 (Full AI M2 는 99.6 = 1.7 배) |
-| 가드 | 없음 (§7.7.5) |
+| Model | linear readout, 12 features → 2 outputs, **26 parameters** |
+| Outputs | resistance multipliers k_f (R0+R1) and k_s (R2), bounded in log space |
+| Inputs | 12 O(1) exponentially-weighted statistics, no ring buffer, 14 states (64 B NVM) |
+| Nominal | leave-one-cell-out pooled 2RC ECM (pooled in response space) |
+| Score | 6-fold measured pulse dV RMSE **44.8 mV** (uncorrected ECM 85.7, Full AI M2 58.7) |
+| Worst cell | **62.6 mV** = 1.4× the mean (Full AI M2 is 99.6 = 1.7×) |
+| Guard | none (§7.7.5) |
 
-### 왜 이것인가
+### Why this one
 
-- **최악이 짧다.** 물리 모델이 바닥을 받치므로 처음 보는 셀에서도 평균의 1.4 배를
-  넘지 않는다. 순수 AI 는 1.7 배까지 벌어지고, 그 방향이 낙관(위험) 쪽이다.
-- **514 파라미터 MLP 가 26 개를 이기지 못한다** (45.4 대 44.8). 용량이 아니라
-  parameterisation 이 일을 하고 있다는 뜻이고, 배치 논지로는 더 강한 결과다.
-- **MCU 예산이 문제가 아니다.** 26 파라미터 + 상태 14 개는 어떤 BMS MCU 에서도
-  반올림 오차다. 비용은 pooled ECM 표 조회와 2RC 전파에 있다.
+- **The worst case is short.** With a physical model underneath, an unseen
+  cell never exceeds 1.4× the mean. Pure AI stretches to 1.7×, and in the
+  optimistic (dangerous) direction.
+- **The 514-parameter MLP does not beat the 26** (45.4 against 44.8). What is
+  doing the work is parameterisation rather than capacity, which is a
+  stronger result for the deployment argument.
+- **The MCU budget is not the issue.** 26 parameters plus 14 states is a
+  rounding error on any BMS MCU. The cost is in the pooled ECM table lookups
+  and the 2RC propagation.
 
-### 이 결정이 기대는 증거의 한계
+### Limits of the evidence this decision rests on
 
-- **지표는 펄스 dV 이지 SOP 가 아니다.** (§11 에서 암페어로 쟀다: 방전 4.94 A,
-  §16 에서 충전 2.05 A.)
-  전류 민감도가 물리 기대의 0.62~0.67 배라는 것은 여섯 셀 전부에서 재현됐고,
-  이는 SOP 이분 탐색이 **가용 전력을 낙관한다**는 뜻이다. 이것이 채택된 기준선의
-  가장 큰 미해결 항목이다.
-- **셀이 여섯 개, 프로토콜당 하나씩이다.** 같은 프로토콜의 반복(CC 대 CC_CELL2)이
-  수명에서 15 % 벌어지므로, 그보다 작은 차이는 이 데이터로 구분되지 않는다.
-- **BOOST_REST 의 지속 편향은 고치지 못했다.** 분포 밖 셀에서 pooled ECM 이 밀리는
-  것이고, 셀을 늘리는 것 말고 이 데이터로 할 수 있는 것이 없다. 다만 편향의
-  방향이 보수적이라는 점은 확인했다.
+- **The metric is pulse dV, not SOP.** (§11 measured it in amperes:
+  discharge 4.94 A; §16 charge 2.05 A.) That the current sensitivity is
+  0.62–0.67 × the physical expectation reproduced across all six cells, and
+  it means the SOP binary search **is optimistic about available power.**
+  This is the largest open item in the adopted baseline.
+- **Six cells, one per protocol.** Repeats of the same protocol (CC against
+  CC_CELL2) diverge 15 % over life, so this data cannot distinguish anything
+  smaller.
+- **BOOST_REST's sustained bias was not fixed.** It is the pooled ECM losing
+  ground on an out-of-distribution cell, and nothing can be done about it
+  with this data except adding cells. The direction of the bias was confirmed
+  to be conservative, at least.
 
 ---
 
----
+## 11. SOP in amperes — measured labels and inversion (2026-08-22)
 
-## 11. SOP 를 암페어로 — 측정 라벨과 역산 (2026-08-22)
+Every number in this project had been in millivolts. The arms are voltage
+models and SOP is the current at which voltage reaches the floor, so 44.8 mV
+is not an answer to "how many amperes." The conversion factor is not a
+constant but dV/dI — resistance itself — so a model that gets resistance
+wrong gets it wrong twice.
 
-이 프로젝트의 모든 숫자가 밀리볼트였다. 팔들은 전압 모델이고 SOP 는 전압이
-바닥에 닿는 전류이므로, 44.8 mV 는 "몇 암페어" 에 대한 답이 아니다. 환산 계수는
-상수가 아니라 dV/dI = 저항 자체여서, 저항을 틀리는 모델은 두 번 틀린다.
+### 11.1 Measurement-based labels — `analysis/sop_label_measured.csv`
 
-### 11.1 측정 기반 라벨 — `analysis/sop_label_measured.csv`
+The existing `sop_reference.csv` cannot be a label. It is derived from the
+very ECM the hybrid corrects, which is circular; 84.8 % of it extrapolates
+beyond the maximum measured current (29.0 A); and 82.7 % is clipped at the
+current ceiling rather than by voltage.
 
-기존 `sop_reference.csv` 는 라벨이 될 수 없다. 하이브리드가 보정하는 바로 그
-ECM 에서 유도되어 순환이고, 84.8 % 가 측정 최대 전류(29.0 A) 밖을 외삽하며
-82.7 % 가 전압이 아니라 전류 상한에서 잘린다.
+HPPC itself is used instead. At every (cell, cycle, SOC group), **four
+discharge rates** were measured and each V(τ) recorded — four points of the
+V-I characteristic at one operating point, model-free. Solving that to
+V(τ) = 2.5 V gives I*. 7,406 rows.
 
-대신 HPPC 자체를 쓴다. 매 (셀, 사이클, SOC 그룹)에서 **네 개의 방전율**이 실측되고
-각각의 V(τ) 가 기록되어 있다 — 한 운전점의 V-I 특성 네 점, 모델 없이. 그것을
-V(τ) = 2.5 V 로 풀면 I* 가 나온다. 7,406 행.
+**The label's extrapolation error was measured.** Fitting only the lower
+current steps and predicting the higher step that was actually applied:
 
-**라벨의 외삽 오차는 측정했다.** 낮은 전류 단계로만 적합해 실제로 인가된 높은
-단계를 예측하면:
-
-| 적합 | 외삽 배수 | 전압 오차(중앙) | I* 환산 |
+| Fit | Extrapolation factor | Voltage error (median) | in I* |
 |---|---:|---:|---:|
-| 하위 3 개 → 최고 단계 | 1.44x | −17.7 mV | 1.17 A |
-| 하위 2 개 → 최고 단계 | 2.87x | −40.8 mV | 2.51 A |
+| lowest 3 → highest step | 1.44× | −17.7 mV | 1.17 A |
+| lowest 2 → highest step | 2.87× | −40.8 mV | 2.51 A |
 
-부호가 일정하게 음수다 — 고전류에서 R1·R2 가 떨어지므로(Butler–Volmer) 선형
-외삽은 전압을 낮게 보고 **I\* 를 작게 잡는다.** 3 배 외삽에서도 2.5 A(5~11 %)
-이므로 전 구간을 쓸 수 있고, 라벨 품질로 행을 고르면 저 SOC 만 남아 **모델이
-아니라 라벨을 기준으로 선택**하게 된다. 따라서 전 행을 평가하고 밴드로 층화한다.
+The sign is consistently negative — R1 and R2 fall at high current
+(Butler–Volmer), so a linear extrapolation reads voltage low and **reads I\*
+small.** Even at 3× extrapolation it is 2.5 A (5–11 %), so the whole range is
+usable; selecting rows by label quality would leave only low SOC and would
+mean **selecting on the label rather than on the model.** So all rows are
+evaluated and stratified into bands.
 
-### 11.2 결과 — 하이브리드 4.94 A, 보정 없는 ECM 7.26 A
+### 11.2 Result — hybrid 4.94 A, uncorrected ECM 7.26 A
 
-`analysis/eval_sop_amps.py`. V_pre + I·R_eff(I) = V_min 의 고정점 해. 5,995 행
-(1,129 행은 pooled 표의 hull 밖이라 제외).
+`analysis/eval_sop_amps.py`. Fixed-point solution of
+V_pre + I·R_eff(I) = V_min. 5,995 rows (1,129 excluded as outside the pooled
+table's hull).
 
-| 셀 | n | ECM | 하이브리드 | 개선 |
+| Cell | n | ECM | Hybrid | Gain |
 |---|---:|---:|---:|---:|
 | BOOST | 1,097 | 5.32 A | 3.95 A | +25.8 % |
 | BOOST_NEGPULSE | 936 | 7.33 | 4.71 | +35.8 % |
@@ -620,46 +698,47 @@ V(τ) = 2.5 V 로 풀면 I* 가 나온다. 7,406 행.
 | BOOST_REST | 752 | 11.75 | 6.47 | +45.0 % |
 | CC | 1,099 | 6.36 | 4.96 | +21.9 % |
 | CC_CELL2 | 1,035 | 6.71 | 5.81 | +13.5 % |
-| **전체** | **5,995** | **7.26 A** | **4.94 A** | **+31.9 %** |
+| **total** | **5,995** | **7.26 A** | **4.94 A** | **+31.9 %** |
 
-**44.8 mV 의 번역값은 4.94 A 다.** 여섯 셀 전부에서 이기고, 개선폭 31.9 % 는
-전압 도메인의 24 % 보다 크다.
+**44.8 mV translates to 4.94 A.** It wins on all six cells, and the 31.9 %
+gain is larger than the 24 % in the voltage domain.
 
-### 11.3 편향이 전류 크기에 따라 부호를 바꾼다
+### 11.3 The bias changes sign with current magnitude
 
-전류가 음수이므로 방향을 크기로 읽는다 — |예측| > |측정| 이면 더 많은 전류를
-허용한다는 뜻, 즉 낙관이다.
+Current is negative, so direction is read as magnitude — |predicted| >
+|measured| means allowing more current, i.e. optimistic.
 
-| 외삽 배수 | \|I*\| 중앙 | ECM | 하이브리드 |
+| Extrapolation factor | median \|I*\| | ECM | Hybrid |
 |---|---:|---:|---:|
-| ≤ 1.0 | 22.7 A | **+6.66 A 낙관** | **+3.84 A 낙관** |
-| 1.0~1.5 | 34.0 | +5.27 낙관 | +2.82 낙관 |
-| 1.5~2.5 | 57.6 | +1.13 낙관 | −0.35 보수 |
-| > 2.5 | 95.6 | −1.73 보수 | −1.88 보수 |
+| ≤ 1.0 | 22.7 A | **+6.66 A optimistic** | **+3.84 A optimistic** |
+| 1.0–1.5 | 34.0 | +5.27 optimistic | +2.82 optimistic |
+| 1.5–2.5 | 57.6 | +1.13 optimistic | −0.35 conservative |
+| > 2.5 | 95.6 | −1.73 conservative | −1.88 conservative |
 
-**작은 I\* 에서 낙관, 큰 I\* 에서 보수.** 위험한 쪽이 하필 수명 말기, 전력
-여유가 이미 없는 구간이다 — I* 22.7 A 에서 6.66 A 를 더 허용하면 29 % 과대
-약속이다. 이것은 §7.6.6 의 "전류 민감도가 물리 기대의 0.62~0.67 배" 가 암페어
-도메인에서 드러난 모습이다. 기울기가 완만한 모델은 작은 I* 를 과대, 큰 I* 를
-과소 추정한다.
+**Optimistic at small I\*, conservative at large I\*.** The dangerous side
+happens to be late life, where the power headroom is already gone —
+allowing 6.66 A more at an I* of 22.7 A is a 29 % overpromise. This is
+§7.6.6's "current sensitivity is 0.62–0.67 × the physical expectation"
+showing itself in the ampere domain. A model with a shallow slope
+overestimates small I* and underestimates large I*.
 
-**꼬리 개선이 RMSE 개선보다 크다.**
+**The tail improves more than the RMSE.**
 
-| | ECM | 하이브리드 |
+| | ECM | Hybrid |
 |---|---:|---:|
-| 낙관 방향 오류 | 45.7 % | 42.1 % |
-| **5 A 이상 낙관** | **20.5 %** | **8.2 %** |
-| 10 A 이상 낙관 | 4.1 % | 2.6 % |
-| 20 A 이상 낙관 | 0.5 % | 0.1 % |
+| errors in the optimistic direction | 45.7 % | 42.1 % |
+| **optimistic by 5 A or more** | **20.5 %** | **8.2 %** |
+| optimistic by 10 A or more | 4.1 % | 2.6 % |
+| optimistic by 20 A or more | 0.5 % | 0.1 % |
 
-### 11.4 레퍼런스 LSTM 은 SOP 이분 탐색을 돌릴 수 없다
+### 11.4 The reference LSTM cannot run an SOP binary search
 
-`analysis/eval_sop_amps_ai.py`. 닫힌 형태가 없으므로 전류를 이분 탐색한다 —
-논문의 SOP 방법 그 자체다. 결과는 M1 이 57.3 %, M2 가 96.0 % 의 행에서 경계에
-붙었다. 코드 문제가 아니다: **s = 1 에서 두 모델 모두 측정과 9 mV 차이로
-맞힌다.**
+`analysis/eval_sop_amps_ai.py`. With no closed form, current is found by
+bisection — the paper's SOP method itself. The result is that M1 pinned to
+the boundary on 57.3 % of rows and M2 on 96.0 %. Not a code problem: **at
+s = 1 both models match the measurement within 9 mV.**
 
-CC 셀 120 개 펄스, 기준 전류 −33.2 A:
+CC cell, 120 pulses, reference current −33.2 A:
 
 | s | 1.0 | 1.5 | 2.0 | 3.0 | 4.0 | 6.0 | 8.0 |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -667,60 +746,64 @@ CC 셀 120 개 펄스, 기준 전류 −33.2 A:
 | M1 dV/ds | — | −0.41 | −0.37 | **−0.07** | −0.05 | −0.05 | −0.04 |
 | M2 V | 3.320 | **3.698** | **4.111** | **4.589** | 4.627 | 3.920 | 3.320 |
 
-**M1 은 s = 2 를 넘으면 기울기가 6 배 꺾여 평평해진다.** 8 배(266 A)에서도
-2.641 V 로 바닥에 닿지 않는다. **M2 는 부호가 뒤집혀** s = 3 에서 4.589 V —
-셀의 상한을 넘는 물리적으로 불가능한 값을 낸다.
+**Beyond s = 2, M1's slope bends 6× and flattens.** Even at 8× (266 A) it
+sits at 2.641 V without reaching the floor. **M2 reverses sign** and gives
+4.589 V at s = 3 — a physically impossible value above the cell's ceiling.
 
-§7.6.6 에서 잰 민감도 0.62~0.67 배는 **s = 1 근처의 국소 기울기**였다. SOP 는
-국소가 아니라 s = 2~4 를 묻는 질문이고, 훈련 전류의 최대가 30 A 인데 SOP 는
-60~100 A 를 묻는다. 신경망은 외삽하지 않고 평평해지거나 엉뚱한 방향으로 간다.
-M2 가 더 심한 것은 문맥 인코더가 분포 밖 입력에 더 크게 반응하기 때문으로
-보이며, 드라이브사이클에서 6/6 으로 이겼던 바로 그 구조가 여기서는 독이 된다.
+The 0.62–0.67 sensitivity measured in §7.6.6 was **the local slope near
+s = 1.** SOP is not a local question but asks about s = 2–4, and while the
+maximum training current is 30 A, SOP asks about 60–100 A. Neural networks do
+not extrapolate; they flatten or go the wrong way. M2 being worse is
+apparently because the context encoder responds more strongly to
+out-of-distribution input, and the very structure that won 6/6 on drive
+cycles is poison here.
 
-### 11.5 이 절이 원래 질문에 하는 답
+### 11.5 What this section answers of the original question
 
-"AI 기반 SOP 를 전용 가속기 없는 BMS 에 올릴 수 있는가" 에 대해, 이 데이터가
-말하는 것은 **정확도 문제가 아니라 질의 가능성 문제**라는 것이다.
+To "can AI-based SOP go on a BMS without a dedicated accelerator," what this
+data says is that **the problem is not accuracy but queryability.**
 
-| | 펄스 dV | 암페어 SOP |
+| | Pulse dV | SOP in amperes |
 |---|---:|---|
-| 하이브리드 선형 (26) | 44.8 mV | **4.94 A** |
-| 보정 없는 pooled ECM | 85.7 mV | 7.26 A |
-| Full AI M1 (1.08 M) | 77.3 mV | **역산 불가** (57 % 포화) |
-| Full AI M2 (1.08 M) | 58.7 mV | **역산 불가** (96 % 포화, 부호 반전) |
+| hybrid linear (26) | 44.8 mV | **4.94 A** |
+| uncorrected pooled ECM | 85.7 mV | 7.26 A |
+| Full AI M1 (1.08 M) | 77.3 mV | **cannot invert** (57 % saturated) |
+| Full AI M2 (1.08 M) | 58.7 mV | **cannot invert** (96 % saturated, sign reversal) |
 
-전압 도메인에서 M2 가 M1 을 이기던 순위는 암페어에서 의미를 잃는다. 둘 다 답을
-내지 못한다.
+The ranking in which M2 beat M1 in the voltage domain loses meaning in
+amperes. Neither produces an answer.
 
-### 11.6 남은 한계
+### 11.6 Remaining limits
 
-- **τ = 10 s 만 검증된다.** τ = 2 s 는 내삽 행이 0 개다 — 2 초에는 29 A 로도
-  2.5 V 에 닿지 않는다.
-- **1,129 행(15.9 %)이 pooled 표의 hull 밖**이라 빠졌다.
-- 라벨 자체가 I* 를 작게 보는 편향이 1.17~2.51 A 있으므로, 큰 I* 구간의 "보수"
-  판정 중 일부는 라벨 편향일 수 있고 낙관 구간은 **실제로는 더 낙관적**이다.
-- LSTM 의 역산 실패가 이 아키텍처의 성질인지 이 훈련 분포의 성질인지는 구분하지
-  못했다. 30 A 를 넘는 부하를 포함한 훈련 데이터가 없다.
+- **Only τ = 10 s is validated.** τ = 2 s has zero interpolated rows — in two
+  seconds even 29 A does not reach 2.5 V.
+- **1,129 rows (15.9 %) fell outside the pooled table's hull.**
+- The label itself has a 1.17–2.51 A bias toward reading I* small, so some of
+  the "conservative" verdicts in the large-I* range may be label bias, and
+  the optimistic range is **in reality more optimistic still.**
+- Whether the LSTM's inversion failure is a property of the architecture or
+  of this training distribution was not separated. There is no training data
+  containing loads above 30 A.
 
 ---
 
-## 12. 오차 예산 — 저 SOH 의 79 mV 는 무엇으로 되어 있나
+## 12. Error budget — what the 79 mV at low SOH is made of
 
-`fig_hybrid_paper_layout.png` (b) 에서 하이브리드 오차가 SOH 1.00 의 12 mV 에서
-0.68 의 88 mV 로 단조 증가한다. **SOH 는 이미 입력 특징에 들어 있다.** 그러니
-조건화가 없어서가 아니고, 무엇이 남는지 분해해야 한다.
+In `fig_hybrid_paper_layout.png` (b) the hybrid error grows monotonically
+from 12 mV at SOH 1.00 to 88 mV at 0.68. **SOH is already an input feature.**
+So it is not a lack of conditioning, and what remains has to be decomposed.
 
-### 12.1 스케일은 절반도 설명하지 못한다
+### 12.1 Scale explains less than half
 
-|dV| 자체가 376 → 742 mV 로 2 배가 되지만 절대 오차는 11 → 79 mV 로 7 배다.
-**상대 오차도 2.8 % → 10.6 % 로 3.8 배** 커진다.
+|dV| itself doubles, 376 → 742 mV, while absolute error grows 7×, 11 →
+79 mV. **Relative error also grows 3.8×, 2.8 % → 10.6 %.**
 
-### 12.2 오라클 곱수 — 추정을 완벽히 해도 남는 것
+### 12.2 Oracle multipliers — what remains with perfect estimation
 
-특성화마다 최소제곱으로 최적 k_f, k_s 를 사후에 꽂는다. 어떤 추정기도 이보다
-잘할 수 없다.
+The optimal k_f and k_s are fitted per characterisation by least squares
+after the fact. No estimator can do better.
 
-| SOH 밴드 | \|dV\| 평균 | ECM | A3 | 오라클 k | A3 상대 | 오라클 상대 |
+| SOH band | mean \|dV\| | ECM | A3 | oracle k | A3 relative | oracle relative |
 |---|---:|---:|---:|---:|---:|---:|
 | 1.00-.95 | 376 mV | 6 | 11 | **4** | 2.8 % | 1.1 % |
 | .95-.90 | 408 | 10 | 12 | **5** | 2.8 % | 1.2 % |
@@ -729,17 +812,19 @@ M2 가 더 심한 것은 문맥 인코더가 분포 밖 입력에 더 크게 반
 | .80-.75 | 645 | 121 | 61 | **38** | 9.5 % | 6.0 % |
 | .75-.68 | 742 | 170 | 79 | **58** | 10.6 % | 7.8 % |
 
-**79 mV 중 21 mV 만 곱수를 잘못 맞춘 탓이고, 58 mV 는 k 를 완벽히 알아도 남는다.**
-펄스마다 k 를 따로 주면 0 mV 가 되므로(2 자유도로 2 지평), 한 펄스 안에서는 2RC
-가 충분하고 **한 특성화 전체를 하나의 k 로 덮는 것**이 한계다.
+**Only 21 mV of the 79 comes from getting the multiplier wrong; 58 mV
+remains even knowing k perfectly.** Giving each pulse its own k drives it to
+0 mV (two degrees of freedom for two horizons), so 2RC suffices within a
+single pulse, and the limit is **covering a whole characterisation with one
+k.**
 
-### 12.3 곱수에 형태를 줘도 거의 내려가지 않는다
+### 12.3 Giving the multiplier a shape barely helps
 
-k_f = a0 + a1·x 로 두고 x 를 바꿔가며 오라클을 다시 푼다. 전부 파라미터에 선형
-이므로 특성화당 최소제곱 한 번이고, 특성화는 펄스 20 개 × 2 지평 = 40 개 방정식을
-갖는다.
+Set k_f = a0 + a1·x and re-solve the oracle for various x. Everything is
+linear in the parameters, so it is one least squares per characterisation,
+and a characterisation has 20 pulses × 2 horizons = 40 equations.
 
-| SOH 밴드 | k 2개 | + SOC 선형 (4) | + 전류 선형 (4) | + 둘 다 (6) | + SOC 2차 (6) |
+| SOH band | 2 k's | + SOC linear (4) | + current linear (4) | + both (6) | + SOC quadratic (6) |
 |---|---:|---:|---:|---:|---:|
 | 1.00-.95 | 4 mV | 4 | 4 | 3 | 3 |
 | .90-.85 | 11 | 8 | 10 | 7 | 7 |
@@ -747,254 +832,283 @@ k_f = a0 + a1·x 로 두고 x 를 바꿔가며 오라클을 다시 푼다. 전�
 | .80-.75 | 38 | 32 | 34 | 28 | 29 |
 | **.75-.68** | **58** | **53** | **55** | **50** | **49** |
 
-파라미터를 3 배로 늘려도 최저 밴드에서 16 % 만 줄어든다. **곱수의 형태 문제가
-아니다.** (이 절을 쓰기 전에는 SOC 의존 곱수가 상한을 크게 내릴 것이라고
-예상했고, 그것은 틀렸다.)
+Tripling the parameters cuts only 16 % in the lowest band. **It is not a
+problem of the multiplier's shape.** (Before writing this section a
+SOC-dependent multiplier was expected to lower the ceiling substantially.
+That was wrong.)
 
-### 12.4 tau2 는 실제로 움직이고, 방향이 일관된다
+### 12.4 tau2 really does move, and consistently in one direction
 
-k 는 R 만 곱하고 tau1, tau2 는 pooled 값 그대로다. tau2 는 저장된 값에서 회수할
-수 있다 — 아카이브가 ns(tau) = R2(1 - exp(-tau/tau2)) 를 두 지평에서 갖고 있으므로
-그 비가 tau2 에 대한 한 개의 방정식이다(재구성 오차 0.005 uOhm). 빠른 가지는 이렇게
-다루지 않는다: 측정 tau1 이 0.244 s 라 nf2 와 nf10 이 네 자리까지 같아 분리되지
-않으며, 그것이 트림이 빠른 곱수를 하나만 갖는 이유와 같다.
+k multiplies R only; tau1 and tau2 stay at their pooled values. tau2 can be
+recovered from the stored values — the archive holds
+ns(tau) = R2(1 − exp(−tau/tau2)) at two horizons, so their ratio is a single
+equation in tau2 (reconstruction error 0.005 µΩ). The fast branch is not
+handled this way: the measured tau1 of 0.244 s makes nf2 and nf10 agree to
+four digits and inseparable, which is the same reason the trim has only one
+fast multiplier.
 
-| SOH 밴드 | k 2개 (tau 고정) | + tau2 자유 | 개선 | **tau2 배율** |
+| SOH band | 2 k's (tau fixed) | + tau2 free | gain | **tau2 factor** |
 |---|---:|---:|---:|---:|
-| 1.00-.95 | 4 mV | 4 | +6.7 % | 1.22x |
-| .95-.90 | 5 | 4 | +8.5 % | 1.12x |
-| .90-.85 | 11 | 8 | +30.7 % | 1.22x |
-| .85-.80 | 23 | 18 | +22.6 % | **0.86x** |
-| .80-.75 | 38 | 29 | +24.2 % | **0.55x** |
-| .75-.68 | 58 | 50 | +14.6 % | **0.49x** |
+| 1.00-.95 | 4 mV | 4 | +6.7 % | 1.22× |
+| .95-.90 | 5 | 4 | +8.5 % | 1.12× |
+| .90-.85 | 11 | 8 | +30.7 % | 1.22× |
+| .85-.80 | 23 | 18 | +22.6 % | **0.86×** |
+| .80-.75 | 38 | 29 | +24.2 % | **0.55×** |
+| .75-.68 | 58 | 50 | +14.6 % | **0.49×** |
 
-**노화되면 tau2 가 절반으로 줄어든다** — pooled 표는 7.15 s 인데 노화 셀은 3.5 s
-근처가 맞다. 부호가 SOH 0.85 에서 뒤집혀 단조롭게 내려가므로 잡음이 아니다.
-그래도 최저 밴드의 상한은 58 → 50 mV 로, 6-파라미터 곱수(49 mV)와 같은 수준이다.
+**Aging halves tau2** — the pooled table says 7.15 s while an aged cell wants
+about 3.5 s. The sign flips at SOH 0.85 and falls monotonically, so it is not
+noise. Even so the ceiling in the lowest band goes 58 → 50 mV, the same level
+as the 6-parameter multiplier (49 mV).
 
-### 12.5 예산과 그 함의
+### 12.5 The budget and what follows from it
 
-| 성분 | 저 SOH 에서의 크기 |
+| Component | Size at low SOH |
 |---|---:|
-| 곱수 추정 오차 (A3 → 오라클) | **21 mV** |
-| tau2 오차 | 8 mV |
-| 곱수 표현력 부족 | 8 mV |
-| 어떤 방법으로도 남는 바닥 | **~50 mV** |
+| multiplier estimation error (A3 → oracle) | **21 mV** |
+| tau2 error | 8 mV |
+| insufficient multiplier expressiveness | 8 mV |
+| the floor that no method removes | **~50 mV** |
 
-**바닥이 지배적이고, 그것은 2RC + pooled 표라는 구조의 한계다.** 파라미터를 더
-준다고 사라지지 않는다.
+**The floor dominates, and it is the limit of the structure — 2RC plus a
+pooled table.** More parameters do not make it go away.
 
-움직일 수 있는 셋 중 **가장 큰 것이 추정 오차 21 mV** 이고, 표현력 쪽 둘을 합쳐도
-16 mV 인데 파라미터가 26 → 36 개로 늘어 배치 논지가 약해진다. 따라서 **26 개를
-유지하고 추정을 개선하는 쪽이 이득이 크다.** §7.7 이 보여준 곱수 진동 — 41 개
-사건 중 절반이 인접한 왕복 쌍 — 이 그 21 mV 의 유력한 원천이다.
+Of the three movable pieces, **the largest is the 21 mV of estimation
+error**, and the two expressiveness items together are 16 mV while taking the
+parameter count from 26 to 36, which weakens the deployment argument. So
+**keeping 26 and improving the estimate pays more.** The multiplier
+oscillation shown in §7.7 — half of the 41 events being adjacent round trips
+— is the leading source of that 21 mV.
 
 ---
 
-## 13. 특징 재설계 시도와 그 기각 (2026-08-22)
+## 13. Feature redesign attempts and their rejection (2026-08-22)
 
-§12.5 는 움직일 수 있는 것 중 곱수 추정 오차 21 mV 가 가장 크다고 했다. 그 원인을
-찾기 위해 두 가지를 시도했고 **둘 다 기각됐다.** 그 과정에서 나온 진단이 시도
-자체보다 중요하다.
+§12.5 said the multiplier estimation error, 21 mV, is the largest movable
+piece. Two things were tried to find its cause, and **both were rejected.**
+The diagnosis that came out matters more than the attempts.
 
-### 13.1 먼저: 21 mV 는 읽기 잡음이 아니다
+### 13.1 First: the 21 mV is not read noise
 
-라벨마다 특징 블록이 12 개 있고 평가는 **마지막 것**을 쓴다. 12 개를 평균하면
-sqrt(12) 만큼 잡음이 줄어야 한다. 결과는 45.4 → 47.9 mV 로 **나빠졌다**(중앙값도
-46.5). 최근 블록이 이기므로 곱수는 정적 잡음이 아니라 **실제로 움직이고 최신
-값이 중요하다.**
+Every label has 12 feature blocks and evaluation uses **the last one.**
+Averaging all 12 should cut noise by sqrt(12). It got **worse** instead,
+45.4 → 47.9 mV (median 46.5). The most recent block wins, so the multiplier
+is not static noise: it **really moves, and the latest value matters.**
 
-### 13.2 특징이 답을 담고 있는가 — 두 곱수가 전혀 다르다
+### 13.2 Do the features contain the answer — the two multipliers differ completely
 
-오라클 k 를 표본내에서 선형 회귀했다. 규제도 홀드아웃도 없는, 이 12 개로 가능한
-상한이다.
+The oracle k was regressed linearly in-sample. No regularisation, no holdout
+— the ceiling of what these 12 features can do.
 
-| | 표본내 R² | LOCO R² | 최강 단일 상관 |
+| | in-sample R² | LOCO R² | strongest single correlation |
 |---|---:|---:|---|
 | **log k_f** | **0.860** | 0.781 | dR_fast **+0.89** |
 | **log k_s** | **0.481** | **0.221** | dR_fast +0.65 |
 
-**k_f 는 담겨 있고 k_s 는 아니다.** 그리고 느린 가지를 위해 만든 `dR_slow` 는
-k_s 의 최강 항에 들지도 못한다 — dR_fast 가 더 강하다.
+**k_f is in there and k_s is not.** And `dR_slow`, built for the slow branch,
+does not even make the strongest terms for k_s — dR_fast is stronger.
 
-### 13.3 시도 1: 필터 시정수 — 기각
+### 13.3 Attempt 1: the filter time constant — rejected
 
-`dR_slow` 의 TAU_I 는 8 s 로, 측정된 tau2 중앙 7.95 s 에 맞춰져 있다. §12.4 에서
-노화 셀의 tau2 가 절반으로 준다는 것을 확인했으므로 고정값이 틀렸을 것으로 봤다.
-TAU_I in {2, 4, 8, 16, 32} s 를 한 번의 패스로 동시에 계산해 `dR_slow` 만 교체했다
-(특징 수 12 유지).
+`dR_slow`'s TAU_I is 8 s, matched to the measured median tau2 of 7.95 s.
+§12.4 established that an aged cell's tau2 halves, so the fixed value was
+suspected. TAU_I ∈ {2, 4, 8, 16, 32} s was computed simultaneously in one
+pass, replacing only `dR_slow` (keeping 12 features).
 
-**16 배를 훑어도 k_s 표본내 R² 가 0.481 에서 소수점 셋째 자리도 움직이지 않는다.**
-필터 상수는 원인이 아니다.
+**Sweeping 16× does not move k_s's in-sample R² of 0.481 in the third
+decimal.** The filter constant is not the cause.
 
-### 13.4 시도 2: 지속 부하 구간에서만 읽기 — 기각
+### 13.4 Attempt 2: read only during sustained load — rejected
 
-드라이브사이클 전류는 초 단위로 뒤집혀 느린 가지가 정상상태에 도달하지 못한다.
-`|I| > 5 A` 가 3 초 이상 지속된 동안에만 갱신하는 누산기를 따로 뒀다.
+Drive-cycle current reverses on a per-second scale, so the slow branch never
+reaches steady state. A separate accumulator was added that updates only
+while `|I| > 5 A` has been sustained for 3 seconds or more.
 
-분포는 뚜렷하게 좁아졌다(5~95 % 가 −0.5~28.4 → −0.2~11.0). **그러나 그것은 안정이
-아니라 정보가 적은 것이었다** — 표본내는 0.481 → 0.489 로 미세하게 오르는데
-**LOCO 는 0.221 → 0.196 으로 떨어진다.**
+The distribution narrowed markedly (5–95 % from −0.5–28.4 to −0.2–11.0).
+**But that was less information rather than more stability** — in-sample
+rises slightly, 0.481 → 0.489, while **LOCO falls, 0.221 → 0.196.**
 
-### 13.5 채널 수를 고정한 것이 판정을 살렸다
+### 13.5 Fixing the channel count is what saved the verdict
 
-9 채널을 전부 추가하면 k_s 표본내가 0.506 으로 오르지만 **LOCO 는 0.081 로
-무너진다.** 특성화가 274 개뿐인데 특징을 21 개로 늘리면 그렇게 된다. 주 판정을
-"dR_slow 한 채널만 교체, 특징 수 12 유지" 로 미리 고정해 두지 않았다면 표본내
-상승을 개선으로 읽었을 것이다.
+Adding all nine channels raises k_s in-sample to 0.506 while **LOCO collapses
+to 0.081.** With only 274 characterisations, growing the features to 21 does
+that. Had the primary verdict not been fixed in advance as "replace only the
+`dR_slow` channel, keep 12 features," the in-sample rise would have been read
+as an improvement.
 
-### 13.6 그 대신 나온 진단 — 두 곱수의 산포 구조가 반대다
+### 13.6 What came out instead — the two multipliers have opposite spread structure
 
-| | 셀 내 표준편차 | 셀 간 | **셀 간 비중** |
+| | within-cell sd | between-cell | **between-cell share** |
 |---|---:|---:|---:|
 | log k_f | 0.0887 | 0.1147 | **63 %** |
 | log k_s | 0.1215 | 0.0634 | **21 %** |
 
-**k_f 의 변동은 "어느 셀인가" 가 대부분이고, k_s 의 변동은 "그 셀의 어느 시점인가"
-가 대부분이다.** 이것이 왜 특징 재설계가 k_s 에 듣지 않는지 설명한다 — 순간
-특징을 아무리 다듬어도 잡으려는 것이 셀 간 차이가 아니라 **한 셀의 시간 궤적**
-이기 때문이다.
+**k_f's variation is mostly "which cell," and k_s's variation is mostly
+"which moment in that cell's life."** That explains why feature redesign does
+not help k_s — however much an instantaneous feature is refined, the thing to
+be captured is not a between-cell difference but **one cell's trajectory in
+time.**
 
-같은 이유로 `k_s = rho * k_f` 로 묶는 것도 안 된다: corr(log k_f, log k_s) = 0.583,
-LOCO R² 는 0.067 로 특징 기반(0.221)보다 나쁘다. 두 곱수는 서로 다른 것을 따라간다.
+For the same reason tying `k_s = rho · k_f` does not work either:
+corr(log k_f, log k_s) = 0.583 and its LOCO R² is 0.067, worse than the
+feature-based 0.221. The two multipliers follow different things.
 
-### 13.7 이 진단이 가리키는 방향
+### 13.7 Where this diagnosis points
 
-- **k_f 는 셀 간 문제** → 셀 수를 늘리는 것이 정공법. 새 측정 없이도 Mendeley 와
-  RPCWBY 에 HPPC 를 가진 셀이 더 있다.
-- **k_s 는 시간 궤적 문제** → 순간 특징이 아니라 **시간 구조**를 써야 한다. 곱수는
-  노화를 따라 매끄럽게 흐르는데 현재 추정기는 매 특성화를 독립으로 본다. §7.7 의
-  진동 41 건 중 절반이 인접한 왕복 쌍이었던 것도 같은 얘기다.
-- **휴지 뒤 부하 단차를 노려 읽는 것**은 아직 시도하지 않았다. 시도 2 는 "지속
-  부하" 를 골랐지만 느린 가지가 의미를 가지려면 RC 상태가 0 에서 출발해야 하므로,
-  올바른 조건은 지속이 아니라 **휴지 → 부하 전이**다. 차량도 키온 때마다 그것을
-  한다.
+- **k_f is a between-cell problem** → adding cells is the direct route. Even
+  without new measurement, Mendeley and RPCWBY have more cells with HPPC.
+- **k_s is a trajectory problem** → what is needed is **time structure**
+  rather than an instantaneous feature. The multiplier flows smoothly with
+  aging while the current estimator treats every characterisation as
+  independent. Half of §7.7's 41 oscillations being adjacent round trips says
+  the same thing.
+- **Reading the load step after a rest** has not been tried. Attempt 2 chose
+  "sustained load," but for the slow branch to mean anything the RC state has
+  to start from zero, so the right condition is not sustained load but a
+  **rest → load transition.** A vehicle does that at every key-on.
 
 ---
 
-## 14. 셀 수를 늘리기 — RPCWBY 통합 (2026-08-22)
+## 14. Adding cells — integrating RPCWBY (2026-08-22)
 
-§13.7 은 세 갈래를 제안했고, 그중 추정기 안에서 푸는 두 갈래(가드 §7.7, 특징
-재설계 §13, 시간 추적)는 각각 평균 2 % 대를 얻고 **최악 셀은 나빠졌다.** 남은
-정공법은 셀 수다. 새 측정 없이 `raw/RPCWBY` 에 Samsung 30T 노화 셀이 더 있다.
+§13.7 proposed three routes; the two that stay inside the estimator (the
+guard in §7.7 and the feature redesign in §13, plus time tracking) each
+gained about 2 % on the mean and **made the worst cell worse.** The remaining
+direct route is cell count. Without new measurement, `raw/RPCWBY` has more
+aged Samsung 30T cells.
 
-### 14.1 그 데이터셋이 무엇인가
+### 14.1 What that dataset is
 
-참고 자료가 아니라 **SOP 를 직접 측정한 데이터셋**이다(Chen, Emadi, Kollmeyer,
-"Battery State of Power Measurement: A Generalized Methodology").
+Not a reference but **a dataset that measured SOP directly** (Chen, Emadi,
+Kollmeyer, "Battery State of Power Measurement: A Generalized Methodology").
 
 | | |
 |---|---|
-| Test#1 (RPC_CC) | Samsung 30T 1 셀, 사이클 1→2013, 특성화 18 회, 1C CC 방전으로 노화 |
-| Test#2 (RPC_US06) | Samsung 30T 1 셀, US06 프로파일로 노화, 특성화 15 회 |
-| 전압창 | 2.55~4.15 V (UYPYDJ 는 2.5~4.2) |
-| 전류 한계 | 30 A / −15 A |
-| 기록 | 1 Hz (UYPYDJ HPPC 는 펄스 중 10 Hz) |
+| Test#1 (RPC_CC) | one Samsung 30T, cycles 1 → 2013, 18 characterisations, aged by 1C CC discharge |
+| Test#2 (RPC_US06) | one Samsung 30T, aged on the US06 profile, 15 characterisations |
+| Voltage window | 2.55–4.15 V (UYPYDJ is 2.5–4.2) |
+| Current limits | 30 A / −15 A |
+| Logging | 1 Hz (UYPYDJ HPPC is 10 Hz within pulses) |
 
-### 14.2 첫 추출이 틀렸고, 그것이 셀 차이처럼 보였다
+### 14.2 The first extraction was wrong, and it looked like a cell difference
 
-`|I| > 1 A` 구간을 전부 펄스로 잡았더니 3 A 에서 저항이 UYPYDJ 의 0.39~0.72 배로
-나왔다. 같은 셀 모델이 그럴 수는 없다. 원인은 **SOC 를 옮기는 1C 방전 계단**이
-섞인 것 — 한 파일에 60 초 넘는 것이 74 개였다. 긴 방전 중에는 V_pre 가 기준점이
-못 되고 RC 가 이미 발달해 dV 가 작게 읽힌다.
+Taking every `|I| > 1 A` stretch as a pulse gave a resistance at 3 A of
+0.39–0.72 × UYPYDJ's. The same cell model cannot do that. The cause was
+**the 1C discharge steps that move SOC** getting mixed in — 74 of them
+exceeded 60 s in one file. During a long discharge V_pre is not a reference
+point and the RC has already developed, so dV reads small.
 
-길이 5~20 s + 직전 휴지 ≥ 20 s 로 거르니 18,152 → 9,398 행이 되고 문제가 사라졌다.
-**셀 차이로 보였던 것이 펄스 정의의 차이였다.**
+Filtering to length 5–20 s with a preceding rest ≥ 20 s took 18,152 → 9,398
+rows and the problem vanished. **What looked like a cell difference was a
+difference in the definition of a pulse.**
 
-### 14.3 호환성 — 전류를 맞추면 10 s 에서 0.5 %
+### 14.3 Compatibility — 0.5 % at 10 s once currents are matched
 
-신품 펄스가 RPCWBY 는 30 A(탐색이 전류 상한에 붙음), UYPYDJ 는 34 A 에 몰려
-직접 비교하면 4 A 차이를 셀 차이로 읽는다. UYPYDJ 는 4 단계를 밟으므로 셀별·SOC
-별로 **30 A 를 보간**해 운전점을 맞췄다.
+Fresh pulses cluster at 30 A in RPCWBY (the search pins to the current
+ceiling) and at 34 A in UYPYDJ, so comparing directly reads a 4 A difference
+as a cell difference. UYPYDJ steps through four levels, so **30 A was
+interpolated** per cell and SOC to match operating points.
 
-| tau | RPCWBY / UYPYDJ 6 셀 중앙 |
+| tau | RPCWBY / median of UYPYDJ's 6 cells |
 |---|---:|
 | 2 s | **+2.5 %** |
 | **10 s** | **+0.5 %** |
 
-SOP 가 사는 10 s 지평에서 0.5 % 다. 두 RPCWBY 셀이 서로 0.5 % 안에서 일치하므로
-2 s 의 +2.5 % 는 개체차가 아니라 **실험실 간 계통 오프셋**으로 읽힌다.
+0.5 % at the 10 s horizon where SOP lives. The two RPCWBY cells agree within
+0.5 % of each other, so the +2.5 % at 2 s reads as a **systematic offset
+between labs** rather than cell variation.
 
-### 14.4 SOH 앵커
+### 14.4 SOH anchors
 
-Step_Index 가 파일 안에서 재사용되므로(164 개 중 하나가 919 분에 걸침) 그것으로
-묶으면 3.0 Ah 셀에 3.15 Ah 가 나온다. 전류 파형에서 직접 찾았다 — 약 1C 로
-연속 방전하며 창 상단에서 시작해 바닥에 닿는 구간을 적분.
+Step_Index is reused within a file (one of 164 spans 919 minutes), so
+grouping by it gives 3.15 Ah for a 3.0 Ah cell. They were found directly from
+the current waveform — integrate the stretch that discharges continuously at
+about 1C from the top of the window to the floor.
 
-| 셀 | 앵커 | 용량 | SOH |
+| Cell | Anchors | Capacity | SOH |
 |---|---:|---|---|
 | RPC_CC | 18 | 2.910 → 2.127 Ah | 1.000 → **0.731** |
 | RPC_US06 | 15 | 2.980 → 2.395 Ah | 1.000 → 0.804 |
 
-전부 4.15 → 2.500 V 완주, 단조 감소, 결측 0.
+All run the full 4.15 → 2.500 V, monotonically decreasing, zero missing.
 
-### 14.5 tau2 를 빌리려다 잡은 결함 — 그리고 §12.4 의 독립 검증
+### 14.5 A defect caught while borrowing tau2 — and an independent check of §12.4
 
-두 지평만으로는 가지를 분리할 수 없어 tau2 가 필요하다. 처음에는 UYPYDJ 중앙값
-8.111 s 를 상수로 넣었는데, **§12.4 에서 "노화되면 tau2 가 절반이 된다" 를 직접
-확인해 놓고도 상수를 쓴 것**이었다. RPCWBY 는 1 Hz 이고 10 초 펄스면 10 점이라
-tau2 는 맞출 수 있다(tau1 은 0.244 s 라 불가능하지만, 2 s 이상 지평에서 빠른
-가지는 R0+R1 한 덩어리로만 들어가므로 손실이 없다).
+Two horizons alone cannot separate the branches, so tau2 is needed. The first
+attempt inserted UYPYDJ's median of 8.111 s as a constant — **having just
+confirmed in §12.4 that aging halves tau2 and used a constant anyway.**
+RPCWBY is 1 Hz and a 10 s pulse gives 10 points, so tau2 can be fitted (tau1
+at 0.244 s cannot be, but at horizons of 2 s and above the fast branch enters
+only as one R0+R1 lump, so nothing is lost).
 
-| SOH | 1.00~0.95 | 0.95~0.90 | 0.90~0.85 | 0.85~0.80 | 0.80~0.72 |
+| SOH | 1.00–0.95 | 0.95–0.90 | 0.90–0.85 | 0.85–0.80 | 0.80–0.72 |
 |---|---:|---:|---:|---:|---:|
-| tau2 중앙 | **8.53 s** | 8.28 | 7.34 | 5.78 | **4.03 s** |
+| median tau2 | **8.53 s** | 8.28 | 7.34 | 5.78 | **4.03 s** |
 
-**0.47 배.** §12.4 가 UYPYDJ 의 저장된 두 지평에서 역산해 얻은 0.49 배와 거의
-같다. **다른 데이터셋, 다른 셀, 다른 방법**(직접 적합 대 두 지평 역산)에서 같은
-값이 나왔으므로, tau2 의 노화 감소는 아티팩트가 아니다.
+**0.47×.** Almost identical to the 0.49× that §12.4 obtained by inverting
+UYPYDJ's two stored horizons. **A different dataset, a different cell and a
+different method** (direct fit against two-horizon inversion) give the same
+value, so tau2's decrease with aging is not an artefact.
 
-처음 격자를 40 s 까지 열었을 때는 적합의 5~95 % 가 상한에 쌓였다 — 10 초 펄스로
-tau2 = 20 s 와 40 s 를 구분할 수 없기 때문이다. 격자를 16 s 로 좁히고 경계에 붙은
-적합을 기각하니 분포가 정상화됐다(2.4~12.2 s).
+When the grid was first opened to 40 s, the 5–95 % of fits piled up at the
+ceiling — a 10 s pulse cannot distinguish tau2 = 20 s from 40 s. Narrowing
+the grid to 16 s and rejecting boundary-pinned fits normalised the
+distribution (2.4–12.2 s).
 
-### 14.6 전류 구간이 공통 언어다
+### 14.6 Current bins are the common language
 
-UYPYDJ 는 네 rate 를 밟고 0~3 으로 라벨하지만 RPCWBY 의 SOP 탐색은 3~30 A 연속
-이라 그 라벨이 없다. `rate_rank` 를 **전류 구간 인덱스**로 다시 정의했다
-(경계 2/7/16/26/40 A — 30 A 와 34 A 가 한 칸에 들어가도록). `ECMSurface` 는 rank 를
-이미 전류 사다리의 눈금으로만 쓰고 `rank_I` 로 보간하므로 하위 코드는 그대로다.
+UYPYDJ steps four rates labelled 0–3, but RPCWBY's SOP search is continuous
+over 3–30 A and has no such label. `rate_rank` was redefined as a **current
+bin index** (edges 2/7/16/26/40 A, so that 30 A and 34 A fall in one bin).
+`ECMSurface` already uses rank only as a tick on the current ladder and
+interpolates with `rank_I`, so the code below is unchanged.
 
-**키를 바꾸면 기준선도 바뀐다.** 그래서 세 숫자를 따로 낸다: (1) 기존 rank 키 6 셀
-= 44.8 mV, (2) 전류 키 6 셀 = 키 변경의 효과, (3) 전류 키 8 셀 = 셀 추가의 효과.
-(1)→(2) 와 (2)→(3) 을 섞어 보고하면 안 된다.
+**Changing the key changes the baseline too.** So three numbers are reported
+separately: (1) the old rank key with 6 cells = 44.8 mV, (2) the current key
+with 6 cells = the effect of the key change, (3) the current key with 8 cells
+= the effect of adding cells. (1)→(2) and (2)→(3) must not be reported mixed.
 
-### 14.7 빌드 게이트가 실패한다, 그리고 그것이 게이트의 일이다
+### 14.7 The build gate fails, and that is the gate doing its job
 
-8 셀 pool 에서 여섯 중 다섯이 실패한다(k_s ≈ 0.95). §14.3 의 계통 오프셋이
-원인이다 — d2 는 +2.5 % 인데 d10 은 +0.5 % 이므로 (d10 − d2) 가 작아지고, 두 지평
-환원이 그 차이를 가지 분리에서 5 % 로 증폭한다. 3 % 허용치를 넘는다.
+In the 8-cell pool, five of six fail (k_s ≈ 0.95). §14.3's systematic offset
+is the cause — d2 is +2.5 % while d10 is +0.5 %, so (d10 − d2) shrinks, and
+the two-horizon reduction amplifies that difference to 5 % in the branch
+separation. That exceeds the 3 % tolerance.
 
-게이트는 "보정 없이 신품 셀을 맞히는가" 를 묻는다. 하이브리드는 보정을 하는
-물건이고, 곱수가 존재하는 이유가 바로 그런 오프셋을 흡수하는 것이다. 따라서
-**판정은 게이트가 아니라 홀드아웃 RMSE 로 한다.** 나빠지면 RPCWBY 를 학습 5 셀에
-맞춰 스칼라로 먼저 정렬하는 방법이 남아 있다.
+The gate asks "does it match a fresh cell without correction?" The hybrid is
+a thing that corrects, and the multipliers exist precisely to absorb such
+offsets. So **the verdict comes from the holdout RMSE, not from the gate.**
+If it gets worse, aligning RPCWBY to the five training cells with a scalar
+first remains available.
 
-### 14.8 이 실험이 재는 것과 재지 않는 것
+### 14.8 What this experiment does and does not measure
 
-RPCWBY 셀은 **pooled 표에만** 들어가고 트림 학습에는 들어가지 않는다. 트림의
-특징이 `cache_t/uypydj_*_Fifteen_Drive_Cycles.npz` 에서 나오는데 RPCWBY 에는 같은
-형태의 주행 데이터가 없기 때문이다. 즉 재는 것은 **"더 나은 nominal 이 하이브리드를
-돕는가"** 이지 "학습 셀이 늘면 좋아지는가" 가 아니다. 평가는 여전히 UYPYDJ 6 셀
-leave-one-cell-out 이다.
+RPCWBY cells enter **the pooled table only**, not the trim training. The
+trim's features come from
+`cache_t/uypydj_*_Fifteen_Drive_Cycles.npz` and RPCWBY has no drive data of
+that form. So what is measured is **"does a better nominal help the
+hybrid"**, not "does it improve with more training cells." Evaluation is
+still leave-one-cell-out over UYPYDJ's six.
 
-### 14.9 결과 — 셀 추가는 평균에 무효, 최악 셀에 유효
+### 14.9 Result — adding cells is null on the mean and effective on the worst cell
 
-| 구성 | ECM (A0) | 하이브리드 평균 | **최악 셀** |
+| Configuration | ECM (A0) | hybrid mean | **worst cell** |
 |---|---:|---:|---:|
-| (1) rank 키, 6 셀 | 86.0 mV | 57.1 | 74.8 |
-| (2) 전류 키, 6 셀 | 74.0 | **55.8** | 68.4 |
-| (3) 전류 키, 8 셀 | 75.2 | 56.1 | **64.1** |
+| (1) rank key, 6 cells | 86.0 mV | 57.1 | 74.8 |
+| (2) current key, 6 cells | 74.0 | **55.8** | 68.4 |
+| (3) current key, 8 cells | 75.2 | 56.1 | **64.1** |
 
-**(1)→(2) 키 변경**: 전류 구간이 보정 없는 ECM 을 크게 개선한다(86.0 → 74.0,
-−14 %). 네 rate 라벨보다 전류로 묶는 편이 pooled nominal 에 맞는다. 하이브리드는
-소폭(57.1 → 55.8), 최악 셀은 −8.6 %.
+**(1)→(2), the key change**: current bins improve the uncorrected ECM
+substantially (86.0 → 74.0, −14 %). Binning by current suits a pooled
+nominal better than four rate labels. The hybrid moves a little
+(57.1 → 55.8) and the worst cell −8.6 %.
 
-**(2)→(3) 셀 추가**: 평균은 55.8 → 56.1 로 **변하지 않고**(잡음 수준), **최악 셀이
-68.4 → 64.1 로 −6.3 %** 좋아진다. 그 최악 셀이 BOOST_REST — 가드(§7.7), 특징
-재설계(§13), 칼만 추적이 **모두 실패했던 바로 그 셀**이다.
+**(2)→(3), adding cells**: the mean is **unchanged** at 55.8 → 56.1 (noise
+level) while **the worst cell improves 68.4 → 64.1, −6.3 %.** That worst cell
+is BOOST_REST — **the very cell where the guard (§7.7), the feature redesign
+(§13) and Kalman tracking all failed.**
 
-| 셀 | 6 셀 → 8 셀 |
+| Cell | 6 cells → 8 cells |
 |---|---|
 | **BOOST_REST** | 68.4 → **64.1** (−6.3 %) |
 | BOOST_NEGPULSE | 52.8 → 50.4 (−4.5 %) |
@@ -1003,556 +1117,638 @@ leave-one-cell-out 이다.
 | BOOST | 46.3 → 50.4 (+8.9 %) |
 | **BOOST_NEGPULSE_1S** | 55.8 → **61.4** (+10 %) |
 
-**세 셀이 좋아지고 두 셀이 나빠져 평균에서 상쇄된다.** §13.6 의 진단대로 —
-k_f 는 셀 간 문제이므로 **분포 밖에 있던 셀들이 정확히 개선**되고, 이미 잘 맞던
-셀은 실험실 오프셋이 섞이며 나빠진다.
+**Three cells improve and two get worse, cancelling in the mean.** Exactly as
+§13.6 diagnosed — k_f is a between-cell problem, so **the cells that were out
+of distribution are precisely the ones that improve**, while cells that
+already fitted well get worse as the lab offset mixes in.
 
-8 셀 pool 은 **더 넓고 덜 정밀하다.** BMS 는 최악을 보장해야 하므로 이 거래는
-유리한 쪽이고, 무엇보다 **최악 셀을 개선한 것은 이번이 처음이다** — 앞선 세 번의
-시도는 전부 평균을 조금 얻고 최악을 잃는 반대 방향이었다.
+The 8-cell pool is **broader and less precise.** A BMS has to guarantee the
+worst case, so that trade is favourable, and above all **this is the first
+time the worst cell has improved** — the three previous attempts all went the
+other way, gaining a little on the mean and losing on the worst.
 
-나빠진 두 셀의 유력한 원인은 §14.7 의 실험실 오프셋이다. RPCWBY 를 학습 셀에
-맞춰 정렬하면 상쇄 없이 최악 개선만 남을 수 있다 — 다음 절.
+The likely cause of the two that got worse is §14.7's lab offset. Aligning
+RPCWBY to the training cells could leave the worst-case improvement without
+the cancellation — next section.
 
 ---
 
-## 15. I* 를 직접 회귀하기 — 그리고 순수 data-driven 이 왜 실패하는가 (2026-08-23)
+## 15. Regressing I* directly — and why pure data-driven fails (2026-08-23)
 
-§11.4 는 레퍼런스 LSTM 이 SOP 이분 탐색을 돌리지 못한다는 것을 보였다. 그 실패는
-**외삽**에서 온다 — 훈련 전류가 30 A 를 넘지 않는데 SOP 는 60~100 A 를 묻는다.
-그렇다면 외삽이 필요 없는 형태, 즉 **I\* 자체를 목표로** 두면 어떻게 되는가.
+§11.4 showed the reference LSTM cannot run an SOP binary search. That failure
+comes from **extrapolation** — training current never exceeds 30 A while SOP
+asks about 60–100 A. So what happens in a form that needs no extrapolation,
+with **I\* itself as the target**?
 
-특징은 하이브리드가 보는 것과 정확히 같다: 트림의 12 개 O(1) 통계 + 여유 전압
-(V_pre − 2.5 V). 펄스 자체는 보지 않는다 — 차량이 "얼마나 뽑을 수 있나" 를 물을
-때 아직 뽑지 않았다. 6 셀 leave-one-cell-out, 5,995 행.
+The features are exactly what the hybrid sees: the trim's 12 O(1) statistics
+plus headroom voltage (V_pre − 2.5 V). The pulse itself is not seen — when a
+vehicle asks "how much can I draw," it has not drawn yet. 6-cell
+leave-one-cell-out, 5,995 rows.
 
-| 형태 | 모델 | 평균 | 최악 셀 |
+| Form | Model | Mean | Worst cell |
 |---|---|---:|---:|
-| **D0  I\* 직접** | linear | 11.27 A | 12.72 |
-| **D0  I\* 직접** | tiny MLP (529) | **17.39** | 18.05 |
+| **D0  I\* direct** | linear | 11.27 A | 12.72 |
+| **D0  I\* direct** | tiny MLP (529) | **17.39** | 18.05 |
 | D1  I\*/I_ecm | linear | 5.05 | 6.63 |
 | D1  I\*/I_ecm | tiny | 5.28 | 10.33 |
 | **D2  I\*−I_ecm** | **tiny (529)** | **4.39** | **6.48** |
 | D2  I\*−I_ecm | linear | 4.82 | 6.58 |
-| ECM (보정 없음) | — | 7.25 | 11.75 |
-| 하이브리드 역산 (26) | — | 4.94 | 6.47 |
+| ECM (uncorrected) | — | 7.25 | 11.75 |
+| hybrid inversion (26) | — | 4.94 | 6.47 |
 
-### 15.1 순수 data-driven 은 보정 없는 ECM 보다 나쁘다
+### 15.1 Pure data-driven is worse than an uncorrected ECM
 
-D0 는 11.27 A(선형), **17.39 A(MLP)** 로 ECM 7.25 A 에 못 미친다. 외삽 문제를
-제거했는데도 그렇다.
+D0 gives 11.27 A (linear) and **17.39 A (MLP)**, short of the ECM's 7.25 A —
+even with the extrapolation problem removed.
 
-이유는 목표의 구성에 있다. I\* 는 9.1~156.3 A 로 17 배에 걸치고 그 변동의 대부분은
-SOC 와 V_pre 가 정하는 **물리**다. 직접 회귀는 그것을 처음부터 배워야 하는데
-특성화 274 개로는 배우지 못한다.
+The reason lies in how the target is composed. I\* spans 9.1–156.3 A, a
+factor of 17, and most of that variation is **physics** set by SOC and V_pre.
+Direct regression has to learn that from scratch, and 274 characterisations
+are not enough.
 
-**그리고 MLP 가 선형보다 54 % 나쁘다.** 용량을 주면 여섯 셀에 과적합한다.
+**And the MLP is 54 % worse than linear.** Given capacity, it overfits six
+cells.
 
-### 15.2 물리를 기준으로 두면 즉시 된다 — 그리고 그때는 용량이 도움이 된다
+### 15.2 With physics as the reference it works immediately — and then capacity helps
 
-ECM 의 답을 기준으로 **차이만** 배우면(D2) 4.39 A 로 하이브리드 역산(4.94)을 11 %
-이긴다. 같은 특징, 같은 분할, 같은 행이다.
+Learning **only the difference** from the ECM's answer (D2) gives 4.39 A,
+beating the hybrid inversion (4.94) by 11 %. Same features, same split, same
+rows.
 
-**D2 에서는 MLP 가 선형을 이긴다**(4.39 대 4.82). D0 에서 정반대였던 것과 대비된다:
-배울 것이 잔차뿐이면 용량이 도움이 되고, 전체를 배워야 하면 독이 된다. 이것이
-이 프로젝트에서 물리 기준선의 역할을 가장 선명하게 보여주는 대비다.
+**In D2 the MLP beats linear** (4.39 against 4.82), the opposite of D0. When
+there is only a residual to learn, capacity helps; when the whole thing has
+to be learned, it is poison. That contrast is the sharpest demonstration in
+this project of what a physical baseline does.
 
-최악 셀은 6.48 대 6.47 로 하이브리드와 동률이다. 둘 다 BOOST_REST 에서 6.5 A
-근처에 막힌다.
+The worst cell is 6.48 against 6.47, a tie with the hybrid. Both stall near
+6.5 A on BOOST_REST.
 
-### 15.3 이것이 "AI 로 SOP 를 한다" 는 아니다
+### 15.3 This is not "doing SOP with AI"
 
-D2 는 ECM 의 I\* 를 입력으로 받는다. 물리 모델이 없으면 성립하지 않는다. 정확한
-서술은 **"ECM 위에 529 개 파라미터를 얹는다"** 이고, 그것이 지금까지 나온 형태 중
-최선이다. 아키텍처 축으로 정리하면:
+D2 takes the ECM's I\* as an input. It does not exist without the physical
+model. The accurate statement is **"529 parameters on top of an ECM"**, and
+that is the best form found so far. Organised along the architecture axis:
 
-| 방식 | 목표 | 물리 기준 | 평균 | 결과 |
+| Approach | Target | Physical baseline | Mean | Outcome |
 |---|---|---|---:|---|
-| Full AI (1.08 M) | 전압 → 역산 | 없음 | — | **역산 불가** |
-| 직접 회귀 D0 (529) | I\* | 없음 | 11.3~17.4 A | ECM 보다 나쁨 |
-| 하이브리드 (26) | 저항 곱수 | ECM | 4.94 A | 닫힌해 |
-| **잔차 회귀 D2 (529)** | I\* − I_ecm | ECM | **4.39 A** | 최선 |
+| Full AI (1.08 M) | voltage → inversion | none | — | **cannot invert** |
+| direct regression D0 (529) | I\* | none | 11.3–17.4 A | worse than the ECM |
+| hybrid (26) | resistance multipliers | ECM | 4.94 A | closed form |
+| **residual regression D2 (529)** | I\* − I_ecm | ECM | **4.39 A** | best |
 
-물리 기준이 없는 두 형태는 실패하고, 있는 두 형태는 성공한다. **파라미터 수가
-아니라 기준선의 유무가 가른다.**
+The two forms without a physical baseline fail and the two with one succeed.
+**What separates them is the presence of a baseline, not the parameter
+count.**
 
-### 15.4 오라클 상태임을 밝혀둔다
+### 15.4 Stated: this is the oracle state
 
-이 표의 SOC 와 SOH 는 파일의 참값이다. EKF 를 물린 엔드투엔드는 §15.5 에서 잰다.
+SOC and SOH in this table are the file's true values. The end-to-end version
+with an EKF attached is measured in §15.5.
 
-### 15.5 엔드투엔드 — EKF 의 SOC 를 물려도 무너지지 않는다
+### 15.5 End to end — attaching the EKF's SOC does not break it
 
-SOC 를 파일이 아니라 필터에서 받고, ECM 기준선도 **추정된 SOC 에서 다시 푼다**.
-기준선을 참값 SOC 의 답으로 두면 모델이 BMS 에 없는 물리 위에서 잔차를 배우게
-되고, 있지도 않은 정확도를 체인에 얹게 된다.
+SOC comes from the filter rather than the file, and **the ECM baseline is
+re-solved at the estimated SOC too.** Leaving the baseline as the answer at
+true SOC would have the model learn residuals on top of physics the BMS does
+not have, adding accuracy to the chain that is not there.
 
-| 형태 | 오라클 (5,995 행) | 엔드투엔드 (2,927 행) |
+| Form | Oracle (5,995 rows) | End to end (2,927 rows) |
 |---|---:|---:|
-| ECM (보정 없음) | 7.25 A | 5.46 |
+| ECM (uncorrected) | 7.25 A | 5.46 |
 | **D2 tiny (529)** | **4.39** | **3.38** |
 | D2 linear | 4.82 | 3.72 |
 | D0 linear | 11.27 | 5.41 |
 | **D0 tiny** | 17.39 | **27.85** |
 
-**엔드투엔드 열이 더 좋은 것은 EKF 때문이 아니라 행 집합 때문이다** — ECM 자신도
-7.25 → 5.46 으로 좋아진다. 필터가 커버하는 rank3 펄스 부분집합이 더 쉬운 구간이다.
-두 열을 가로로 비교하면 안 되고, 각 열 안에서만 읽어야 한다.
+**The end-to-end column is better because of the row set, not the EKF** — the
+ECM itself improves 7.25 → 5.46. The rank-3 pulse subset the filter covers is
+an easier region. The two columns must not be compared across; each is read
+only within itself.
 
-같은 행 안에서: ECM 5.46 → **D2 tiny 3.38 A (38 % 개선)**, 최악 셀 9.64 → **5.26 A
-(45 %)**.
+Within the same rows: ECM 5.46 → **D2 tiny 3.38 A (38 % better)**, worst cell
+9.64 → **5.26 A (45 %)**.
 
-**SOC 추정 오차가 D2 를 무너뜨리지 않는다.** §11.3 의 합성 오차 전파는 계통 2 %
-에서 4.94 → 14.23 A 를 예측했지만, 실제 필터를 물리면 그런 붕괴가 없다 — 실제 EKF
-오차(|중앙| 0.0139)는 셀 전체에 고정된 상수 오프셋과 성질이 다르다. §11 의 재검이
-이미 같은 것을 보였다.
+**SOC estimation error does not break D2.** §11.3's synthetic error
+propagation predicted 4.94 → 14.23 A at a systematic 2 %, but attaching the
+real filter produces no such collapse — real EKF error (median |·| 0.0139)
+behaves differently from a constant offset fixed across a cell. §11's
+recheck already showed the same.
 
-**그리고 D0 tiny 는 엔드투엔드에서 17.39 → 27.85 A 로 더 나빠진다.** SOC 가
-추정치로 바뀌자 물리를 처음부터 배우려던 모델이 흔들린다. 반면 D0 linear 는
-5.41 A 로 멀쩡하다. **물리 기준선 없이는 용량이 독**이라는 §15.2 의 관찰이
-엔드투엔드에서 더 강하게 재현된다.
+**And D0 tiny gets worse end to end, 17.39 → 27.85 A.** Once SOC becomes an
+estimate, the model that tried to learn physics from scratch wobbles. D0
+linear, by contrast, holds at 5.41 A. §15.2's observation — **without a
+physical baseline, capacity is poison** — reproduces more strongly end to
+end.
 
-### 15.6 채택된 체인 (2026-08-23)
+### 15.6 The adopted chain (2026-08-23)
 
-| 구성요소 | 방식 | 파라미터 | 성능 |
+| Component | Method | Parameters | Performance |
 |---|---|---:|---|
-| SOC | EKF, 상태 [SOC, V1, V2] + 결정론적 이력 | 0 | \|오차\| 중앙 0.0139 |
+| SOC | EKF, state [SOC, V1, V2] + deterministic hysteresis | 0 | median \|error\| 0.0139 |
 | SOH | dQ/dV CNN | 10,945 | RMSE 0.0128 |
-| **SOP** | **pooled ECM + tiny MLP 잔차** | **529** | **3.38 A** (동일 행 ECM 5.46) |
+| **SOP** | **pooled ECM + tiny MLP residual** | **529** | **3.38 A** (ECM 5.46 on the same rows) |
 
-SOP 의 "small AI" 는 529 개이고 물리 기준선 위에 얹혀 있다. 순수 AI 는 어떤
-크기로도 안 된다 — 1.08 M 은 역산이 불가능하고, 529 는 ECM 보다 나쁘다.
+The "small AI" in SOP is 529 parameters sitting on a physical baseline. Pure
+AI does not work at any size — 1.08 M cannot be inverted, and 529 is worse
+than the ECM.
 
 ---
 
-## 16. 충전 방향 SOP (2026-08-23)
+## 16. SOP in the charge direction (2026-08-23)
 
-SOP 를 했다고 말하려면 양방향이어야 하는데 §11~15 는 전부 방전이었다. 회생 제동
-한계는 BMS 의 절반이고, 낙관하면 과충전이므로 안전 함의는 오히려 크다.
+Claiming to have done SOP requires both directions, and §11–15 were all
+discharge. The regenerative braking limit is half of a BMS, and being
+optimistic there means overcharge, so the safety implications are if anything
+larger.
 
-### 16.1 충전 라벨이 방전보다 훨씬 잘 조건화된다
+### 16.1 Charge labels are far better conditioned than discharge
 
-같은 방법 — HPPC 의 네 전류 단계에 직선을 맞춰 V_max = 4.2 V 로 푼다. SOC > 0.92
-와 V_tau >= 4.195 V 는 제외했다: 충전 행의 10.2 % 가 정확히 4.2000 V 인데, 그것은
-셀의 응답이 아니라 사이클러가 펄스를 자른 것이고 저항 측정이 아니다.
+Same method — fit a line through HPPC's four current steps and solve to
+V_max = 4.2 V. SOC > 0.92 and V_tau ≥ 4.195 V are excluded: 10.2 % of charge
+rows sit at exactly 4.2000 V, which is the cycler truncating the pulse rather
+than the cell's response, and is not a resistance measurement.
 
-| 외삽 배수 | 충전 | 방전 |
+| Extrapolation factor | Charge | Discharge |
 |---|---:|---:|
-| **≤ 1.0 (내삽)** | **34.1 %** | 8.0 % |
-| 1.0~1.5 | 35.2 % | 14.1 % |
-| 1.5~2.5 | 30.2 % | 32.7 % |
+| **≤ 1.0 (interpolated)** | **34.1 %** | 8.0 % |
+| 1.0–1.5 | 35.2 % | 14.1 % |
+| 1.5–2.5 | 30.2 % | 32.7 % |
 | **> 2.5** | **0.4 %** | **45.1 %** |
-| 두 적합 차이(중앙) | **0.2 A** | 1.4 A |
+| difference between the two fits (median) | **0.2 A** | 1.4 A |
 
-**충전 SOP 는 이 데이터로 훨씬 확실하게 검증된다.** 물리적 이유가 있다 — 충전
-천장(4.2 V)은 셀이 가까이 있고 방전 바닥(2.5 V)은 멀어서, 측정 가능한 전류로
-천장에는 닿고 바닥에는 닿지 못한다.
+**Charge SOP is far more solidly validated by this data.** There is a
+physical reason — the charge ceiling (4.2 V) is close to the cell while the
+discharge floor (2.5 V) is far, so a measurable current reaches the ceiling
+and not the floor.
 
-### 16.2 방전 트림을 충전에 쓰면 안 된다
+### 16.2 The discharge trim must not be used on charge
 
-트림은 `rate_rank in ("2","3")` 의 **방전** 펄스로만 학습된다. 그 곱수를 충전
-저항에 곱하면 여섯 셀 중 **둘에서 보정 없는 ECM 에 진다** — CC_CELL2 1.37 → 2.21 A
-(−62 %), BOOST_NEGPULSE 2.63 → 3.21 (−22 %). 방전에서 6/6 이겼던 것과 대비된다.
+The trim is trained only on **discharge** pulses with
+`rate_rank in ("2","3")`. Multiplying charge resistance by those multipliers
+**loses to the uncorrected ECM on two of six cells** — CC_CELL2 1.37 →
+2.21 A (−62 %), BOOST_NEGPULSE 2.63 → 3.21 (−22 %). In contrast to winning
+6/6 on discharge.
 
-충전 펄스로 트림을 따로 학습하면 전압 도메인에서 51.03 → 33.66 mV, **+34.0 %,
-6/6** — 방전의 +33.6 % 와 같은 수준이다. **k_s 가 전부 0.976~1.001 로 1 에 붙는
-것**이 방전(0.90~1.10)과 다른 점이다: 충전에서는 느린 가지 보정이 거의 필요 없고
-빠른 곱수만 일한다.
+Training a separate trim on charge pulses gives 51.03 → 33.66 mV in the
+voltage domain, **+34.0 %, 6/6** — the same level as discharge's +33.6 %.
+What differs from discharge (0.90–1.10) is that **k_s stays pinned to 1 at
+0.976–1.001**: on charge the slow branch barely needs correcting and only the
+fast multiplier works.
 
-암페어로는 2.62 → **2.41 A**, 개선 +25.7 % → **+31.5 %**. 다만 진 두 셀은 손실이
-절반으로 줄 뿐 부호는 그대로다(−62 → −31 %, −22 → −9 %). 둘 다 **ECM 이 이미 좋은
-셀**이고, 보정할 것이 없는 곳에서 곱수 추정 잡음만 더해지는 것은 §7.6.5 가 SOH
-0.95 이상에서 본 것과 같다.
+In amperes it is 2.62 → **2.41 A**, a gain of +25.7 % → **+31.5 %**. The two
+losing cells only halve their loss without changing sign (−62 → −31 %,
+−22 → −9 %). Both are **cells where the ECM is already good**, and adding
+multiplier estimation noise where there is nothing to correct is the same
+thing §7.6.5 saw above SOH 0.95.
 
-### 16.3 남은 +1.02 A 낙관 편향의 추적 — 세 후보 기각, 하나 확정
+### 16.3 Tracing the remaining +1.02 A optimistic bias — three candidates rejected, one confirmed
 
-| 후보 | 검증 | 결과 |
+| Candidate | Test | Result |
 |---|---|---|
-| 라벨의 선형 외삽 | 하위율로 최고율 예측 | **반대 방향** — 충전은 R 이 떨어져 직선이 전압을 +26.6~77.5 mV 높게 보고, 그러면 라벨 I* 가 과대해져 예측이 보수적으로 보인다 |
-| pooled 충전 저항 | 4 단계 × 4 SOH 밴드 측정 대조 | 3.5~4.8 % 일치, 저 SOH 고율은 오히려 pooled 가 5 % 큼(보수) |
-| 사다리 클램프 | 예측 I* 가 사다리 밖인 비율 | 62.8 % 가 밖이지만 그 구간 상대 편향이 **더 작다**(3.1 % 대 10.8 %), 방향도 보수 |
-| **기준점 불일치** | 절편 대 V_pre | **확정** |
+| the label's linear extrapolation | predict the highest rate from the lower ones | **opposite direction** — on charge R falls, so a straight line reads voltage +26.6 to +77.5 mV high, which makes the label I* too large and the prediction look conservative |
+| pooled charge resistance | compare 4 steps × 4 SOH bands against measurement | agrees within 3.5–4.8 %; at low SOH and high rate the pooled value is actually 5 % larger (conservative) |
+| ladder clamping | fraction of predicted I* outside the ladder | 62.8 % are outside, but the relative bias there is **smaller** (3.1 % against 10.8 %) and conservative in direction |
+| **reference-point mismatch** | intercept against V_pre | **confirmed** |
 
-**편향이 절대값 +1 A 로 고정**이라는 것이 단서였다 — 사다리 안(I* 8.5 A)에서
-+0.92, 밖(37.0 A)에서 +1.13. I* 크기와 무관하다. R_eff 가 12~25 mOhm 이므로
-+1 A 는 전압 20 mV 에 해당한다.
+The clue was that **the bias is fixed at about +1 A in absolute terms** —
++0.92 inside the ladder (I* 8.5 A) and +1.13 outside (37.0 A), independent of
+the size of I*. With R_eff at 12–25 mΩ, +1 A corresponds to 20 mV.
 
-라벨은 네 전류 단계에 맞춘 직선의 **절편**에서 출발하고, 역산은 **첫 rank 의 기록된
-V_pre** 에서 출발한다. 네 펄스가 순차로 인가되며 셀이 흐르기 때문에 둘이 중앙
-**+14.1 mV** 다르다(그룹 내 V_pre 변동폭 13.8 mV). 절편을 시작점으로 바꾸면:
+The label starts from the **intercept** of the line fitted to four current
+steps; the inversion starts from **the recorded V_pre of the first rank.**
+The four pulses are applied in sequence and the cell drifts, so the two
+differ by a median **+14.1 mV** (V_pre varies by 13.8 mV within a group).
+Starting from the intercept instead:
 
-| 역산 시작 전압 | n | RMSE | 편향 |
+| Inversion start voltage | n | RMSE | Bias |
 |---|---:|---:|---:|
-| V_pre 기록 | 3,707 | 2.57 A | +1.06 A |
-| **적합 절편** | 3,707 | **2.05 A** | **+0.10 A** |
+| recorded V_pre | 3,707 | 2.57 A | +1.06 A |
+| **fitted intercept** | 3,707 | **2.05 A** | **+0.10 A** |
 
-**편향이 사라진다.** 이것은 모델 결함이 아니라 라벨과 역산이 서로 다른 기준점에서
-출발한 것이었다.
+**The bias disappears.** This was not a model defect but the label and the
+inversion starting from different reference points.
 
-(이 검사는 두 번 만에 맞았다. 첫 시도는 평가표에 tau = 2 s 와 10 s 가 섞여 있는데
-tau 를 10 초로 하드코딩해, 절반을 2 초 라벨 대 10 초 저항으로 풀었다. 같은 행의
-저장값이 2.41 A 인데 5.84 A 가 나왔고, 그 불일치가 harness 의 것임을 확인한 뒤
-고쳤다.)
+(This check took two attempts. The first hard-coded tau at 10 s while the
+evaluation table mixes τ = 2 s and 10 s, so half of it solved 2 s labels
+against 10 s resistance. It gave 5.84 A where the stored value for the same
+rows was 2.41 A, and the discrepancy was traced to the harness before being
+fixed.)
 
-### 16.4 방전에는 같은 결함이 없다 — 다른 결함이 있다
+### 16.4 Discharge has no such defect — it has a different one
 
-| | 방전 | 충전 |
+| | Discharge | Charge |
 |---|---:|---:|
-| 절편 − 첫 V_pre | −12.0 mV | +14.1 mV |
-| **그룹 내 V_pre 변동폭** | **2.4 mV** | **13.8 mV** |
-| 절편으로 치환 | 4.94 → 5.12 A (악화) | 2.57 → 2.05 A (개선) |
+| intercept − first V_pre | −12.0 mV | +14.1 mV |
+| **V_pre variation within a group** | **2.4 mV** | **13.8 mV** |
+| substituting the intercept | 4.94 → 5.12 A (worse) | 2.57 → 2.05 A (better) |
 
-**방전 펄스 사이에는 셀이 거의 흐르지 않는다**(2.4 mV). 충전은 펄스가 SOC 를
-올리고 뒤이은 휴지에서 완전히 돌아오지 않아 6 배 흐른다. 그래서 방전에서는 V_pre
-가 옳은 기준점이고, 절편(−12.0 mV)은 45 % 가 2.5 배 이상 외삽인 데서 오는 직선의
-절편일 뿐이라 시작점으로 쓰면 나빠진다.
+**Between discharge pulses the cell barely drifts** (2.4 mV). On charge the
+pulse raises SOC and the following rest does not fully return it, so it
+drifts 6×. So V_pre is the right reference on discharge, and the intercept
+(−12.0 mV) is just the intercept of a line where 45 % is extrapolated 2.5× or
+more, which makes it worse as a starting point.
 
-방전의 −0.76 A 보수 편향은 §11.1 이 측정한 **외삽 편향**(1.17~2.51 A, I* 를 작게
-보는 방향)으로 부호와 크기가 설명된다.
+The discharge side's −0.76 A conservative bias is explained in both sign and
+magnitude by the **extrapolation bias** §11.1 measured (1.17–2.51 A, in the
+direction of reading I* small).
 
-### 16.5 정리
+### 16.5 Summary
 
-| | ECM | 하이브리드 | 라벨 기준점 보정 후 |
+| | ECM | Hybrid | after correcting the label reference |
 |---|---:|---:|---:|
-| **충전** | 3.52 A | 2.41 A | **2.05 A** (편향 +0.10) |
-| 방전 | 7.25 A | 4.94 A | — (해당 결함 없음) |
+| **charge** | 3.52 A | 2.41 A | **2.05 A** (bias +0.10) |
+| discharge | 7.25 A | 4.94 A | — (no such defect) |
 
-**충전 SOP 가 방전보다 두 배 이상 정확하다.** 라벨 조건도 훨씬 좋다.
+**Charge SOP is more than twice as accurate as discharge.** Its label
+conditions are far better too.
 
-기준점 보정은 **진단이지 배치 가능한 수정이 아니다** — 절편은 네 전류 단계를 다
-아는 사후 값이고 차량은 지금의 단자 전압 하나만 안다. 실질적 함의는 라벨 쪽이다:
-측정 기반 충전 I* 라벨이 네 펄스에 걸친 드리프트를 흡수해 **약 1 A 작다.**
+The reference correction is **a diagnosis, not a deployable fix** — the
+intercept is an after-the-fact value that knows all four current steps, while
+a vehicle knows only its present terminal voltage. The practical implication
+is on the label side: a measurement-based charge I* label absorbs the drift
+across four pulses and is **about 1 A small.**
 
 ---
 
-## 17. 두 채점을 구분한다 (2026-08-23)
+## 17. Two scorings, kept distinct (2026-08-23)
 
-같은 하이브리드가 문서 안에서 **두 개의 숫자**를 갖는다. 채점이 다르기 때문이고,
-어느 쪽도 틀리지 않았지만 나란히 놓으면 회귀로 읽힌다.
+The same hybrid carries **two numbers** in this document, because the
+scorings differ. Neither is wrong, but placed side by side they read as a
+regression.
 
-| 채점 | 무엇을 세는가 | rank 키 6 셀에서 |
+| Scoring | What it counts | With the rank key, 6 cells |
 |---|---|---:|
-| `sop_trim.py` 자체 | 그 pool 의 데이터셋에 있는 **모든 특징 블록** (라벨당 12) | **57.1 mV** |
-| **A13** | LSTM 도 세울 수 있었던 **교집합 펄스**, **마지막 블록만** | **44.8 mV** |
+| `sop_trim.py` itself | **every feature block** in that pool's dataset (12 per label) | **57.1 mV** |
+| **A13** | the **intersection pulses** the LSTM could also be placed on, **last block only** | **44.8 mV** |
 
-§7.5 와 §14.9 는 앞의 것을, §7.6.5 와 §10 은 뒤의 것을 쓴다.
+§7.5 and §14.9 use the former; §7.6.5 and §10 use the latter.
 
-### 17.1 네 pool 을 A13 채점으로 통일
+### 17.1 All four pools under the A13 scoring
 
-| pool | BOOST | BNP | BNP_1S | B_REST | CC | CC_2 | 평균 | 최악 |
+| Pool | BOOST | BNP | BNP_1S | B_REST | CC | CC_2 | mean | worst |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| rank 키 6 셀 | 32.7 | 38.8 | 46.9 | 62.6 | 41.5 | 46.4 | 44.8 | 62.6 |
-| **전류 키 6 셀** | 30.7 | 38.9 | 47.7 | 60.9 | 40.6 | 38.0 | **42.8** | 60.9 |
-| 전류 키 8 셀 | 38.2 | 35.5 | 55.0 | 57.5 | 44.3 | 38.1 | 44.8 | **57.5** |
-| 정렬 8 셀 | 37.9 | 35.2 | 55.0 | 57.4 | 43.9 | 38.3 | 44.6 | 57.4 |
+| rank key, 6 cells | 32.7 | 38.8 | 46.9 | 62.6 | 41.5 | 46.4 | 44.8 | 62.6 |
+| **current key, 6 cells** | 30.7 | 38.9 | 47.7 | 60.9 | 40.6 | 38.0 | **42.8** | 60.9 |
+| current key, 8 cells | 38.2 | 35.5 | 55.0 | 57.5 | 44.3 | 38.1 | 44.8 | **57.5** |
+| aligned, 8 cells | 37.9 | 35.2 | 55.0 | 57.4 | 43.9 | 38.3 | 44.6 | 57.4 |
 
-**전류 키가 rank 키보다 평균과 최악 둘 다 낫다**(42.8/60.9 대 44.8/62.6). 키 변경은
-비용 없는 개선이다.
+**The current key beats the rank key on both mean and worst** (42.8/60.9
+against 44.8/62.6). The key change is a free improvement.
 
-**셀 수는 평균 대 최악의 절충이다** — 6 셀이 평균 42.8, 8 셀이 최악 57.5. §14.9 가
-자체 채점으로 본 것과 같은 방향이고, 정렬(§14.7)은 여전히 무의미하다(44.8 → 44.6).
+**Cell count is a trade between mean and worst** — 6 cells give a mean of
+42.8, 8 cells a worst of 57.5. Same direction as §14.9's self-scoring, and
+alignment (§14.7) remains pointless (44.8 → 44.6).
 
-### 17.2 §10 의 채택 결정을 어느 pool 로 읽어야 하는가
+### 17.2 Which pool §10's adoption decision should be read against
 
-§10 이 인용한 44.8 mV 는 **rank 키 6 셀**의 A13 채점이다. 그것이 그 시점의 유일한
-구성이었기 때문이고, 이후 §14 가 전류 키와 8 셀을 도입했다. 갱신하면:
+The 44.8 mV §10 cited is the A13 scoring of the **rank key, 6 cells**,
+because that was the only configuration at the time; §14 later introduced the
+current key and 8 cells. Updated:
 
-| | 평균 | 최악 |
+| | mean | worst |
 |---|---:|---:|
-| §10 시점 (rank 6 셀) | 44.8 mV | 62.6 |
-| **평균을 취하면** (전류 6 셀) | **42.8** | 60.9 |
-| **최악을 취하면** (전류 8 셀) | 44.8 | **57.5** |
+| at the time of §10 (rank, 6 cells) | 44.8 mV | 62.6 |
+| **taking the mean** (current, 6 cells) | **42.8** | 60.9 |
+| **taking the worst** (current, 8 cells) | 44.8 | **57.5** |
 
-§10 이 세운 기준 — BMS 는 평균이 아니라 최악을 보장한다 — 을 따르면 **전류 키
-8 셀**이다. 다만 그 선택의 실질은 최악 셀 62.6 → 57.5 (−8 %)이고 평균은 그대로다.
+By §10's own criterion — a BMS guarantees the worst case, not the average —
+it is **the current key with 8 cells.** Though what that choice buys is the
+worst cell 62.6 → 57.5 (−8 %) with the mean unchanged.
 
 ---
 
-## 18. 온도 축 (2026-08-23)
+## 18. The temperature axis (2026-08-23)
 
-이 프로젝트의 모든 측정이 25 C 였다. 레퍼런스 논문의 그림은 −20 부터 40 C 까지
-쓸고, 거기서 그들의 ECM 이 40 C 의 25 mV 에서 −20 C 의 77.5 mV 로 3 배 나빠진다.
-**온도는 ECM 이 가장 약한 축**이므로, 보정된 ECM 이 신경망을 이긴다는 주장은 그
-축이 없으면 미완이다.
+Every measurement in this project was at 25 °C. The reference paper's figure
+sweeps −20 to 40 °C, and there its ECM degrades 3×, from 25 mV at 40 °C to
+77.5 mV at −20 °C. **Temperature is the ECM's weakest axis**, so the claim
+that a corrected ECM beats a neural network is incomplete without that axis.
 
-### 18.1 무엇을 쓸 수 있는가
+### 18.1 What is available
 
-RPCWBY Test#3 은 Samsung 30T 한 셀을 −20, −10, 0, 10, 25, 40 C 에서 2 s, 10 s,
-30 s 펄스로 측정한 18 개 조합이다(`analysis/rpcwby_temp_pulses.py`, 24 파일에서
-1,656 펄스). **여섯 aging 셀과 다른 셀**이므로 이에 대한 평가는 전부 교차
-데이터셋 일반화 시험이다.
+RPCWBY Test#3 measures one Samsung 30T at −20, −10, 0, 10, 25 and 40 °C with
+2 s, 10 s and 30 s pulses — 18 combinations
+(`analysis/rpcwby_temp_pulses.py`, 1,656 pulses from 24 files). It is **a
+different cell from the six aging cells**, so every evaluation on it is a
+cross-dataset generalisation test.
 
-실측 셀 온도가 설정보다 일관되게 높다 — 설정 −20 C 에서 −17.9 C, −10 에서 −8.1.
-자기발열이고, `ecm_temp_factor` 가 `T_cell_C` 를 쓰므로 평가도 실측값으로 한다.
+The measured cell temperature is consistently above the setpoint — −17.9 °C
+at a −20 °C setting, −8.1 at −10. That is self-heating, and since
+`ecm_temp_factor` uses `T_cell_C`, evaluation uses the measured value too.
 
-### 18.2 저항은 여섯 온도와 세 지평에서 맞는다
+### 18.2 Resistance holds across six temperatures and three horizons
 
-pooled 표(UYPYDJ 6 셀, 25 C)에 온도 인자 g(Mendeley 에서 별도 측정)를 곱해 제 3 의
-셀을 예측한다. 학습에 쓰인 적 없는 데이터다.
+Multiply the pooled table (UYPYDJ's 6 cells at 25 °C) by a temperature factor
+g (measured separately from Mendeley) and predict a third cell. Data never
+used in training.
 
-| 설정 T | tau=2 s | tau=10 s | tau=30 s |
+| Setpoint T | tau=2 s | tau=10 s | tau=30 s |
 |---|---:|---:|---:|
-| −20 C | 0.81 | 0.94 | 1.11 |
+| −20 °C | 0.81 | 0.94 | 1.11 |
 | −10 | 0.89 | 0.90 | 0.93 |
 | 0 | 0.97 | 1.09 | 1.02 |
 | 10 | 0.86 | 0.93 | 0.87 |
 | 25 | 0.89 | 0.90 | 0.82 |
 | 40 | 0.91 | 0.90 | 0.79 |
 
-(예측/측정 비. 저항 자체는 9.6 에서 88.2 mOhm 으로 **9 배** 변한다.)
+(predicted/measured ratio. The resistance itself varies **9×**, 9.6 to
+88.2 mΩ.)
 
-**전체 중앙 0.908, 상대오차 중앙 13.7 %.** 9 배 범위를 가로질러 비가 0.79~1.11 에
-머문다.
+**Overall median 0.908, median relative error 13.7 %.** Across a 9× range the
+ratio stays within 0.79–1.11.
 
-다만 **전 구간에서 9 % 과소평가**하고, 그 방향은 SOP 를 낙관하는 쪽이다. tau=30 s
-에서 온도 의존이 보인다(40 C 0.79, −20 C 1.11) — 30 s 는 2·10 s 로 환원된 표를
-외삽하는 지평이므로 예상되는 방향이다.
+But it **underestimates by 9 % everywhere**, and that direction is optimistic
+for SOP. At tau = 30 s a temperature dependence appears (0.79 at 40 °C, 1.11
+at −20 °C) — 30 s extrapolates a table reduced to 2 and 10 s, so the
+direction is expected.
 
-**이로써 tau = 2 s 와 30 s 가 저항 수준에서는 처음 검증된다.**
+**This validates τ = 2 s and 30 s at the resistance level for the first
+time.**
 
-### 18.3 그러나 온도별 SOP 라벨은 만들 수 없다
+### 18.3 But per-temperature SOP labels cannot be made
 
-Test#3 은 SOP **탐색** 데이터셋이다. 탐색은 수렴하므로 SOC 마다 전류 하나를
-남기지 팬(fan)을 남기지 않는다 — (T, tau, SOC 0.05 격자) 324 그룹 중 펄스가 3 개
-이상이고 전류 폭이 3 A 이상인 것은 62 개뿐이고, 그마저 −20/−10 C 에 몰려 있다.
+Test#3 is an SOP **search** dataset. A search converges, so it leaves one
+current per SOC rather than a fan — of 324 groups (T, tau, SOC on a 0.05
+grid), only 62 have three or more pulses with a current span of 3 A or more,
+and even those cluster at −20 and −10 °C.
 
-그 62 개로 직선을 2.55 V 까지 늘리면 **외삽이 8.7~93.8 배**가 되고 I* 가
-91~1411 A 로 물리적으로 불가능한 값이 나온다. 라벨로 쓸 수 없다.
+Extending a line through those 62 to 2.55 V gives **extrapolation factors of
+8.7–93.8×** and physically impossible I* values of 91–1411 A. Unusable as
+labels.
 
-원인은 물리다. **따뜻할수록 30 A 로는 2.55 V 에 닿지 못한다** — 25 C 중간 SOC 의
-SOP 는 60~100 A 인데 사이클러 상한이 30 A 다. 저온에서만 저항이 9 배 커져 닿고,
-그래서 풀 수 있는 그룹이 저온에 몰린다. 이것은 UYPYDJ 방전 라벨이 45 % 외삽이었던
-것과 같은 벽이다.
+The cause is physical. **The warmer it is, the less 30 A reaches 2.55 V** —
+SOP at 25 °C and mid SOC is 60–100 A against a 30 A cycler ceiling. Only in
+the cold does resistance grow 9× enough to reach it, which is why the
+solvable groups cluster there. This is the same wall as UYPYDJ's discharge
+labels being 45 % extrapolated.
 
-### 18.4 저자들의 SOP 추출 — 두 온도, 그러나 그들도 외삽한다
+### 18.4 The authors' SOP extraction — two temperatures, but they extrapolate too
 
-`rpcwby_sop_summary.csv` 에 Test#1/#2 의 SOP 가 있다: 938 개 유효값, 2 셀 × 10 과
-25 C × 사이클 1~1994 × SOC 0.005~1.000.
+`rpcwby_sop_summary.csv` holds Test#1/#2's SOP: 938 valid values, 2 cells ×
+10 and 25 °C × cycles 1–1994 × SOC 0.005–1.000.
 
-물리는 깨끗하다. SOC 0.5 에서 사이클 1 → 1428 로 가면 25 C 에서 −100.5 → −87.4 W,
-10 C 에서 −96.5 → −76.9 W — **저온의 열화가 더 가파르다**(−20 % 대 −13 %).
+The physics is clean. At SOC 0.5 from cycle 1 to 1428, 25 °C goes
+−100.5 → −87.4 W and 10 °C goes −96.5 → −76.9 W — **degradation is steeper in
+the cold** (−20 % against −13 %).
 
-**전류 제한은 아니다**: 상위값이 111.5~112.8 W 로 연속이고 30 A 근처에 뭉친 비율이
-2~9 % 다. 전압으로 정해진 값이다.
+**Not current-limited**: the upper values run continuously over
+111.5–112.8 W and only 2–9 % cluster near 30 A. They are set by voltage.
 
-그러나 |SOP| / 2.55 V 의 중앙이 **34.3 A** 로 그들 자신의 30 A 상한을 넘는다.
-논문 제목이 "A Generalized Methodology" 인 것과 맞물려, 그들도 적용한 전류 너머로
-외삽한 것으로 읽힌다. 이 프로젝트의 라벨과 **같은 성격의 한계**이므로, 이것을
-기준으로 삼아도 외삽 대 외삽의 비교가 된다.
+But the median of |SOP| / 2.55 V is **34.3 A**, above their own 30 A ceiling.
+Together with the paper's title, "A Generalized Methodology," this reads as
+their extrapolating past the current they applied. It is **the same kind of
+limit** as this project's labels, so using it as a reference is an
+extrapolation-against-extrapolation comparison.
 
-### 18.5 온도 축이 실제로 준 것과 주지 못한 것
+### 18.5 What the temperature axis actually gave and did not
 
-| | 상태 |
+| | Status |
 |---|---|
-| 저항 모델의 온도 일반화 | **검증됨** — 6 온도 × 3 지평, 외부 셀, 13.7 % |
-| tau = 2 s, 30 s | **저항 수준에서 검증됨** |
-| 온도별 **SOP 암페어** 검증 | **불가** — 30 A 상한이 따뜻한 쪽에서 바닥에 못 닿는다 |
-| 하이브리드의 온도 일반화 | **불가** — 트림의 특징이 UYPYDJ 주행에서 나오는데 Test#3 에는 주행이 없다 |
+| temperature generalisation of the resistance model | **validated** — 6 temperatures × 3 horizons, external cell, 13.7 % |
+| tau = 2 s and 30 s | **validated at the resistance level** |
+| per-temperature **SOP in amperes** | **impossible** — the 30 A ceiling does not reach the floor on the warm side |
+| temperature generalisation of the hybrid | **impossible** — the trim's features come from UYPYDJ driving and Test#3 has no driving |
 
-마지막 항목이 구조적이다. 하이브리드를 온도 축에서 시험하려면 **같은 셀에 주행과
-저온 펄스가 함께** 있어야 하는데, 세 데이터셋 어디에도 그 조합이 없다.
+The last is structural. Testing the hybrid on the temperature axis needs
+**driving and cold pulses on the same cell**, and none of the three datasets
+has that combination.
 
-### 18.6 저자들의 측정 SOP 로 채점하다 (10 / 25 C)
+### 18.6 Scored against the authors' measured SOP (10 / 25 °C)
 
-`analysis/eval_sop_rpcwby.py`. 채점 대상은 **보정 없는 pooled ECM + 온도 인자**다 —
-학습된 트림은 UYPYDJ 특성화 사이클로 색인되어 다른 실험실 셀에서 의미가 없으므로
-kf = ks = 1 로 둔다. 이 데이터에 맞춰진 것은 아무것도 없다.
+`analysis/eval_sop_rpcwby.py`. What is scored is **the uncorrected pooled ECM
+plus the temperature factor** — the trained trim is indexed by UYPYDJ
+characterisation cycles and is meaningless on another lab's cell, so
+kf = ks = 1. Nothing is fitted to this data.
 
-**쓸 수 있는 행을 가르는 법.** 저자 프로토콜은 2.55 V 바닥에 30 A 상한을 건다.
-따라서 각 행은 둘 중 하나다.
+**How usable rows are separated.** The authors' protocol applies a 30 A
+ceiling to a 2.55 V floor. So every row is one of two things.
 
-    전류 제한   I = 30 A,      V_end > 2.55   ->  |SOP| = 30 x V_end
-    전압 제한   V_end = 2.55,  I* < 30 A      ->  |SOP| = 2.55 x I*
+    current-limited   I = 30 A,      V_end > 2.55   ->  |SOP| = 30 × V_end
+    voltage-limited   V_end = 2.55,  I* < 30 A      ->  |SOP| = 2.55 × I*
 
-두 경우가 만나는 점은 정확히 2.55 x 30 = **76.5 W** 다. 그 위는 사이클러가 답을
-정한 것이므로 전압 모델을 시험할 수 없어 버린다. 이 가름은 자기일관이다 — 전류
-제한 행의 V_end 가 2.551~3.759 V 로 전부 [2.55, 4.15] 안이고, 전압 제한 행의 I* 가
-1.8~29.9 A 로 전부 30 A 이하다. 겹치는 행이 없다.
+The two meet at exactly 2.55 × 30 = **76.5 W**. Above that the cycler set the
+answer, so the voltage model cannot be tested and those rows are discarded.
+The split is self-consistent — current-limited rows have V_end 2.551–3.759 V,
+all inside [2.55, 4.15], and voltage-limited rows have I* 1.8–29.9 A, all
+below 30 A. No row overlaps.
 
-938 행 중 **342 가 전압 제한**(36 %)이고, 나머지 64 % 는 쓸 수 없다.
+Of 938 rows, **342 are voltage-limited** (36 %); the other 64 % are unusable.
 
-**SOC 축은 정격이다.** readme 117 행: `SOC = 1 - (Discharge_Capacity -
-Charge_Capacity)/cell_rated_capacity`. 이 프로젝트의 축과 같은 규약이다. 노화 용량
-기준일 것이라 보고 SOC x SOH 로 환산해 보았으나 readme 가 이를 기각한다.
+**The SOC axis is the rated one.** Line 117 of the readme:
+`SOC = 1 - (Discharge_Capacity - Charge_Capacity)/cell_rated_capacity`. Same
+convention as this project's axis. It was assumed to be on an aged-capacity
+basis and converted by SOC × SOH, but the readme rejects that.
 
-**결과** (풀 6 변형 x 344 행 = 2064 중 hull 안 319; tau = 10 s, v_pre = OCV - M):
+**Result** (6 pool variants × 344 rows = 2064, of which 319 in hull;
+τ = 10 s, v_pre = OCV − M):
 
-| | n | RMSE | 편향 | 비 중앙 |
+| | n | RMSE | Bias | median ratio |
 |---|---:|---:|---:|---:|
-| 전체 | 319 | 6.44 A | −4.18 A | 1.210 |
-| 10 C | 300 | 6.59 | −4.61 | 1.240 |
-| 25 C | 19 | 3.14 | +2.49 | 0.930 |
-| SOH 0.88~0.95 | 78 | 4.21 | −3.01 | 1.152 |
-| SOH 0.80~0.88 | 144 | 7.46 | −5.92 | 1.314 |
+| all | 319 | 6.44 A | −4.18 A | 1.210 |
+| 10 °C | 300 | 6.59 | −4.61 | 1.240 |
+| 25 °C | 19 | 3.14 | +2.49 | 0.930 |
+| SOH 0.88–0.95 | 78 | 4.21 | −3.01 | 1.152 |
+| SOH 0.80–0.88 | 144 | 7.46 | −5.92 | 1.314 |
 
-전류가 음수이므로 **비 1.21 은 쓸 수 있는 전류를 21 % 많게 본다는 뜻** — BMS 에서
-위험한 쪽이다. 그리고 그 과대평가가 **노화와 함께 깊어진다**(1.152 → 1.314).
+Current is negative, so **a ratio of 1.21 means seeing 21 % more usable
+current** — the dangerous side for a BMS. And that overestimate **deepens
+with age** (1.152 → 1.314).
 
-**오차의 출처는 저항이다.** 측정 I* 를 맞추려면 R 이 **1.29 배** 커야 한다
-(예측 36.9 mOhm, 필요 48.1 mOhm). 전압 여유 v_pre − 2.55 가 중앙 0.969 V 로 넓어
-OCV 오차로는 설명되지 않으며, 실제로 이력 항 M 을 껐다 켜도 비는 1.21 과 1.29
-사이에서만 움직인다. R 비를 SOH 로 나누면 0.869 (SOH>=0.88) -> 0.726 (0.80~0.88)
--> 0.757 (<0.80) 이다.
+**The source of the error is resistance.** Matching the measured I* requires
+R to be **1.29×** larger (predicted 36.9 mΩ, required 48.1 mΩ). The voltage
+headroom v_pre − 2.55 is a wide median 0.969 V, so OCV error does not explain
+it, and turning the hysteresis term M on and off moves the ratio only between
+1.21 and 1.29. Dividing the R ratio by SOH gives 0.869 (SOH ≥ 0.88) → 0.726
+(0.80–0.88) → 0.757 (< 0.80).
 
-**두 외부 시험의 방향이 같다.** Test#3 의 저항 검증에서 예측/측정 = 0.908, 여기서
-0.778. 둘 다 pooled ECM 이 저항을 **낮게** 본다고 말하고, 모서리(저 SOC, 노화,
-고전류)로 갈수록 깊어진다. Test#3 는 0.33C 의 완만한 조건이었고 여기는 최대 30 A
-이므로 크기 차이도 방향과 맞는다.
+**Two external tests point the same way.** Test#3's resistance validation
+gave predicted/measured = 0.908; here it is 0.778. Both say the pooled ECM
+reads resistance **low**, and it deepens toward the corners (low SOC, aged,
+high current). Test#3 was a gentle 0.33C condition and this is up to 30 A, so
+the difference in magnitude matches the direction too.
 
-**필요한 보정이 트림의 사거리 안에 있다.** k_f = exp(0.470 tanh u) 의 상한이 1.60 배인데
-필요한 값은 1.29 배다. 즉 하이브리드의 교정 기구는 이 오차와 **모양이 맞다**. 다만
-그 확인은 여기서 못 한다 — 트림의 특징은 주행 창에서 나오고, 이 평가에는 그
-파이프라인이 없다. **Test#2 가 US06 주행이므로 원리적으로는 가능하다**(18.7).
+**The required correction is within the trim's range.** k_f =
+exp(0.470 tanh u) has a ceiling of 1.60× and the required value is 1.29×. So
+the hybrid's correction mechanism is **shaped to fit** this error. That
+cannot be confirmed here, though — the trim's features come from driving
+windows and this evaluation has no such pipeline. **Test#2 is US06 driving,
+so it is possible in principle** (18.7).
 
-**한계를 분명히 한다.** hull 통과가 15 % 이고, 25 C 는 19 행뿐이다(따뜻하면 30 A 로
-바닥에 못 닿아 전압 제한 행이 저 SOC 에만 남고, 거기가 풀의 SOC 하한 0.053 밖이다).
-**따라서 이것은 10 C 에서의 시험이지 온도 대비의 시험이 아니다.**
+**The limits, stated.** Only 15 % pass the hull, and 25 °C has just 19 rows
+(when warm, 30 A does not reach the floor, so voltage-limited rows survive
+only at low SOC, which is outside the pool's SOC floor of 0.053).
+**So this is a test at 10 °C, not a test of temperature contrast.**
 
-### 18.7 남은 것
+### 18.7 Remaining
 
-Test#2 는 US06 주행 + 측정 SOP 를 한 셀에 함께 담은 **유일한** 파일이다. 여기에
-트림 특징 파이프라인을 세우면 하이브리드를 외부 셀에서, 측정 SOP 로, 10 과 25 C
-에서 채점할 수 있다. 이 프로젝트에서 가능한 가장 강한 검증이고, 아직 하지 않았다.
+Test#2 is the **only** file that holds US06 driving and measured SOP on one
+cell. Standing up the trim feature pipeline on it would score the hybrid on
+an external cell, against measured SOP, at 10 and 25 °C. That is the
+strongest validation possible in this project, and it has not been done.
 
 ---
 
-## 19. SOP 오차는 대칭이 아니다 (2026-08-23)
+## 19. SOP error is not symmetric (2026-08-23)
 
-RMSE 는 낙관(전류를 실제보다 크게 봄)과 보수를 같은 값으로 벌한다. BMS 에서 둘은
-전혀 같지 않다 — **낙관은 저전압 보호를 뚫고, 보수는 출력을 못 쓸 뿐이다.** 이
-프로젝트는 15 절까지 SOP 를 RMSE 로만 재 왔다. 부호로 가르면 다른 그림이 나온다.
+RMSE penalises optimism (reading current higher than it is) and conservatism
+equally. In a BMS they are nothing alike — **optimism breaches undervoltage
+protection, conservatism only leaves output unused.** Through §15 this
+project had measured SOP only by RMSE. Split by sign, a different picture
+appears.
 
-### 19.1 헤드라인 숫자가 희석되어 있었다
+### 19.1 The headline number was diluted
 
-전체 5,995 행에서 하이브리드의 낙관율은 42.1 % 다(ECM 45.7 %). 그런데 그 집합은
-라벨이 못 믿을 행으로 채워져 있다. 라벨은 HPPC 4-rate 팬을 전압 바닥까지 늘여
-만들고, `extrap = |I*| / max|I_meas|` 가 그 외삽 배율이다.
+Over all 5,995 rows the hybrid's optimism rate is 42.1 % (ECM 45.7 %). But
+that set is filled with rows whose labels cannot be trusted. Labels come from
+stretching HPPC's 4-rate fan to the voltage floor, and
+`extrap = |I*| / max|I_meas|` is that extrapolation factor.
 
-| extrap | n | 하이브리드 낙관율 | 평균 초과 | |I*| 중앙 |
+| extrap | n | hybrid optimism | mean overshoot | median \|I*\| |
 |---|---:|---:|---:|---:|
-| <= 1.0 (내삽) | 143 | **97.9 %** | +3.93 A | 22.7 A |
-| 1.0~1.5 | 508 | **78.7 %** | +4.15 A | 34.0 A |
-| 1.5~2.5 | 2,134 | 46.3 % | −0.27 A | 57.5 A |
-| 2.5~5 | 3,210 | 31.0 % | −2.16 A | 95.6 A |
+| ≤ 1.0 (interpolated) | 143 | **97.9 %** | +3.93 A | 22.7 A |
+| 1.0–1.5 | 508 | **78.7 %** | +4.15 A | 34.0 A |
+| 1.5–2.5 | 2,134 | 46.3 % | −0.27 A | 57.5 A |
+| 2.5–5 | 3,210 | 31.0 % | −2.16 A | 95.6 A |
 
-고외삽 행의 |I*| 중앙은 95.6 A — 3 Ah 셀에서 **32C** 다. 그 라벨은 부풀려져 있고,
-그에 대고 재면 어떤 모델이든 보수적으로 보인다.
+The median |I*| of the high-extrapolation rows is 95.6 A — **32C** on a 3 Ah
+cell. Those labels are inflated, and measured against them any model looks
+conservative.
 
-**SOH 선택 효과가 아니다.** 모든 SOH 구간에서 신뢰 라벨 쪽이 훨씬 더 낙관적이다 —
-SOH 0.90+ 에서 80.6 % 대 40.3 %, 0.80~0.90 에서 68.7 % 대 31.2 %, 0.80 미만에서
-88.3 % 대 57.6 %.
+**Not an SOH selection effect.** In every SOH band the trustworthy labels are
+far more optimistic — 80.6 % against 40.3 % above SOH 0.90, 68.7 % against
+31.2 % over 0.80–0.90, and 88.3 % against 57.6 % below 0.80.
 
-**따라서 정직한 숫자는 42.1 % 가 아니라 신뢰 라벨 651 행에서 82.9 % 다**(ECM 84.8 %).
+**So the honest number is not 42.1 % but 82.9 % on the 651 trustworthy
+rows** (ECM 84.8 %).
 
-### 19.2 라벨의 현(chord) 이 그중 9 %p 를 설명한다
+### 19.2 The label's chord explains 9 %p of that
 
-`sop_label.py` 는 두 적합을 낸다. `lin4` 는 네 rate 전부에 최소제곱, `lin2hi` 는
-높은 두 rate 만. R 이 전류에 따라 떨어지므로(2.6 A → 29.6 A 에서 0.7 배) 네 점을
-지나는 직선은 저율 점에 끌려 고전류 구간의 저항을 과대평가하고, 그래서 |I*| 를
-**낮게** 본다.
+`sop_label.py` produces two fits. `lin4` is least squares on all four rates;
+`lin2hi` uses only the top two. R falls with current (0.7× from 2.6 A to
+29.6 A), so a line through four points is pulled up by the low-rate points,
+overestimates resistance in the high-current range, and therefore reads |I*|
+**low.**
 
-라벨을 `lin2hi` 로 바꾸면 낙관율이 82.9 → **73.9 %**(대칭 트림), 52.5 → 44.1 %
-(핀볼 q=0.9)로 내려간다. 즉 겉보기 낙관의 약 9 %p 는 라벨 탓이다. **핵심 발견은
-두 라벨 모두에서 살아남는다.**
+Switching the label to `lin2hi` takes optimism from 82.9 to **73.9 %**
+(symmetric trim) and 52.5 to 44.1 % (pinball q = 0.9). So about 9 %p of the
+apparent optimism is the label. **The core finding survives both labels.**
 
-`lin2hi` 가 물리적으로 더 맞지만 동시에 모델에 유리한 방향이므로, **안전 여유는
-보수적인 `lin4` 로 보정하고 `lin2hi` 는 물리 최선추정으로 병기한다.**
-`eval_sop_amps.py --label-fit` 로 둘 다 낼 수 있다.
+`lin2hi` is physically better but also moves the label in the direction that
+flatters the model, so **the safety margin is calibrated on the conservative
+`lin4` while `lin2hi` is reported alongside as the physical best estimate.**
+`eval_sop_amps.py --label-fit` produces both.
 
-### 19.3 필요한 저항 배수 — tau=2 s 가 무너지는 곳
+### 19.3 The required resistance multiplier — where τ = 2 s breaks
 
-v_pre 와 v_min 은 라벨과 모델이 공유하므로, 차이는 전적으로 R_eff(I*) 에서 온다.
-신뢰 651 행에서 측정 I* 를 맞추려면 R 이 몇 배여야 하나:
+v_pre and v_min are shared by label and model, so the difference comes
+entirely from R_eff(I*). Over the 651 trustworthy rows, the factor R would
+need to match the measured I*:
 
-| | 중앙 | 90 %tile |
+| | median | 90th percentile |
 |---|---:|---:|
-| 하이브리드 전체 | 1.109 | — |
-| ECM 전체 | 1.198 | — |
-| SOH 0.90~1.01 | 1.055 | 1.085 |
-| SOH 0.80~0.90 | 1.052 | 1.176 |
+| hybrid, all | 1.109 | — |
+| ECM, all | 1.198 | — |
+| SOH 0.90–1.01 | 1.055 | 1.085 |
+| SOH 0.80–0.90 | 1.052 | 1.176 |
 | SOH < 0.80 | 1.143 | 1.484 |
 | **tau = 2 s** | **1.323** | **1.843** |
 | tau = 10 s | 1.076 | 1.257 |
 
-tau=10 s SOP 는 거의 맞고 **tau=2 s 가 32 % 부족하다.** 90 %tile 1.843 은 트림의
-k_f 상한 exp(0.470) = 1.60 을 넘는다 — 지금 구조로는 도달할 수 없는 보정이다.
+τ = 10 s SOP is nearly right and **τ = 2 s is 32 % short.** The 90th
+percentile of 1.843 exceeds the trim's k_f ceiling of exp(0.470) = 1.60 — a
+correction the present structure cannot reach.
 
-**tau=2 s 는 항상 외삽이다.** extrap <= 1.0 인 143 행은 전부 tau=10 s 다. 즉
-tau=2 s 의 SOP 는 이 데이터셋에서 한 번도 내삽으로 검증된 적이 없다.
+**τ = 2 s is always extrapolated.** All 143 rows with extrap ≤ 1.0 are
+τ = 10 s. So τ = 2 s SOP has never been validated by interpolation in this
+dataset.
 
-**그래도 순수 내삽에서 10~19 % 는 진짜다.** extrap <= 1.0 (tau=10 s, 143 행)에서
-하이브리드는 여전히 1.187 배(lin4) 또는 1.101 배(lin2hi)가 필요하다. 외삽과 무관한
-과소예측이 남는다.
+**But 10–19 % is real even in pure interpolation.** At extrap ≤ 1.0
+(τ = 10 s, 143 rows) the hybrid still needs 1.187× (lin4) or 1.101×
+(lin2hi). An underprediction unrelated to extrapolation remains.
 
-**외부 대조가 같은 방향이다.** RPCWBY 저자 SOP 에서 필요 배수 1.29(18.6 절),
-Test#3 저항 검증에서 예측/측정 0.908(18.2 절). 세 독립 시험이 모두 "pooled ECM 은
-저항을 낮게 본다" 고 말한다.
+**External comparisons point the same way.** The required factor against the
+RPCWBY authors' SOP is 1.29 (§18.6), and Test#3's resistance validation gives
+predicted/measured 0.908 (§18.2). Three independent tests all say the pooled
+ECM reads resistance low.
 
-### 19.4 그런데 측정 펄스에서는 무편향이다
+### 19.4 Yet on measured pulses it is unbiased
 
-홀드아웃 pooled 명목값(k=1)을 측정 dV 와 비교하면 비가 0.98~1.08 이다 — 두 지평,
-두 rate(20.2 A, 29.2 A), 모든 SOH 에서. **모델은 측정된 곳에서는 맞는다.**
+Comparing the holdout's pooled nominal (k = 1) against measured dV gives a
+ratio of 0.98–1.08 — at both horizons, both rates (20.2 A, 29.2 A) and every
+SOH. **The model is right where it was measured.**
 
-모순이 아니다. SOP 는 팬 **너머**를 묻고, 거기서 라벨은 현(chord)으로, 모델은
-rate 사다리 끝에서 R 을 고정한 접선(tangent)으로 외삽한다. R 이 전류에 따라
-떨어지므로 접선은 현보다 위에 있고, 그래서 모델의 I* 가 더 크다. 19.3 의 배수는
-**저항 모델의 오차와 두 외삽 규약의 차이가 섞인 값**이며, 19.2 와 19.3 의 마지막
-문단이 그 분해다.
+Not a contradiction. SOP asks about **beyond** the fan, and there the label
+extrapolates with a chord while the model extrapolates with a tangent, fixing
+R at the end of the rate ladder. R falls with current, so the tangent sits
+above the chord and the model's I* is larger. §19.3's factor is **a mixture
+of resistance-model error and the difference between two extrapolation
+conventions**, and the last paragraphs of §19.2 and §19.3 are that
+decomposition.
 
-### 19.5 고칠 방법 — 지평별 여유가 가장 크게 듣는다
+### 19.5 How to fix it — a per-horizon margin helps most
 
-`sop_safety.py`. |I_hat| <- lambda |I_hat| 이고, lambda 는 홀드아웃 셀을 빼고
-나머지에서 초과율이 목표가 되도록 이분법으로 잡는다(LOCO). 조건화 축을 고른다.
+`sop_safety.py`. |I_hat| ← lambda·|I_hat|, with lambda found by bisection on
+the other cells so that the exceedance rate hits the target (LOCO). Choose
+the conditioning axis.
 
-목표 5 %, 하이브리드, 신뢰 라벨:
+Target 5 %, hybrid, trustworthy labels:
 
-| 조건화 축 | 실제 초과율 | 최악 초과 | 가용률 | lambda |
+| Conditioning axis | actual exceedance | worst overshoot | usability | lambda |
 |---|---:|---:|---:|---|
-| 전역 | 5.5 % | 12.61 A | 0.691 | 0.612 |
+| global | 5.5 % | 12.61 A | 0.691 | 0.612 |
 | **tau** | **5.5 %** | **6.95 A** | **0.794** | t2=0.497, t10=0.754 |
-| tau + SOH | 6.6 % ✗ | 14.29 A | 0.812 | 6 칸 |
+| tau + SOH | 6.6 % ✗ | 14.29 A | 0.812 | 6 cells |
 
-**tau 로 나누는 것 하나가 가용률을 0.691 → 0.794 로 올리고 최악 초과를 절반으로
-줄인다.** 전역 lambda 하나는 tau=2 s 의 실패를 tau=10 s 에도 물리고 있었다.
+**Splitting by tau alone raises usability 0.691 → 0.794 and halves the worst
+overshoot.** A single global lambda was making τ = 10 s pay for τ = 2 s's
+failure.
 
-**SOH 를 한 축 더 넣으면 과적합이다.** 칸이 얇아져 보정이 새 셀로 전이되지 않고
-목표를 넘긴다(6.6 %), 최악 초과도 되레 나빠진다.
+**Adding SOH as a second axis overfits.** The cells thin out, the calibration
+does not transfer to a new cell, it overshoots the target (6.6 %), and the
+worst overshoot gets worse rather than better.
 
-**derate 는 셀 간에 전이된다** — 목표 5 % 에 실제 5.4~5.9 %, 목표 1 % 에 1.0~1.7 %.
+**The derate transfers between cells** — target 5 % gives an actual 5.4–5.9 %,
+target 1 % gives 1.0–1.7 %.
 
-### 19.6 핀볼(분위수) 손실 — 여유를 학습으로 옮기기
+### 19.6 Pinball (quantile) loss — moving the margin into training
 
-트림의 손실은 Huber, 즉 대칭이었다. `sop_trim.py --quantile q` 를 추가했다:
+The trim's loss was Huber, i.e. symmetric. `sop_trim.py --quantile q` was
+added:
 
-    e = |dV| - |dV_hat| ,   L = mean( max(q e, (q-1) e) )
+    e = |dV| − |dV_hat| ,   L = mean( max(q e, (q−1) e) )
 
-부호 정규화(s = sign(I))로 방·충전 모두 같은 코드가 쓰인다. q > 0.5 면 |dV_hat| 가
-|dV| 의 q 분위수가 된다.
+Sign normalisation (s = sign(I)) lets the same code serve both directions.
+For q > 0.5, |dV_hat| becomes the q-quantile of |dV|.
 
-**왜 이것이 임의의 안전계수가 아닌가.** SOP 반전 I* = (V_min − V_pre)/R_eff 는 R 에
-대해 단조 감소다. 단조 변환은 분위수를 보존하므로
+**Why this is not an arbitrary safety factor.** The SOP inversion
+I* = (V_min − V_pre)/R_eff is monotonically decreasing in R. A monotone
+transform preserves quantiles, so
 
     P(|I*_hat| > |I*_true|) = P(R_hat < R_true) = 1 − q
 
-즉 저항 공간의 q 가 전류 공간의 초과율을 직접 정한다 — **원리적으로는.**
+That is, q in resistance space directly sets the exceedance rate in current
+space — **in principle.**
 
-### 19.7 이력 스냅샷을 고르는 방식이 두 번째 손잡이다
+### 19.7 How the history snapshot is chosen is the second knob
 
-데이터셋은 펄스 하나를 **12 개의 서로 다른 주행 이력 창**과 짝지어 담는다
-(`m_exc` 가 다르다). 물리 저항은 하나지만 모델이 보는 이력은 12 가지이므로 k 도
-12 개 나온다. 배치되는 BMS 가 보게 될 것은 그중 하나이고, 어느 것일지는 모른다.
+The dataset pairs one pulse with **12 different drive-history windows**
+(their `m_exc` differ). The physical resistance is one number, but the model
+sees 12 histories, so 12 k's come out. A deployed BMS will see one of them,
+and which one is unknown.
 
-`trim_k` 는 (cycle, SOC, rank) 마다 **마지막** 행만 남긴다. 그 행들은 모두 특성화
-끝 시점이라 k 가 한 값으로 수렴하고 — CC 셀 사이클 40 의 원자료에는 서로 다른 k_f
-가 12 개(0.934~1.030) 있는데 SOP 평가는 1.0296 하나만 쓴다. SOC 를 살린 키를
-넣어도 결과가 **한 행도** 바뀌지 않는 이유가 이것이다.
+`trim_k` keeps only the **last** row per (cycle, SOC, rank). Those are all at
+the end of a characterisation, where k has converged to one value — the raw
+data for CC cell cycle 40 holds 12 different k_f values (0.934–1.030) while
+the SOP evaluation uses only 1.0296. That is why adding SOC to the key
+changes **not a single row.**
 
-안전을 원한다면 이력 불확실성 위에서 **상위 분위수**를 취하는 편이 맞다. 저항을
-크게 잡는 쪽이 SOP 를 보수적으로 만든다. `eval_sop_amps.py --trim-agg` 로 고른다.
-재학습이 필요 없다.
+For safety, taking an **upper quantile** over the history uncertainty is
+right. Reading resistance large makes SOP conservative.
+`eval_sop_amps.py --trim-agg` selects it. No retraining needed.
 
-### 19.8 두 손잡이의 전체 대응 (derate 없이 날것, 신뢰 라벨 651 행)
+### 19.8 Both knobs, end to end (raw, no derate, 651 trustworthy rows)
 
-| 손실 | 이론 초과 | 낙관율 (last) | 낙관율 (max) | 최악 (max) | A-RMSE (last) | k_f | mV |
+| Loss | theoretical exceedance | optimism (last) | optimism (max) | worst (max) | A-RMSE (last) | k_f | mV |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Huber | — | 82.9 % | 61.1 % | 28.5 A | 6.63 A | 0.988 | 57.1 |
 | q=0.50 | 50 % | 81.6 % | 57.8 % | 27.2 A | 6.65 A | 0.991 | 56.7 |
@@ -1562,427 +1758,484 @@ rate 사다리 끝에서 R 을 고정한 접선(tangent)으로 외삽한다. R �
 | q=0.95 | 5 % | 41.5 % | 23.2 % | 25.3 A | 5.13 A | 1.102 | 97.8 |
 | q=0.99 | 1 % | 24.4 % | 15.7 % | 23.9 A | 5.59 A | 1.188 | 132.1 |
 
-세 가지가 읽힌다.
+Three things read out.
 
-**(1) q 는 단조로 듣지만 크게 감쇠한다.** 이론 10 % 가 실제 52.5 %(last) / 28.9 %
-(max) 로 나온다. 감쇠는 매끄럽고 일정하다. 이유는 19.4 다 — 손실은 측정 펄스의
-dV 위에 있고 SOP 는 팬 너머를 묻는다. dV 손실에 없는 오차원(OCV, rate 보간, 현 대
-접선)이 반전 단계에서 더해진다. **q 는 손잡이이지 보증이 아니다.**
+**(1) q works monotonically but is heavily attenuated.** A theoretical 10 %
+comes out as an actual 52.5 % (last) / 28.9 % (max). The attenuation is
+smooth and consistent. The reason is §19.4 — the loss lives on measured pulse
+dV while SOP asks about beyond the fan. Error dimensions absent from the dV
+loss (OCV, rate interpolation, chord against tangent) are added at the
+inversion step. **q is a knob, not a guarantee.**
 
-**(2) 두 손잡이는 곱해진다.** 어느 q 에서도 max 집계가 낙관율을 20~24 %p 더
-떨어뜨린다. k 상한(1.60)에는 q=0.99 에서도 닿지 않는다(k_f 1.188).
+**(2) The two knobs multiply.** At any q, max aggregation drops optimism a
+further 20–24 %p. The k ceiling (1.60) is not reached even at q = 0.99
+(k_f 1.188).
 
-**(3) mV 와 암페어가 서로 다른 q 를 가리킨다.** mV RMSE 는 q=0.50 에서 최소
-(56.7 m)이고 단조로 나빠지는데, **암페어 RMSE 는 q=0.90 에서 최소(5.08 A)** 다.
-트림 전체가 조율된 응답공간 지표가 SOP 과제의 선택 기준이 아니다.
+**(3) mV and amperes point to different q.** mV RMSE is minimised at q = 0.50
+(56.7 m) and degrades monotonically, while **ampere RMSE is minimised at
+q = 0.90 (5.08 A)**. The response-space metric the whole trim is tuned on is
+not the selection criterion for the SOP task.
 
-**q=0.50 이 대조군을 통과한다.** 핀볼 중앙값은 L1 이므로 대칭이고, 기존 Huber 와
-사실상 같은 결과가 나와야 한다 — mV +34.0 % 대 +33.6 %, 낙관율 81.6 % 대 82.9 %.
-**따라서 q=0.9 의 개선은 Huber -> 핀볼 교체가 아니라 비대칭 자체에서 온다.**
+**q = 0.50 passes as a control.** The pinball median is L1, hence symmetric,
+and should give essentially the same result as the existing Huber — mV
++34.0 % against +33.6 %, optimism 81.6 % against 82.9 %. **So q = 0.9's gain
+comes from the asymmetry itself rather than from replacing Huber with
+pinball.**
 
-### 19.9 권고 구성
+### 19.9 Recommended configuration
 
-목표 5 %, 지평별 여유, 신뢰 라벨 651 행, 셀 홀드아웃 보정:
+Target 5 %, per-horizon margin, 651 trustworthy rows, cell-holdout
+calibration:
 
-| 구성 | 실제 초과율 | 최악 초과 | 가용률 | lambda |
+| Configuration | actual exceedance | worst overshoot | usability | lambda |
 |---|---:|---:|---:|---|
-| 현행 (Huber + last) | 5.5 % | 6.95 A | 0.794 | t2=0.497 t10=0.754 |
-| **Huber + max 집계** | **5.1 %** | **5.62 A** | 0.826 | t2=0.543 t10=0.840 |
+| current (Huber + last) | 5.5 % | 6.95 A | 0.794 | t2=0.497 t10=0.754 |
+| **Huber + max aggregation** | **5.1 %** | **5.62 A** | 0.826 | t2=0.543 t10=0.840 |
 | q0.80 + max | 5.4 % | 7.89 A | 0.843 | t2=0.602 t10=0.921 |
 | q0.90 + max | 5.8 % | 8.65 A | **0.849** | t2=0.617 t10=0.958 |
 | q0.95 + max | 6.9 % ✗ | 9.05 A | 0.846 | — |
-| ECM (참고) | 6.5 % ✗ | 4.87 A | 0.761 | t2=0.449 t10=0.665 |
+| ECM (reference) | 6.5 % ✗ | 4.87 A | 0.761 | t2=0.449 t10=0.665 |
 
-**q 를 올리면 중앙(가용률)이 좋아지고 꼬리가 나빠진다.** q=0.90 이 가용률을 2.8 %
-더 주는 대신 최악 초과를 54 % 키운다(5.62 -> 8.65 A). BMS 에서는 나쁜 거래다.
+**Raising q improves the middle (usability) and worsens the tail.** q = 0.90
+gives 2.8 % more usability at the cost of 54 % more worst overshoot
+(5.62 → 8.65 A). A bad trade for a BMS.
 
-이유는 구조적이다. 높은 q 는 k 를 전반적으로 올리고, 그러면 목표 초과율을 맞추는
-lambda 가 1 에 가까워진다. 그런데 꼬리는 **모델이 크게 틀린 행**에서 오고, 모델
-자신의 분위수는 그 행들을 알지 못한다. lambda 는 곱셈이므로 꼬리도 같이 눌러준다.
-**derate 가 학습된 분위수보다 나은 꼬리 억제기다.**
+The reason is structural. A high q raises k generally, which brings the
+lambda that hits the exceedance target closer to 1. But the tail comes from
+**rows where the model is badly wrong**, and the model's own quantile knows
+nothing about those rows. lambda is multiplicative and presses the tail down
+too. **The derate is a better tail suppressor than a learned quantile.**
 
-**목표를 조일수록 권고가 강해진다:**
+**The tighter the target, the stronger the recommendation:**
 
-| 목표 | Huber+max | q0.80+max | q0.90+max |
+| Target | Huber+max | q0.80+max | q0.90+max |
 |---|---|---|---|
 | 10 % | 10.9 % / 7.03 A / 0.867 | 10.6 % / 9.31 / 0.874 | 11.1 % / 9.64 / 0.871 |
 | 5 % | 5.1 % / **5.62** / 0.826 | 5.4 % / 7.89 / 0.843 | 5.8 % / 8.65 / **0.849** |
 | 2 % | 2.5 % / **3.50** / 0.774 | 3.4 % / 5.21 / 0.781 | 3.2 % / 7.03 / **0.791** |
 | 1 % | 1.7 % / **2.50** / **0.745** | 1.7 % / 3.83 / 0.716 | 1.8 % / 5.68 / 0.713 |
 
-(초과율 / 최악 / 가용률.) **1 % 에서는 Huber+max 가 꼬리와 가용률을 모두 이긴다.**
+(exceedance / worst / usability.) **At 1 % Huber+max wins on both tail and
+usability.**
 
-**권고: Huber 트림 + max 이력집계 + 지평별 derate.** 현행 대비 가용률
-(0.794 -> 0.826)과 최악 초과(6.95 -> 5.62 A)를 **동시에** 개선하고, 목표를 가장
-정확히 맞히며, **재학습이 필요 없다.** tau=10 s 는 16 % 만 깎으면 된다.
+**Recommendation: Huber trim + max history aggregation + per-horizon
+derate.** Against the current setting it improves usability (0.794 → 0.826)
+**and** worst overshoot (6.95 → 5.62 A) **at the same time**, hits the target
+most accurately, and **needs no retraining.** τ = 10 s needs only a 16 % cut.
 
-`docs/fig_sop_safety.png` 가 프론티어 전체다. **어느 축을 살 것인지는 설계
-결정이지만, 여유는 지평별로 두어야 한다** — 그 축은 두 목적 모두에서 이긴다.
+`docs/fig_sop_safety.png` is the whole frontier. **Which axis to buy is a
+design decision, but the margin has to be per horizon** — that axis wins for
+both objectives.
 
+### 19.11 So does it not exceed? — it does
 
-### 19.11 그래서 안 넘는가 — 아니다
+Answered in three layers.
 
-세 층으로 답한다.
+**(1) By design it exceeds.** The target was set at 5 %, so 5.1 % exceeds and
+the worst is 5.62 A. Reduced, not removed.
 
-**(1) 설계상 넘는다.** 목표를 5 % 로 잡았으니 5.1 % 가 넘고 최악이 5.62 A 다.
-줄인 것이지 없앤 것이 아니다.
+**(2) It can be driven to zero. It is expensive.** Taking the largest lambda
+under which not one row on the other cells exceeds, and applying it to a new
+cell, leaves 0.5 % (3 rows) with a worst of 0.89 A. Adding another 10 %
+(×0.90) takes exceedance to zero over the 651 rows — **usability falls from
+0.826 to 0.620.** That means discarding 38 % of the predicted current, not
+17 %.
 
-**(2) 0 으로 만들 수는 있다. 값이 비싸다.** 홀드아웃 셀을 뺀 나머지에서 단 한 행도
-넘지 않는 최대 lambda 를 잡아 새 셀에 걸면 0.5 %(3 행)가 남고 최악 0.89 A 다.
-거기에 10 % 를 더 얹으면(x0.90) 651 행에서 초과가 0 이 된다 — **가용률은 0.826 에서
-0.620 으로 떨어진다.** 예측 전류의 17 % 가 아니라 38 % 를 버리는 셈이다.
-
-| 여백 | 초과 행 | 최악 | 가용률 |
+| Margin | exceeding rows | worst | usability |
 |---|---:|---:|---:|
-| 초과 0 보정 그대로 | 3 / 651 | 0.89 A | 0.688 |
-| x0.90 | **0** | 0 | 0.620 |
-| x0.80 | 0 | 0 | 0.551 |
+| zero-exceedance calibration as is | 3 / 651 | 0.89 A | 0.688 |
+| ×0.90 | **0** | 0 | 0.620 |
+| ×0.80 | 0 | 0 | 0.551 |
 
-**(3) 그리고 이 보정은 다른 실험실 셀로 전이되지 않는다.** RPCWBY Test#1/#2 의
-전압 제한 행(외부 셀, 10 s, 53 행)에 같은 여유를 그대로 걸면:
+**(3) And this calibration does not transfer to another lab's cell.**
+Applying the same margin to the voltage-limited rows of RPCWBY Test#1/#2
+(external cell, 10 s, 53 rows):
 
-| 적용 여유 | 초과율 | 최악 | 가용률 |
+| Applied margin | exceedance | worst | usability |
 |---|---:|---:|---:|
-| 없음 (18.6 절) | 92.5 % | 15.05 A | 1.294 |
-| ECM 지평별 **5 % 목표** (t10 = 0.665) | **13.2 %** | 2.05 A | 0.861 |
-| 0.665 x 0.90 | 1.9 % | 0.21 A | 0.775 |
+| none (§18.6) | 92.5 % | 15.05 A | 1.294 |
+| ECM per-horizon **5 % target** (t10 = 0.665) | **13.2 %** | 2.05 A | 0.861 |
+| 0.665 × 0.90 | 1.9 % | 0.21 A | 0.775 |
 
-**5 % 를 겨냥한 여유가 외부 셀에서는 13.2 % 를 낸다.** 여섯 UYPYDJ 셀 사이에서는
-목표가 지켜지는데(5 % 겨냥 -> 5.1 %) 실험실이 바뀌면 두 배 넘게 벌어진다. 즉
-**보정 자체가 셀 간에는 전이되지만 데이터셋 간에는 전이되지 않는다.**
+**A margin aimed at 5 % produces 13.2 % on an external cell.** Among the six
+UYPYDJ cells the target holds (aim 5 % → 5.1 %), and changing lab more than
+doubles it. So **the calibration transfers between cells but not between
+datasets.**
 
-**주장할 수 있는 것은 여기까지다.** "초과율을 목표 근처로 잡을 수 있다" 는 같은
-데이터셋 안에서만 성립하고, 새 셀·새 실험실에서는 여유를 다시 보정해야 한다.
-배치라면 그 재보정 절차가 설계의 일부여야 한다.
+**That is as far as the claim goes.** "Exceedance can be held near target"
+holds only within one dataset; on a new cell or in a new lab the margin has
+to be recalibrated, and for deployment that recalibration procedure has to be
+part of the design.
 
-**남은 사각지대**도 분명히 해 둔다.
+**The remaining blind spots**, stated:
 
-- 채점에 쓸 수 있는 행은 5,995 중 **651** 뿐이다. 나머지는 라벨이 부풀려 판정하지
-  못한다.
-- **tau = 2 s 는 이 데이터셋에서 한 번도 내삽으로 검증되지 않았다**(19.3). 필요한
-  R 배수가 가장 큰 곳이 바로 거기다.
-- 내부 평가는 전부 25 C 다. 외부 대조는 10 C 이고 25 C 는 3 행뿐이다.
-- 충전 방향은 19 절 전체에서 다루지 않았다.
+- Only **651** of 5,995 rows are scoreable. The rest have labels too inflated
+  to judge on.
+- **τ = 2 s has never been validated by interpolation in this dataset**
+  (§19.3), and it is exactly where the required R multiplier is largest.
+- Internal evaluation is all 25 °C. The external comparison is 10 °C with
+  only 3 rows at 25 °C.
+- The charge direction is not covered anywhere in §19.
 
-### 19.10 아직 안 한 것
+### 19.10 Not yet done
 
-- tau=2 s 를 내삽으로 검증할 데이터가 이 데이터셋에 없다(19.3). RPCWBY Test#3 이
-  tau=2 s 를 여섯 온도에서 재지만 SOP 라벨은 만들 수 없다(18.3).
-- 충전 방향의 대칭성 점검. 19 절은 전부 방전이다.
-- 19.4 의 분해 — 저항 모델 오차와 현/접선 규약 차이를 완전히 가르려면 팬 안에서
-  tau=2 s 를 재는 데이터가 필요하다.
+- There is no data in this dataset to validate τ = 2 s by interpolation
+  (§19.3). RPCWBY Test#3 measures τ = 2 s at six temperatures but SOP labels
+  cannot be made from it (§18.3).
+- A symmetry check on the charge direction. §19 is all discharge.
+- §19.4's decomposition — fully separating resistance-model error from the
+  chord/tangent convention needs data measuring τ = 2 s inside the fan.
 
 ---
 
-## 20. 하이브리드를 완전히 바깥에서 채점하다 (2026-08-24)
+## 20. Scoring the hybrid entirely from outside (2026-08-24)
 
-18.6 절은 보정 없는 pooled ECM 만 외부 셀에 걸었다 — 트림이 UYPYDJ 특성화
-사이클로 색인돼 있어 옮길 수 없었기 때문이다. 이 절이 그 색인을 없앤다:
-**특징을 RPCWBY 셀 자신의 노화 주행에서 다시 계산한다.**
+§18.6 applied only the uncorrected pooled ECM to an external cell, because
+the trim is indexed by UYPYDJ characterisation cycles and could not be moved.
+This section removes that index: **the features are recomputed from the
+RPCWBY cells' own aging drives.**
 
-사이클러도, 실험실도, 셀도, 노화 프로토콜도 다르다. 트림 가중치만 UYPYDJ 에서
-온다. 이 프로젝트에서 하이브리드가 받는 가장 바깥의 시험이다.
+Different cycler, different lab, different cell, different aging protocol.
+Only the trim weights come from UYPYDJ. It is the most external test the
+hybrid receives in this project.
 
-### 20.1 파이프라인 (`rpcwby_us06_trim.py`)
+### 20.1 The pipeline (`rpcwby_us06_trim.py`)
 
-짝짓기 규칙은 UYPYDJ 와 같다 — 각 특성화는 **직전 주행**의 마지막 12 블록(600 s)을
-가져가고, 특성화 자체에서는 절대 가져오지 않는다.
+The pairing rule matches UYPYDJ — each characterisation takes the last 12
+blocks (600 s) of **the preceding drive** and never takes anything from the
+characterisation itself.
 
-여기서만 필요한 게이트가 하나 더 있다. Test#2 의 주행 파일은 특성화 직전에 통째로
-CC-CV 충전으로 끝나므로 마지막 2 h 를 그대로 쓰면 학습 분포 밖의 충전 블록만
-담긴다. duty(EW{1[|I|>5 A]})가 0.05 이상인 블록만 센다 — UYPYDJ 블록의 duty
-5 %tile 이 0.028 이다.
+One extra gate is needed only here. Test#2's drive files end entirely in a
+CC-CV charge right before the characterisation, so using the last 2 h as-is
+captures only charge blocks outside the training distribution. Only blocks
+with duty (EW{1[|I| > 5 A]}) of 0.05 or more are counted — the 5th percentile
+of duty across UYPYDJ blocks is 0.028.
 
-**측정된 함정 둘.**
+**Two traps, measured.**
 
-*SOC 앵커가 전류 문턱에 의존하면 안 된다.* Test#2 는 도중에 CC-CV 종료 전류를
-0.15 A 에서 약 1 A 로 바꾸고, 후반 주행은 만충이 아니라 방전으로 끝난다. |I| 문턱
-으로 만충을 찾으면 사이클 1333 이후 한 점도 못 찾아 SOC 가 1.00~1.62 로 새어
-나왔다. 만충(V >= 4.19) 구간마다 누적 전하 최대점을 앵커로 잡아 **주기적으로
-재고정**하면 전 구간 0.14~1.00 으로 물리적이 되고(이탈 1.4~3.4 %), 쿨롱 효율에
-의한 표류도 매 사이클 지워진다.
+*An SOC anchor must not depend on a current threshold.* Test#2 changes the
+CC-CV termination current from 0.15 A to about 1 A partway through, and the
+later drives end in discharge rather than full charge. Finding full charge by
+an |I| threshold finds no point after cycle 1333, and SOC leaked out to
+1.00–1.62. Taking the maximum accumulated charge in each full-charge stretch
+(V ≥ 4.19) as an anchor and **re-fixing it periodically** makes the whole
+range physical at 0.14–1.00 (excursions 1.4–3.4 %) and also erases the drift
+from coulombic efficiency at every cycle.
 
-*셀 온도 채널은 크기로 고를 수 없다.* Test#2 는 챔버를 10 과 25 C 사이로
-순환시키므로 챔버 채널의 표준편차가 셀보다 크다(5.71 대 5.54). 셀은 부하에 초
-단위로 반응하고 챔버는 시간 단위로 움직이므로, 가르는 것은 크기가 아니라 **차분의
-표준편차**다.
+*The cell temperature channel cannot be chosen by magnitude.* Test#2 cycles
+the chamber between 10 and 25 °C, so the chamber channel's standard deviation
+exceeds the cell's (5.71 against 5.54). The cell responds to load within
+seconds while the chamber moves over hours, so what separates them is not
+magnitude but **the standard deviation of the differences.**
 
-### 20.2 결과 — 두 외부 셀 모두에서 오차와 꼬리가 반으로 준다
+### 20.2 Result — error and tail halve on both external cells
 
-여유 없이, 날것으로. 풀 6 변형의 중앙값을 취해 고유 행으로 모았다.
-(하이브리드는 독립적으로 학습한 대칭 트림 2 개의 값을 나란히 적는다.)
+Raw, no margin. The median over six pool variants, collected to unique rows.
+(The hybrid shows the values of two independently trained symmetric trims
+side by side.)
 
-| Test#2 — US06 주행, n=14, 10 C | 초과율 | 최악 | 가용률 | RMSE |
+| Test#2 — US06 driving, n=14, 10 °C | exceedance | worst | usability | RMSE |
 |---|---:|---:|---:|---:|
 | pooled ECM | 100 % | 10.05 A | 1.152 | 4.32 A |
-| 하이브리드 | 71.4 / 64.3 % | 5.26 / 3.84 A | 1.067 / 1.026 | **2.26 / 1.76 A** |
+| hybrid | 71.4 / 64.3 % | 5.26 / 3.84 A | 1.067 / 1.026 | **2.26 / 1.76 A** |
 
-| Test#1 — 정전류 18 A, n=31 | 초과율 | 최악 | 가용률 | RMSE |
+| Test#1 — constant 18 A, n=31 | exceedance | worst | usability | RMSE |
 |---|---:|---:|---:|---:|
 | pooled ECM | 80.6 % | 13.97 A | 1.275 | 6.92 A |
-| 하이브리드 | 77.4 / 61.3 % | 7.23 / 4.70 A | 1.097 / 1.013 | **3.97 / 3.57 A** |
+| hybrid | 77.4 / 61.3 % | 7.23 / 4.70 A | 1.097 / 1.013 | **3.97 / 3.57 A** |
 
-**트림이 필요한 보정을 스스로 찾는다.** k_f 중앙은 Test#2 에서 1.143~1.166,
-Test#1 에서 1.188~1.282 다. 18.6 절이 이 데이터에 필요하다고 **측정한** 배수가
-1.29 이고, 그 53 행 중 38 행이 Test#1 이다. 트림은 그 라벨을 본 적이 없고 셀 자신의
-노화 주행만 보았다.
+**The trim finds the required correction on its own.** Median k_f is
+1.143–1.166 on Test#2 and 1.188–1.282 on Test#1. The multiplier §18.6
+**measured** as required on this data is 1.29, and 38 of those 53 rows are
+Test#1. The trim never saw that label — only the cell's own aging drives.
 
-시드 간 변동이 약 15 % 다. 방향과 크기는 재현되지만 정확한 값은 학습마다 다르다.
+Seed-to-seed variation is about 15 %. Direction and magnitude reproduce; the
+exact value differs per training run.
 
-### 20.3 정전류 여기에서도 작동한다 — 가설이 틀렸다
+### 20.3 It works under constant-current excitation too — the hypothesis was wrong
 
-Test#1 의 노화는 **정전류 18 A 방전**이고 주행 사이클이 아니다. 트림의 핵심 특징은
-EW{I r}/EW{I I}, 즉 잔차를 전류에 회귀한 기울기이므로, 전류가 한 값뿐이면 회귀가
-점 하나를 지나는 직선이 되고 30 A 로의 전이가 순수 외삽이 된다 — 그래서 깨질 것으로
-예상했다.
+Test#1's aging is a **constant 18 A discharge**, not a drive cycle. The
+trim's core feature is EW{I r}/EW{I I}, the slope of the residual regressed
+on current, so with a single current value the regression becomes a line
+through one point and transfer to 30 A is pure extrapolation — it was
+expected to break.
 
-**깨지지 않는다.** Test#1 에서 RMSE 6.92 -> 3.97/3.57 A, 최악 초과 13.97 ->
-7.23/4.70 A 로 Test#2 와 같은 비율로 개선된다. 여기(excitation)의 종류는 이 시험이
-닿는 범위에서 제약이 아니다.
+**It does not.** On Test#1 the RMSE goes 6.92 → 3.97/3.57 A and the worst
+overshoot 13.97 → 7.23/4.70 A, improving in the same proportion as Test#2.
+The kind of excitation is not a constraint within the reach of this test.
 
-### 20.4 그러나 여유(lambda)는 옮겨 심으면 안 된다
+### 20.4 But the margin (lambda) must not be transplanted
 
-19.9 절에서 UYPYDJ 로 보정한 lambda 를 그대로 걸면 목표 5 % 가 지켜지지 않는다 —
-Test#2 에서 7.1 %, Test#1 에서 **16.1 %** 다.
+Applying the lambda calibrated on UYPYDJ in §19.9 does not hold the 5 %
+target — 7.1 % on Test#2 and **16.1 %** on Test#1.
 
-이것은 하이브리드의 실패가 아니라 lambda 이식의 실패다. 하이브리드는 내부에서 더
-정확했기에 더 순한 lambda(0.840)를 받았고, 그래서 외부 셀에서 **덜 보수적인
-지점**(가용률 0.922)에서 돌게 된다. ECM 은 0.665 를 받아 0.848 에서 돈다. 서로 다른
-지점을 비교한 것이다.
+That is a failure of transplanting lambda, not of the hybrid. Being more
+accurate internally, the hybrid received a gentler lambda (0.840) and
+therefore runs at **a less conservative point** on the external cell
+(usability 0.922). The ECM received 0.665 and runs at 0.848. Two different
+points were compared.
 
-**가용률을 맞추면 하이브리드가 두 셀 모두에서 같거나 낫다:**
+**Matched on usability, the hybrid is equal or better on both cells:**
 
-| 가용률 0.85 로 맞추면 | ECM 초과 | 하이브리드 초과 |
+| Matched at usability 0.85 | ECM exceedance | hybrid exceedance |
 |---|---|---|
 | Test#2 | 2/14 = 14.3 % (lam 0.738) | **0/14 = 0.0 %** (lam 0.796) |
 | Test#1 | 2/31 = 6.5 % (lam 0.667) | **1/31 = 3.2 %** (lam 0.775) |
 
-`docs/fig_sop_external.png` (c) 판이 전 구간이다 — 어느 가용률에서도 하이브리드
-곡선이 ECM 아래에 있다.
+Panel (c) of `docs/fig_sop_external.png` is the whole range — at every
+usability the hybrid curve sits below the ECM's.
 
-**배치 결론: 모델은 옮겨지고 여유는 옮겨지지 않는다.** 트림은 새 실험실·새
-프로토콜의 셀에서 다시 학습하지 않고도 오차를 반으로 줄인다. lambda 는 대상 차량군
-에서 다시 보정해야 하고, 그 재보정 절차가 설계의 일부여야 한다(19.11).
+**Deployment conclusion: the model transfers and the margin does not.** The
+trim halves the error on a cell from a new lab and a new protocol without
+retraining. lambda must be recalibrated on the target fleet, and that
+recalibration procedure has to be part of the design (§19.11).
 
-### 20.5 한계
+### 20.5 Limits
 
-- **n 이 작다.** Test#2 14 행, Test#1 31 행. 초과율의 95 % 상한이 각각 19.3 %,
-  9.2~18.9 % 수준이라 팔끼리 초과율만으로는 잘 갈리지 않는다. 갈리는 것은
-  가용률이다.
-- **사실상 10 C 한 점이다.** Test#1 의 25 C 행이 3 개뿐이다. 온도 대비는 여전히
-  없다.
-- **전부 tau = 10 s** 다. Test#1/#2 의 펄스 길이가 10 s 이므로 tau=2 s 는 여기서도
-  검증되지 않는다(19.3).
-- 146(Test#2) / 173(Test#1) 전압 제한 행 중 hull 을 통과하는 것은 일부다. 저 SOC
-  쪽이 pooled 표의 (SOC, SOH) 볼록껍질 밖이다.
+- **n is small.** 14 rows on Test#2, 31 on Test#1. The 95 % upper bounds on
+  exceedance are around 19.3 % and 9.2–18.9 %, so the arms are not well
+  separated by exceedance alone. What separates them is usability.
+- **Effectively a single point at 10 °C.** Test#1 has only 3 rows at 25 °C.
+  There is still no temperature contrast.
+- **All τ = 10 s.** Test#1/#2 pulses are 10 s long, so τ = 2 s is not
+  validated here either (§19.3).
+- Only some of the 146 (Test#2) / 173 (Test#1) voltage-limited rows pass the
+  hull. The low-SOC end is outside the pooled table's (SOC, SOH) convex hull.
 
 ---
 
-## 21. 과대예측을 없애기 — 무초과 구성과 그 값 (2026-08-24)
+## 21. Eliminating overprediction — the zero-exceedance configuration and its price (2026-08-24)
 
-19 절과 20 절이 남긴 것은 "낙관 편향을 줄였다" 였다. 안전 관리 관점에서는 그것으로
-부족하다 — SOP 를 실제보다 크게 보는 것은 저전압 보호를 뚫는 방향이므로, 줄이는
-것이 아니라 **없애는** 것이 요구사항이 된다. 이 절이 그 요구를 목표로 놓고 값을
-매긴다.
+What §19 and §20 left was "the optimistic bias was reduced." From a safety
+management standpoint that is not enough — reading SOP higher than it is
+breaches undervoltage protection, so the requirement becomes **eliminating**
+it rather than reducing it. This section sets that as the target and prices
+it.
 
-### 21.1 보정 목표를 5 % 가 아니라 0 으로 놓는다
+### 21.1 Setting the calibration target to zero rather than 5 %
 
-lambda 는 홀드아웃 셀을 빼고 나머지에서 **초과가 한 행도 없도록** 이분법으로 잡는다
-(19.5 절과 같은 LOCO, 목표만 0). 내부 신뢰 라벨 651 행, 대칭 트림 + max 집계:
+lambda is set by bisection, leaving the holdout cell out, so that **not one
+row exceeds**
+on the rest (the same LOCO as §19.5, only with the target at 0).
+651 internal trustworthy rows, symmetric trim + max aggregation:
 
-| 훈련 목표 | 초과 | 초과율 | 95 % 상한 | 최악 초과 | 가용률 | lambda |
+| Training target | exceeding | rate | 95 % upper | worst overshoot | usability | lambda |
 |---|---:|---:|---:|---:|---:|---|
 | 5 % | 33 | 5.1 % | 6.72 % | 5.62 A | 0.826 | t10=0.840 t2=0.543 |
 | 2 % | 16 | 2.5 % | 3.71 % | 3.50 A | 0.774 | t10=0.782 t2=0.518 |
 | 1 % | 11 | 1.7 % | 2.78 % | 2.50 A | 0.745 | t10=0.749 t2=0.512 |
 | **0** | **3** | **0.46 %** | **1.19 %** | **0.89 A** | **0.688** | **t10=0.693 t2=0.489** |
 
-**새 셀에서 완전한 0 은 되지 않는다** — 3 행이 남는다. 다만 최악 초과가 5.62 에서
-**0.89 A** 로 떨어진다. |I*| 가 20~30 A 인 구간이므로 3~4 % 이고, 저전압 보호가
-가진 여유 안에 들어간다.
+**A complete zero is not reached on a new cell** — three rows remain. But the
+worst overshoot falls from 5.62 to **0.89 A**. Against an |I*| of 20–30 A
+that is 3–4 %, inside the headroom undervoltage protection already has.
 
-**값은 가용률 0.826 -> 0.688 이다.** 팩 첨두 전류의 14 %p 를 더 버린다.
+**The price is usability 0.826 → 0.688.** A further 14 %p of pack peak
+current is given up.
 
-### 21.2 여기서도 tau 가 맞는 축이다 — SOH 를 더하면 꼬리가 터진다
+### 21.2 tau is the right axis here too — adding SOH blows up the tail
 
-| 조건화 | 칸 | 초과율 | 최악 초과 | 가용률 |
+| Conditioning | cells | exceedance | worst overshoot | usability |
 |---|---:|---:|---:|---:|
-| 전역 | 1 | 0.31 % | 0.89 A | 0.513 |
+| global | 1 | 0.31 % | 0.89 A | 0.513 |
 | **tau** | 2 | 0.46 % | **0.89 A** | **0.688** |
-| tau + SOH(2 칸) | 4 | 0.92 % | **7.84 A** | 0.709 |
-| tau + SOH(3 칸) | 6 | 1.69 % | 8.17 A | 0.729 |
-| SOH(2 칸) | 2 | 0.77 % | 22.52 A | 0.520 |
+| tau + SOH (2 bands) | 4 | 0.92 % | **7.84 A** | 0.709 |
+| tau + SOH (3 bands) | 6 | 1.69 % | 8.17 A | 0.729 |
+| SOH (2 bands) | 2 | 0.77 % | 22.52 A | 0.520 |
 
-SOH 를 더하면 가용률이 2 %p 늘지만 **최악 초과가 0.89 -> 7.84 A 로 터진다.** 칸이
-얇아져 훈련 셀이 우연히 괜찮았던 곳에서 lambda 가 헐거워지고, 새 셀은 그렇지 않다.
-19.5 절이 5 % 목표에서 관찰한 과적합이 0 목표에서 더 크게 나타난다.
+Adding SOH gains 2 %p of usability while **the worst overshoot blows up from
+0.89 to 7.84 A.** The cells thin out, lambda goes loose where the training
+cells happened to be fine, and a new cell is not. The overfitting §19.5
+observed at a 5 % target is larger at a target of 0.
 
-### 21.3 트림의 내부 불일치는 불확실성 지표가 되지 않는다
+### 21.3 The trim's internal disagreement is not an uncertainty measure
 
-12 블록에 걸친 k_f 의 상대 산포를 여유의 축으로 쓰려 했다. 확신하는 곳에서 출력을
-덜 버릴 수 있으면 값이 크다.
+The relative spread of k_f across the 12 blocks was tried as a margin axis.
+Discarding less output where the model is confident would be worth a lot.
 
-**안 된다.** corr(산포, 상대 초과) = −0.087, corr(산포, |상대 초과|) = +0.170 이고,
-사분위로 보면 산포가 클수록 오히려 **덜** 낙관적이다(초과율 75.5 % -> 38.2 %).
-최악 초과는 Q3 에 있고 Q4 에 없다. 즉 산포는 위험한 행을 지목하지 못한다. 이것을
-여유의 축으로 쓰면 이미 보수적인 곳에서 더 보수적이 되는, 방향이 뒤집힌 규칙이
-된다. 기각.
+**It does not work.** corr(spread, relative overshoot) = −0.087 and
+corr(spread, |relative overshoot|) = +0.170, and by quartile a larger spread
+is if anything **less** optimistic (exceedance 75.5 % → 38.2 %). The worst
+overshoot is in Q3, not Q4. So the spread does not point at the dangerous
+rows. Using it as a margin axis would give a rule with reversed direction,
+becoming more conservative where it is already conservative. Rejected.
 
-### 21.4 무초과 lambda 는 외부 셀로 옮겨진다
+### 21.4 The zero-exceedance lambda does transplant to external cells
 
-내부에서 잡은 lambda(t10) 를 20 절의 외부 두 셀에 **그대로** 걸었다. 재보정 없음.
+The internally calibrated lambda(t10) was applied **as is** to §20's two
+external cells. No recalibration.
 
-| | 초과 | 95 % 상한 | 최악 | 가용률 |
+| | exceeding | 95 % upper | worst | usability |
 |---|---:|---:|---:|---:|
-| Test#2 (US06) 하이브리드 + 0.693 | **0/14** | 19.3 % | 0.00 A | **0.740** |
-| Test#1 (정전류) 하이브리드 + 0.693 | **0/31** | 9.2 % | 0.00 A | **0.761** |
+| Test#2 (US06) hybrid + 0.693 | **0/14** | 19.3 % | 0.00 A | **0.740** |
+| Test#1 (constant current) hybrid + 0.693 | **0/31** | 9.2 % | 0.00 A | **0.761** |
 | Test#2 ECM + 0.520 | 0/14 | 19.3 % | 0.00 A | 0.599 |
 | Test#1 ECM + 0.520 | 0/31 | 9.2 % | 0.00 A | 0.663 |
 
-20.4 절은 5 % 목표의 lambda 가 이식되지 않는다고 했다(Test#1 에서 16.1 %). **0 목표의
-lambda 는 이식된다** — 여유가 충분히 크면 실험실 간 차이가 그 안에 들어간다.
+§20.4 said the 5 %-target lambda does not transplant (16.1 % on Test#1).
+**The zero-target lambda does** — with enough margin the between-lab
+difference fits inside it.
 
-풀 6 변형의 **최소**를 취하는 앙상블은 필요하지 않았다(가용률 0.699 / 0.711 로 오히려
-낮다). 중앙값으로 이미 무초과다.
+An ensemble taking the **minimum** over six pool variants was not needed
+(usability 0.699 / 0.711, in fact lower). The median already gives zero
+exceedance.
 
-### 21.5 이 구성에서 트림이 사는 값
+### 21.5 What the trim is worth in this configuration
 
-무초과라는 같은 기준에서:
+At the same zero-exceedance standard:
 
-| | 내부 가용률 | Test#2 | Test#1 |
+| | internal usability | Test#2 | Test#1 |
 |---|---:|---:|---:|
 | ECM | 0.594 | 0.599 | 0.663 |
-| **하이브리드** | **0.688** | **0.740** | **0.761** |
+| **hybrid** | **0.688** | **0.740** | **0.761** |
 
-**26 개 파라미터가 과대예측 0 에서 팩 첨두 전류의 10~14 %p 를 되사온다.** 이것이
-지금까지 나온 가장 강한 배치 논거다 — RMSE 개선이 아니라, 같은 안전 등급에서 쓸 수
-있는 출력의 차이다.
+**26 parameters buy back 10–14 %p of pack peak current at zero
+overprediction.** This is the strongest deployment argument so far — not an
+RMSE improvement, but a difference in usable output at the same safety
+grade.
 
-### 21.6 무엇을 보장하지 않는가
+### 21.6 What it does not guarantee
 
-- **"0" 은 관측값이고 보장이 아니다.** 95 % 상한이 내부 1.19 %, 외부 9.2~19.3 % 다.
-  회귀 모델은 상한을 보장할 수 없다. 진짜 보장은 저전압 차단이라는 보호 계층이
-  주고, SOP 추정기의 일은 그 차단이 드물게 울도록 하는 것이다.
-- **외부 검증은 전부 tau = 10 s 다.** tau = 2 s 는 lambda 0.489, 즉 51 % 를 깎아야
-  하고 이 데이터셋에서 내삽으로 검증된 적이 없다(19.3).
-- **사실상 10 C 한 점이다.** 온도 대비는 여전히 없다.
-- 저 SOC 는 pooled 표의 볼록껍질 밖이라 채점되지 않는다.
+- **"Zero" is an observation, not a guarantee.** The 95 % upper bounds are
+  1.19 % internally and 9.2–19.3 % externally. A regression model cannot
+  guarantee an upper bound. The real guarantee comes from the undervoltage
+  cutoff as a protection layer, and the SOP estimator's job is to make that
+  cutoff fire rarely.
+- **External validation is all τ = 10 s.** τ = 2 s carries lambda 0.489, a
+  51 % cut, and has never been validated by interpolation in this dataset
+  (§19.3).
+- **Effectively one point at 10 °C.** There is still no temperature contrast.
+- Low SOC lies outside the pooled table's convex hull and is not scored.
 
 ---
 
-## 22. 온도 축이 열리다 — Test#3 시트 (2026-08-24)
+## 22. The temperature axis opens — the Test#3 sheet (2026-08-24)
 
-18.3 절은 Test#3 의 **원시 펄스**에서 SOP 라벨을 만들 수 없다고 결론지었다. 맞는
-결론이었지만, 저자들이 그 탐색의 수렴값을 시트에 적어 두었다는 것을 그때 보지
-못했다. `rpcwby_sop_summary.py` 는 `--sheets Test#1,Test#2` 만 돌았고 Test#3 은
-레이아웃이 달라 읽히지 않았다.
+§18.3 concluded that SOP labels cannot be made from Test#3's **raw pulses.**
+That was right, but it missed that the authors had written the converged
+values of that search into a sheet. `rpcwby_sop_summary.py` ran only
+`--sheets Test#1,Test#2`, and Test#3 has a different layout and was not read.
 
-`rpcwby_sop_test3.py` 가 그 레이아웃을 읽는다. 열 밴드 3 개(A=2 s, F=10 s,
-K=30 s), 각 밴드 안에서 "SOC | <온도>°C" 헤더로 시작하는 블록이 아래로 반복.
+`rpcwby_sop_test3.py` reads that layout: three column bands (A = 2 s,
+F = 10 s, K = 30 s), and within each band, blocks starting with a
+"SOC | <temperature>°C" header repeating downward.
 
-### 22.1 무엇이 실제로 들어 있나 — 기대와 다르다
+### 22.1 What is actually in it — not what was expected
 
-| 밴드 | 행 | 온도 |
+| Band | rows | Temperatures |
 |---|---:|---|
-| tau = 2 s | 14 | 25 C 만 |
+| tau = 2 s | 14 | 25 °C only |
 | tau = 10 s | 84 | −20, −10, 0, 10, 25, 40 |
-| tau = 30 s | 10 | 25 C 만 |
+| tau = 30 s | 10 | 25 °C only |
 
-**온도 여섯 점은 tau = 10 s 에만 있다.** tau=2 s 와 30 s 는 25 C 하나뿐이다.
-(원시 파일에는 세 지평 모두 여섯 온도가 있다 — 저자들이 요약에 옮기지 않았을 뿐이다.)
+**The six temperature points exist only at tau = 10 s.** τ = 2 s and 30 s
+have 25 °C only. (The raw files have all six temperatures at all three
+horizons — the authors simply did not transfer them into the summary.)
 
-전압 제한(|SOP| <= 76.5 W)은 54 행. **−20 과 −10 C 에서는 14 행이 전부 전압
-제한이고 SOC 0.02~1.00 전 구간을 덮는다** — 전압 제한 SOP 가 SOC 축 전체를 덮은
-것은 이 프로젝트에서 처음이다. 따뜻한 쪽은 30 A 상한이 2.55 V 에 닿지 못해 저 SOC
-몇 행만 남는다(18.3 의 물리 그대로).
+54 rows are voltage-limited (|SOP| ≤ 76.5 W). **At −20 and −10 °C all 14
+rows are voltage-limited and cover the whole SOC 0.02–1.00 range** — the
+first time in this project that voltage-limited SOP covers the entire SOC
+axis. On the warm side the 30 A ceiling does not reach 2.55 V and only a few
+low-SOC rows survive (exactly §18.3's physics).
 
-### 22.2 SOH 는 블록 용량이 아니라 25 C 용량이다 — 이 선택이 결론을 4 배 흔든다
+### 22.2 SOH is the 25 °C capacity, not the block capacity — and this choice swings the conclusion 4×
 
-시트는 온도 블록마다 용량을 적어 두었다(40 C 2.6333 / 25 C 2.6 / 0 C 2.4193 /
-−20 C 2.1352 Ah). 그것을 SOH 로 쓰면 −20 C 에서 0.712 가 된다.
+The sheet records a capacity per temperature block (40 °C 2.6333 / 25 °C
+2.6 / 0 °C 2.4193 / −20 °C 2.1352 Ah). Used as SOH, −20 °C becomes 0.712.
 
-**노화가 아니다.** 파일 날짜로 시험 순서가 나온다 — 7/11 0 C(2.4193), 7/12
-25 C(2.6), 7/13 40 C(2.6333), 7/14 −20 C(2.1352). 용량이 시간에 따라 **오르내린다.**
-노화는 용량을 올리지 못한다. 온도에 따른 방전 가능 용량의 차이다.
+**That is not aging.** File dates give the test order — 7/11 0 °C (2.4193),
+7/12 25 °C (2.6), 7/13 40 °C (2.6333), 7/14 −20 °C (2.1352). The capacity
+**rises and falls with time.** Aging cannot raise capacity. This is the
+difference in dischargeable capacity with temperature.
 
-**그리고 블록 용량을 SOH 로 넣으면 온도를 두 번 센다** — g_temp 가 이미 온도 효과를
-담고 있다. SOH 는 기준 온도에서 정의되는 양이므로 25 C 값 2.6/3.0 = **0.867** 을
-전 블록에 쓴다.
+**And putting the block capacity into SOH counts temperature twice** —
+g_temp already carries the temperature effect. SOH is defined at a reference
+temperature, so the 25 °C value 2.6/3.0 = **0.867** is used for every block.
 
-이 선택의 무게를 숫자로 남긴다. −20 C 에서 예측/측정 배율이
+The weight of that choice, in numbers. At −20 °C the predicted/measured
+factor is
 
-    SOH 0.867 (채택)     1.121   -> 모델이 낙관적
-    SOH 0.712 (블록 용량) 0.275   -> 모델이 4 배 보수적
+    SOH 0.867 (adopted)        1.121   -> the model is optimistic
+    SOH 0.712 (block capacity) 0.275   -> the model is 4× conservative
 
-**부호가 뒤집힌다.** 저 SOH 쪽에서 pooled 표의 저항이 가파르게 커지기 때문이다.
-채택 근거는 위의 두 문단이고, 그 근거가 틀리면 22.3 의 결론도 틀린다.
+**The sign reverses**, because the pooled table's resistance rises steeply at
+low SOH. The basis for the choice is the two paragraphs above, and if that
+basis is wrong so is §22.3's conclusion.
 
-### 22.3 여유는 온도에 의존한다 — 그리고 그 크기는 온건하다
+### 22.3 The margin depends on temperature — and the size of it is moderate
 
-pooled ECM(보정 없음), tau = 10 s, 풀 6 변형 중앙값, 고유 27 행:
+Pooled ECM (uncorrected), tau = 10 s, median over six pool variants, 27
+unique rows:
 
-| T 설정 | n | SOC 범위 | 배율 중앙 | 배율 최대 | 무초과 lambda |
+| T setpoint | n | SOC range | median factor | max factor | zero-exceedance lambda |
 |---|---:|---|---:|---:|---:|
-| −20 C | 10 | 0.20~1.00 | 1.119 | 1.604 | **0.623** |
-| −10 C | 10 | 0.20~1.00 | 1.366 | 1.522 | **0.657** |
-| 0 C | 4 | 0.20~0.50 | 1.176 | 1.234 | 0.810 |
-| 10 C | 2 | 0.20~0.30 | 1.188 | 1.238 | 0.808 |
+| −20 °C | 10 | 0.20–1.00 | 1.119 | 1.604 | **0.623** |
+| −10 °C | 10 | 0.20–1.00 | 1.366 | 1.522 | **0.657** |
+| 0 °C | 4 | 0.20–0.50 | 1.176 | 1.234 | 0.810 |
+| 10 °C | 2 | 0.20–0.30 | 1.188 | 1.238 | 0.808 |
 
-단조다. 선형 적합이 lambda ≈ 0.790 + 0.0093·T 이고 25 C 로 외삽하면 1.024 다.
+Monotone. A linear fit gives lambda ≈ 0.790 + 0.0093·T, extrapolating to
+1.024 at 25 °C.
 
-**모든 저온에서 ECM 은 낙관적이다** — 19 절, 20 절과 같은 방향이다. 세 데이터셋,
-두 실험실, 여섯 온도가 같은 부호를 가리킨다.
+**The ECM is optimistic at every low temperature** — the same direction as
+§19 and §20. Three datasets, two labs and six temperatures point at the same
+sign.
 
-### 22.4 21 절의 lambda 는 저온에서 부족하다. 0.623 하나로 덮인다.
+### 22.4 §21's lambda is insufficient in the cold. A single 0.623 covers it.
 
-21 절은 25 C 데이터로 lambda(tau=10 s) = 0.693 을 잡았다. 저온에 걸면:
+§21 calibrated lambda(tau = 10 s) = 0.693 on 25 °C data. Applied in the cold:
 
-| | 초과 | 최악 |
+| | exceeding | worst |
 |---|---:|---:|
-| −20 C | 2/10 | 0.67 A |
-| −10 C | **4/10** | 1.00 A |
-| 0, 10 C | 0 | 0 |
+| −20 °C | 2/10 | 0.67 A |
+| −10 °C | **4/10** | 1.00 A |
+| 0, 10 °C | 0 | 0 |
 
-**0 C 위에서는 충분하고 −10 C 아래에서 깨진다.**
+**Sufficient above 0 °C and broken below −10 °C.**
 
-lambda 를 0.623 으로 조이면 네 데이터셋 전부에서 무초과다:
+Tightening lambda to 0.623 gives zero exceedance across all four datasets:
 
-| | 초과 | 95 % 상한 | 가용률 |
+| | exceeding | 95 % upper | usability |
 |---|---:|---:|---:|
-| 내부 UYPYDJ 25 C | 0/504 | 0.6 % | 0.627 |
-| 외부 Test#2 (US06 주행) | 0/14 | 19.3 % | 0.665 |
-| 외부 Test#1 (정전류) | 0/31 | 9.2 % | 0.684 |
-| **Test#3 −20~+10 C** | **0/26** | 10.9 % | 0.762 |
+| internal UYPYDJ, 25 °C | 0/504 | 0.6 % | 0.627 |
+| external Test#2 (US06 driving) | 0/14 | 19.3 % | 0.665 |
+| external Test#1 (constant current) | 0/31 | 9.2 % | 0.684 |
+| **Test#3, −20 to +10 °C** | **0/26** | 10.9 % | 0.762 |
 
-**대가는 내부 가용률 0.697 -> 0.627, 즉 7 %p 다.** 팩 첨두 전류의 7 %p 로
-−20 C 까지의 적용 범위를 산다. 온도별 lambda 표를 두는 것보다 단순하고, 표의 칸을
-얇게 만들지 않는다(21.2 의 과적합).
+**The price is internal usability 0.697 → 0.627, i.e. 7 %p.** Seven
+percentage points of pack peak current buys coverage down to −20 °C. Simpler
+than a per-temperature lambda table, and it does not thin the table's cells
+(§21.2's overfitting).
 
-### 22.5 tau = 2 s 는 닫히지 않는다 — 장비의 한계이지 데이터의 부족이 아니다
+### 22.5 τ = 2 s does not close — an equipment limit, not a shortage of data
 
-시트의 tau=2 s 밴드는 25 C 뿐이고, 그 14 행 중 전압 제한은 3 행이며, 셋 다 SOC
-0.02~0.10 으로 pooled 표의 볼록껍질 밖이라 채점되지 않았다.
+The sheet's τ = 2 s band is 25 °C only, 3 of its 14 rows are
+voltage-limited, and all three are at SOC 0.02–0.10, outside the pooled
+table's convex hull and therefore unscored.
 
-**원시 파일을 캤다.** Test#3 의 24 개 CSV 에는 tau=2 s 가 여섯 온도 모두에 있고,
-7 월 파일들은 진짜 탐색 파일이다(짧은 펄스 247~361 개). 기존 추출
-(`rpcwby_temp_pulses.csv`)이 이것들을 거의 다 버리고 있었다 — `MIN_REST_S = 20 s`
-게이트 때문이다. 탐색은 펄스를 연달아 치므로 앞 휴지가 중앙 2 s 다. 그래서 9 월/
-10 월의 별개 실행(펄스 50 여 개, 바닥에 닿지 않음)만 남아 "수렴 펄스 1 개" 라는
-잘못된 그림이 나왔다.
+**The raw files were dug into.** Test#3's 24 CSVs have τ = 2 s at all six
+temperatures, and the July files are genuine search files (247–361 short
+pulses). The existing extraction (`rpcwby_temp_pulses.csv`) was discarding
+almost all of them — because of a `MIN_REST_S = 20 s` gate. A search fires
+pulses back to back, so the preceding rest is a median 2 s. What survived was
+only the separate September/October runs (about 50 pulses, never reaching the
+floor), producing the false picture of "one converged pulse."
 
-게이트를 풀고 다시 보니, **바닥(2.55 V)을 위아래로 감싸는 SOC 그룹이 거의 없다:**
+Releasing the gate and looking again, **almost no SOC group brackets the
+floor (2.55 V):**
 
-| tau=2 s 파일 | 짧은 펄스 | V_end 최소 | 2.55 를 감싸는 SOC 그룹 |
+| τ = 2 s file | short pulses | min V_end | SOC groups bracketing 2.55 |
 |---|---:|---:|---|
-| 7/20 10 C | 361 | 2.498 | 1 개 (SOC~0.05, 0.5~4.3 A) |
-| 7/21 40 C | 270 | 2.530 | 1 개 (SOC~0.05, 0.5~5.8 A) |
-| 7/19 25 C | 247 | 2.577 | **0** |
-| 7/20 −10 C | 296 | 2.574 | **0** |
-| 7/20 −20 C | 297 | 2.570 | **0** (SOC 0.4~1.0 은 V_end 가 정확히 3.200 에서 잘린다) |
+| 7/20 10 °C | 361 | 2.498 | 1 (SOC ≈ 0.05, 0.5–4.3 A) |
+| 7/21 40 °C | 270 | 2.530 | 1 (SOC ≈ 0.05, 0.5–5.8 A) |
+| 7/19 25 °C | 247 | 2.577 | **0** |
+| 7/20 −10 °C | 296 | 2.574 | **0** |
+| 7/20 −20 °C | 297 | 2.570 | **0** (SOC 0.4–1.0 has V_end cut at exactly 3.200) |
 
-**이유는 물리이고 숫자로 나온다.** pooled ECM 이 예측하는 무제한 I* (25 C):
+**The reason is physical and comes out in numbers.** The unlimited I* the
+pooled ECM predicts (25 °C):
 
-| SOC | SOH | tau=2 s | tau=10 s |
+| SOC | SOH | tau = 2 s | tau = 10 s |
 |---|---:|---:|---:|
 | 0.20 | 0.95 | **76.3 A** | 51.6 A |
 | 0.50 | 0.95 | **108.7 A** | 86.5 A |
@@ -1990,45 +2243,50 @@ lambda 를 0.623 으로 조이면 네 데이터셋 전부에서 무초과다:
 | 0.30 | 0.85 | 56.5 A | 35.5 A |
 | 0.50 | 0.85 | 77.6 A | 59.7 A |
 
-짧은 지평은 저항이 작으므로 바닥에 닿는 데 **더 큰** 전류가 필요하다. 30 A
-사이클러로는 저 SOC 나 저온(저항이 4~5 배 커지는 곳) 말고는 닿지 못한다.
+A short horizon has low resistance, so reaching the floor takes **more**
+current. A 30 A cycler cannot get there except at low SOC or low temperature,
+where resistance grows 4–5×.
 
-**따라서 tau = 2 s SOP 는 이 장비로 측정될 수 없다.** 데이터를 더 캐는 문제가
-아니다. 이 프로젝트의 tau=2 s 라벨은 앞으로도 전부 외삽이고, 21 절의
-lambda(tau=2 s) = 0.489 는 검증되지 않은 채 보수적으로 남는다. 그것이 옳은
-처리다 — 검증할 수 없는 지평에서 여유를 줄일 근거가 없다.
+**So τ = 2 s SOP cannot be measured with this equipment.** It is not a matter
+of digging out more data. Every τ = 2 s label in this project will remain
+extrapolated, and §21's lambda(τ = 2 s) = 0.489 stays unvalidated and
+conservative. That is the right handling — there is no basis for reducing
+margin on a horizon that cannot be validated.
 
-(같은 벽이 tau=10 s 에도 부분적으로 있다 — SOH 0.95, SOC 0.5 에서 86.5 A 다.
-tau=10 s 가 채점되는 것은 노화·저온·저 SOC 에서 I* 가 30 A 아래로 내려오기
-때문이고, 그래서 22.1 의 전압 제한 행이 그쪽에 몰린다.)
+(The same wall partly applies at τ = 10 s — 86.5 A at SOH 0.95, SOC 0.5.
+τ = 10 s is scoreable because aging, cold and low SOC bring I* below 30 A,
+which is why §22.1's voltage-limited rows cluster there.)
 
-### 22.6 이전 판정의 수정
+### 22.6 Correcting an earlier verdict
 
-18.3 절은 "Test#3 로는 측정 SOP 라벨을 만들 수 없다" 고 했다. 절반만 맞았다 —
-**저자들의 시트에는 있었고**(22.1), 그것으로 온도 축이 열렸다(22.3, 22.4).
-원시 펄스로는 만들 수 없다는 부분은 맞고, 이제 그 이유가 정확해졌다: 탐색이
-수렴하지 않아서가 아니라 **30 A 로는 바닥에 닿지 못해서**다.
+§18.3 said "measured SOP labels cannot be made from Test#3." Half right —
+**the authors' sheet had them** (§22.1), and they opened the temperature axis
+(§22.3, §22.4). The part about the raw pulses is right, and the reason is now
+precise: not that the search fails to converge, but that **30 A does not
+reach the floor.**
 
 `analysis/rpcwby_sop_test3.csv`, `analysis/sop_test3_eval.csv`,
 `analysis/eval_sop_test3.py`.
 
 ---
 
-## 23. 이력 효과 — 트림의 전제를 정면으로 시험하다 (2026-08-24)
+## 23. Hysteresis effects — testing the trim's premise head on (2026-08-24)
 
-트림은 "최근 이력이 유효 저항을 바꾸고 그것을 12 개 O(1) 통계로 읽을 수 있다" 는
-가정 위에 서 있다. UYPYDJ 에서는 그 가정을 시험할 수 없었다 — 이력이 바뀌면 셀도
-사이클도 함께 바뀐다.
+The trim stands on the assumption that recent history changes effective
+resistance and that 12 O(1) statistics can read it. UYPYDJ cannot test that
+assumption — changing the history changes the cell and the cycle too.
 
-**Test#8 은 다른 것을 모두 고정하고 이력만 바꾼다**: 같은 셀, 같은 0 C, 같은 SOC,
-측정 직전 펄스의 C-rate 만 0 / C3 / 1C / 2C / 3C / 4C. 저자들이 붙인 그림 이름이
-`fig_historyEffect.png` 다.
+**Test#8 holds everything else fixed and varies only history**: the same
+cell, the same 0 °C, the same SOC, with only the C-rate of the immediately
+preceding pulse at 0 / C/3 / 1C / 2C / 3C / 4C. The authors named the figure
+`fig_historyEffect.png`.
 
-### 23.1 효과는 실재하고 크며, 전압 제한 구간에 있다
+### 23.1 The effect is real, large, and sits in the voltage-limited region
 
-`rpcwby_sop_test8.py` 로 시트를 파싱했다(72 행). 진폭(최대-최소)/평균:
+The sheet was parsed with `rpcwby_sop_test8.py` (72 rows).
+Amplitude (max − min) / mean:
 
-| SOC | 0C | 1C | 2C | 4C | 진폭 | 전압 제한 |
+| SOC | 0C | 1C | 2C | 4C | amplitude | voltage-limited |
 |---|---:|---:|---:|---:|---:|---:|
 | 0.50 | −90.2 | −89.7 | −89.7 | −88.7 | 1.6 % | 0/6 |
 | 0.30 | −84.4 | −82.7 | −81.2 | −79.2 | 6.3 % | 0/6 |
@@ -2036,343 +2294,387 @@ tau=10 s 가 채점되는 것은 노화·저온·저 SOC 에서 I* 가 30 A 아�
 | 0.15 | −48.1 | −43.2 | −42.3 | −43.3 | 13.1 % | 6/6 |
 | 0.10 | −23.6 | −18.6 | −17.4 | — | 31.8 % | 5/5 |
 
-SOC >= 0.3 은 전부 30 A 상한이 답을 정하므로 전압 모델을 시험하지 못한다.
-**전압 제한 17 행이 정확히 이력 효과가 큰 곳에 있다.**
+At SOC ≥ 0.3 the 30 A ceiling sets the answer, so the voltage model is not
+tested. **The 17 voltage-limited rows sit exactly where the hysteresis effect
+is large.**
 
-추출 검증: 파일별 측정 직전 온도 중앙이 0.9 / 1.1 / 2.0 / 3.1 / 3.9 / 4.4 C 로
-저자 그림의 막대와 일치한다.
+Extraction check: the median temperature immediately before measurement is
+0.9 / 1.1 / 2.0 / 3.1 / 3.9 / 4.4 °C per file, matching the bars in the
+authors' figure.
 
-### 23.2 효과는 저항이 아니라 V_pre 에 있다
+### 23.2 The effect is in V_pre, not in resistance
 
-수렴 펄스(V_end = 2.55 V)만 골라 SOC 를 맞추면:
+Taking only converged pulses (V_end = 2.55 V) and matching SOC:
 
-| SOC ~ 0.20 | 0C | C/3 | 1C | 2C | 3C | 4C |
+| SOC ≈ 0.20 | 0C | C/3 | 1C | 2C | 3C | 4C |
 |---|---:|---:|---:|---:|---:|---:|
 | **V_pre [V]** | **3.456** | 3.413 | 3.365 | 3.299 | 3.239 | **3.197** |
-| R = dV/I [mOhm] | 38.8 | 39.8 | 39.5 | 37.7 | 35.0 | **32.6** |
+| R = dV/I [mΩ] | 38.8 | 39.8 | 39.5 | 37.7 | 35.0 | **32.6** |
 | I* [A] | 23.4 | 21.7 | 20.6 | 19.9 | 19.7 | 19.8 |
-| T [C] | 1.1 | 1.3 | 1.9 | 3.1 | 3.9 | 4.4 |
+| T [°C] | 1.1 | 1.3 | 1.9 | 3.1 | 3.9 | 4.4 |
 
-**여유(V_pre − 2.55)가 0.906 -> 0.647 V, 29 % 줄어든다. 저항은 오히려 16 %
-줄어든다** — 자기발열 때문이다. 즉 이력 효과는 확산 분극이 남긴 **전압 기준선의
-상태**이지 저항의 변화가 아니다.
+**The headroom (V_pre − 2.55) falls 29 %, 0.906 → 0.647 V. Resistance
+actually falls 16 %** — self-heating. So the hysteresis effect is a **state
+of the voltage baseline** left by diffusion polarisation, not a change in
+resistance.
 
-### 23.3 트림은 이것을 표현할 수 없다 — 구조적으로
+### 23.3 The trim cannot express this — structurally
 
-트림의 출력은 저항 배수 (k_f, k_s) 한 쌍이다. `sop_trim_dataset.py` 의 설계
-문단이 그것을 명시한다: 손실이 dV = V(t0+tau) − V(t0−) 위에 있으므로 "OCV,
-hysteresis and the RC initial states are absent by construction." 그 배제가
-45~72 mV 의 OCV 오차가 저항 배수로 새는 것을 막아 준 장치인데, 여기서는 바로 그
-배제가 효과를 못 보게 만든다.
+The trim's output is one pair of resistance multipliers (k_f, k_s). The
+design paragraph in `sop_trim_dataset.py` states it: the loss lives on
+dV = V(t0+tau) − V(t0−), so "OCV, hysteresis and the RC initial states are
+absent by construction." That exclusion is the device that stopped 45–72 mV
+of OCV error leaking into the resistance multipliers, and here that very
+exclusion is what keeps the effect out of reach.
 
-측정으로도 확인된다. SOC 0.18~0.30 에서 C-rate 가 오를 때
+Measurement confirms it. Over SOC 0.18–0.30, as the C-rate rises,
 
-    필요 배수 (R측정/R명목)   0.642 -> 0.570   (기울기 −0.0136 /C)
-    k_f                    0.687 -> 0.732   (기울기 **+0.0099** /C)
+    required factor (R measured / R nominal)   0.642 -> 0.570   (slope −0.0136 /C)
+    k_f                                        0.687 -> 0.732   (slope **+0.0099** /C)
 
-**트림이 반대 방향으로 움직인다.** 주행에서 배운 연상("최근 고전류 = 더 저항적")이
-0 C 의 자기발열 앞에서 뒤집힌다.
+**The trim moves the opposite way.** The association learned from driving
+("recent high current = more resistive") reverses in the face of
+self-heating at 0 °C.
 
-### 23.4 그런데 하이브리드는 맞힌다 — V_pre 를 측정으로 쓰면
+### 23.4 Yet the hybrid gets it right — if V_pre is the measured value
 
-SOP 반전은 V_pre + I·R_eff = V_min 이고, 차량의 BMS 는 V_pre 를 **측정**한다.
-그러면 23.2 의 효과가 입력으로 그냥 들어온다.
+The SOP inversion is V_pre + I·R_eff = V_min, and a vehicle's BMS
+**measures** V_pre. Then §23.2's effect simply enters as an input.
 
-dI*/d(C-rate), 즉 이력 효과의 기울기:
+dI*/d(C-rate), the slope of the hysteresis effect:
 
-| SOC | 측정 | 예측 (V_pre 측정) | 예측 (V_pre 모델 OCV−M) |
+| SOC | measured | predicted (measured V_pre) | predicted (model V_pre, OCV−M) |
 |---|---:|---:|---:|
 | 0.20 | −0.767 | **−0.668** | **+0.583** |
 | 0.25 | −0.924 | **−0.374** | **+0.700** |
 
-**측정 단자전압을 쓰면 부호와 크기가 맞고, 모델 OCV 를 쓰면 부호가 뒤집힌다.**
-V_pre 를 고정하면 변하는 것은 R 뿐인데 R 은 자기발열로 내려가므로 예측 I* 가
-올라간다 — 정확히 반대다.
+**With the measured terminal voltage the sign and magnitude are right; with
+the model OCV the sign reverses.** Fixing V_pre leaves only R varying, and R
+falls with self-heating, so the predicted I* rises — exactly backwards.
 
-**설계 규칙: SOP 반전의 V_pre 는 반드시 측정 단자전압이어야 하며, 모델 OCV 로
-대체해서는 안 된다.** 11 절의 end-to-end 경로는 이미 라벨의 `V_pre_V`(측정)를
-쓴다. 20 절과 22 절의 외부 평가는 라벨이 V_pre 를 싣지 않아 OCV−M 을 썼다 — 그
-셀들은 특성화 전에 쉬므로 V_pre ~ OCV 가 성립하지만, 이 근사가 무너지는 조건이
-어디인지는 이제 안다.
+**Design rule: V_pre in the SOP inversion must be the measured terminal
+voltage and must not be replaced by the model OCV.** §11's end-to-end path
+already uses the label's `V_pre_V` (measured). §20's and §22's external
+evaluations used OCV−M because the labels do not carry V_pre — those cells
+rest before characterisation so V_pre ≈ OCV holds, but where that
+approximation breaks is now known.
 
-### 23.5 무엇이 남는가
+### 23.5 What remains
 
-- **트림의 전제는 절반만 맞다.** 이력은 SOP 를 크게 바꾸지만(SOC 0.2 에서 27 %),
-  그 통로가 저항이 아니라 전압 상태다. 저항 배수로는 닿지 않는다.
-- **그래도 하이브리드의 SOP 는 옳게 나온다** — 물리 쪽(전압 반전)이 측정
-  V_pre 를 통해 그것을 담기 때문이다. AI 쪽이 못 하는 일을 물리 쪽이 한다.
-- **절대 수준은 확립되지 않았다.** 0 C 에서 모델이 I* 를 약 절반으로 본다
-  (SOC 0.20 에서 예측 12.9 A 대 측정 23.4 A). 보수적인 쪽이지만, Test#8 의 SOH 가
-  시트에 없어 0.90 으로 가정했고 그 가정이 절대 수준을 지배한다. **여기서 읽어야
-  할 것은 기울기이지 수준이 아니다.**
-- 0 C 는 트림이 학습된 온도 범위(25.96~30.66 C) 밖이다. 23.3 의 부호 반전이
-  온도 외삽 탓인지 이력 연상 탓인지는 이 데이터로 가르지 못한다.
+- **The trim's premise is half right.** History changes SOP substantially
+  (27 % at SOC 0.2), but the channel is a voltage state rather than
+  resistance. A resistance multiplier cannot reach it.
+- **The hybrid's SOP still comes out right** — because the physics side
+  (voltage inversion) carries it through the measured V_pre. The physics does
+  what the AI cannot.
+- **The absolute level is not established.** At 0 °C the model reads I* at
+  about half (12.9 A predicted against 23.4 A measured at SOC 0.20). That is
+  the conservative side, but Test#8's SOH is not in the sheet and was assumed
+  to be 0.90, and that assumption dominates the absolute level. **What is to
+  be read here is the slope, not the level.**
+- 0 °C is outside the temperature range the trim was trained on
+  (25.96–30.66 °C). Whether §23.3's sign reversal is temperature
+  extrapolation or the history association cannot be separated with this
+  data.
 
 `analysis/rpcwby_sop_test8.py`, `analysis/rpcwby_t8_trim.py`,
 `analysis/rpcwby_sop_test8.csv`, `analysis/cache/t8/`.
 
 ---
 
-## 24. 데이터 설계 감사 — 무엇을 가를 수 있고 무엇을 없는가 (2026-08-24)
+## 24. Data design audit — what can and cannot be separated (2026-08-24)
 
-23 절이 미결로 남긴 질문 — 트림의 부호 반전이 온도 외삽 탓인가 이력 연상 탓인가 —
-은 **가지고 있는 데이터로 닫힌다.** 그리고 그 과정에서 더 중요한 것이 드러난다:
-행 수는 많은데 **대비(contrast)가 축마다 극단적으로 불균등하다.**
+The question §23 left open — whether the trim's sign reversal is temperature
+extrapolation or the history association — **closes with the data already in
+hand.** And something more important emerges on the way: there are many rows,
+but **contrast is extremely unevenly distributed across axes.**
 
-### 24.1 부호 반전은 온도 탓이 아니다
+### 24.1 The sign reversal is not temperature
 
-25 C 의 UYPYDJ 블록 64,308 개에서 k_f 를 최근 부하로 갈라 보면:
+Splitting k_f by recent load over 64,308 UYPYDJ blocks at 25 °C:
 
-| 특징 | 하위 20 % k_f | 상위 20 % | 차이 |
+| Feature | bottom 20 % k_f | top 20 % | difference |
 |---|---:|---:|---:|
 | I_rms | 0.9920 | 1.0032 | **+0.0113** |
 | duty | 0.9956 | 1.0021 | +0.0065 |
 | I_hi | 0.9977 | 1.0014 | +0.0037 |
 
-**25 C 에서도 같은 방향이다.** 따라서 Test#8(0 C)에서 본 부호 반전은 온도
-외삽의 인공물이 아니라 트림이 어디서나 가진 연상이다. 23.5 절의 미결 항목을 닫는다.
+**The same direction holds at 25 °C.** So the sign reversal seen in Test#8
+(0 °C) is not an artefact of temperature extrapolation but an association the
+trim carries everywhere. This closes the open item in §23.5.
 
-### 24.2 트림은 이력 판독기가 아니라 잔차 판독기다
+### 24.2 The trim is a residual reader, not a history reader
 
-같은 64,308 블록에서 k_f 와 각 특징의 상관:
+Correlation of k_f with each feature over the same 64,308 blocks:
 
     dR_fast   +0.915      R_fast_nom  -0.405
     dR_slow   +0.889      T           +0.265
     I_rms     +0.075      duty        +0.033      I_hi  +0.065
 
-**k_f 는 사실상 dR_fast 하나의 함수다.** dR_fast = EW{I·r}/EW{I·I} 는 *지금*
-측정되는 잔차의 기울기이지 이력의 적분이 아니다. 부하 관련 특징들의 기여는
-+0.03~0.08 로 미미하다.
+**k_f is effectively a function of dR_fast alone.** dR_fast =
+EW{I·r}/EW{I·I} is the slope of the residual measured *now*, not an integral
+of history. The load-related features contribute a negligible +0.03–0.08.
 
-이것이 세 가지를 한꺼번에 설명한다.
+That explains three things at once.
 
-- **왜 정전류 여기에서도 작동하는가**(20.3) — 잔차 기울기는 전류가 한 값이어도
-  정의된다.
-- **왜 Test#8 의 이력 효과를 못 잡는가**(23.3) — 그 효과는 V_pre 에 있고, 손실이
-  dV 차분 위에 있어 V_pre 가 구조적으로 제거된다.
-- **왜 12 블록 불변 학습이 통했는가**(24.3) — 잔차 기울기는 12 창에서 거의 같다.
+- **Why it works under constant-current excitation** (§20.3) — the residual
+  slope is defined even at a single current.
+- **Why it misses Test#8's hysteresis effect** (§23.3) — that effect lives in
+  V_pre, and with the loss on a dV difference, V_pre is structurally removed.
+- **Why learning invariance over 12 blocks worked** (§24.3) — the residual
+  slope is nearly identical across the 12 windows.
 
-**트림의 주장은 "이력을 읽는다" 가 아니라 "펄스 응답의 저항 편차를 읽는다" 로
-좁혀 적어야 한다.**
+**The trim's claim has to be narrowed from "it reads history" to "it reads
+the resistance deviation of the pulse response."**
 
-### 24.3 데이터는 이력에 대해 '반응하지 말라' 고 가르친다
+### 24.3 The data teaches the model *not* to respond to history
 
-`sop_trim_dataset.pair()` 는 라벨 하나에 **직전 주행의 마지막 12 블록**을 붙인다.
-목표는 하나이고 입력만 12 가지다. 확인했다 — (cycle, SOC, rank) 키 **5,359 개
-전부(100 %)에서 12 창의 라벨 Y 가 완전히 동일**하다(키 내 표준편차 중앙 3e-8 V).
+`sop_trim_dataset.pair()` attaches **the last 12 blocks of the preceding
+drive** to one label. One target, 12 inputs. Checked: in **all 5,359
+(100 %)** (cycle, SOC, rank) keys, the label Y across the 12 windows is
+completely identical (median within-key standard deviation 3e-8 V).
 
-그 짝짓기는 "어떤 이력을 보았든 같은 물리 저항을 내라" 는 **불변성 학습**이다.
-데이터를 아무리 늘려도 그것으로는 이력 민감도를 배울 수 없다.
+That pairing is **invariance training**: "produce the same physical
+resistance whatever history you saw." No amount of extra data teaches history
+sensitivity through it.
 
-그리고 더 근본적으로, **UYPYDJ 의 모든 라벨 펄스는 긴 휴지 뒤에 있다**
-(`MIN_REST_MULT = 5 x tau2`). 라벨 쪽에 이력 대비가 애초에 0 이다. 이 파일의
-설계 문단이 그것을 이미 적어 두었다 — "the features are measured in a regime where
-the cell never rests, the labels in one where it always has."
+More fundamentally, **every labelled pulse in UYPYDJ follows a long rest**
+(`MIN_REST_MULT = 5 × tau2`). History contrast on the label side is zero to
+begin with. This file's own design paragraph already records it — "the
+features are measured in a regime where the cell never rests, the labels in
+one where it always has."
 
-### 24.4 축별 대비 감사
+### 24.4 Contrast audit by axis
 
-| 축 | UYPYDJ (6 셀) | RPCWBY | 라벨과 짝지어졌나 |
+| Axis | UYPYDJ (6 cells) | RPCWBY | paired with a label? |
 |---|---|---|---|
-| SOH | 0.68~1.00 연속 | Test#1/2 0.73~1.00 | **풍부** |
-| SOC | 0.05~1.00, 17 점 | 0.005~1.00, 17 점 | **풍부** |
-| 전류 / rate | 2.6~29.6 A, 4 단 | 최대 30 A | **풍부** |
-| 온도 | **25 C 한 점** | Test#3 −20~40 C, **tau=10 s 만** | 26 행 |
-| 지평 tau | 2 / 10 s | 2 / 10 / 30 s, 온도와 교차 없음 | 부분 (tau=2 s 는 0) |
-| **이력** | 12 창 -> 라벨 1 개 | Test#8 6 조건 -> 라벨 6 개 | **18 행이 전부** |
-| 방향 | 충 / 방전 | 충 / 방전 | 있음 |
+| SOH | continuous 0.68–1.00 | Test#1/2 0.73–1.00 | **plentiful** |
+| SOC | 0.05–1.00, 17 points | 0.005–1.00, 17 points | **plentiful** |
+| current / rate | 2.6–29.6 A, 4 steps | up to 30 A | **plentiful** |
+| temperature | **one point, 25 °C** | Test#3 −20–40 °C, **tau = 10 s only** | 26 rows |
+| horizon tau | 2 / 10 s | 2 / 10 / 30 s, no crossing with temperature | partial (zero at tau = 2 s) |
+| **history** | 12 windows → 1 label | Test#8 6 conditions → 6 labels | **18 rows, all of it** |
+| direction | charge / discharge | charge / discharge | present |
 
-**행은 수만 개인데, 이력 대비를 가진 라벨은 18 행이고 전부 한 셀·한 온도다.**
-온도 대비를 가진 라벨은 26 행이고 전부 한 지평이다. 나머지 대부분의 행은 SOH 와
-SOC 를 반복해서 훑는다 — 그 두 축은 이미 포화되어 있다.
+**There are tens of thousands of rows, and the labels carrying history
+contrast are 18, all from one cell at one temperature.** The labels carrying
+temperature contrast are 26, all at one horizon. Most of the remaining rows
+sweep SOH and SOC repeatedly — two axes that are already saturated.
 
-**즉 "데이터가 많은데 왜 못 가르나" 의 답은 양이 아니라 설계다.** 이 데이터셋들은
-노화 시험으로 설계됐고, 노화 시험은 정의상 SOH 를 흔들고 나머지를 고정한다.
+**So the answer to "there is so much data, why can it not teach this" is
+design, not volume.** These datasets were designed as aging tests, and an
+aging test by definition moves SOH and holds everything else.
 
-### 24.5 그러면 무엇을 재야 하는가
+### 24.5 What should be measured then
 
-이력 축을 닫으려면 Test#8 을 확장하면 된다 — 대단한 장비가 필요 없다.
+Closing the history axis means extending Test#8 — no exotic equipment
+needed.
 
-    같은 셀, 같은 온도, SOC 를 0.2~0.8 로 넓히고,
-    측정 직전 펄스를 0 / 1C / 2C / 4C 로 바꾸고,
-    그 직후 10 s SOP 탐색.
+    same cell, same temperature, SOC widened to 0.2–0.8,
+    the pulse immediately before the measurement varied 0 / 1C / 2C / 4C,
+    then a 10 s SOP search right after.
 
-이것이 **라벨이 이력에 따라 달라지는** 유일한 구조다. 그리고 23.4 절이 이미
-말해 준다 — 그렇게 재도 저항 배수로는 닿지 않을 것이다. 효과는 V_pre 에 있고,
-V_pre 는 차량이 이미 측정한다. **따라서 이 축의 결론은 "모델을 늘려라" 가 아니라
-"측정 단자전압을 쓰라" 다.**
+That is the only structure in which **the label varies with history.** And
+§23.4 already says what would come of it — even measured that way, a
+resistance multiplier will not reach it. The effect is in V_pre, and V_pre is
+something a vehicle already measures. **So the conclusion on this axis is not
+"make the model bigger" but "use the measured terminal voltage."**
 
-온도 축은 tau 와 교차된 SOP 라벨이 필요한데, 22.5 절에서 본 대로 tau=2 s 는
-30 A 사이클러로 도달 불가다. 그 축은 장비를 바꾸지 않는 한 닫히지 않는다.
+The temperature axis needs SOP labels crossed with tau, and as §22.5 showed,
+τ = 2 s is unreachable with a 30 A cycler. That axis does not close without
+changing the equipment.
 
 ---
 
-## 25. 충전 방향의 안전 (2026-08-24)
+## 25. Safety in the charge direction (2026-08-24)
 
-19~24 절은 전부 방전이다. BMS 는 회생 한계 없이 굴러가지 않고, 충전의 과대예측은
-**과전압** 이라는 대칭적 위험이다. 이 절이 같은 잣대를 충전에 적용한다.
+§19–24 are all discharge. A BMS does not run without a regeneration limit,
+and overprediction on charge is the symmetric hazard, **overvoltage.** This
+section applies the same yardstick to charge.
 
-### 25.1 라벨 사정은 충전이 더 좋다
+### 25.1 The label situation is better on charge
 
-| | 전체 | 신뢰(extrap<=1.5) |
+| | total | trustworthy (extrap ≤ 1.5) |
 |---|---:|---:|
-| 방전 | 5,995 | 651 (11 %) |
-| **충전** | 6,946 | **4,648 (69 %)** |
+| discharge | 5,995 | 651 (11 %) |
+| **charge** | 6,946 | **4,648 (69 %)** |
 
-물리 때문이다 — 충전 상한 4.2 V 는 OCV 에 가까워 여유가 작고, 그래서 I* 가 작아
-팬 안에 들어온다. 통계가 방전보다 7 배 튼튼하다.
+The reason is physical — the 4.2 V charge ceiling is close to OCV, so the
+headroom is small, I* is small, and it lands inside the fan. The statistics
+are 7× stronger than discharge.
 
-외부도 마찬가지다. RPCWBY Test#1/#2 의 `SOP_char` 889 개 중 **265 개가 전압
-제한**이다(SOC 0.10~1.00, 10 과 25 C, 두 셀, 30 사이클) — 방전 외부 집합 53 행의
-5 배다.
+The same holds externally. Of RPCWBY Test#1/#2's 889 `SOP_char` values,
+**265 are voltage-limited** (SOC 0.10–1.00, 10 and 25 °C, two cells, 30
+cycles) — 5× the discharge external set of 53 rows.
 
-**전압/전류 제한을 가르는 법이 방전과 다르다.** 충전 상한은 15 A, 전압 상한
-4.15 V 이므로 두 경우 모두 P < 62.25 W 다 — P 문턱 하나로 갈리지 않는다. 대신
-전류 제한이려면 V = P/15 가 **충전 중** 단자전압이어야 하는데, 45 W 아래에서는
-그것이 3.0 V 미만이라 불가능하다. 그래서 P < 45 W 를 전압 제한으로 판정한다.
-자기일관이다 — 그 행들의 I* = P/4.15 가 0.0~10.8 A 로 전부 15 A 이하다.
+**Separating voltage- from current-limited works differently than on
+discharge.** The charge current ceiling is 15 A and the voltage ceiling
+4.15 V, so both cases give P < 62.25 W — one P threshold does not separate
+them. Instead, for a row to be current-limited, V = P/15 has to be the
+terminal voltage **during charge**, and below 45 W that would be under 3.0 V,
+which is impossible. So P < 45 W is judged voltage-limited. Self-consistent —
+those rows have I* = P/4.15 of 0.0–10.8 A, all below 15 A.
 
-### 25.2 max 집계 권고가 충전에서도 재현된다
+### 25.2 The max-aggregation recommendation reproduces on charge
 
-신뢰 라벨 4,648 행:
+4,648 trustworthy rows:
 
-| | 낙관율 | 최악 초과 | 가용률 | RMSE |
+| | optimism | worst overshoot | usability | RMSE |
 |---|---:|---:|---:|---:|
 | ECM | 72.9 % | 31.45 A | 1.084 | 3.65 A |
-| 하이브리드 (현행 last) | **81.6 %** | 32.73 A | 1.067 | 2.52 A |
-| 하이브리드 (max 집계) | **54.4 %** | 23.07 A | 1.009 | **2.23 A** |
+| hybrid (current, last) | **81.6 %** | 32.73 A | 1.067 | 2.52 A |
+| hybrid (max aggregation) | **54.4 %** | 23.07 A | 1.009 | **2.23 A** |
 
-방전과 완전히 같은 형태다 — 트림이 RMSE 는 개선하면서 낙관은 **악화**시키고
-(72.9 -> 81.6 %), 19.7 절의 max 집계가 재학습 없이 그것을 되돌린다. RMSE 도 함께
-좋아진다.
+Exactly the shape of discharge — the trim improves RMSE while **worsening**
+optimism (72.9 → 81.6 %), and §19.7's max aggregation reverses that without
+retraining. RMSE improves along with it.
 
-### 25.3 충전의 실패는 두 갈래다 — 그래서 비율은 잘못된 잣대다
+### 25.3 Charge fails in two different ways — so a ratio is the wrong yardstick
 
-| |I*| 구간 | n | 초과율 | 절대 초과 최악 | 상대 초과 중앙 |
+| \|I*\| range | n | exceedance | worst absolute overshoot | median relative overshoot |
 |---|---:|---:|---:|---:|
-| 0~3 A (고 SOC) | 252 | **92.9 %** | 2.09 A | +36.7 % |
-| 3~10 A | 1,236 | 66.0 % | 7.15 A | +9.0 % |
-| 20~30 A | 1,302 | 44.9 % | 18.80 A | −0.9 % |
-| 30 A 이상 (저 SOC) | 882 | 29.4 % | **23.07 A** | −2.7 % |
+| 0–3 A (high SOC) | 252 | **92.9 %** | 2.09 A | +36.7 % |
+| 3–10 A | 1,236 | 66.0 % | 7.15 A | +9.0 % |
+| 20–30 A | 1,302 | 44.9 % | 18.80 A | −0.9 % |
+| above 30 A (low SOC) | 882 | 29.4 % | **23.07 A** | −2.7 % |
 
-**고 SOC 는 상대 오차가 크고 절대 오차가 작다. 저 SOC 는 반대다.**
+**High SOC has large relative and small absolute error. Low SOC is the
+reverse.**
 
-만충 근처에서 진짜 한계가 1.3 A 인데 2.0 A 를 허용하면 비율로는 54 % 초과지만
-전압은 4.2 V 를 살짝 일찍 치고 CV 루프가 받는다. SOC 0.14 에서 32 A 대신 55 A 를
-허용하면 그것은 전혀 다른 사건이다. **비율은 두 경우를 같게 세고 암페어는 다르게
-센다.** 따라서 충전의 안전 기준은 초과율이 아니라 **절대 초과**여야 한다.
+Allowing 2.0 A where the true limit near full charge is 1.3 A is a 54 %
+exceedance by ratio, but the voltage hits 4.2 V slightly early and the CV
+loop absorbs it. Allowing 55 A instead of 32 A at SOC 0.14 is an entirely
+different event. **A ratio counts the two the same and amperes count them
+differently.** So the safety criterion on charge has to be **absolute
+overshoot** rather than exceedance rate.
 
-### 25.4 허용 초과를 암페어로 놓으면 값이 반으로 준다
+### 25.4 Setting the tolerance in amperes halves the price
 
-훈련 셀에서 `max(lambda·I_pred − I_true) <= tol` 이 되게 lambda 를 잡고 홀드아웃
-에서 잰다(tau 조건화):
+lambda is chosen on the training cells so that
+`max(lambda·I_pred − I_true) ≤ tol`, then measured on the holdout
+(tau-conditioned):
 
-| 허용 tol | 충전 가용률 | 충전 실제 최악 | 방전 가용률 | 방전 실제 최악 |
+| tolerance | charge usability | charge actual worst | discharge usability | discharge actual worst |
 |---|---:|---:|---:|---:|
 | 0 A | 0.458 | 0.03 A | **0.688** | 0.89 A |
 | **0.5 A** | **0.594** | **0.75 A** | 0.701 | 1.40 A |
 | 1.0 A | 0.621 | **3.35 A** | 0.715 | 1.98 A |
 | 2.0 A | 0.645 | 5.30 A | 0.744 | 3.14 A |
 
-**충전은 0.5 A 를 허용하면 가용률이 14 %p 오른다**(0.458 -> 0.594). 1.0 A 부터는
-새 셀의 실제 최악이 3.35 A 로 튀어 보정이 전이되지 않는다 — 0.5 A 가 무릎이다.
+**Allowing 0.5 A on charge raises usability by 14 %p** (0.458 → 0.594). From
+1.0 A the new cell's actual worst jumps to 3.35 A and the calibration does
+not transfer — 0.5 A is the knee.
 
-**방전은 곡선이 평평해 0 으로 조여도 싸다.** 방향마다 최적점이 다르다.
+**On discharge the curve is flat, so tightening to zero is cheap.** The
+optimum differs by direction.
 
-lambda(tol=0.5 A): tau=10 s **0.598**, tau=2 s **0.566**. ECM 은 같은 기준에서
-0.507 이므로 **트림이 8.7 %p 를 되사온다**(방전은 9.4 %p).
+lambda(tol = 0.5 A): tau = 10 s **0.598**, tau = 2 s **0.566**. The ECM at
+the same standard is 0.507, so **the trim buys back 8.7 %p** (9.4 %p on
+discharge).
 
-### 25.5 조건화와 여유 형태 — 방전과 다른 점, 같은 점
+### 25.5 Conditioning and margin form — what differs from discharge and what does not
 
-**tau 조건화가 충전에서는 거의 듣지 않는다.** 무초과 기준에서 가용률 0.458(tau)
-대 0.447(전역)이다. 방전의 0.688 대 0.513 과 대조된다 — 방전의 tau=2 s 는 특별히
-망가져 있었지만(19.3) 충전은 두 지평이 비슷하다(lambda 0.566 대 0.598).
+**tau conditioning barely helps on charge.** At the zero-exceedance standard
+usability is 0.458 (tau) against 0.447 (global), in contrast to discharge's
+0.688 against 0.513 — discharge's τ = 2 s was specifically broken (§19.3)
+while charge's two horizons are similar (lambda 0.566 against 0.598).
 
-**tau+SOH 는 여기서도 과적합이다**: 가용률 0.568 인데 최악 초과가 0.03 -> 7.38 A.
+**tau + SOH overfits here too**: usability 0.568 with the worst overshoot
+going 0.03 → 7.38 A.
 
-**여유의 형태**를 셋 비교했다 — I_bound = lambda·I_pred − delta:
+**Three margin forms** were compared — I_bound = lambda·I_pred − delta:
 
-| 형태 | 초과 | 최악 | 가용률 |
+| Form | exceeding | worst | usability |
 |---|---:|---:|---:|
-| **곱셈 lambda 만** | 2/4648 | **0.03 A** | 0.458 |
-| 덧셈 delta 만 | 6 | 12.74 A | 0.000 |
-| 둘 다 | 9 | **11.11 A** | 0.568 |
+| **multiplicative lambda only** | 2/4648 | **0.03 A** | 0.458 |
+| additive delta only | 6 | 12.74 A | 0.000 |
+| both | 9 | **11.11 A** | 0.568 |
 
-덧셈만은 delta 가 18~23 A 로 커져 출력을 전부 죽인다. 혼합은 가용률을 11 %p 더
-주지만 꼬리가 터진다 — 파라미터가 하나 늘면 훈련 셀이 우연히 괜찮았던 곳에서
-여유가 헐거워지는, 21.2 절과 같은 과적합이다. **곱셈만이 답이다.**
+Additive alone drives delta to 18–23 A and kills the output entirely. Mixed
+gives 11 %p more usability while the tail blows up — one more parameter and
+the margin goes loose where the training cells happened to be fine, the same
+overfitting as §21.2. **Multiplicative only is the answer.**
 
-### 25.6 외부 검증 — 그리고 충전에는 온도 의존이 없다
+### 25.6 External validation — and charge has no temperature dependence
 
-20 절의 특징 파일을 그대로 쓴다(`TrimFeatures` 가 전류 부호로 방향을 가려 쓰므로
-같은 특징 벡터가 양방향을 섬긴다). 충전 트림은 `runs_trim_chg`.
+§20's feature files are used as they are (`TrimFeatures` selects direction by
+the sign of current, so the same feature vector serves both). The charge trim
+is `runs_trim_chg`.
 
-여유 없이, 풀 6 변형 중앙값, 고유 행:
+No margin, median over six pool variants, unique rows:
 
-| | 초과 | 최악 | 가용률 |
+| | exceeding | worst | usability |
 |---|---:|---:|---:|
 | Test#2 ECM | 34/94 | 2.72 A | 0.785 |
-| **Test#2 하이브리드** | **10/94** | **0.29 A** | 0.672 |
+| **Test#2 hybrid** | **10/94** | **0.29 A** | 0.672 |
 | Test#1 ECM | 42/107 | 4.47 A | 0.818 |
-| **Test#1 하이브리드** | **8/107** | **1.05 A** | 0.683 |
+| **Test#1 hybrid** | **8/107** | **1.05 A** | 0.683 |
 
-**가용률을 맞추면 하이브리드의 꼬리가 일관되게 작다:**
+**Matched on usability, the hybrid's tail is consistently smaller:**
 
-| 가용률 | ECM 최악 | 하이브리드 최악 |
+| Usability | ECM worst | hybrid worst |
 |---|---:|---:|
 | Test#2 0.65 | 0.64 A | **0.07 A** |
 | Test#2 0.70 | 1.40 A | **0.68 A** |
 | Test#1 0.65 | 1.34 A | **0.49 A** |
 | Test#1 0.70 | 2.27 A | **1.35 A** |
 
-초과 **횟수**는 비슷하거나 하이브리드가 약간 많다. 즉 충전에서 트림이 하는 일은
-분포를 옮기는 것이 아니라 **꼬리를 압축하는 것**이다 — 방전(19.5)과 다른 성격이다.
+The **count** of exceedances is similar or slightly higher for the hybrid.
+So what the trim does on charge is not shift the distribution but **compress
+the tail** — a different character from discharge (§19.5).
 
-**온도 의존이 없다.** 하이브리드 + lambda 0.598 에서
+**No temperature dependence.** With the hybrid and lambda 0.598:
 
-    Test#2: 10 C 1/51 최악 0.01 A 가용 0.396 | 25 C 1/43 최악 0.00 A 가용 0.406
-    Test#1: 10 C 1/60 최악 0.02 A 가용 0.418 | 25 C 0/47 최악 0.00 A 가용 0.404
+    Test#2: 10 °C 1/51 worst 0.01 A usability 0.396 | 25 °C 1/43 worst 0.00 A usability 0.406
+    Test#1: 10 °C 1/60 worst 0.02 A usability 0.418 | 25 °C 0/47 worst 0.00 A usability 0.404
 
-두 온도가 사실상 같다. **22.4 절에서 방전이 저온에서 lambda 를 0.693 -> 0.623 으로
-조여야 했던 것과 대조된다.** 충전은 그럴 필요가 없다.
+The two temperatures are effectively identical. **In contrast to §22.4, where
+discharge had to tighten lambda 0.693 → 0.623 in the cold.** Charge does not
+need it.
 
-**내부 lambda 는 보수적인 쪽으로 전이된다** — 외부에서 초과가 1~2 행뿐이고 가용률
-이 0.40 으로 떨어진다. 하이브리드가 외부에서 이미 보수적(가용 0.67)이기 때문이다.
-20.4 절과 같은 결론: **모델은 옮겨지고 여유는 대상 차량군에서 다시 잡아야 한다.**
+**The internal lambda transfers on the conservative side** — externally only
+1–2 rows exceed and usability drops to 0.40, because the hybrid is already
+conservative externally (usability 0.67). Same conclusion as §20.4: **the
+model transfers and the margin has to be recalibrated on the target fleet.**
 
-### 25.7 채택 구성 (양방향) — 2026-08-25 재생성 후 값
+### 25.7 Adopted configuration (both directions) — values after the 2026-08-25 rebuild
 
-파이프라인을 온도 결함 제외로 다시 만든 뒤의 값이다(findings.md 7.3).
+These are the values after rebuilding the pipeline with the temperature
+defects excluded (findings.md §7.3).
 
-    이력 집계     max (직전 2 h 주행의 러닝 max)
-    여유 형태     곱셈만, tau 별 (덧셈·혼합은 꼬리가 터진다 — 25.5)
-    V_pre        측정 단자전압, 모델 OCV 로 대체 금지 (23.4)
+    history aggregation   max (running max over the preceding 2 h of driving)
+    margin form           multiplicative only, per tau (additive and mixed blow up the tail — §25.5)
+    V_pre                 measured terminal voltage; never substitute the model OCV (§23.4)
 
-| | lambda(10 s) | lambda(2 s) | 쓸 수 있는 전류 | 초과 | 최악 |
+| | lambda(10 s) | lambda(2 s) | usable current | exceeding | worst |
 |---|---|---|---|---|---|
-| 방전 (25 C) | 0.679 | 0.462 | 70 % | 4/631 (0.6 %) | 1.19 A |
-| **방전 (−20~25 C)** | **0.623** | 0.462 | **~64 %** | — | — |
-| 충전 (온도 무관) | 0.567 | 0.544 | 57 % | 3/4543 (0.07 %) | 0.58 A |
+| discharge (25 °C) | 0.679 | 0.462 | 70 % | 4/631 (0.6 %) | 1.19 A |
+| **discharge (−20 to 25 °C)** | **0.623** | 0.462 | **~64 %** | — | — |
+| charge (temperature independent) | 0.567 | 0.544 | 57 % | 3/4543 (0.07 %) | 0.58 A |
 
-방전의 저온 값 0.623 은 22.4 절이 Test#3 의 −20~+10 C 측정 SOP 에서 요구한 값이다.
-25 C 로만 보정한 0.679 는 −10 C 아래에서 깨진다. **충전은 25.6 절에서 10 과 25 C 가
-사실상 동일해 온도 보정이 필요 없다.**
+The cold value of 0.623 for discharge is what §22.4 required from Test#3's
+measured SOP at −20 to +10 °C. The 0.679 calibrated at 25 °C alone breaks
+below −10 °C. **Charge needs no temperature correction because §25.6 found
+10 and 25 °C effectively identical.**
 
-같은 안전 수준에서 ECM 은 방전 59 %, 충전 51 % 다 — **하이브리드가 팩 전류를
-방전 11 %p, 충전 6 %p 더 쓴다.** 26 개 파라미터가 사는 값이 이것이다.
+At the same safety level the ECM gives 59 % on discharge and 51 % on charge —
+**the hybrid uses 11 %p more pack current on discharge and 6 %p more on
+charge.** That is what 26 parameters are worth.
 
-**여유를 걸기 전 날것**은 여전히 과반이 초과한다(방전 69.4 %, 충전 61.7 %; ECM 은
-84.3 / 73.0 %). 여유 없이는 쓸 수 없다.
+**Raw, before the margin**, a majority still exceeds (discharge 69.4 %,
+charge 61.7 %; the ECM 84.3 / 73.0 %). It is unusable without a margin.
 
-tau = 2 s 는 이 장비로 측정 검증이 불가능하므로(22.5, 30 A 로 바닥에 못 닿는다)
-보수적으로 남긴다.
+τ = 2 s cannot be validated by measurement with this equipment (§22.5, 30 A
+does not reach the floor), so it is left conservative.
 
-### 25.8 셀별로 다시 세다 — 16.2 의 판정이 뒤집힌다
+### 25.8 Recounting per cell — §16.2's verdict flips
 
-16.2 절은 충전 트림이 **여섯 중 둘에서 ECM 에 진다**고 했다(CC_CELL2 −31 %,
-BOOST_NEGPULSE −9 %). RMSE 기준이었다. 안전 기준으로 다시 센다. lambda 는 홀드아웃
-셀을 빼고 나머지 다섯에서 tau 별로 잡는다(tol = 0.5 A).
+§16.2 said the charge trim **loses to the ECM on two of six cells**
+(CC_CELL2 −31 %, BOOST_NEGPULSE −9 %). That was on RMSE. Recounted on the
+safety criterion, with lambda taken per tau on the other five cells
+(tol = 0.5 A):
 
-| 셀 | n | RMSE ECM | RMSE 하이브 | 개선 | 가용 ECM | 가용 하이브 | 개선 |
+| Cell | n | RMSE ECM | RMSE hybrid | gain | usability ECM | usability hybrid | gain |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | BOOST | 851 | 3.99 A | 1.40 A | +64.9 % | 0.553 | 0.608 | +10.0 % |
 | **BOOST_NEGPULSE** | 727 | 2.88 A | 2.96 A | **−2.6 %** | 0.462 | 0.539 | **+16.7 %** |
@@ -2380,18 +2682,20 @@ BOOST_NEGPULSE −9 %). RMSE 기준이었다. 안전 기준으로 다시 센다.
 | BOOST_REST | 580 | 3.05 A | 2.77 A | +9.1 % | 0.430 | 0.527 | +22.5 % |
 | CC | 836 | 4.50 A | 2.04 A | +54.6 % | 0.567 | 0.611 | +7.7 % |
 | **CC_CELL2** | 796 | 1.36 A | 1.80 A | **−32.7 %** | 0.464 | 0.572 | **+23.3 %** |
-| 평균 | | | | +24.0 % | | | **+15.6 %** |
+| mean | | | | +24.0 % | | | **+15.6 %** |
 
-**RMSE 4/6, 안전 6/6.** 그리고 **RMSE 에서 진 두 셀이 안전에서는 가장 크게 이긴다**
-(+16.7 %, +23.3 %).
+**RMSE 4/6, safety 6/6.** And **the two cells that lose on RMSE win the most
+on safety** (+16.7 %, +23.3 %).
 
-**집계 탓이 아니다.** 16.2 와 같은 `last` 집계로 세도 RMSE 는 여전히 4/6 이고 진
-셀도 같다(−6.1 %, −42.5 %) — max 집계는 손실 크기만 줄인다. 바뀐 것은 **기준**이다.
-(다만 안전 기준에서는 집계가 4/6 을 6/6 으로 만든다.)
+**Not an aggregation artefact.** Counted with §16.2's `last` aggregation the
+RMSE is still 4/6 with the same losing cells (−6.1 %, −42.5 %) — max
+aggregation only reduces the size of the loss. What changed is **the
+criterion.** (Though on the safety criterion, aggregation does turn 4/6 into
+6/6.)
 
-**왜 뒤집히나 — 여유는 꼬리가 정한다.**
+**Why it flips — the margin is set by the tail.**
 
-| 셀 | ECM 최악 | 하이브 최악 | ECM p99 | 하이브 p99 |
+| Cell | ECM worst | hybrid worst | ECM p99 | hybrid p99 |
 |---|---:|---:|---:|---:|
 | BOOST | 14.48 A | 8.72 A | 11.29 A | 4.87 A |
 | BOOST_NEGPULSE | **31.45 A** | 23.07 A | 3.92 A | 4.65 A |
@@ -2400,84 +2704,95 @@ BOOST_NEGPULSE −9 %). RMSE 기준이었다. 안전 기준으로 다시 센다.
 | CC | 15.44 A | 10.34 A | 12.24 A | 7.58 A |
 | CC_CELL2 | 5.94 A | 7.24 A | 4.71 A | 4.45 A |
 
-하이브리드의 최악이 6 중 4 에서, p99 가 6 중 5 에서 더 작다. 그래서 어떤 5 셀
-훈련 집합에서도 하이브리드가 **더 헐거운 lambda** 를 받는다 — 실제로 lambda_ECM
-0.465~0.470 대 lambda_하이브 0.582~0.591 로 **25 % 헐겁다.** 그 차이가 그대로
-가용률 차이가 된다.
+The hybrid's worst is smaller in 4 of 6 and its p99 in 5 of 6. So on any
+5-cell training set the hybrid receives **a looser lambda** — measured,
+lambda_ECM 0.465–0.470 against lambda_hybrid 0.582–0.591, **25 % looser.**
+That difference becomes the usability difference directly.
 
-**CC_CELL2 가 이것을 가장 잘 보여준다.** 그 셀에서 ECM 의 RMSE 1.36 A 는 여섯 중
-최고인데, 가용률은 0.464 로 가장 낮은 축이다. **RMSE 는 분포의 가운데를 재고
-여유는 끝을 잰다.** 16.2 절이 "ECM 이 이미 좋은 셀" 이라고 부른 것은 가운데가
-좋다는 뜻이었고, 안전에는 그것이 판정 근거가 되지 못한다.
+**CC_CELL2 shows it best.** On that cell the ECM's RMSE of 1.36 A is the best
+of the six, while its usability at 0.464 is among the worst. **RMSE measures
+the middle of the distribution and the margin measures the end.** What §16.2
+called "a cell where the ECM is already good" meant good in the middle, and
+for safety that is not grounds for a verdict.
 
-**허용치에 견고하다**: tol = 0 / 0.5 / 1.0 A 에서 **6/6**, 2.0 A 에서 5/6(하나가
-−0 % 로 동률). 평균 개선 +14.6 / +15.6 / +12.1 / +7.4 %.
+**Robust to the tolerance**: **6/6** at tol = 0 / 0.5 / 1.0 A, and 5/6 at
+2.0 A (one tied at −0 %). Mean gains +14.6 / +15.6 / +12.1 / +7.4 %.
 
-### 25.9 남은 것
+### 25.9 Remaining
 
-- 16.2 절의 **충전에서 2 셀이 ECM 에 진다**(−9 %, −31 %)는 RMSE 기준이었다. 안전
-  기준(25.4)에서는 트림이 8.7 %p 를 되사오므로 그 판정은 뒤집힌다 — 다만 셀별로
-  다시 세지는 않았다.
-- 충전 tau=2 s 는 방전과 달리 라벨이 있다(신뢰 2,129 행). 그러나 30 s 는 없다.
-- 외부 충전에서 lambda 가 과보수적인 이유(하이브리드가 외부에서 이미 보수적)를
-  셀 단위로 분해하지 않았다.
+- §16.2's **two cells losing to the ECM on charge** (−9 %, −31 %) was on
+  RMSE. On the safety criterion (§25.4) the trim buys back 8.7 %p, so that
+  verdict flips — though it was not recounted per cell there.
+- Charge τ = 2 s has labels, unlike discharge (2,129 trustworthy rows). But
+  30 s does not.
+- Why lambda is over-conservative on external charge (the hybrid is already
+  conservative externally) was not decomposed per cell.
 
 ---
 
-## 26. 충전 여유 40 % 는 어디에서 오는가 (2026-08-24)
+## 26. Where the charge margin's 40 % comes from (2026-08-24)
 
-25 절이 남긴 값은 lambda(tau=10 s) = 0.598 이다. 셀이 받을 수 있는 전류의 59 % 만
-쓰고 41 % 를 버린다는 뜻이다. 그것을 줄일 수 있는지 네 방향으로 파고, 두 개를
-찾았다 — 진짜 모델 결함 하나와 못 고치는 물리 하나. 그리고 시도 세 개가 같은
-이유로 실패했다.
+What §25 left is lambda(tau = 10 s) = 0.598, meaning only 59 % of the current
+the cell can take is used and 41 % is discarded. Whether that can be reduced
+was probed in four directions, and two things were found — one genuine model
+defect and one piece of physics that cannot be fixed. Three attempts failed
+for the same reason.
 
-### 26.1 안전계수를 정하는 것은 측정점 하나다
+### 26.1 One measured point sets the safety factor
 
-보정 집합 2,092 점 가운데 lambda 를 정하는 것은 **한 점**이다:
-BOOST_NEGPULSE_1S, SOC 0.95, SOH 0.691, 실제 한계 1.6 A 인데 모델이 3.6 A(2.18 배).
+Of the 2,092 calibration points, **one** sets lambda:
+BOOST_NEGPULSE_1S, SOC 0.95, SOH 0.691, where the true limit is 1.6 A and the
+model says 3.6 A (2.18×).
 
-그 점 하나를 빼도 lambda 는 0.598 -> 0.600 으로 거의 움직이지 않는다(뒤에 비슷한
-점들이 줄지어 있다). 상위 1 % 를 빼면 0.625, 상위 5 % 를 빼면 **0.768** 이다.
-분포는 중앙에서 비 1.01 로 거의 완벽하고 상위 1 % 에서 1.63 을 넘는다. **꼬리
-하나를 막느라 전체를 깎는 구조다.**
+Removing that one point barely moves lambda, 0.598 → 0.600 (similar points
+queue behind it). Removing the top 1 % gives 0.625, and the top 5 % gives
+**0.768.**
+The distribution is nearly perfect at the centre (ratio 1.01) and exceeds 1.63
+in the top 1 %. **The structure is that one tail is being blocked at the cost
+of cutting everything.**
 
-### 26.2 조건화가 실패하는 이유 — 분산 분해
+### 26.2 Why conditioning fails — variance decomposition
 
-예측/실제 비의 로그 분산을 나누면:
+Splitting the log variance of the predicted/actual ratio:
 
-    조건(tau x SOC x SOH, 32 칸)이 설명    0.122
-    셀이 설명                              0.283
-    칸 x 셀                                0.584
+    condition (tau x SOC x SOH, 32 bins) explains    0.122
+    cell explains                                    0.283
+    bin x cell                                       0.584
 
-**칸을 알고 난 뒤에도 셀이 0.461 을 더 설명한다** — 조건이 설명하는 몫의 네 배다.
-칸마다 셀 평균이 1.10~1.74 배(중앙 1.22) 벌어지고, 그것이 칸 내 표준편차
-(1.03~1.34)와 같은 크기다.
+**Even after the bin is known, the cell explains a further 0.461** — four times
+the share the condition explains. Per bin, cell means spread over 1.10–1.74×
+(median 1.22), which is the same size as the within-bin standard deviation
+(1.03–1.34).
 
-**"이 조건에서는 모델이 이만큼 틀린다" 가 성립하지 않는다.** 같은 SOC·SOH·지평
-이라도 어느 셀이냐에 따라 다르고, 어느 셀인지는 미리 알 수 없다.
+**"The model is wrong by this much under this condition" does not hold.** At the
+same SOC, SOH and horizon it depends on which cell, and which cell it is cannot
+be known in advance.
 
-측정으로 확인한 실패 세 건이 전부 여기서 나온다.
+All three measured failures come from here.
 
-| 시도 | 결과 | 왜 |
+| Attempt | Result | Why |
 |---|---|---|
-| 안전계수를 SOC(2~3칸) x SOH(2칸)로 나눔 | 쓸 수 있는 전류 +1~10 %p, **실제 최악 0.75 -> 16.61 A** | 칸이 얇아서가 아니다(칸마다 217~757 점). 칸 안의 **최악**이 셀 간 1.5~1.6 배 흔들려 새 셀에서 뚫린다 |
-| 중앙 편향을 (tau, SOC, SOH) 격자에서 빼고 재보정 | 59 -> 56~61 %, 최악 0.75 -> 2.13~4.19 A | 중앙 편향도 재현되지 않는다. 칸별 셀 평균 산포(1.12~1.60 배)가 편향 자체(~2 %)보다 크다 |
-| dR_fast 로 셀별 온라인 보정 | 59 -> 56 %, 최악 0.77 A | **셀 편향 추정은 잘 된다**(6 중 5 에서 오차 0.035 이내, 셀 간 상관 +0.962). 그런데 lambda 를 정하는 것은 셀의 평균 편향이 아니라 셀 **안의** 이상점이라 이득이 없다 |
+| Split the safety factor by SOC (2–3 bins) x SOH (2 bins) | usable current +1~10 %p, **true worst 0.75 -> 16.61 A** | Not because the bins are thin (217–757 points per bin). The **worst** within a bin swings 1.5–1.6× between cells and breaks through on a new cell |
+| Subtract the median bias on a (tau, SOC, SOH) grid and recalibrate | 59 -> 56~61 %, worst 0.75 -> 2.13~4.19 A | The median bias does not reproduce either. Per-bin cell-mean spread (1.12–1.60×) exceeds the bias itself (~2 %) |
+| Per-cell online correction with dR_fast | 59 -> 56 %, worst 0.77 A | **Cell bias is estimated well** (error within 0.035 on 5 of 6, cell-to-cell correlation +0.962). But what sets lambda is not the cell's mean bias, it is the outlier **inside** the cell, so there is no gain |
 
-**기록해 둘 잘못 두 가지.** (a) 중앙 편향 격자를 제안한 근거는 표를 잘못 읽은
-것이었다 — "SOC 0.7~0.9 에서 모든 셀이 1.14~1.30 배" 라고 읽었으나 실제 값은
-1.20/1.00/1.27/1.02/1.19/1.06 으로 갈려 있었고, 1.27 은 최대/최소 열이었다.
-(b) 만충 근처를 "여유가 작아 OCV 오차가 증폭되는 구간" 으로 설명하려 했으나,
-pooled OCV 의 홀드아웃 오차는 SOC>=0.9 에서 오히려 **작고**(중앙 1.7 mV, 95 %tile
-26.0 mV, 전체는 6.5 / 55.8 mV), 애초에 내부 평가의 v_pre 는 라벨의 **측정값**이라
-OCV 오차가 들어가지 않는다.
+**Two mistakes worth recording.** (a) The grounds offered for the median-bias
+grid came from misreading a table — it was read as "every cell is 1.14–1.30×
+at SOC 0.7–0.9", but the actual values were split 1.20/1.00/1.27/1.02/1.19/1.06,
+and 1.27 was the max/min column. (b) An attempt was made to explain the
+near-full region as "a region where small margin amplifies OCV error", but the
+holdout error of the pooled OCV is in fact **smaller** at SOC>=0.9 (median
+1.7 mV, 95 %ile 26.0 mV; overall 6.5 / 55.8 mV), and in any case the internal
+evaluation's v_pre is the label's **measured** value, so OCV error does not
+enter.
 
-### 26.3 진짜 결함 — rank 축에서 RC 파라미터를 보간하면 안 된다
+### 26.3 The genuine defect — RC parameters must not be interpolated on the rank axis
 
-v_pre 가 측정값이므로 여유는 정확하고, 따라서 **예측/실제 비 = R_실제/R_예측** 이다.
-문제는 전적으로 저항이다.
+Because v_pre is measured, the margin is exact, and therefore
+**predicted/actual ratio = R_actual/R_predicted.** The problem is entirely
+resistance.
 
-SOC 0.95, SOH 0.72 의 충전 면에서 rank 별 원값:
+Raw values by rank on the charge side at SOC 0.95, SOH 0.72:
 
 | rank | I | R2 | tau2 | D10 |
 |---|---:|---:|---:|---:|
@@ -2485,642 +2800,722 @@ SOC 0.95, SOH 0.72 의 충전 면에서 rank 별 원값:
 | 1 | 4.94 A | 460.0 mOhm | **3000 s** | 40.2 mOhm |
 | 2 | 13.89 A | 0.0 mOhm | 3000 s | 39.4 mOhm |
 
-rank 1 이상의 적합은 **발산했다** — tau2 가 상한 3000 s 에 붙으면 10 s 창에서
-1−e^(−10/3000) = 0.0033 이라 R2 가 460 이든 0 이든 D10 에 기여하지 않는다. R2 와
-tau2 가 서로를 상쇄하며 값이 정해지지 않는다.
+The fits at rank 1 and above **diverged** — once tau2 sits at the 3000 s bound,
+1 − e^(−10/3000) = 0.0033 over a 10 s window, so R2 contributes nothing to D10
+whether it is 460 or 0. R2 and tau2 cancel each other and the values are not
+determined.
 
-`ECMSurface.theta` 는 다섯 파라미터를 rank 축에서 **각각** 선형 보간한 뒤 돌려준다.
-그러면 1.6 A 에서 (R2 64 mOhm, tau2 285 s) 라는, 어느 rank 에도 없고 근거도 없는
-조합이 나온다. 두 발산한 적합의 중간이 발산하지 않은 값처럼 보이는 것뿐이다.
+`ECMSurface.theta` interpolates the five parameters **individually** along the
+rank axis and returns them. That yields, at 1.6 A, a combination
+(R2 64 mOhm, tau2 285 s) that exists at no rank and has no grounds. It is
+merely that the midpoint of two diverged fits looks like a value that did not
+diverge.
 
-결과는 비물리적이다. 모델의 10 s 등가저항이
+The result is unphysical. The model's 10 s equivalent resistance goes
 
     1.0 A 49.0 -> 1.6 A **32.8** -> 5.0 A 40.2 mOhm
 
-으로 꺼졌다 오른다. 측정은 52.2 -> 41.3 -> 29.6 mOhm 으로 단조 감소한다
-(Butler–Volmer). 전류가 커질 때 저항이 오르는 구간이 39 격자점 중 21~31 개다.
+dipping and then rising. The measurement decreases monotonically,
+52.2 -> 41.3 -> 29.6 mOhm (Butler–Volmer). Resistance rises with increasing
+current at 21–31 of the 39 grid points.
 
-`ECMSurface.d_tau` 를 넣었다 — rank 마다 등가저항 D(tau) 를 먼저 만들고 **그것을**
-보간한다. 발산이 그 rank 안에 갇힌다. 1.6 A 에서 32.8 -> 48.2 mOhm(측정 52.2),
-SOC 0.90/SOH 0.75 에서 37.2 -> 56.0 mOhm. 잘 맞던 구간은 건드리지 않는다
-(SOC 0.50/SOH 0.90 에서 16.9 -> 16.8).
+`ECMSurface.d_tau` was added — build the equivalent resistance D(tau) per rank
+first and interpolate **that**. Divergence is trapped inside its own rank. At
+1.6 A, 32.8 -> 48.2 mOhm (measured 52.2); at SOC 0.90/SOH 0.75,
+37.2 -> 56.0 mOhm. Regions that already fit are untouched (16.9 -> 16.8 at
+SOC 0.50/SOH 0.90).
 
-### 26.4 그러나 채택하지 않는다
+### 26.4 But it is not adopted
 
-| 방향 | 보간 | 낙관율 | 안전계수 | 쓸 수 있는 전류 | 실제 최악 |
+| Direction | Interp | Optimism | Safety factor | Usable current | True worst |
 |---|---|---:|---|---:|---:|
-| 방전 | theta | 61.1 % | 0.693 / 0.489 | 69 % | 0.89 A |
-| 방전 | dtau | 61.2 % | 0.689 / 0.482 | 69 % | 1.06 A |
-| 충전 | theta | 54.4 % | 0.598 / 0.566 | 59 % | **0.75 A** |
-| 충전 | dtau | **42.5 %** | 0.608 / 0.590 | 59 % | **2.78 A** |
+| discharge | theta | 61.1 % | 0.693 / 0.489 | 69 % | 0.89 A |
+| discharge | dtau | 61.2 % | 0.689 / 0.482 | 69 % | 1.06 A |
+| charge | theta | 54.4 % | 0.598 / 0.566 | 59 % | **0.75 A** |
+| charge | dtau | **42.5 %** | 0.608 / 0.590 | 59 % | **2.78 A** |
 
-충전 낙관율이 12 %p 줄지만 홀드아웃 셀의 **실제 최악이 0.75 -> 2.78 A** 로 나빠지고
-쓸 수 있는 전류는 그대로다. 방전은 전 항목이 미세하게 나빠진다.
+Charge optimism drops 12 %p, but the holdout cells' **true worst gets worse,
+0.75 -> 2.78 A**, and usable current is unchanged. On discharge every item
+degrades slightly.
 
-**분포의 가운데는 개선하는데 안전에 쓰이는 끝은 악화시킨다.** 이 프로젝트에서
-반복된 패턴이고(19.7, 21.2, 25.5), 채택 기준이 안전인 이상 답은 기각이다.
-진단은 유효하므로 `--interp dtau` 로 남겨 둔다. 지표를 RMSE 로 되돌리는 작업이
-생기면 그때는 채택 대상이다.
+**It improves the middle of the distribution and degrades the end that safety
+uses.** This is a pattern that has repeated in this project (19.7, 21.2, 25.5),
+and as long as the adoption criterion is safety, the answer is rejection. The
+diagnosis is valid, so it is kept as `--interp dtau`. If work ever moves the
+metric back to RMSE, it becomes an adoption candidate then.
 
-### 26.5 최악을 정하는 점 — 정정: 이력 효과가 아니라 온도 채널 결함이었다
+### 26.5 The point that sets the worst — correction: it was a temperature-channel defect, not a hysteresis effect
 
-**처음 판정은 틀렸다.** 아래에 판정과 정정을 함께 남긴다.
+**The first ruling was wrong.** Both the ruling and the correction are left
+below.
 
-방전 쪽에서 절대 초과의 최악을 정하는 점은 **BOOST_NEGPULSE 사이클 487,
-SOC 0.14~0.23** 이다. 전수 조사하면 이웃 사이클 대비 1.4 배 이상 튀는 (셀, 방향,
-사이클) 이 13 개 있는데 **487 만 20 개 조합 전부에서 동시에 튄다**(충전 2.02 배,
-방전 2.97 배). 나머지는 조합 1~3 개짜리 산발적 잡음이다.
+On the discharge side the point that sets the worst absolute exceedance is
+**BOOST_NEGPULSE cycle 487, SOC 0.14–0.23.** An exhaustive scan finds 13
+(cell, direction, cycle) triples that spike 1.4× or more above neighbouring
+cycles, and **487 alone spikes in all 20 combinations at once** (charge 2.02×,
+discharge 2.97×). The rest are scattered noise covering 1–3 combinations.
 
-원시 전압도 그렇게 찍혀 있다 — 같은 V_pre(3.48 V)에 같은 27 A 인데 dV 가 사이클
-450 에서 0.408, **487 에서 0.708**, 525 에서 0.404 V.
+The raw voltage records it too — at the same V_pre (3.48 V) and the same 27 A,
+dV is 0.408 V at cycle 450, **0.708 at 487**, and 0.404 at 525.
 
-**처음에는 이것을 23 절 Test#8 의 이력 효과와 같은 종류로 읽었다.** SOC<0.3 에만
-있고, 양방향·전율에서 동시에 나타나고, 다음 특성화에서 복귀하는 것이 모두 맞아
-보였다.
+**This was first read as the same kind of thing as the hysteresis effect of
+Test#8 in §23.** That it exists only at SOC<0.3, appears in both directions and
+at all rates at once, and recovers at the next characterisation all seemed to
+fit.
 
-**틀렸다. 원자료의 온도를 열어 보니 그 구간의 셀 온도가 3.8 C 다.**
+**Wrong. Opening the temperature in the raw data shows the cell temperature over
+that region is 3.8 C.**
 
-| 사이클 | V<3.55 구간 온도 중앙 | V>3.90 구간 |
+| Cycle | Median temp over V<3.55 | over V>3.90 |
 |---|---:|---:|
 | 450 | 25.8 C | 26.0 |
-| **487** | **3.8 C** (0.4~27.6) | 25.8 |
+| **487** | **3.8 C** (0.4–27.6) | 25.8 |
 | 525 | 25.8 C | 26.0 |
 
-0.4~4 C 에서 저항이 25 C 의 2~3 배가 되는 것은 22 절의 온도 인자와 정확히 맞는다
-(−20 C 에서 4.5 배, 0 C 에서 약 2 배). 저 SOC 에만 있는 것도, 양방향·전율에서
-동시에 튄 것도, 다음 특성화에서 복귀한 것도 전부 온도로 설명된다.
+Resistance being 2–3× the 25 C value at 0.4–4 C matches the temperature factor
+of §22 exactly (4.5× at −20 C, about 2× at 0 C). Existing only at low SOC,
+spiking in both directions and at all rates at once, and recovering at the next
+characterisation are all explained by temperature.
 
-**이 결함은 이미 알려져 있었다.** findings.md 7.1 이 BOOST_NEGPULSE 사이클
-488, 505 를 "앞 ~20 %만" 결함으로 기록해 두었다 — 특성화 487 바로 다음 주행
-사이클이고, 같은 사건이다.
+**This defect was already known.** findings.md 7.1 recorded BOOST_NEGPULSE
+cycles 488 and 505 as defective "in the first ~20 % only" — the drive cycles
+immediately after characterisation 487, and the same event.
 
-**그런데 그 필터는 주행 캐시(cache_t)에만 적용됐다.** HPPC 저항 표
-(`uypydj_hppc_resistance.csv`)에는 온도 컬럼이 아예 없어서 같은 필터를 걸 수
-없었다. 저항 표도 SOP 반전도 25 C 를 전제하는데, 4 C 셀에서 나온 라벨이 그대로
-들어가 방전 안전계수를 정하고 있었다.
+**But that filter was applied only to the drive cache (cache_t).** The HPPC
+resistance table (`uypydj_hppc_resistance.csv`) has no temperature column at
+all, so the same filter could not be applied. The resistance table and the SOP
+inversion both assume 25 C, yet labels taken from a 4 C cell were going straight
+in and setting the discharge safety factor.
 
-**영향은 방전에만 있다.** 결정점을 홀드아웃별로 나열하면:
+**The impact is on discharge only.** Listing the deciding points per holdout:
 
-| | 결정점 | 성격 |
+| | Deciding point | Nature |
 |---|---|---|
-| 방전 t10 | BOOST_NEGPULSE 487, SOC 0.23 (12 조합 중 6 개) | **온도 결함** |
-| 방전 t2 | CC 1762, SOC 0.37, SOH 0.730 | 정상 |
-| 충전 t10/t2 | BOOST_NEGPULSE_1S 1881, SOC 0.95/0.78, SOH 0.691 | 정상 |
+| discharge t10 | BOOST_NEGPULSE 487, SOC 0.23 (6 of 12 combinations) | **temperature defect** |
+| discharge t2 | CC 1762, SOC 0.37, SOH 0.730 | normal |
+| charge t10/t2 | BOOST_NEGPULSE_1S 1881, SOC 0.95/0.78, SOH 0.691 | normal |
 
-평가 단계에서 빼 보면 방전 lambda(t10) 이 0.693 -> 0.715 로 풀리고(그다음 점인
-CC 1425 가 정하게 되어 실제 최악은 0.89 -> 1.15 A), **충전은 0.598 로 전혀
-변하지 않는다.**
+Removing it at the evaluation stage loosens discharge lambda(t10) from 0.693 to
+0.715 (the next point, CC 1425, then sets it, so the true worst goes
+0.89 -> 1.15 A), and **charge does not change at all, staying at 0.598.**
 
-**따라서 26.1 의 충전 결정점(만충 근처, SOC 0.95, 실제 1.6 A 대 예측 3.6 A)은
-온도와 무관한 정상 데이터다.** 충전 여유가 조여 있는 이유는 여전히 열려 있다.
+**So the charge deciding point of 26.1 (near full, SOC 0.95, true 1.6 A vs
+predicted 3.6 A) is normal data unrelated to temperature.** Why the charge
+margin is tight remains open.
 
-### 26.6 결론 — 41 % 의 상당 부분은 줄일 수 없다
+### 26.6 Conclusion — a substantial part of the 41 % cannot be reduced
 
-충전 여유가 조여 있는 이유가 둘로 갈렸다.
+The reason the charge margin is tight split in two.
 
-- **모델 결함**(26.3): 실재하고 고칠 수 있으나, 고쳐도 안전계수는 풀리지 않는다.
-- **데이터 결함**(26.5): 방전 결정점의 절반이 온도 채널 결함에서 왔다. 빼면
-  lambda 가 0.693 -> 0.715 로 풀린다. **충전에는 영향이 없다.**
+- **Model defect** (26.3): real and fixable, but fixing it does not loosen the
+  safety factor.
+- **Data defect** (26.5): half the discharge deciding points came from a
+  temperature-channel defect. Removing it loosens lambda from 0.693 to 0.715.
+  **No effect on charge.**
 
-**충전의 41 % 는 아직 설명되지 않았다.** 결정점은 만충 근처(SOC 0.95, SOH 0.691,
-실제 1.6 A 대 예측 3.6 A)의 정상 데이터이고, 26.2~26.4 가 보였듯 조건화로도
-온라인 보정으로도 보간 수정으로도 풀리지 않는다.
+**The charge 41 % is still unexplained.** The deciding point is normal data near
+full charge (SOC 0.95, SOH 0.691, true 1.6 A vs predicted 3.6 A), and as
+26.2–26.4 showed, it is not resolved by conditioning, by online correction, or
+by fixing the interpolation.
 
-**그리고 실마리 하나가 이번에 닫혔다.** 23.4 절이 측정 단자전압을 통로로
-제시했으나, 사이클 487 에서 V_pre 는 이웃과 같고(3.477 / 3.483 / 3.484) 차이는
-전류를 걸어야 나타난다. 주행 특징도 정상이다(dR_fast −1.47 로 이웃 −1.60, +1.56,
-−2.38, −1.41 한가운데, k_f 0.987). **V_pre 도 주행 잔차도 그 상태를 예언하지
-못했다** — 다만 그것은 온도 결함이었으므로, 이력 효과에 대해서는 아직 시험되지
-않은 채로 남는다.
+**And one lead closed this time.** §23.4 offered the measured terminal voltage
+as a channel, but at cycle 487 V_pre matches its neighbours (3.477 / 3.483 /
+3.484) and the difference only appears once current is applied. The drive
+features are normal too (dR_fast −1.47 against neighbours −1.60, +1.56, −2.38,
+−1.41; k_f 0.987). **Neither V_pre nor the drive residual predicted that state**
+— though that was a temperature defect, so for the hysteresis effect it remains
+untested.
 
 ---
 
-## 27. MCU 실측 — 보드에서 재다 (2026-08-25)
+## 27. MCU measurement — measured on the board (2026-08-25)
 
-이 프로젝트의 출발 질문은 "AI 기반 SOH/SOP 가 일반 BMS 에서 도는가" 였다. 26 절
-까지 정확도와 안전은 다 답했지만 **연산은 한 번도 재지 않았다.** 이 절이 그것을
-닫는다.
+The question this project started from was "does AI-based SOH/SOP run on an
+ordinary BMS". Through §26, accuracy and safety were all answered, but
+**computation was never measured once.** This section closes that.
 
-    보드      NUCLEO-H563ZI, STM32H563ZIT6
-    코어      Cortex-M33 250 MHz, FPv5-SP 하드 FPU, ICACHE on
-    빌드      arm-none-eabi 14.3, -Os, float32
-    타이밍     DWT CYCCNT, 인터럽트 끄고 호출 구간만
-    통신      USART3 921600 baud (기존 CEMA 벤치와 같은 규약)
+    Board     NUCLEO-H563ZI, STM32H563ZIT6
+    Core      Cortex-M33 250 MHz, FPv5-SP hardware FPU, ICACHE on
+    Build     arm-none-eabi 14.3, -Os, float32
+    Timing    DWT CYCCNT, interrupts off, call region only
+    Comms     USART3 921600 baud (same protocol as the existing CEMA bench)
 
-### 27.1 무엇을 올렸나 — 표는 D(tau) 로 저장한다
+### 27.1 What was deployed — the table is stored as D(tau)
 
-Python 은 산점 데이터 위의 `LinearNDInterpolator` 를 쓴다. MCU 에서는 못 쓰므로
-정규 격자로 다시 샘플링해야 하고, **그 격자화가 그 자체로 오차를 만든다.**
+Python uses `LinearNDInterpolator` over scattered data. That cannot be used on
+the MCU, so it must be resampled onto a regular grid, and **that gridding
+itself creates error.**
 
-저장 형식을 두 가지로 재 보았다. RC 5 파라미터를 저장하는 쪽과, rank 마다
-D(2 s)·D(10 s) 를 미리 계산해 저장하는 쪽. **후자가 같은 오차에 용량은 절반
-이하**이고, 무엇보다 26.3 절이 찾은 결함이 구조적으로 불가능해진다 — RC 를
-보간하지 않으니 발산한 tau2 적합들 사이에서 근거 없는 조합이 생길 수 없다.
+Two storage formats were measured: storing the five RC parameters, versus
+precomputing and storing D(2 s) and D(10 s) per rank. **The latter gives the
+same error at less than half the size**, and above all makes the defect found
+in §26.3 structurally impossible — RC is not interpolated, so no baseless
+combination can arise between diverged tau2 fits.
 
-격자 크기는 측정으로 골랐다. 원 표가 SOC 20 x SOH 17 점이므로 그보다 촘촘할
-이유가 없다. Python 산점 보간 대비 10 s 등가저항 상대오차:
+The grid size was chosen by measurement. The source table is SOC 20 x SOH 17
+points, so there is no reason to be finer than that. Relative error in the 10 s
+equivalent resistance against Python scattered interpolation:
 
-| 격자 | 중앙 | 95 % | 최대 | 크기(양방향) |
+| Grid | Median | 95 % | Max | Size (both directions) |
 |---|---:|---:|---:|---:|
 | 24x12 | 0.65 % | 4.46 % | 21.6 % | 18 KB |
 | **32x16** | **0.30 %** | **2.88 %** | 16.8 % | **32 KB** |
 | 48x24 | 0.20 % | 1.75 % | 12.1 % | 72 KB |
 
-32x16 이 무릎이다. 그 위로는 용량이 2 배 늘고 오차는 0.1 %p 줄 뿐이다.
+32x16 is the knee. Above it the size doubles and the error falls by only 0.1 %p.
 
-**격자화가 SOP 를 거의 건드리지 않는다.** 실제 신뢰 라벨 657 행에서
+**Gridding barely touches SOP.** On the 657 rows of real trustworthy labels
 
-    낙관율   70.6 -> 70.9 %
-    RMSE     5.38 -> 5.50 A
-    최악      20.35 -> 19.53 A   (오히려 줄었다)
-    차이 중앙  0.217 A
+    optimism    70.6 -> 70.9 %
+    RMSE        5.38 -> 5.50 A
+    worst       20.35 -> 19.53 A   (it actually fell)
+    median diff 0.217 A
 
-7.3 절이 잰 재학습 산포(낙관율 13.2 %p)에 묻히는 수준이다.
+This is buried under the retraining spread measured in §7.3 (optimism 13.2 %p).
 
-자산 합계 **36.4 KB** — ECM 격자 32 KB + OCV/이력 4 KB + 트림 0.39 KB.
+Assets total **36.4 KB** — ECM grid 32 KB + OCV/hysteresis 4 KB + trim 0.39 KB.
 
-### 27.2 C 구현이 Python 과 같은지 먼저 확인했다
+### 27.2 First, checking that the C implementation matches Python
 
-호스트에서 **펌웨어와 같은 `sop_core.c` 를 링크해** 대조했다. 이것이 안 맞으면
-MCU 측정이 무엇을 잰 것인지 알 수 없다.
+The comparison was done on the host by **linking the same `sop_core.c` as the
+firmware**. If that does not match, there is no way to know what the MCU
+measurement measured.
 
-| | 상대오차 중앙 | 최대 |
+| | Median relative error | Max |
 |---|---:|---:|
-| 트림 k (26 파라미터) | 1.1e-07 | 3.8e-07 |
+| trim k (26 parameters) | 1.1e-07 | 3.8e-07 |
 | R_eff | 2.7e-03 | 6.1e-02 |
 | SOP I* | 2.4e-03 | 3.3e-02 |
 | **SOH CNN** | **7.4e-10** | 1.8e-07 |
 
-트림과 SOH 는 float32 정밀도 한계다 — 수식이 정확히 같다. R_eff 의 2.7e-03 은
-구현 오차가 아니라 **의도한 격자화**이고 27.1 의 0.30 % 와 일치한다. SOH 는
-PyTorch 와 RMSE 까지 같다(0.0123).
+Trim and SOH are at the float32 precision limit — the formulas are exactly the
+same. The 2.7e-03 on R_eff is not implementation error but the **intended
+gridding**, and agrees with the 0.30 % of §27.1. SOH matches PyTorch down to
+the RMSE (0.0123).
 
-### 27.3 실측
+### 27.3 Measurements
 
-n = 200, 중앙값. 인터럽트를 끄고 호출 구간만 잰다.
+n = 200, medians. Interrupts off, call region only.
 
-| 단계 | 중앙 | p95 | 최대 | 반복 |
+| Stage | Median | p95 | Max | Iterations |
 |---|---:|---:|---:|---:|
-| 표 조회 D(tau) 1 회 | 2.91 us | 3.05 | 4.22 | — |
-| 트림 (12->2, 26 파라미터) | 6.34 us | 6.50 | 6.58 | — |
-| 고정점 반전 | 43.06 us | 47.10 | 64.91 | **17** |
-| **SOP 1 회 (트림+반전)** | **49.28 us** | 53.29 | 71.19 | 17 |
-| 트림 특징 갱신 (샘플마다) | 12.42 us | 12.50 | 14.93 | — |
-| SOC EKF 1 스텝 (예측+갱신) | 7.46 us | 7.76 | 7.83 | — |
-| SOC EKF (예측만) | 4.86 us | 4.96 | 5.00 | — |
-| **SOH CNN (시드 3 개)** | **17,919 us** | 17,919 | 17,919 | — |
+| One table lookup D(tau) | 2.91 us | 3.05 | 4.22 | — |
+| Trim (12->2, 26 parameters) | 6.34 us | 6.50 | 6.58 | — |
+| Fixed-point inversion | 43.06 us | 47.10 | 64.91 | **17** |
+| **One SOP (trim + inversion)** | **49.28 us** | 53.29 | 71.19 | 17 |
+| Trim feature update (per sample) | 12.42 us | 12.50 | 14.93 | — |
+| SOC EKF one step (predict + update) | 7.46 us | 7.76 | 7.83 | — |
+| SOC EKF (predict only) | 4.86 us | 4.96 | 5.00 | — |
+| **SOH CNN (3 seeds)** | **17,919 us** | 17,919 | 17,919 | — |
 
-반복 17 회는 Python 예측(중앙 17, 95 % 18)과 정확히 같다.
+The 17 iterations match the Python prediction exactly (median 17, 95 % 18).
 
-**예상이 하나 빗나갔다.** "지배하는 것은 26 파라미터가 아니라 표 조회" 라고
-보았는데, 트림 6.34 us 가 표 조회 2.91 us 의 **2.2 배**다. 26 MAC 이 이중선형
-보간보다 비싼 이유는 `expf` 와 `tanhf` 각 2 회다 — 초월함수가 MAC 보다 훨씬
-비싸다. 다만 전체에서는 반전이 87 % 를 차지하므로 큰 그림은 맞았다.
+**One expectation was wrong.** It was expected that "what dominates is the table
+lookup, not the 26 parameters", but the trim at 6.34 us is **2.2×** the table
+lookup's 2.91 us. The reason 26 MACs cost more than a bilinear interpolation is
+two `expf` and two `tanhf` calls — transcendentals are far more expensive than
+MACs. Still, inversion accounts for 87 % of the total, so the big picture was
+right.
 
-**같은 코드가 바이너리 구성에 따라 20 % 움직인다.** SOP 만 있던 빌드에서 표 조회가
-2.41 us 였는데 FEAT/EKF 를 넣자 2.91 us 가 되었다. ICACHE 와 플래시 배치 탓이다.
-절대값을 인용할 때 이 폭을 함께 적어야 한다.
+**The same code moves 20 % depending on binary layout.** In the SOP-only build
+the table lookup was 2.41 us; adding FEAT/EKF made it 2.91 us. This is ICACHE
+and flash placement. That spread must be quoted alongside any absolute value.
 
-### 27.4 주기 예산
+### 27.4 Cycle budget
 
-| 무엇 | 주기 | 주기당 |
+| What | Period | Per period |
 |---|---|---:|
-| SOC EKF | 샘플마다 | 7.5 us |
-| 트림 특징 갱신 | 샘플마다 | 12.4 us |
-| SOP (방·충전 x tau 2·10 s = 4 회) | 결정마다 | 197.1 us |
-| **합계** | | **217.0 us** |
+| SOC EKF | per sample | 7.5 us |
+| Trim feature update | per sample | 12.4 us |
+| SOP (discharge/charge x tau 2/10 s = 4 calls) | per decision | 197.1 us |
+| **Total** | | **217.0 us** |
 
-| 주기 | 부하 | 여유 |
+| Rate | Load | Headroom |
 |---|---:|---:|
 | 1 Hz | 0.02 % | 99.98 % |
 | 10 Hz | 0.22 % | 99.78 % |
 | 100 Hz | 2.17 % | 97.83 % |
 | 200 Hz | 4.34 % | 95.66 % |
 
-**SOC 와 SOP 는 200 Hz 로 돌려도 CPU 의 4 % 다.** 실무 요구(1~10 Hz)에는 사실상
-공짜다.
+**SOC and SOP together are 4 % of the CPU even at 200 Hz.** For practical
+requirements (1–10 Hz) they are effectively free.
 
-**SOH 만 제약이다.** 17.9 ms 를 한 번에 물면 100 Hz 주기(10 ms)를 넘긴다. 다만
-충전이 끝날 때 1 회만 돌므로 1 시간에 1 회라면 평균 부하 0.0005 % 다. 선택지는
-셋 — 시드 1 개만 쓰기(5.97 ms, 10 Hz 안에 들어감, 정확도 대가는 미측정), 조각내
-여러 주기에 분산, 저우선순위 태스크로 분리. **실시간성이 필요 없는 양이므로
-어느 쪽이든 된다.**
+**Only SOH is a constraint.** Taking 17.9 ms in one bite overruns a 100 Hz
+period (10 ms). But it runs only once at the end of a charge, so at once per
+hour the average load is 0.0005 %. There are three options — use a single seed
+(5.97 ms, fits inside 10 Hz; the accuracy cost is unmeasured), split it across
+several periods, or separate it into a low-priority task. **The quantity does
+not need real-time behaviour, so any of them works.**
 
-### 27.5 메모리
+### 27.5 Memory
 
-| 구성 | Flash | RAM | 스택 최고수위 |
+| Configuration | Flash | RAM | Stack high-water |
 |---|---:|---:|---:|
-| SOP 만 | 64.6 KB | 12.9 KB | 624 B |
+| SOP only | 64.6 KB | 12.9 KB | 624 B |
 | **SOP + SOH** | **197.2 KB** | **24.8 KB** | 624 B |
-| (참고) GRU-128 신경망 | 449 KB | 82 KB | — |
+| (reference) GRU-128 network | 449 KB | 82 KB | — |
 
-전체가 신경망 하나의 절반 이하다. S32K344 급(4 MB flash, 512 KB RAM)에는 여유롭게
-들어간다.
+The whole thing is less than half of a single neural network. It fits an
+S32K344-class part (4 MB flash, 512 KB RAM) with room to spare.
 
-### 27.6 같은 보드의 기존 실측과 나란히
+### 27.6 Alongside existing measurements on the same board
 
-`MCU_DEPLOYMENT_REPORT_BUNDLE_20260804` 의 CEMA 벤치가 같은 보드에서 잰 값이다.
+The CEMA bench in `MCU_DEPLOYMENT_REPORT_BUNDLE_20260804` was measured on the
+same board.
 
-| 방법 | 지연 | Flash | RAM |
+| Method | Latency | Flash | RAM |
 |---|---:|---:|---:|
-| 쿨롱 카운팅 | 5.9 us | 28 KB | 12.6 KB |
-| 2RC EKF (FP64 소프트웨어) | 378.6 us | 418 KB | 13.1 KB |
-| **하이브리드 1 주기 (SOC+SOP)** | **217 us** | 64.6 KB | 12.9 KB |
-| GRU-128 신경망 | 191,789 us | 449 KB | 82 KB |
+| Coulomb counting | 5.9 us | 28 KB | 12.6 KB |
+| 2RC EKF (FP64 software) | 378.6 us | 418 KB | 13.1 KB |
+| **Hybrid one period (SOC+SOP)** | **217 us** | 64.6 KB | 12.9 KB |
+| GRU-128 network | 191,789 us | 449 KB | 82 KB |
 
-**신경망의 1/884 이다.**
+**That is 1/884 of the neural network.**
 
-기존 EKF 378.6 us 와 이번 7.46 us 를 나란히 놓고 "51 배" 라고 말하고 싶어지지만
-**그렇게 쓰면 안 된다.** 기존 것은 소프트웨어 FP64 이고, 이번 것은 float32 인 데다
-빠른 가지를 즉시항으로 접어 전파를 단순화했다. 정밀도와 구조가 함께 바뀌었고
-둘의 몫을 가르지 않았다. 정밀도 쪽이 지배적일 것으로 보이지만 측정하지 않았다.
+It is tempting to put the existing EKF's 378.6 us next to this run's 7.46 us and
+say "51×", but **it must not be written that way.** The existing one is software
+FP64, and this one is float32 and additionally folds the fast branch into an
+instantaneous term to simplify the propagation. Precision and structure changed
+together and their shares were not separated. Precision is presumed dominant,
+but it was not measured.
 
-### 27.7 AI 가 붙는 비용
+### 27.7 The cost of adding AI
 
-순수 물리(EKF + 반전 x4)가 179.7 us, 하이브리드가 217.0 us — **1.21 배**다.
+Pure physics (EKF + inversion x4) is 179.7 us, hybrid is 217.0 us — **1.21×.**
 
-**26 개 파라미터를 얹는 대가가 21 % 이고, 그 대가로 25.7 절의 같은 안전 수준에서
-팩 전류를 방전 11 %p, 충전 6 %p 더 쓴다.**
+**The price of adding 26 parameters is 21 %, and in exchange the pack current
+used at the same safety level of §25.7 is 11 %p higher on discharge and 6 %p
+higher on charge.**
 
-### 27.8 가는 길에 밟은 것 셋
+### 27.8 Three things stepped on along the way
 
-- **`SETUP.md` 의 115200 baud 는 낡았다.** 실제 펌웨어는 921600 이다. 응답이
-  0 바이트로 오면 여기부터 본다.
-- **packed 구조체의 float 를 직접 읽으면 Cortex-M33 이 하드폴트를 낸다.**
-  CFSR 0x01000000 (UsageFault UNALIGNED), HFSR FORCED. 바이트로 받아 정렬된
-  구조체로 `memcpy` 해야 한다. 유선 형식이 73 B 로 정렬되지 않으므로 피할 수 없다.
-- **`soh_cnn.py` 는 가중치를 저장한 적이 없다** — 예측만 저장했다. MCU 배포에는
-  가중치가 필요하므로 `--save-model` 을 추가하고 재학습했다(그때 RMSE 0.0128,
-  10,945 파라미터). **지금 채택 수치는 RMSE 0.0135 / 편향 +0.0001 이다** —
-  온도 결함 8 곡선을 뺀 뒤의 값 (30.12).
+- **The 115200 baud in `SETUP.md` is stale.** The actual firmware is 921600.
+  When responses come back as 0 bytes, look here first.
+- **Reading a float directly out of a packed struct hard-faults on Cortex-M33.**
+  CFSR 0x01000000 (UsageFault UNALIGNED), HFSR FORCED. It must be received as
+  bytes and `memcpy`'d into an aligned struct. The wire format is 73 B and
+  therefore unaligned, so this cannot be avoided.
+- **`soh_cnn.py` had never saved weights** — only predictions. MCU deployment
+  needs the weights, so `--save-model` was added and it was retrained (RMSE
+  0.0128, 10,945 parameters at that time). **The currently adopted numbers are
+  RMSE 0.0135 / bias +0.0001** — the values after removing the 8
+  temperature-defect curves (30.12).
 
-### 27.9 int8 양자화 — 플래시를 사는 거래이지 속도가 아니다
+### 27.9 int8 quantisation — a trade that buys flash, not speed
 
-findings.md 10 절의 "int8 양자화 후 실제 RMSE — 미측정" 이 오래 열려 있었다.
-닫는다.
+"Actual RMSE after int8 quantisation — unmeasured" in findings.md §10 had been
+open for a long time. Closing it.
 
-**대상이 성격이 다른 둘이다.** SOH CNN 가중치(128 KB)는 신경망이고, ECM 조회표
-(36 KB)는 매끄러운 함수다. 같은 방식으로 다루면 안 된다.
+**The two targets are different in kind.** The SOH CNN weights (128 KB) are a
+neural network; the ECM lookup table (36 KB) is a smooth function. They must not
+be handled the same way.
 
-**SOH CNN — 채널별 대칭 int8, 편향은 float 유지.**
+**SOH CNN — per-channel symmetric int8, biases kept as float.**
 
-| 방식 | RMSE (홀드아웃 CC) | 가중치 |
+| Scheme | RMSE (holdout CC) | Weights |
 |---|---:|---:|
 | fp32 | 0.0123 | 128.3 KB |
-| int8 텐서별 | 0.0128 | 32.8 KB |
-| **int8 채널별** | **0.0125** | **32.8 KB** |
-| int6 채널별 | 0.0111 | 24.8 KB |
-| int4 채널별 | **0.0216** | 16.9 KB |
+| int8 per-tensor | 0.0128 | 32.8 KB |
+| **int8 per-channel** | **0.0125** | **32.8 KB** |
+| int6 per-channel | 0.0111 | 24.8 KB |
+| int4 per-channel | **0.0216** | 16.9 KB |
 
-6-fold 전체로 재확인하면 **0.0128 -> 0.0129 (+1.7e-4)** 다 — 사실상 공짜다.
-int4 는 무너진다. (int6 이 CC 에서 더 좋게 나온 것은 52 표본의 잡음이다.)
+Rechecking over the full 6-fold gives **0.0128 -> 0.0129 (+1.7e-4)** — effectively
+free. int4 collapses. (int6 coming out better on CC is noise over 52 samples.)
 
-**ECM 조회표 — rank x 지평 별 스케일.** 축을 잘게 나눌수록 스케일이 좁아진다:
+**ECM lookup table — per rank x horizon scaling.** The finer the axis split, the
+narrower the scale:
 
-| 스케일 | 중앙 | 95 % | 최대 | 크기 |
+| Scale | Median | 95 % | Max | Size |
 |---|---:|---:|---:|---:|
-| int8 전역 | 0.43 % | 1.51 % | 3.35 % | 8 KB |
-| int8 지평별 | 0.34 % | 1.14 % | 2.46 % | 8 KB |
-| **int8 rank x 지평** | **0.23 %** | **0.77 %** | 2.15 % | **8 KB** |
-| int16 전역 | 0.00 % | 0.01 % | 0.01 % | 16 KB |
+| int8 global | 0.43 % | 1.51 % | 3.35 % | 8 KB |
+| int8 per horizon | 0.34 % | 1.14 % | 2.46 % | 8 KB |
+| **int8 rank x horizon** | **0.23 %** | **0.77 %** | 2.15 % | **8 KB** |
+| int16 global | 0.00 % | 0.01 % | 0.01 % | 16 KB |
 
-**rank x 지평 int8 의 오차가 격자화 오차(27.1 의 0.30 % / 2.88 %)보다 작다** —
-양자화가 격자화에 묻힌다. 실제 신뢰 라벨 657 행에서 낙관율 70.9 -> 71.4 %,
-최악 초과 19.53 -> 19.51 A, 차이 중앙 0.005 A.
+**The error of rank x horizon int8 is smaller than the gridding error (0.30 % /
+2.88 % in §27.1)** — quantisation is buried under gridding. On the 657 rows of
+real trustworthy labels, optimism 70.9 -> 71.4 %, worst overshoot
+19.53 -> 19.51 A, median difference 0.005 A.
 
-**보드 실측 (n=200):**
+**Board measurements (n=200):**
 
-| | float32 | int8 | 변화 |
+| | float32 | int8 | Change |
 |---|---:|---:|---:|
 | **Flash** | 197.2 KB | **76.2 KB** | **−61 %** |
 | RAM | 24.8 KB | 24.8 KB | — |
-| SOP 1 회 | 49.28 us | 53.65 us | +8.9 % |
-| 주기 합계 | 217.0 us | 235.2 us | +8.4 % |
-| SOH 1 회 | 17,919 us | 19,442 us | +8.5 % |
+| One SOP | 49.28 us | 53.65 us | +8.9 % |
+| Period total | 217.0 us | 235.2 us | +8.4 % |
+| One SOH | 17,919 us | 19,442 us | +8.5 % |
 | SOH RMSE (6-fold) | 0.0128 | 0.0129 | +1.7e-4 |
 
-**int8 이 더 느리다.** Cortex-M33 에 하드 FPU 가 있어서다 — float32 곱셈이
-1 사이클인데 int8 은 부호확장 + float 변환 + 곱셈이라 명령이 늘어난다. CMSIS-NN
-의 SIMD(`SMLAD` 등)를 쓰면 뒤집히겠지만 그러려면 활성화까지 정수화하고 런타임을
-붙여야 하고, 그것은 27.1 에서 직접 구현을 택한 이유(무엇이 얼마나 걸리는지
-런타임 안에 가려지지 않게)와 상충된다.
+**int8 is slower.** It is because the Cortex-M33 has a hardware FPU — a float32
+multiply is one cycle, whereas int8 requires sign extension + float conversion +
+multiply, so the instruction count rises. Using CMSIS-NN's SIMD (`SMLAD` etc.)
+would flip that, but it would require quantising the activations too and pulling
+in a runtime, which conflicts with the reason a direct implementation was chosen
+in §27.1 (so that what costs how much is not hidden inside a runtime).
 
-**따라서 이 보드에서 int8 은 속도가 아니라 플래시를 사는 거래다.**
+**So on this board int8 is a trade that buys flash, not speed.**
 
-**권고: 기본은 float32, int8 은 선택지로 둔다.** 197 KB 도 S32K344 급
-(4 MB flash)에는 여유롭고 속도 여유도 충분하다. 플래시가 빠듯한 표적에서만
-`--int8` 을 쓴다 (`export_mcu_tables.py --int8`, `export_soh_mcu.py --int8`).
-C 쪽은 `SOP_GRID_INT8` / `SOH_INT8` 매크로로 갈린다. int8 판도 호스트 대조를
-통과했다(SOH 1.2e-07).
+**Recommendation: float32 by default, int8 as an option.** Even 197 KB is
+comfortable on an S32K344-class part (4 MB flash) and the speed headroom is
+ample. Use `--int8` only on flash-tight targets (`export_mcu_tables.py --int8`,
+`export_soh_mcu.py --int8`). The C side branches on the `SOP_GRID_INT8` /
+`SOH_INT8` macros. The int8 build also passed the host comparison (SOH 1.2e-07).
 
-### 27.10 시드를 줄이면 — 2 개가 무릎이다
+### 27.10 Cutting seeds — two is the knee
 
-SOH 17.9 ms 는 시드 3 개를 다 돌린 값이다. 줄이면 얼마를 잃나 (6-fold 전체,
-조합을 모두 돌려 평균):
+The SOH 17.9 ms is with all three seeds. How much is lost by cutting (full
+6-fold, averaged over all combinations):
 
-| 구성 | RMSE | 기준 대비 | 지연 | 조합 간 산포 |
+| Configuration | RMSE | vs baseline | Latency | Spread across combinations |
 |---|---:|---:|---:|---:|
-| 시드 3 개 | 0.0128 | — | 17,919 us | — |
-| **시드 2 개** | **0.0129** | +1.0e-4 | **11,946 us** | ±3.9e-4 |
-| 시드 1 개 | 0.0132 | +4.1e-4 | 5,973 us | ±8.4e-4 |
+| 3 seeds | 0.0128 | — | 17,919 us | — |
+| **2 seeds** | **0.0129** | +1.0e-4 | **11,946 us** | ±3.9e-4 |
+| 1 seed | 0.0132 | +4.1e-4 | 5,973 us | ±8.4e-4 |
 
-**시드 2 개가 무릎이다** — 1.5 배 빠르고 대가가 +1.0e-4 다.
+**Two seeds is the knee** — 1.5× faster at a cost of +1.0e-4.
 
-시드 1 개는 3 배 빨라지지만 **어느 시드를 뽑느냐가 결과를 좌우한다**(개별 시드
-RMSE 0.0123 / 0.0143 / 0.0129, 조합 간 산포 ±8.4e-4). 홀드아웃으로 고르면 그
-선택이 홀드아웃을 소진하므로, 3 배가 꼭 필요한 경우가 아니면 권하지 않는다.
+One seed is 3× faster, but **which seed is drawn drives the result** (individual
+seed RMSE 0.0123 / 0.0143 / 0.0129; spread across combinations ±8.4e-4). Picking
+by holdout would consume the holdout on that choice, so it is not recommended
+unless the 3× is genuinely needed.
 
-### 27.11 완전 정수 경로 — 이 코어에서는 속도가 뒤집히지 않는다
+### 27.11 Full integer path — speed does not flip on this core
 
-27.9 의 int8 은 **가중치만** int8 이고 활성화는 float 였다. 곱셈 전에 float 변환이
-붙어 8.5 % 느렸다. 진짜 질문은 "활성화까지 정수로 하면 하드 FPU 를 이기는가" 다.
+The int8 of §27.9 was int8 **weights only**, with float activations. A float
+conversion sat before the multiply, making it 8.5 % slower. The real question is
+"does going integer all the way through the activations beat the hardware FPU".
 
-`soh_simd.c` 를 썼다 — 활성화까지 층별 대칭 int8, 누산 int32, 재양자화는 층
-끝에서 한 번. M33 의 DSP 확장(`__SMLAD`, 사이클당 int16 MAC 2 회)을 직접 쓴다.
-CMSIS-NN 전체를 끌어오지 않은 것은 27.1 과 같은 이유다 — 커널을 직접 써야
-무엇이 얼마나 걸리는지 런타임 안에 가려지지 않는다. 활성화 스케일은 **홀드아웃을
-뺀 훈련 셀**에서만 보정했다.
+`soh_simd.c` was written — per-layer symmetric int8 through the activations,
+int32 accumulation, requantisation once at the end of each layer. It uses the
+M33's DSP extension (`__SMLAD`, two int16 MACs per cycle) directly. Not pulling
+in all of CMSIS-NN is for the same reason as §27.1 — writing the kernels
+directly is what keeps what costs how much from being hidden inside a runtime.
+Activation scales were calibrated on the **training cells with the holdout
+removed** only.
 
-**첫 판은 32 % 느렸다**(25,581 대 19,443 us). 층별 MAC 을 세어 보니 이유가
-분명했다:
+**The first version was 32 % slower** (25,581 vs 19,443 us). Counting MACs per
+layer made the reason clear:
 
-| 층 | MAC | 몫 |
+| Layer | MACs | Share |
 |---|---:|---:|
 | conv1 | 5,120 | 5.4 % |
 | **conv2** | **81,920** | **86.0 %** |
 | dense1 | 8,192 | 8.6 % |
 | dense2 | 32 | 0.0 % |
 
-**SIMD 를 dense1 에만 걸었는데 그것은 전체의 8.6 % 다.** 지배하는 conv2 에는 정수
-곱셈만 했고, 대신 층마다 재양자화(곱셈 + 반올림 + 포화)가 새로 붙었다.
+**SIMD had been applied only to dense1, which is 8.6 % of the total.** The
+dominant conv2 got only integer multiplies, while each layer newly acquired a
+requantisation (multiply + round + saturate).
 
-conv2 의 입력 채널 축을 int16 쌍으로 묶어 SMLAD 를 걸자 **25,581 -> 18,885 us**
-로 26 % 회복했다. 그래도 **fp32(17,919 us)보다 5 % 느리다.**
+Packing conv2's input-channel axis into int16 pairs and applying SMLAD recovered
+26 %, **25,581 -> 18,885 us**. Even so it is **5 % slower than fp32
+(17,919 us).**
 
-| 경로 | 지연 | 6-fold RMSE |
+| Path | Latency | 6-fold RMSE |
 |---|---:|---:|
 | **fp32** | **17,919 us** | **0.0128** |
-| 가중치만 int8 | 19,441 us | 0.0129 |
-| 완전 정수 + SIMD | 18,885 us | 0.0136 |
+| int8 weights only | 19,441 us | 0.0129 |
+| full integer + SIMD | 18,885 us | 0.0136 |
 
-**이유는 구조적이다.** `SMLAD` 는 사이클당 int16 MAC 2 회인데 FPv5 하드 FPU 도
-float32 MAC 이 사이클당 1 회다 — 이론상 2 배 여유뿐인데 재양자화 비용이 그것을
-먹는다. Cortex-M55 의 Helium(MVE, 사이클당 int8 MAC 8~16 회)이라면 달라지지만
-M33 에는 없다.
+**The reason is structural.** `SMLAD` is two int16 MACs per cycle, and the FPv5
+hardware FPU is one float32 MAC per cycle — only 2× of theoretical headroom, and
+the requantisation cost eats it. Cortex-M55's Helium (MVE, 8–16 int8 MACs per
+cycle) would change that, but the M33 does not have it.
 
-**정확도까지 나빠진다** — 완전 정수는 6-fold 0.0136 으로 가중치만 int8(0.0129)의
-8 배 손해다. (홀드아웃 CC 한 셀에서는 0.0100 으로 fp32 보다 좋게 나왔는데, 6-fold
-로 보니 잡음이었다. 한 셀로 판단하면 안 된다는 예가 하나 더 늘었다.)
+**Accuracy gets worse too** — full integer is 0.0136 over 6-fold, 8× the loss of
+int8-weights-only (0.0129). (On the single CC holdout cell it came out 0.0100,
+better than fp32, but over 6-fold that was noise. One more example of why one
+cell must not decide.)
 
-**결론: 이 코어에서 완전 정수화는 이득이 없다.** 느리고 부정확하다. 27.9 의
-권고(기본 fp32, 플래시가 빠듯하면 가중치만 int8)가 그대로 남는다.
+**Conclusion: full integerisation gains nothing on this core.** It is slower and
+less accurate. The recommendation of §27.9 (fp32 by default; int8 weights only
+when flash is tight) stands unchanged.
 
-### 27.12 EKF — 정밀도가 7.4 배, 구조는 1.2 배
+### 27.12 EKF — precision is 7.4×, structure is 1.2×
 
-27.6 절이 "기존 378.6 us 대비 51 배" 를 쓰지 못한다고 적은 이유는 정밀도
-(FP64 소프트웨어 -> float32 하드 FPU)와 구조(완전 2RC -> 빠른 가지를 즉시항으로
-접음)가 함께 바뀌었기 때문이다. 네 조합을 다 만들어 갈랐다. 산술 타입과 상태
-전파만 바꾸고 흐름은 동일하게 유지했다.
+The reason §27.6 said "51× versus the existing 378.6 us" must not be written is
+that precision (FP64 software -> float32 hardware FPU) and structure (full 2RC ->
+fast branch folded into an instantaneous term) changed together. All four
+combinations were built and split apart. Only the arithmetic type and the state
+propagation were changed; the flow was kept identical.
 
-| 변형 | 지연 | float32 대비 |
+| Variant | Latency | vs float32 |
 |---|---:|---:|
-| **접은 2RC + float32** | **7.77 us** | 1.00x |
-| 접은 2RC + double | 57.24 us | **7.37x** |
-| 완전 2RC + float32 | 9.00 us | 1.16x |
-| 완전 2RC + double | 73.05 us | 9.40x |
+| **folded 2RC + float32** | **7.77 us** | 1.00x |
+| folded 2RC + double | 57.24 us | **7.37x** |
+| full 2RC + float32 | 9.00 us | 1.16x |
+| full 2RC + double | 73.05 us | 9.40x |
 
-**정밀도가 7.37 배, 구조가 1.16 배다.** 차이의 88 % 가 소프트웨어 double 이고
-구조 단순화는 16 % 만 기여한다. 27.6 의 짐작("정밀도 쪽이 지배적일 것")이 맞았고
-이제 숫자가 있다.
+**Precision is 7.37×, structure is 1.16×.** 88 % of the difference is software
+double and the structural simplification contributes only 16 %. The guess in
+§27.6 ("precision is presumed dominant") was right and there is now a number.
 
-**남는 5 배는 여전히 귀속할 수 없다.** 기존 CEMA 의 378.6 us 와 여기 완전 2RC +
-double 의 73.05 us 사이가 그렇다. 그 EKF 는 3x3 공분산을 완전히 돌리는 등 연산이
-더 많다 — **같은 알고리즘이 아니므로 그 5 배를 정밀도나 구조로 나눌 수 없다.**
-비교하려면 같은 EKF 를 두 정밀도로 돌려야 하고, 그것은 이 벤치의 범위 밖이다.
+**The remaining 5× still cannot be attributed.** That is the gap between the
+existing CEMA's 378.6 us and the 73.05 us of full 2RC + double here. That EKF
+does more work — it propagates the full 3x3 covariance, for one — so **it is not
+the same algorithm, and that 5× cannot be split into precision and structure.**
+Comparing would require running the same EKF at two precisions, which is outside
+this bench's scope.
 
-**배포 관점의 함의**: 자동차 BMS 의 EKF 가 double 로 짜여 있고 코어에 배정밀도
-FPU 가 없다면, **알고리즘을 바꾸지 않고 float32 로 옮기는 것만으로 7 배**가 난다.
-27.4 의 여유(1 Hz 에서 0.02 %)는 그 위에서 나온 값이다.
+**Deployment implication**: if an automotive BMS's EKF is written in double and
+the core has no double-precision FPU, **moving it to float32 without changing
+the algorithm alone gives 7×.** The headroom of §27.4 (0.02 % at 1 Hz) sits on
+top of that.
 
-**표적 MCU 가 실제로 그 조건이다.** 이 프로젝트가 기준으로 삼은 NXP S32K344 는
-BMS 팩 마스터(BMU) 급의 주류 부품이고 — Cortex-M7 160 MHz, 4 MB flash,
-512 KB SRAM, ASIL-D, 락스텝 — **FPU 가 단정밀도(fpv5-sp-d16) 뿐이라 double 은
-소프트웨어 에뮬레이션이다.** 여기서 측정한 H563(M33, FPv5-SP)과 FPU 구성이 같으므로
-7.37 배는 표적에 직접 적용된다. (Cortex-M7 은 배정밀도 FPU 로도 구성할 수 있으나
-S32K3 계열은 그렇지 않다.)
+**The target MCU is actually in that condition.** The NXP S32K344 this project
+takes as its reference is a mainstream BMS pack-master (BMU) class part —
+Cortex-M7 160 MHz, 4 MB flash, 512 KB SRAM, ASIL-D, lockstep — and **its FPU is
+single precision only (fpv5-sp-d16), so double is software-emulated.** Its FPU
+configuration matches the H563 measured here (M33, FPv5-SP), so the 7.37×
+applies directly to the target. (Cortex-M7 can also be configured with a
+double-precision FPU, but the S32K3 family is not.)
 
-같은 이유로 27.11 의 정수 경로 판정도 표적에 그대로 간다 — Cortex-M7 은 Armv7E-M
-이라 DSP 확장만 있고 Helium(MVE)이 없다. Helium 은 Armv8.1-M 의 Cortex-M55 /
-M85 / M52 에만 있고, 자동차 등급으로는 아직 드물다.
+For the same reason the integer-path ruling of §27.11 carries to the target
+unchanged — Cortex-M7 is Armv7E-M, so it has the DSP extension only and no
+Helium (MVE). Helium exists only on Armv8.1-M's Cortex-M55 / M85 / M52, which
+are still rare at automotive grade.
 
-### 27.13 남은 것
+### 27.13 What remains
 
-- Helium 이 있는 코어(M55/M85)에서 정수 경로 재측정 — 27.11 의 판정이 뒤집힐 수
-  있다. M33 의 SMLAD 는 사이클당 int16 MAC 2 회뿐이다.
-- 같은 EKF 를 두 정밀도로 돌린 like-for-like 비교 (위의 남는 5 배)
+- Re-measure the integer path on a core with Helium (M55/M85) — the ruling of
+  §27.11 could flip. The M33's SMLAD is only two int16 MACs per cycle.
+- A like-for-like comparison running the same EKF at two precisions (the
+  remaining 5× above)
 
 ---
 
-## 28. 팩 수준 — min 연산은 보호하지 않는다 (2026-08-25)
+## 28. Pack level — the min operation does not protect (2026-08-25)
 
-19~27 절은 전부 셀 하나다. 직렬 팩에서는 전류가 공통이므로
+Sections 19–27 are all single-cell. In a series pack the current is common, so
 
-    팩 SOP = min over cells ( 셀별 I* )
+    pack SOP = min over cells ( per-cell I* )
 
-이고, 셀 추정기를 팩에 올리면 그 min 을 거친다. **min 이 오차를 어떻게 바꾸는가**
-가 시스템 수준의 질문이다.
+and putting a cell estimator on a pack passes through that min. **How min
+transforms the error** is the system-level question.
 
-### 28.1 기대 — min 은 보호해야 한다
+### 28.1 Expectation — min ought to protect
 
-팩이 초과하려면 두 가지가 **동시에** 필요하다: (a) 한계 셀이 과대추정되고,
-(b) 나머지 어느 셀도 그 한계 아래로 떨어지지 않아야 한다. 셀이 많을수록 (b)가
-어려워지므로, 오차가 **독립이고 대칭이면** min 연산 자체가 팩을 셀보다 안전하게
-만든다. 잡음이 섞인 값들의 최소는 참값들의 최소보다 아래로 끌리기 때문이다.
+For the pack to exceed, two things are needed **at once**: (a) the limiting cell
+is overestimated, and (b) no other cell falls below that limit. The more cells,
+the harder (b) becomes, so **if the errors are independent and symmetric** the
+min operation itself makes the pack safer than a cell, because the minimum of
+noisy values is pulled below the minimum of the true values.
 
-### 28.2 측정 — 방전은 반대로 간다
+### 28.2 Measurement — discharge goes the other way
 
-셀 홀드아웃 오차를 조건 그룹(SOH 대역 x SOC 대역 x tau) 안에서 재표집해 N 셀
-팩을 4,000 회 모사했다. 팩 셀은 SOH 가 비슷하므로 같은 SOH 대역에서만 뽑는다.
+N-cell packs were simulated 4,000 times by resampling cell holdout errors within
+condition groups (SOH band x SOC band x tau). Pack cells have similar SOH, so
+draws are within the same SOH band only.
 
-| lambda | N=1 초과 | N=12 | N=96 | | N=1 초과 | N=12 | N=96 |
+| lambda | N=1 exceed | N=12 | N=96 | | N=1 exceed | N=12 | N=96 |
 |---|---:|---:|---:|---|---:|---:|---:|
-| | **방전** | | | | **충전** | | |
+| | **discharge** | | | | **charge** | | |
 | 0.90 | 22.8 % | 33.6 % | 44.0 % | | 17.3 % | 18.2 % | 13.4 % |
 | 0.80 | 8.9 % | 16.7 % | 22.2 % | | 5.2 % | 4.3 % | 3.6 % |
 | 0.70 | 4.1 % | 11.3 % | **14.1 %** | | 1.6 % | 0.4 % | **0.0 %** |
 
-**충전은 기대대로 셀이 많을수록 안전해진다. 방전은 반대로 나빠진다.**
+**Charge gets safer with more cells, as expected. Discharge gets worse.**
 
-### 28.3 원인 — 약한 셀일수록 더 낙관적으로 추정된다
+### 28.3 Cause — the weaker the cell, the more optimistically it is estimated
 
-조건 그룹 안에서 실측 I* 와 예측/실측 비의 상관을 재면:
+Measuring the correlation between measured I* and the predicted/measured ratio
+within a condition group:
 
-| | corr(실측 I*, 비) | 실측 하위 25 % 의 비 | 상위 25 % |
+| | corr(measured I*, ratio) | ratio in bottom 25 % of measured | top 25 % |
 |---|---:|---:|---:|
-| 방전 | **−0.385** | 1.054 | 0.971 |
-| 충전 | **−0.411** | 1.136 | 0.989 |
+| discharge | **−0.385** | 1.054 | 0.971 |
+| charge | **−0.411** | 1.136 | 0.989 |
 
-**약한 셀일수록 비가 크다** — 즉 더 과대추정된다. 그리고 팩을 정하는 것은 최약
-셀이다. **min 연산은 "가장 약한 셀" 을 고르는데, 그 셀이 하필 "가장 낙관적으로
-추정된 셀" 이다.** 28.1 의 보호는 오차가 참값과 무관할 때의 이야기이고, 여기서는
-오차가 참값에 **음의 상관**으로 묶여 있어 성립하지 않는다.
+**The weaker the cell, the larger the ratio** — i.e. the more it is
+overestimated. And what sets the pack is the weakest cell. **The min operation
+picks "the weakest cell", and that cell happens to be "the most optimistically
+estimated cell".** The protection of §28.1 is a story about errors being
+unrelated to the true value; here the error is bound to the true value by a
+**negative correlation**, so it does not hold.
 
-물리적으로 자연스럽다. 같은 조건에서 I* 가 작은 셀은 저항이 큰 셀이고, pooled
-표는 평균적인 저항을 주므로 그런 셀을 과소저항으로 본다 — 26 절이 셀 간 편차를
-조건으로 설명할 수 없다고 한 것과 같은 사실의 다른 얼굴이다.
+Physically this is natural. At the same condition, a cell with small I* is a cell
+with large resistance, and the pooled table gives an average resistance, so it
+sees such cells as under-resistive — the same fact §26 stated as cell-to-cell
+deviation not being explicable by condition, seen from another side.
 
-**충전이 살아남는 이유**는 상관이 같은데도(−0.411) 오차 분포의 꼬리가 방전보다
-훨씬 얇기 때문이다(25.2 의 최악 초과 23.07 A 대 방전 28.51 A, 그러나 |I*| 규모가
-달라 상대적으로는 충전이 좁다). 상관의 해악을 꼬리의 얇음이 이긴다.
+**The reason charge survives** is that despite the same correlation (−0.411) the
+tail of its error distribution is far thinner than discharge's (worst overshoot
+23.07 A in §25.2 vs discharge 28.51 A, but the |I*| scale differs, so charge is
+narrower in relative terms). The thinness of the tail beats the harm of the
+correlation.
 
-### 28.4 함의 — 셀 여유를 팩 여유로 옮겨 쓸 수 없다
+### 28.4 Implication — cell margin cannot be carried over as pack margin
 
-**셀 단위로 보정한 lambda 를 팩에 그대로 쓰면 방전에서 초과율이 3 배 넘게 는다**
-(N=96, lambda 0.70 에서 4.1 -> 14.1 %). 27 절까지의 모든 수치는 셀 수준이고,
-팩 수준 보정은 따로 해야 한다.
+**Using a cell-calibrated lambda directly on a pack raises the discharge
+exceedance rate more than threefold** (4.1 -> 14.1 % at N=96, lambda 0.70). Every
+number through §27 is cell-level, and pack-level calibration must be done
+separately.
 
-다만 **채택 구성에서는 문제가 드러나지 않는다.** lambda 를 무초과 기준으로 잡은
-값(방전 0.679/0.462, 충전 0.567/0.544)에서는 N=1 부터 192 까지 전부 초과 0 이고,
-쓸 수 있는 전류는 오히려 방전 69 -> 78 %, 충전 57 % 유지로 **좋아진다.** 여유가
-충분히 크면 상관의 해악이 그 안에 들어간다.
+That said, **the adopted configuration does not expose the problem.** At the
+lambda values set on a zero-exceedance criterion (discharge 0.679/0.462, charge
+0.567/0.544), exceedances are zero for every N from 1 to 192, and usable current
+actually **improves** — discharge 69 -> 78 %, charge holding at 57 %. When the
+margin is large enough, the harm of the correlation fits inside it.
 
-**[갱신 — 31.2]** 위 lambda 는 A3 시절 값이다. 채택이 A8 로 바뀐 뒤
-(방전 0.683/0.470, 충전 0.586/0.560) 다시 모사했고 **초과 0 은 유지된다.**
-단 충전 10 s 는 허용 0 으로 세면 N 이 커질수록 4.4 % 가 나오는데, 최악
-초과가 0.09 A 로 **충전의 설계 허용 0.5 A 안** 이라 초과가 아니다.
-28.2 의 평평한 lambda 표는 재현되지 않았다 (31.4).
+**[Updated — 31.2]** The lambda above is from the A3 era. After adoption changed
+to A8 (discharge 0.683/0.470, charge 0.586/0.560) the simulation was rerun and
+**zero exceedance holds.** Charge 10 s does give 4.4 % as N grows if counted at
+zero tolerance, but the worst overshoot is 0.09 A, **inside charge's design
+tolerance of 0.5 A**, so it is not an exceedance. The flat lambda table of §28.2
+did not reproduce (31.4).
 
-**따라서 결론은 "팩에서도 된다" 가 아니라 "여유를 셀 기준으로 잡아 두었기 때문에
-팩에서도 된다" 다.** 여유를 줄이려는 어떤 시도도 팩 수준에서 다시 검증해야 한다 —
-셀 수준에서 안전해 보이는 lambda 가 팩에서 3 배 뚫린다.
+**So the conclusion is not "it works on a pack too" but "it works on a pack too
+because the margin was set on a cell basis".** Any attempt to reduce the margin
+must be revalidated at pack level — a lambda that looks safe at cell level is
+broken through threefold on a pack.
 
-### 28.5 한계
+### 28.5 Limitations
 
-- 팩 셀을 **우리 여섯 셀에서 재표집**했다. 실제 팩은 같은 공정·같은 이력의 셀이라
-  편차가 더 좁을 것이다. 즉 이 모사는 **비관적**이다. 반대로 우리 여섯 셀은 노화
-  프로토콜이 서로 달라 실제 팩의 편차 구조와 다르다 — 방향은 알지만 크기는 아니다.
-- 셀 간 오차의 **공유 성분**을 명시적으로 모형화하지 않았다. 조건 그룹 안에서
-  뽑았으므로 조건 몫(26.2 의 0.122)은 자동으로 공유되지만, 온도 구배처럼 팩에만
-  있는 공유 요인은 이 데이터에 없다.
-- 실제 팩은 셀 전압을 모두 측정하므로 **한계 셀을 관측할 수 있다**. 그것을 쓰면
-  min 을 추정에 맡기지 않아도 된다 — 23.4 절의 "V_pre 는 측정값이어야 한다" 가
-  팩 수준에서 더 강해진다. 그 경로는 이 데이터로 시험할 수 없다.
+- Pack cells were **resampled from our six cells**. A real pack has cells of the
+  same process and same history, so its spread would be narrower. That is, this
+  simulation is **pessimistic**. Conversely our six cells have different ageing
+  protocols, so their deviation structure differs from a real pack's — the
+  direction is known, the magnitude is not.
+- The **shared component** of cell-to-cell error was not modelled explicitly.
+  Drawing within a condition group shares the condition's portion (0.122 in
+  §26.2) automatically, but shared factors that exist only on a pack, such as a
+  temperature gradient, are not in this data.
+- A real pack measures every cell voltage, so **the limiting cell is
+  observable**. Using that removes the need to leave min to estimation — §23.4's
+  "V_pre must be a measured value" becomes stronger at pack level. That path
+  cannot be tested with this data.
 
 ---
 
-## 29. 논문 전 점검 — 세 가지 공백을 메우다 (2026-08-25)
+## 29. Pre-paper check — filling three gaps (2026-08-25)
 
-초안을 잡기 전에 리뷰어가 물을 것을 미리 세었다. 세 곳이 비어 있었고 그중 하나는
-**지금까지의 모든 SOP 수치가 서 있던 가정**이었다.
+Before drafting, what a reviewer would ask was enumerated in advance. Three
+places were empty, and one of them was **the assumption every SOP number so far
+had been standing on.**
 
-### 29.1 SOH 오차가 SOP 로 전파된다 — 그리고 부호가 안전을 가른다
+### 29.1 SOH error propagates into SOP — and the sign decides safety
 
-SOP 반전은 SOH 를 입력으로 받는다(저항 표의 축). **지금까지 모든 평가가 라벨의
-정답 SOH 를 넣었다.** 실제 시스템은 추정한다.
+SOP inversion takes SOH as an input (an axis of the resistance table). **Every
+evaluation so far fed the label's true SOH.** A real system estimates it.
 
-계통 오차를 주입하면:
+Injecting a systematic error:
 
-| SOH 오차 | 낙관율 | 최악 초과 | 중앙 비 |
+| SOH error | Optimism | Worst overshoot | Median ratio |
 |---|---:|---:|---:|
 | −0.03 | 24.1 % | 16.65 A | 0.937 |
 | −0.01 | 58.5 % | 18.08 A | 1.027 |
-| **0 (정답)** | **70.6 %** | **20.35 A** | 1.070 |
+| **0 (true)** | **70.6 %** | **20.35 A** | 1.070 |
 | +0.01 | 81.9 % | 21.82 A | 1.121 |
 | **+0.02** | **88.5 %** | **30.99 A** | 1.189 |
 | +0.05 | 99.0 % | 37.77 A | 1.406 |
 
-**SOH 를 높게 보면 저항을 작게 잡아 SOP 가 낙관적이 된다.** 2 %p 만 높게 봐도
-최악 초과가 20.4 -> 31.0 A 로 뛴다.
+**Reading SOH high makes resistance look small and SOP optimistic.** Reading it
+just 2 %p high jumps the worst overshoot from 20.4 to 31.0 A.
 
-~~**채택 SOH 팔의 편향이 +0.0010 으로 하필 위험한 쪽이다.**~~ **[철회 —
-30.12]** 그 편향의 90 % 가 온도 결함 곡선 8 개에서 왔다. 결함을 빼면
-편향은 **+0.0001** 로 사실상 0 이고, 채택 팔이 위험한 방향으로 치우쳐
-있다는 근거는 없다.
+~~**The adopted SOH arm's bias of +0.0010 is, of all things, on the dangerous
+side.**~~ **[Retracted — 30.12]** 90 % of that bias came from 8
+temperature-defect curves. With the defects removed the bias is **+0.0001**,
+effectively zero, and there is no basis for saying the adopted arm is skewed in
+the dangerous direction.
 
-**위 표(주입 실험)의 기전 자체는 유효하다** — SOH 를 높게 보면 SOP 가
-낙관적이 되는 것은 맞다. 유효하지 않은 것은 "우리 팔이 그쪽으로
-치우쳐 있다" 는 진단이다.
+**The mechanism of the table above (the injection experiment) is still valid** —
+reading SOH high does make SOP optimistic. What is not valid is the diagnosis
+that "our arm is skewed that way".
 
-(참고로 남긴다: 결함 포함 판의 오차 분포 RMSE 0.0128 / 편향 +0.0010 을
-주입하면 낙관율 70.6 -> 72.4 %, 최악 20.35 -> 22.72 A 였다. 결함 제외
-판(RMSE 0.0135 / 편향 +0.0001)으로 다시 재지는 않았다.)
+(Left for reference: injecting the defect-included error distribution
+RMSE 0.0128 / bias +0.0010 gave optimism 70.6 -> 72.4 % and worst
+20.35 -> 22.72 A. It was not re-measured with the defect-excluded version
+(RMSE 0.0135 / bias +0.0001).)
 
-**안전계수를 다시 잡아야 한다:**
+**The safety factor must be reset:**
 
-| SOH 입력 | lambda(10 s) | lambda(2 s) | 초과 | 최악 | 쓸 수 있는 전류 |
+| SOH input | lambda(10 s) | lambda(2 s) | Exceed | Worst | Usable current |
 |---|---:|---:|---:|---:|---:|
-| 정답 SOH | 0.679 | 0.462 | 4/657 | 1.19 A | **70 %** |
-| **추정 SOH** | **0.594** | **0.423** | 6/645 | 1.85 A | **63 %** |
+| true SOH | 0.679 | 0.462 | 4/657 | 1.19 A | **70 %** |
+| **estimated SOH** | **0.594** | **0.423** | 6/645 | 1.85 A | **63 %** |
 
-**7 %p 가 SOH 추정의 대가다.** 27 절까지의 모든 수치는 정답 SOH 위의 값이므로,
-논문에서는 **추정 SOH 판을 주 결과로** 쓰고 정답 SOH 판은 상한으로 병기해야 한다.
+**7 %p is the price of SOH estimation.** Every number through §27 sits on top of
+true SOH, so the paper must use the **estimated-SOH version as the main result**
+and quote the true-SOH version alongside as an upper bound.
 
-이것이 SOH 팔과 SOP 팔을 따로 평가하면 안 되는 이유다 — 사슬로 묶어야 시스템의
-답이 나온다.
+This is why the SOH arm and the SOP arm must not be evaluated separately — only
+chaining them gives the system's answer.
 
-### 29.2 센서 잡음은 문제가 아니다
+### 29.2 Sensor noise is not a problem
 
-자동차 BMS AFE 의 전압 분해능은 mV 급이다. V_pre 에 잡음을 주입하면:
+The voltage resolution of an automotive BMS AFE is on the order of mV. Injecting
+noise into V_pre:
 
-| V_pre 잡음 | 낙관율 | 최악 초과 |
+| V_pre noise | Optimism | Worst overshoot |
 |---|---:|---:|
-| 없음 | 70.6 % | 20.35 A |
+| none | 70.6 % | 20.35 A |
 | 1 mV rms | 70.8 % | 20.25 A |
 | 5 mV | 70.8 % | 20.97 A |
 | 10 mV | 70.9 % | 20.68 A |
 
-**10 mV 까지도 묻힌다.** 여유(V_pre − V_min)가 중앙 1.0 V 이기 때문이다.
+**Even 10 mV is buried.** It is because the margin (V_pre − V_min) has a median
+of 1.0 V.
 
-이것이 23.4 절의 "V_pre 는 측정 단자전압이어야 한다" 를 보강한다 — **센서 잡음
-(mV)이 모델 OCV 오차(45~72 mV)보다 한 자릿수 작다.** 측정을 쓰는 쪽이 명백히
-유리하다.
+This reinforces §23.4's "V_pre must be the measured terminal voltage" — **sensor
+noise (mV) is an order of magnitude smaller than model OCV error (45–72 mV).**
+Using the measurement is clearly the better side.
 
-### 29.3 특징 절제 — 잔차 채널이 일하고 상태·나이는 못 한다
+### 29.3 Feature ablation — the residual channels do the work, state and age do not
 
-12 개 특징이 다 필요한가. 24 절이 k_f 와 dR_fast 의 상관을 +0.915 로 재었으므로
-"하나면 되는 것 아닌가" 가 자연스러운 질문이다.
+Are all 12 features needed? §24 measured the correlation of k_f and dR_fast at
++0.915, so
+"surely one would do" is a natural question.
 
-홀드아웃 셀별로 부분집합만 써서 다시 적합했다(선형이므로 최소제곱 근사, 순위
-비교용):
+Refits were made per holdout cell using subsets only (linear, so least squares —
+for ranking comparison):
 
-| 특징 집합 | dV RMSE | 전체 대비 |
+| Feature set | dV RMSE | vs full |
 |---|---:|---:|
-| 보정 없음 (k=1) | 87.2 mV | — |
-| **전체 12 개** | **58.2 mV** | — |
-| dR_fast 하나 | 62.9 mV | +8.2 % |
+| no correction (k=1) | 87.2 mV | — |
+| **all 12** | **58.2 mV** | — |
+| dR_fast alone | 62.9 mV | +8.2 % |
 | dR_fast + dR_slow | 62.5 mV | +7.5 % |
-| 잔차 채널만 (0~5) | 61.6 mV | +5.8 % |
-| **상태·나이만 (6~11)** | **75.3 mV** | **+29.4 %** |
+| residual channels only (0–5) | 61.6 mV | +5.8 % |
+| **state/age only (6–11)** | **75.3 mV** | **+29.4 %** |
 | dR_fast + SOC, SOH | 64.0 mV | +9.9 % |
 
-**dR_fast 하나로 전체의 92 % 를 얻는다.** 반대로 상태·나이(SOC, SOH, T, I_rms,
-R_nom)만 남기면 29 % 나빠진다.
+**dR_fast alone gets 92 % of the full set.** Conversely, keeping only state/age
+(SOC, SOH, T, I_rms, R_nom) is 29 % worse.
 
-이것이 7.6 절의 A5 falsifier 를 정량적으로 재확인한다 — 기각 조건이 "보정이
-상태·나이의 함수일 뿐이면 표로 흡수해야 한다" 였고, **흡수할 수 없다.** 보정을
-만드는 것은 잔차 채널, 즉 **측정된 전압이 명목 모델에서 얼마나 벗어나는가** 다.
+This quantitatively reconfirms the A5 falsifier of §7.6 — the rejection condition
+was "if the correction is merely a function of state and age, it should be
+absorbed into the table", and **it cannot be absorbed.** What creates the
+correction is the residual channels, that is, **how far the measured voltage
+departs from the nominal model.**
 
-**배포 함의**: 12 개를 다 계산할 필요가 없을 수 있다. dR_fast 만이면 EW 상태가
-2 개(e_ir, e_ii)로 줄어 특징 갱신 비용이 준다.
+**Deployment implication**: it may not be necessary to compute all 12. With
+dR_fast alone the EW states drop to two (e_ir, e_ii) and the feature-update cost
+falls.
 
-**[측정됨 — 33.1]** 보드에서 **13.25 -> 5.99 us (-55 %)**. 안전계수 대가는
-29.7 / 32.7 에서 쟀고 **없다** — 오히려 충전에서는 A8 이 A3 를 이긴다.
+**[Measured — 33.1]** On the board, **13.25 -> 5.99 us (−55 %).** The
+safety-factor price was measured in 29.7 / 32.7 and there is **none** — on
+charge A8 actually beats A3.
 
-### 29.4 SOC 도 정답 SOH 를 쓰고 있었다
+### 29.4 SOC was using true SOH too
 
-29.1 을 SOP 에서 찾고 나서 SOC 를 확인했다. **같은 문제였다.**
+After finding §29.1 on SOP, SOC was checked. **It was the same problem.**
 
-`ekf_soc.py` 는 SOH 를 두 군데에 쓴다 — 저항·OCV 표의 축(`theta`, `ocv`,
-`hyst_M`)과 **측정 잡음 R_volt 의 스케줄**(SOH 0.70 에서 110 mV, 1.00 에서 15 mV).
-평가 루프는 캐시의 참값을 넣는다(`soh = np.nanmedian(SOH)`).
+`ekf_soc.py` uses SOH in two places — as an axis of the resistance/OCV tables
+(`theta`, `ocv`, `hyst_M`) and as the **schedule of the measurement noise
+R_volt** (110 mV at SOH 0.70, 15 mV at 1.00). The evaluation loop feeds the
+cache's true value (`soh = np.nanmedian(SOH)`).
 
-두 번째가 특히 나쁘다. **SOH 를 높게 보면 R_volt 를 작게 잡아 칼만 이득이 커지고
-모델을 과신한다.** SOH 팔의 편향이 양수이므로 방향이 위험하다.
+The second is particularly bad. **Reading SOH high makes R_volt small, which
+raises the Kalman gain and overtrusts the model.** The SOH arm's bias is
+positive, so the direction is dangerous.
 
-SOH 팔의 예측을 SOP 와 같은 방식(직전 충전)으로 이어 붙여 다시 돌렸다
-(SOH 0.68~0.70 구간, 셀당 6 런):
+The SOH arm's predictions were stitched in the same way as for SOP (the
+preceding charge) and rerun (SOH 0.68–0.70 region, 6 runs per cell):
 
-| 셀 | SOH 참 / 추정 | SOC RMSE 정답 -> 추정 |
+| Cell | SOH true / estimated | SOC RMSE true -> estimated |
 |---|---|---|
 | CC | 0.696 / 0.706 | 2.87 -> 2.46 %p |
 | BOOST | 0.692 / 0.697 | 2.95 -> 3.11 |
@@ -3128,535 +3523,588 @@ SOH 팔의 예측을 SOP 와 같은 방식(직전 충전)으로 이어 붙여 �
 | **BOOST_REST** | 0.691 / **0.745** | 3.01 -> **4.19** |
 | CC_CELL2 | 0.687 / 0.679 | 3.81 -> 3.96 |
 | BOOST_NEGPULSE_1S | 0.693 / 0.697 | 3.03 -> 3.10 |
-| **전체** | | **3.11 -> 3.35 %p (+0.24)** |
+| **overall** | | **3.11 -> 3.35 %p (+0.24)** |
 
-**손실이 한 셀에 몰려 있다.** BOOST_REST 에서 SOH 를 5.4 %p 높게 보고 SOC 오차가
-1.18 %p 늘었다. 나머지는 SOH 오차가 ±0.008 이내라 영향이 미미하다.
+**The loss is concentrated in one cell.** BOOST_REST reads SOH 5.4 %p high and
+its SOC error grows 1.18 %p. On the rest the SOH error is within ±0.008, so the
+impact is negligible.
 
-(이 수치는 가장 노화된 구간만 본 것이므로 여섯 셀 전체 궤적의 1.59 %p 와는 다른
-조건이다.)
+(These numbers look only at the most-aged region, so they are a different
+condition from the 1.59 %p over the full six-cell trajectories.)
 
-**[2026-08-26 추가 — 이 수치는 다시 재야 한다]** 여기 쓰인 SOC 벤치가 순환이다.
-정답 라벨이 `SOC = 1 + Ah/3.0` 이고 필터 예측이 `soc + I dt/3600/3.0` 이라
-같은 식이며, 필터를 정확한 초기 SOC 에서 출발시켰다.  그래서 전압 보정을
-아예 끄면 RMSE 가 0.12 %p 로 최선이 된다 (30.1 절).
+**[Added 2026-08-26 — these numbers must be re-measured]** The SOC benchmark
+used here is circular. The true label is `SOC = 1 + Ah/3.0` and the filter's
+prediction is `soc + I dt/3600/3.0` — the same equation — and the filter was
+started from the exact initial SOC. So turning the voltage correction off
+entirely gives the best RMSE, 0.12 %p (§30.1).
 
-이 절의 논리는 "SOH 를 높게 보면 R_volt 가 작아지고 칼만 이득이 커져
-모델을 과신한다" 인데, 저 벤치에서는 **이득이 커지는 모든 변화가 무조건
-나쁘게 나온다** (측정: R_volt=0.005 로 조이면 1.51 -> 2.90 %p).  따라서
-+0.24 %p 의 대가 중 얼마가 SOH 오차 때문이고 얼마가 "전압을 더 썼기
-때문" 인지 이 표로는 가를 수 없다.  30 절의 섭동 벤치에서 다시 재야 한다.
+This section's logic is "reading SOH high makes R_volt small, raises the Kalman
+gain and overtrusts the model", but on that benchmark **every change that raises
+the gain comes out bad unconditionally** (measured: tightening to R_volt=0.005
+gives 1.51 -> 2.90 %p). So this table cannot separate how much of the +0.24 %p
+price is due to SOH error and how much to "having used voltage more". It must be
+re-measured on the perturbation benchmark of §30.
 
-**세 팔이 모두 정답 SOH 위에 서 있었다.** 논문에서는 이것을 하나의 절로 묶어야
-한다 — "상태 추정기를 따로 평가하면 시스템의 답이 아니다" 는 그 자체로 방법론적
-지적이고, 이 작업은 그 대가를 방전 3 %p, 충전 4 %p, SOC 0.24 %p 로 수치화했다.
+**All three arms were standing on true SOH.** The paper should bundle this into
+one section — "evaluating state estimators separately does not give the system's
+answer" is a methodological point in itself, and this work quantified its price
+at 3 %p discharge, 4 %p charge, and 0.24 %p SOC.
 
-### 29.5 재현 산포 — 정정
+### 29.5 Reproduction spread — correction
 
-7.3 절이 "트림은 학습 데이터의 2 % 변화에 낙관율이 8~9 %p 움직인다" 고 적고,
-그것을 20 절의 시드 간 변동(15 %)과 같은 성질로 뭉뚱그렸다. **틀렸다.**
+§7.3 wrote that "the trim's optimism moves 8–9 %p under a 2 % change in the
+training data" and lumped that together with the seed-to-seed variation of §20
+(15 %) as the same property. **That was wrong.**
 
-같은 데이터·같은 설정으로 시드만 바꿔 독립 학습본 4 개를 만들어 재면:
+Building four independent training runs with the same data and settings, varying
+only the seed:
 
-| 산포의 출처 | n | 낙관율 폭 | 가용률 폭 | lambda 폭 |
+| Source of spread | n | Optimism range | Availability range | lambda range |
 |---|---:|---:|---:|---:|
-| **시드만 다름** | 4 | **0.00 %p** | 0.02 %p | 0.001 |
-| 학습 데이터 2 % 다름 | 2 | 8.28 %p | 0.98 %p | 0.015 |
+| **seed only** | 4 | **0.00 %p** | 0.02 %p | 0.001 |
+| training data differs by 2 % | 2 | 8.28 %p | 0.98 %p | 0.015 |
 
-**시드에 대해서는 완벽하게 재현된다.** 26 파라미터 선형 모델이므로 최적해가 하나로
-수렴한다 — 당연한데 확인하지 않고 적었다. k_f 중앙이 1.032025 / 1.032042 /
-1.032039 로 다섯째 자리에서만 갈린다.
+**It reproduces perfectly with respect to seed.** It is a 26-parameter linear
+model, so the optimum converges to a single solution — obvious, but it was
+written down without checking. The median k_f differs only in the fifth digit:
+1.032025 / 1.032042 / 1.032039.
 
-8.28 %p 는 **학습 데이터가 바뀌어서**이고, 그마저 평가 행 집합이 657 -> 631 로 함께
-바뀐 것이 섞여 있어 순수 비교가 아니다.
+The 8.28 %p is because **the training data changed**, and even that is not a
+clean comparison because the evaluation row set changed with it (657 -> 631).
 
-**따라서 헤드라인 수치에 시드 오차 막대는 필요 없다.** 대신 밝혀야 할 것은
-데이터 민감도이며, 그것은 "온도 결함 6 사이클(2.1 %)을 빼면 이만큼 움직인다" 로
-7.3 에 이미 기록돼 있다. 20 절이 관찰한 15 % 는 **대칭 트림 두 학습본** 사이의
-것이었고 그 둘은 데이터도 코드 상태도 달랐다 — 시드 효과가 아니다.
+**So the headline numbers need no seed error bars.** What must be disclosed
+instead is data sensitivity, and that is already recorded in §7.3 as "removing
+the 6 temperature-defect cycles (2.1 %) moves it this much". The 15 % observed
+in §20 was between **two training runs of the symmetric trim**, and those two
+differed in data as well as code state — it is not a seed effect.
 
-### 29.6 초안 전에 남은 것
+### 29.6 What remains before the draft
 
-**해야 하는 것**
-- 추정 SOH 판으로 27~28 절의 수치를 다시 내기. 29.1/29.4 가 셀 수준은 냈다
-  (방전 70 -> 67 %, 충전 57 -> 53 %, SOC 3.11 -> 3.35 %p). 팩 수준(28 절)은 아직.
-- dR_fast 만 쓰는 축소판(A8)의 안전계수 대가 — 학습 중
+**Must do**
+- Redo the §27–28 numbers on the estimated-SOH version. §29.1/29.4 produced the
+  cell level (discharge 70 -> 67 %, charge 57 -> 53 %, SOC 3.11 -> 3.35 %p). The
+  pack level (§28) is not done.
+- The safety-factor price of the dR_fast-only reduction (A8) — in training
 
-**있으면 좋은 것**
-- SOH 팔의 외부 검증
-- 문헌의 표준 SOP 기법과의 비교군
+**Nice to have**
+- External validation of the SOH arm
+- A comparison group against a standard SOP technique from the literature
 
-**못 하는 것** (22.5 / 26 / 28.5 에 근거 기록)
-- tau = 2 s 검증, 온도 x 지평 교차, 셀 수 늘리기
+**Cannot do** (grounds recorded in 22.5 / 26 / 28.5)
+- tau = 2 s validation, temperature x horizon crossing, more cells
 
-### 29.7 dR_fast 하나만 쓰는 트림 (A8) 측정 결과
+### 29.7 Measured result of the dR_fast-only trim (A8)
 
-§29.3 에서 절제로 추정만 해두었던 것을 실제로 학습해 측정했다.
-A8 은 EW 특징 12 개 중 dR_fast 하나만 남기고 나머지 11 개를 뺀 트림이다.
+What §29.3 had only estimated by ablation was actually trained and measured.
+A8 is the trim that keeps only dR_fast of the 12 EW features and drops the other
+11.
 
-전압 기준 (홀드아웃 셀 6 개 평균, A0=k 고정 대비):
+On the voltage basis (mean over the 6 holdout cells, against A0 = fixed k):
 
-| 트림 | A0 | 모델 | 개선 |
+| Trim | A0 | Model | Improvement |
 |---|---|---|---|
-| 전체 12 특징 | 85.36 mV | 58.76 mV | +31.2% |
-| dR_fast 하나 (A8) | 85.36 mV | 62.81 mV | +26.4% |
+| all 12 features | 85.36 mV | 58.76 mV | +31.2% |
+| dR_fast alone (A8) | 85.36 mV | 62.81 mV | +26.4% |
 
-전압만 보면 A8 이 6.9% 나쁘다. 절제로 추정했던 +8.2% 와 대체로 맞는다.
+On voltage alone A8 is 6.9% worse. That broadly matches the +8.2% estimated by
+ablation.
 
-그런데 전류로 환산하면 순서가 뒤집힌다:
+But converting to current flips the order:
 
-| 트림 | 낙관율 | RMSE | λ(10 s) | 쓸 수 있는 전류 | 최악 초과 |
+| Trim | Optimism | RMSE | λ(10 s) | Usable current | Worst overshoot |
 |---|---|---|---|---|---|
-| 전체 12 특징 | 69.4% | 5.43 A | 0.679 | 69.8% | 1.19 A |
-| dR_fast 하나 (A8) | 62.8% | 4.95 A | 0.683 | 68.9% | 0.97 A |
+| all 12 features | 69.4% | 5.43 A | 0.679 | 69.8% | 1.19 A |
+| dR_fast alone (A8) | 62.8% | 4.95 A | 0.683 | 68.9% | 0.97 A |
 
-배치 후 성능을 결정하는 두 값 — 안전계수 λ 와 쓸 수 있는 전류 — 은 사실상 같다
-(λ 0.683 vs 0.679, 전류 68.9% vs 69.8%). 반면 λ 를 곱하기 전의 원 예측은
-A8 이 모든 항목에서 낫다: 낙관율 6.6 %p 낮고, RMSE 0.48 A 낮고, 최악 초과 0.22 A 낮다.
+The two values that decide post-deployment performance — the safety factor λ and
+the usable current — are effectively the same (λ 0.683 vs 0.679, current 68.9%
+vs 69.8%). Meanwhile the raw prediction before multiplying by λ is better for A8
+on every item: optimism 6.6 %p lower, RMSE 0.48 A lower, worst overshoot 0.22 A
+lower.
 
-해석: 나머지 11 개 특징은 전압 잔차는 더 줄이지만 그 이득이 전류로 넘어오지
-않는다. 전압 오차를 전류로 바꾸는 것은 나눗셈(dV/dR)이므로, 전압에서 이긴
-자리와 전류에서 이기는 자리가 일치할 이유가 없다. 전압 RMSE 를 트림의
-평가 지표로 쓰면 배치 성능을 잘못 고를 수 있다는 뜻이다.
+Interpretation: the other 11 features do reduce the voltage residual further,
+but that gain does not carry over into current. Turning voltage error into
+current is a division (dV/dR), so there is no reason for the places that win on
+voltage to coincide with the places that win on current. That means using
+voltage RMSE as the trim's evaluation metric can select the wrong deployment
+performance.
 
-배치 측면에서 A8 이 갖는 이점: 특징 갱신이 EW 상태 12 개에서 2 개로 줄고,
-트림 입력 차원이 12 -> 1 이 되어 파라미터가 26 -> 4 개가 된다.
+Deployment advantages of A8: the feature update drops from 12 EW states to 2,
+and the trim input dimension goes 12 -> 1, so parameters go 26 -> 4.
 
-**채택**: A8 을 최종 구성으로 한다.
+**Adoption**: A8 is the final configuration.
 
-확인한 것 — 두 판의 평가 행 집합이 완전히 같고(신뢰 라벨 631 행, `meas`
-일치), 이득이 한 셀에 몰려 있지 않다. 셀별로:
+Checked — the evaluation row sets of the two versions are exactly the same (631
+trustworthy-label rows, `meas` agreeing), and the gain is not concentrated in one
+cell. Per cell:
 
-| 셀 | n | 낙관율 12 -> A8 | RMSE 12 -> A8 |
+| Cell | n | Optimism 12 -> A8 | RMSE 12 -> A8 |
 |---|---:|---|---|
-| BOOST | 153 | 73.2 -> 66.0 % (-7.2) | 4.76 -> 4.24 A |
-| BOOST_NEGPULSE | 43 | 25.6 -> 23.3 % (-2.3) | 4.80 -> 4.34 A |
-| BOOST_NEGPULSE_1S | 169 | 87.0 -> 78.7 % (-8.3) | 5.53 -> 4.85 A |
-| BOOST_REST | 25 | 8.0 -> 4.0 % (-4.0) | 4.78 -> 4.73 A |
-| CC | 153 | 77.1 -> 69.9 % (-7.2) | 6.18 -> 5.89 A |
-| CC_CELL2 | 88 | 54.5 -> 50.0 % (-4.5) | 5.42 -> 4.81 A |
-| **전체** | **631** | **69.4 -> 62.8 % (-6.7)** | **5.43 -> 4.95 A** |
+| BOOST | 153 | 73.2 -> 66.0 % (−7.2) | 4.76 -> 4.24 A |
+| BOOST_NEGPULSE | 43 | 25.6 -> 23.3 % (−2.3) | 4.80 -> 4.34 A |
+| BOOST_NEGPULSE_1S | 169 | 87.0 -> 78.7 % (−8.3) | 5.53 -> 4.85 A |
+| BOOST_REST | 25 | 8.0 -> 4.0 % (−4.0) | 4.78 -> 4.73 A |
+| CC | 153 | 77.1 -> 69.9 % (−7.2) | 6.18 -> 5.89 A |
+| CC_CELL2 | 88 | 54.5 -> 50.0 % (−4.5) | 5.42 -> 4.81 A |
+| **overall** | **631** | **69.4 -> 62.8 % (−6.7)** | **5.43 -> 4.95 A** |
 
-**6 / 6 셀에서 두 지표 모두 A8 이 낫다.** 트림은 원래 셀 하나씩 빼고
-학습하므로 이 표 자체가 홀드아웃 결과다. 시드 산포는 29.5 에서 0.00 %p 로
-측정됐으므로 이 차이는 시드 탓이 아니다.
+**A8 is better on both metrics in 6 of 6 cells.** The trim is trained leaving one
+cell out anyway, so this table is itself a holdout result. Seed spread was
+measured at 0.00 %p in §29.5, so this difference is not seed.
 
-전체 12 특징 구성은 비교군으로 16 절에 남긴다.
+The full 12-feature configuration is kept in §16 as a comparison group.
 
-## 30. SOC 벤치가 순환이었다
+## 30. The SOC benchmark was circular
 
-### 30.1 라벨과 예측이 같은 식이다
+### 30.1 The label and the prediction are the same equation
 
-정답 라벨은 `SOC = 1 + Ah/3.0` 이고 (readme 117 행), EKF 의 예측 단계는
-`ekf_soc.py:231` 에서
+The true label is `SOC = 1 + Ah/3.0` (readme line 117), and the EKF's prediction
+step at `ekf_soc.py:231` is
 
     soc_p = soc + I * dt / 3600.0 / Q_RATED_AH        # Q_RATED_AH = 3.0
 
-이다. 같은 전류, 같은 나눗수, 같은 식이다. 평가 루프는 필터를 `soc0 = soc[0]`
-에서 정확히 출발시킨다 (`run()` 의 `f.x[0] = soc0`). 그러면 전류를 적분하는
-것만으로 라벨이 정의대로 재현되고, 전압 보정은 오차를 **더하는** 일밖에
-할 수 없다.
+Same current, same divisor, same equation. The evaluation loop starts the filter
+exactly at `soc0 = soc[0]` (`f.x[0] = soc0` in `run()`). Then integrating the
+current alone reproduces the label by definition, and the voltage correction can
+only **add** error.
 
-측정 (드라이브 사이클 36 런, 6 셀):
+Measured (36 drive-cycle runs, 6 cells):
 
-| 구성 | 전체 RMSE | 최악 | 노화 <0.80 |
+| Configuration | Overall RMSE | Worst | Aged <0.80 |
 |---|---:|---:|---:|
-| **전압 보정 끔 (순수 전류 적분)** | **0.12 %p** | **0.48** | **0.20** |
-| 채택 구성 (게이트 1 A / 30 s) | 1.51 | 3.86 | 2.13 |
-| 전압 보정 강함 (R_volt = 5 mV) | 2.90 | 6.99 | 4.53 |
+| **voltage correction off (pure current integration)** | **0.12 %p** | **0.48** | **0.20** |
+| adopted configuration (gate 1 A / 30 s) | 1.51 | 3.86 | 2.13 |
+| strong voltage correction (R_volt = 5 mV) | 2.90 | 6.99 | 4.53 |
 
-전압을 아예 안 쓰는 쪽이 12 배 낫고, 전압을 더 쓸수록 나빠진다. 남은
-0.12 %p 는 dt 양자화와 `soc_span` 제한이다.
+Not using voltage at all is 12× better, and the more voltage is used the worse it
+gets. The remaining 0.12 %p is dt quantisation and the `soc_span` limit.
 
-### 30.2 그래서 과거 결론들이 설명된다
+### 30.2 Which explains the past conclusions
 
-`ecm_kf_plan.md` 는 "모델을 고치는 시도 7 번은 전부 실패, 언제 믿을지 정하는
-시도 3 번은 전부 성공" 이라고 적었다. 성공한 셋 — R_volt 올리기, 저전류
-게이트, 30 s 휴지 유지 — 은 **전부 전압을 덜 믿는 방향**이다. 벤치의 최적해가
-"전압을 믿지 마라" 이므로 그 방향은 무엇을 해도 이긴다. 실패한 일곱은 전부
-전압 모델을 고치려는 시도였고, 전압을 쓰는 한 이길 수 없었다.
+`ecm_kf_plan.md` wrote that "seven attempts to fix the model all failed; three
+attempts to decide when to trust it all succeeded". The three that succeeded —
+raising R_volt, the low-current gate, holding for 30 s — are **all in the
+direction of trusting voltage less**. Since the benchmark's optimum is "do not
+trust voltage", anything in that direction wins. The seven that failed were all
+attempts to fix the voltage model, and as long as voltage is used they cannot
+win.
 
-같은 함정에 이번 세션도 걸렸다. 잔차 크기로 R 을 키우는 규칙을 만들어
-1.51 -> 0.84 %p (-44.6 %) 를 얻었고 셀 하나씩 빼는 검증까지 통과했는데
-(6 폴드가 전부 같은 상수 k=20, w=0.003 을 골랐다), 그 규칙이 하는 일은
-R 을 중앙값 505 배로 올려 97.8 % 의 시간 동안 전압 보정을 억누르는 것이었다.
-k 를 200 으로 더 키우면 더 좋아진다. 순수 전류 적분에 얼마나 가까워졌는지를
-측정하고 있었던 것이다.
+This session fell into the same trap. A rule that grows R with the residual
+magnitude gave 1.51 -> 0.84 %p (−44.6 %) and even passed leave-one-cell-out
+validation (all 6 folds picked the same constants k=20, w=0.003), but what that
+rule does is raise R by a median factor of 505 and suppress the voltage
+correction 97.8 % of the time. Raising k to 200 makes it better still. It was
+measuring how close it had got to pure current integration.
 
-**셀 단위 교차검증은 이 오류를 못 잡는다.** 순환은 셀마다 있는 것이 아니라
-라벨 정의에 있다.
+**Cell-level cross-validation cannot catch this error.** The circularity is not
+per cell; it is in the label definition.
 
-### 30.3 무엇이 영향을 받고 무엇은 아닌가
+### 30.3 What is affected and what is not
 
-영향 없음: SOP (라벨이 HPPC 에서 측정된 전류), SOH (라벨이 용량). 라벨이
-필터의 예측식과 무관하다.
+Not affected: SOP (labels measured from HPPC currents), SOH (labels are
+capacity). The labels are unrelated to the filter's prediction equation.
 
-영향 있음: 이 벤치 위에서 EKF 변형끼리 비교한 모든 것. R_volt 스케줄,
-저전류 게이트, 휴지 유지 시간, 29.4 절의 "추정 SOH 대가 +0.24 %p" 가 여기
-속한다.
+Affected: everything that compared EKF variants on this benchmark. The R_volt
+schedule, the low-current gate, the hold time, and §29.4's "estimated-SOH price
+of +0.24 %p" belong here.
 
-### 30.4 순환을 끊은 벤치
+### 30.4 A benchmark that breaks the circularity
 
-칼만 필터를 쓰는 이유는 실차에서 세 가지가 안 맞기 때문이다: 초기 SOC 를
-모르고, 전류 센서에 옵셋이 있고, 이득 오차가 있다. 라벨은 참 전류로 두고
-필터에게만 틀어진 전류·초기값을 준다.
+The reason to use a Kalman filter is that three things do not hold in a real
+vehicle: the initial SOC is unknown, the current sensor has an offset, and it has
+a gain error. The label is kept on the true current and only the filter is given
+the distorted current and initial value.
 
-전체 RMSE (%p, 36 런 평균):
+Overall RMSE (%p, mean over 36 runs):
 
-| 틀어짐 | 순수 전류 적분 | EKF 게이트 없음 | **EKF 채택 (게이트)** | EKF+퍼짐 k=20 | EKF+퍼짐 k=200 |
+| Distortion | pure current integ. | EKF no gate | **EKF adopted (gate)** | EKF+spread k=20 | EKF+spread k=200 |
 |---|---:|---:|---:|---:|---:|
-| 없음 | 0.12 | 3.11 | 1.51 | 0.84 | 0.77 |
-| 초기 SOC +10 %p | 9.95 | 3.11 | 1.57 | 1.04 | 1.51 |
-| 초기 SOC −10 %p | 10.03 | 3.10 | 1.57 | 0.94 | 1.04 |
-| 전류 옵셋 +0.10 A | 10.32 | 2.41 | 2.86 | 8.15 | 8.64 |
-| 전류 옵셋 −0.10 A | 10.39 | 3.96 | 3.77 | 7.56 | 8.64 |
-| 전류 이득 +1 % | 0.37 | 3.14 | 1.55 | 0.98 | 0.94 |
-| 전류 이득 −1 % | 0.29 | 3.08 | 1.51 | 0.81 | 0.74 |
-| **틀어짐 6 개 평균** | 6.89 | 3.13 | **2.14** | 3.25 | 3.58 |
+| none | 0.12 | 3.11 | 1.51 | 0.84 | 0.77 |
+| initial SOC +10 %p | 9.95 | 3.11 | 1.57 | 1.04 | 1.51 |
+| initial SOC −10 %p | 10.03 | 3.10 | 1.57 | 0.94 | 1.04 |
+| current offset +0.10 A | 10.32 | 2.41 | 2.86 | 8.15 | 8.64 |
+| current offset −0.10 A | 10.39 | 3.96 | 3.77 | 7.56 | 8.64 |
+| current gain +1 % | 0.37 | 3.14 | 1.55 | 0.98 | 0.94 |
+| current gain −1 % | 0.29 | 3.08 | 1.51 | 0.81 | 0.74 |
+| **mean over the 6 distortions** | 6.89 | 3.13 | **2.14** | 3.25 | 3.58 |
 
-순위가 뒤집힌다.
+The ranking flips.
 
-1. **채택 구성이 이미 최선이다** (2.14). 순환 벤치에서 -44.6 % 로 보였던
-   퍼짐 규칙은 실제로는 2.14 -> 3.25 로 **52 % 손해**다. 폐기한다.
-2. **약점은 전류 센서 옵셋 하나다.** 다른 조건에서 1.5 %p 인데 옵셋에서만
-   2.86 / 3.77 %p 다. 뒤쪽 1/4 만 보면 2.18 / 3.46 이므로 수렴하지 않고
-   남는 오차다.
-3. 순수 전류 적분은 옵셋에서 뒤쪽 1/4 RMSE 15.3 %p 로 발산한다. 전압
-   보정이 하는 일이 정확히 이것이고, 순환 벤치는 그 일을 볼 수 없었다.
+1. **The adopted configuration is already best** (2.14). The spread rule that
+   looked like −44.6 % on the circular benchmark is in fact a **52 % loss**,
+   2.14 -> 3.25. It is discarded.
+2. **The one weakness is current-sensor offset.** It is 1.5 %p under the other
+   conditions but 2.86 / 3.77 %p under offset. Looking at only the last quarter
+   gives 2.18 / 3.46, so it is residual error that does not converge away.
+3. Pure current integration diverges under offset, with a last-quarter RMSE of
+   15.3 %p. That is exactly what the voltage correction does, and the circular
+   benchmark could not see that work.
 
-### 30.5 전류 옵셋 상태
+### 30.5 Current-offset state
 
-과거에 접었던 옵셋 상태 `q_b` 는 예측 **전압** 에 더하는 상수였다
-(`y += xp[self.ib]`, ±0.25 V 로 제한). 전류 옵셋 상태는 시도한 적이 없다.
+The offset state `q_b` that was abandoned in the past was a constant added to the
+predicted **voltage** (`y += xp[self.ib]`, limited to ±0.25 V). A current-offset
+state had never been tried.
 
-이번에 넣었다: `I_true = I_meas - ib` 를 쿨롱 적분과 전압 모델 양쪽에
-쓰고, 야코비안에 `dsoc/d(ib) = -dt/3600/Q`, `dy/d(ib) = -R0` 를 넣는다.
-옵셋이 만드는 SOC 표류가 OCV 오차로 드러나므로 관측된다.
+It was added this time: `I_true = I_meas - ib` is used in both the coulomb
+integration and the voltage model, and the Jacobian gets
+`dsoc/d(ib) = -dt/3600/Q` and `dy/d(ib) = -R0`. The SOC drift the offset creates
+surfaces as OCV error, so it is observable.
 
-(측정 진행 중 — 30.6 에 기록한다.)
+(Measurement in progress — recorded in 30.6.)
 
-### 30.6 R_volt 와 게이트를 다시 골랐다 — 값은 그대로, 이유는 달라졌다
+### 30.6 R_volt and the gate were re-chosen — the values are the same, the reason is not
 
-R_volt 스케줄(SOH 0.70 -> 110 mV, 1.00 -> 15 mV)과 게이트(|I| <= 1 A 를
-30 s 유지)는 전부 순환 벤치에서 고른 값이다. 섭동 벤치에서 다시 골랐다.
-R_volt 배율 4 단 x 게이트 5 종 x 섭동 7 종, 셀 하나씩 빼고 선택.
+The R_volt schedule (110 mV at SOH 0.70, 15 mV at 1.00) and the gate (|I| <= 1 A
+held for 30 s) were all chosen on the circular benchmark. They were re-chosen on
+the perturbation benchmark: 4 R_volt multipliers x 5 gates x 7 perturbations,
+selected leave-one-cell-out.
 
-**결과: 여섯 폴드가 전부 배율 x1.00, 게이트 1 A / 30 s 를 골랐다. 변화 0.0 %.**
+**Result: all six folds picked multiplier x1.00 and gate 1 A / 30 s. Change
+0.0 %.**
 
-값이 안 바뀌었다고 순환이 무해했다는 뜻은 아니다. 세 표를 나란히 놓으면
-왜 그 값이 살아남았는지가 드러난다.
+The values not changing does not mean the circularity was harmless. Putting the
+three tables side by side shows why those values survived.
 
-**틀어짐이 없을 때** (순환 벤치가 보던 것, %p):
+**With no distortion** (what the circular benchmark saw, %p):
 
-| 배율 | 게이트 없음 | 1A 즉시 | 1A 30s | 1A 120s | 3A 30s |
+| Multiplier | no gate | 1A immediate | 1A 30s | 1A 120s | 3A 30s |
 |---|---:|---:|---:|---:|---:|
 | x0.25 | 3.84 | 3.49 | 2.14 | 1.77 | 2.82 |
 | x1.00 | 3.11 | 2.68 | 1.51 | 1.33 | 1.90 |
 | x2.00 | 2.81 | 2.33 | 1.26 | **1.13** | 1.56 |
 
-최적이 오른쪽 아래다 — R_volt 를 키우고 유지 시간을 늘리는 쪽, 즉 전압을
-덜 쓰는 쪽. 30.1 절이 예측한 그대로다.
+The optimum is at the bottom right — raise R_volt and lengthen the hold, i.e.
+use voltage less. Exactly as §30.1 predicted.
 
-**전류 옵셋이 있을 때** (%p):
+**With a current offset** (%p):
 
-| 배율 | 게이트 없음 | 1A 즉시 | 1A 30s | 1A 120s | 3A 30s |
+| Multiplier | no gate | 1A immediate | 1A 30s | 1A 120s | 3A 30s |
 |---|---:|---:|---:|---:|---:|
 | x0.25 | 3.84 | 3.50 | **2.58** | 3.27 | 2.90 |
 | x1.00 | 3.18 | 2.92 | 3.32 | 3.68 | 2.68 |
 | x2.00 | 3.13 | 3.17 | 4.29 | 4.55 | 3.58 |
 
-**방향이 정반대다.** R_volt 를 줄여 전압을 더 써야 옵셋을 잡는다. 순환
-벤치의 최적점(x2.00, 1A 120s)이 여기서는 4.55 로 표 전체에서 최악이다.
+**The direction is exactly opposite.** R_volt must be reduced — voltage used more
+— to catch the offset. The circular benchmark's optimum (x2.00, 1A 120s) is 4.55
+here, the worst in the whole table.
 
-**섭동 7 개 평균** (%p):
+**Mean over the 7 perturbations** (%p):
 
-| 배율 | 게이트 없음 | 1A 즉시 | 1A 30s | 1A 120s | 3A 30s |
+| Multiplier | no gate | 1A immediate | 1A 30s | 1A 120s | 3A 30s |
 |---|---:|---:|---:|---:|---:|
 | x0.25 | 3.84 | 3.49 | 2.28 | 2.27 | 2.85 |
 | x0.50 | 3.45 | 3.08 | 2.07 | 2.11 | 2.40 |
 | x1.00 | 3.13 | 2.75 | **2.05** | 2.09 | 2.14 |
 | x2.00 | 2.90 | 2.58 | 2.16 | 2.20 | 2.16 |
 
-현재 값이 1 등인 이유는 **서로 반대로 미는 두 힘의 균형점**이기 때문이다.
-순환 벤치는 그중 한쪽만 보고 있었고, 우연히 균형점 근처에서 멈췄다.
+The reason the current values come first is that they are the **balance point of
+two forces pushing in opposite directions**. The circular benchmark was seeing
+only one of them, and happened to stop near the balance point.
 
-이것이 이 절에서 남길 교훈이다 — 순환 벤치가 맞는 답을 낼 수도 있지만,
-그때 그 답은 **이유 없이 맞은 답**이다. 왜 그 값인지 설명하려면 순환을
-끊어야 한다.
+That is the lesson this section leaves — a circular benchmark can produce the
+right answer, but when it does, that answer is **right for no reason**. Explaining
+why that value is the value requires breaking the circularity.
 
-### 30.7 전류 옵셋 상태 측정 결과
+### 30.7 Measured result of the current-offset state
 
-30.5 에서 넣은 상태를 잰다. 넣어 준 옵셋을 필터가 찾아내는가:
+Measuring the state added in §30.5. Does the filter find the offset it was given:
 
-| q_ib | 넣은 0.00 | +0.05 | +0.10 | +0.20 | -0.10 |
+| q_ib | injected 0.00 | +0.05 | +0.10 | +0.20 | −0.10 |
 |---|---:|---:|---:|---:|---:|
-| 1e-10 | +0.002 | +0.052 | +0.102 | +0.202 | -0.098 |
+| 1e-10 | +0.002 | +0.052 | +0.102 | +0.202 | −0.098 |
 
-**오차 2 mA.** 폭주한 런은 0 개다.
+**Error 2 mA.** Zero runs diverged.
 
-RMSE (%p, 게이트 1 A / 30 s):
+RMSE (%p, gate 1 A / 30 s):
 
-| 넣은 옵셋 | 상태 끔 | 상태 켬 (p0=0.25) | 상태 켬 (p0=1e-4) |
+| Injected offset | state off | state on (p0=0.25) | state on (p0=1e-4) |
 |---|---:|---:|---:|
 | 0.00 A | **1.51** | 2.44 | 1.94 |
 | +0.05 A | **1.67** | 2.42 | 1.81 |
 | +0.10 A | 2.86 | 2.42 | **1.81** |
 | +0.20 A | 5.98 | 2.41 | **2.41** |
-| -0.10 A | 3.77 | 2.44 | **2.70** |
-| 4 개 평균 | 3.53 | 2.43 | **2.21** |
+| −0.10 A | 3.77 | 2.44 | **2.70** |
+| mean of 4 | 3.53 | 2.43 | **2.21** |
 
-**결정적인 손잡이는 p0_ib 하나다.** 초기 불확실성을 0.25 (표준편차 0.5 A)
-에서 1e-4 (0.01 A) 로 조이면 옵셋이 없을 때 무는 대가가 0.90 -> 0.43 %p 로
-반 이하가 되고, 옵셋이 있을 때는 오히려 더 좋아진다. 초기 불확실성이 크면
-상태가 초반에 참 SOC 오차를 대신 흡수해 버리는데, 조이면 그것이 막힌다.
+**The one decisive knob is p0_ib.** Tightening the initial uncertainty from 0.25
+(standard deviation 0.5 A) to 1e-4 (0.01 A) more than halves the price paid when
+there is no offset, 0.90 -> 0.43 %p, and when there is an offset it actually
+improves. With large initial uncertainty the state absorbs the true SOC error
+instead early on; tightening blocks that.
 
-`ib_clip` 은 영향이 없다 (0.3 A 와 2.0 A 가 같다). `q_ib` 는 1e-12 ~ 1e-10
-이 같고, 1e-8 은 RMSE 가 근소하게 낫지만 옵셋 추정 오차가 7 -> 22 mA 로
-세 배 나빠진다.
+`ib_clip` has no effect (0.3 A and 2.0 A are the same). `q_ib` is the same over
+1e-12 to 1e-10; 1e-8 gives marginally better RMSE but the offset estimate error
+worsens threefold, 7 -> 22 mA.
 
-**손익분기는 약 0.07 A.** 실제 전류 센서 옵셋이 그보다 작으면 상태를 넣는
-것이 손해다. 30 A 만스케일 기준 0.07 A 는 0.23 % 로, 자동차용 센서의
-전형적인 옵셋 오차(만스케일의 0.1 ~ 0.5 %) 한가운데다. 즉 이 결정은
-센서 사양에 달렸고 한쪽으로 자명하지 않다.
+**The break-even is about 0.07 A.** If the real current-sensor offset is smaller
+than that, adding the state is a loss. Against a 30 A full scale, 0.07 A is
+0.23 %, right in the middle of a typical automotive sensor's offset error
+(0.1–0.5 % of full scale). So this decision depends on the sensor specification
+and is not obvious either way.
 
-**주의**: 위 표는 36 런 전부로 고른 값이다. 셀 하나씩 빼는 확정은 진행 중.
+**Note**: the table above was chosen using all 36 runs. Confirmation
+leave-one-cell-out is in progress.
 
-### 30.8 최종 확정 — SOC 는 거의 못 올린다
+### 30.8 Final confirmation — SOC can barely be improved
 
-R_volt 배율 x 게이트 x 전류 옵셋 상태의 p0_ib 를 한 격자에 놓고 셀 하나씩
-빼고 골랐다 (24 구성 x 섭동 7 x 36 런).
+The R_volt multiplier x gate x the current-offset state's p0_ib were put on one
+grid and chosen leave-one-cell-out (24 configurations x 7 perturbations x 36
+runs).
 
-**여섯 폴드가 전부 `배율 x1.00 / 게이트 1 A 30 s / p0_ib = 1e-5` 를 골랐다.**
+**All six folds picked `multiplier x1.00 / gate 1 A 30 s / p0_ib = 1e-5`.**
 
-안 본 셀에서 잰 값:
+Measured on the unseen cell:
 
-| 홀드아웃 | 현재 채택 | 옵셋 상태 추가 | 변화 |
+| Holdout | current adopted | with offset state | Change |
 |---|---:|---:|---:|
-| BOOST | 1.85 | 1.79 | -3.6 % |
-| BOOST_NEGPULSE | 1.90 | 1.86 | -1.9 % |
-| BOOST_NEGPULSE_1S | 2.39 | 2.30 | -3.9 % |
+| BOOST | 1.85 | 1.79 | −3.6 % |
+| BOOST_NEGPULSE | 1.90 | 1.86 | −1.9 % |
+| BOOST_NEGPULSE_1S | 2.39 | 2.30 | −3.9 % |
 | BOOST_REST | 2.12 | 2.14 | +0.7 % |
-| CC | 1.74 | 1.68 | -3.9 % |
+| CC | 1.74 | 1.68 | −3.9 % |
 | CC_CELL2 | 2.29 | 2.31 | +0.8 % |
-| **합계** | **2.05** | **2.01** | **-1.9 %** |
+| **total** | **2.05** | **2.01** | **−1.9 %** |
 
-섭동별 내역 (%p):
+Breakdown by perturbation (%p):
 
-| 구성 | 없음 | 초기SOC ±10 | 옵셋 +0.1 | 옵셋 -0.1 | 이득 ±1% | 평균 |
+| Configuration | none | initial SOC ±10 | offset +0.1 | offset −0.1 | gain ±1% | mean |
 |---|---:|---:|---:|---:|---:|---:|
-| 상태 끔 | **1.51** | 1.57 | 2.86 | 3.77 | 1.53 | 2.05 |
+| state off | **1.51** | 1.57 | 2.86 | 3.77 | 1.53 | 2.05 |
 | p0=1e-5 | 1.65 | 1.71 | **2.35** | **3.30** | 1.68 | **2.01** |
 | p0=1e-4 | 1.94 | 1.99 | **1.81** | **2.70** | 1.96 | 2.05 |
 
-옵셋이 없을 때 0.14 %p 를 물고 옵셋이 있을 때 0.5 %p 를 벌어, 평균으로는
-거의 상쇄된다. p0 를 1e-4 로 더 열면 옵셋에서 더 벌지만(1.81) 평상시
-대가가 커져(1.94) 평균이 같아진다.
+It pays 0.14 %p when there is no offset and earns 0.5 %p when there is, so on
+average they nearly cancel. Opening p0 further to 1e-4 earns more under offset
+(1.81) but the everyday price grows (1.94) and the mean comes out the same.
 
-**권고: 기본 구성으로는 넣지 않는다.** 상태가 하나 늘어 EKF 연산이 약
-30 % 증가하는데 얻는 것이 1.9 % 다. 다만 손익분기가 옵셋 약 0.07 A
-(30 A 만스케일의 0.23 %) 이고 자동차용 전류 센서의 전형적 옵셋이
-만스케일의 0.1 ~ 0.5 % 이므로, **목표 BMS 의 센서 사양이 그 위면
-넣는 쪽이 맞다.** 자명하게 한쪽이 아니다.
+**Recommendation: do not include it in the default configuration.** It adds one
+state, raising EKF computation by about 30 %, for a gain of 1.9 %. That said,
+the break-even is an offset of about 0.07 A (0.23 % of a 30 A full scale) and a
+typical automotive current sensor's offset is 0.1–0.5 % of full scale, so **if
+the target BMS's sensor specification is above that, including it is right.** It
+is not obvious either way.
 
-`ekf_soc.py` 에 `q_ib` / `p0_ib` / `ib_clip` 로 남겨 둔다 (기본 끔).
+It is left in `ekf_soc.py` as `q_ib` / `p0_ib` / `ib_clip` (off by default).
 
-### 30.9 이 절에서 남는 수치
+### 30.9 The number this section leaves
 
-논문에 쓸 SOC 숫자는 1.51 %p 가 아니라 **2.05 %p** 다. 앞은 라벨을 만든
-전류를 그대로 필터에 넣고 정확한 초기값에서 출발시킨 값이고, 뒤는 초기
-SOC 오차 ±10 %p, 전류 옵셋 ±0.1 A, 이득 오차 ±1 % 를 평균한 값이다.
+The SOC number to use in the paper is not 1.51 %p but **2.05 %p.** The former
+feeds the filter the very current that made the label and starts it at the exact
+initial value; the latter averages over initial SOC error ±10 %p, current offset
+±0.1 A, and gain error ±1 %.
 
-### 30.10 남은 것
+### 30.10 What remains
 
-- **비대칭**: 옵셋 -0.1 A (3.77 / 3.30) 가 +0.1 A (2.86 / 2.35) 보다 항상
-  나쁘다. 드라이브 사이클이 SOC 0.85 -> 0.35 로 방전 방향이므로 음의
-  옵셋은 방전을 더하는 쪽인데, 왜 관측이 더 어려운지 안 봤다.
-  `soc_span` 하한 제한이 걸리는지 의심된다.
-- **29.4 재측정**: "추정 SOH 대가 +0.24 %p" 를 섭동 벤치에서 다시 재야 한다.
-- **p0_ib 격자 끝**: 1e-5 가 off 와 1e-4 사이의 내부 최적이지만 그 사이를
-  더 세밀히 보지는 않았다. 최적이 얕아서 실익은 없어 보인다.
+- **Asymmetry**: offset −0.1 A (3.77 / 3.30) is always worse than +0.1 A
+  (2.86 / 2.35). The drive cycle runs SOC 0.85 -> 0.35, i.e. in the discharge
+  direction, so a negative offset adds to discharge, but why it is harder to
+  observe was not examined. The `soc_span` lower bound is suspected.
+- **Re-measuring 29.4**: the "estimated-SOH price of +0.24 %p" must be
+  re-measured on the perturbation benchmark.
+- **p0_ib grid ends**: 1e-5 is an interior optimum between off and 1e-4, but the
+  space between was not examined more finely. The optimum is shallow, so there
+  appears to be no real gain.
 
-### 30.11 29.4 재측정 — 기전 주장이 틀렸고 대가는 절반이다
+### 30.11 Re-measuring 29.4 — the mechanism claim was wrong and the price is half
 
-29.4 는 순환 벤치에서 "추정 SOH 를 쓰면 SOC 가 3.11 -> 3.35 %p (+0.24)"
-라고 냈고, 그 원인을 **R_volt 스케줄** 로 지목했다 — "SOH 를 높게 보면
-R_volt 를 작게 잡아 칼만 이득이 커지고 모델을 과신한다."
+§29.4 produced "using estimated SOH gives SOC 3.11 -> 3.35 %p (+0.24)" on the
+circular benchmark and pointed at the **R_volt schedule** as the cause —
+"reading SOH high makes R_volt small, raises the Kalman gain and overtrusts the
+model."
 
-섭동 벤치에서 두 경로를 분리해 다시 쟀다. SOH 는 두 곳에 들어간다:
-(a) 저항·OCV 표의 축, (b) 측정 잡음 R_volt 스케줄.
+The two paths were separated and re-measured on the perturbation benchmark. SOH
+enters in two places: (a) the axis of the resistance/OCV tables, (b) the
+measurement-noise R_volt schedule.
 
-SOH 팔의 예측을 직전 충전에서 이어 붙였다 (36 런, 추정 오차 RMSE 0.0129,
-편향 +0.0032 — 팔 전체의 0.0128 / +0.0010 과 일치).
+The SOH arm's predictions were stitched from the preceding charge (36 runs,
+estimate error RMSE 0.0129, bias +0.0032 — consistent with the arm's overall
+0.0128 / +0.0010).
 
-| SOH 입력 | 섭동 7 개 평균 | 없음 | 옵셋 +0.1 | 옵셋 -0.1 | 정답 대비 |
+| SOH input | mean over 7 perturbations | none | offset +0.1 | offset −0.1 | vs true |
 |---|---:|---:|---:|---:|---:|
-| 둘 다 정답 | **2.05 %p** | 1.51 | 2.86 | 3.77 | — |
-| **R_volt 만 추정** | **2.05** | 1.51 | 2.87 | 3.77 | **+0.00** |
-| 표 축만 추정 | 2.17 | 1.65 | 2.79 | 3.97 | +0.12 |
-| 둘 다 추정 | 2.17 | 1.65 | 2.82 | 3.96 | +0.12 |
+| both true | **2.05 %p** | 1.51 | 2.86 | 3.77 | — |
+| **R_volt estimated only** | **2.05** | 1.51 | 2.87 | 3.77 | **+0.00** |
+| table axis estimated only | 2.17 | 1.65 | 2.79 | 3.97 | +0.12 |
+| both estimated | 2.17 | 1.65 | 2.82 | 3.96 | +0.12 |
 
-**R_volt 경로의 대가는 0.00 이다.** 29.4 의 기전 주장은 틀렸다. 전부
-저항·OCV 표의 축에서 나온다.
+**The R_volt path's price is 0.00.** The mechanism claim of §29.4 was wrong. It
+all comes from the axis of the resistance/OCV tables.
 
-크기를 계산해 보면 당연하다. R_volt 는 SOH 0.70 -> 1.00 에서 110 -> 15 mV
-로 보간되므로 기울기가 약 0.32 V / SOH 다. SOH 오차 0.013 은 R_volt 를
-4 mV 움직인다. 15 ~ 110 mV 범위에서 4 mV 는 무시할 수준이다. 29.4 는
-그 크기를 재지 않고 방향만 보고 "특히 나쁘다" 고 썼다.
+Working out the magnitude makes it obvious. R_volt interpolates 110 -> 15 mV over
+SOH 0.70 -> 1.00, a slope of about 0.32 V per SOH. An SOH error of 0.013 moves
+R_volt by 4 mV. Over a 15–110 mV range, 4 mV is negligible. §29.4 did not measure
+that magnitude and wrote "particularly bad" from the direction alone.
 
-**총 대가도 +0.24 가 아니라 +0.12 %p 다.** 셀별:
+**The total price is also +0.12 %p, not +0.24.** Per cell:
 
-| 셀 | SOH 오차(평균) | 정답 -> 추정 |
+| Cell | SOH error (mean) | true -> estimated |
 |---|---:|---|
 | BOOST | +0.0075 | 1.85 -> 1.94 (+0.08) |
 | BOOST_NEGPULSE | +0.0041 | 1.90 -> 2.04 (+0.14) |
-| BOOST_NEGPULSE_1S | +0.0067 | 2.39 -> 2.32 (-0.07) |
+| BOOST_NEGPULSE_1S | +0.0067 | 2.39 -> 2.32 (−0.07) |
 | **BOOST_REST** | **+0.0095** | 2.12 -> **2.64 (+0.52)** |
-| CC | -0.0060 | 1.74 -> 1.86 (+0.12) |
-| CC_CELL2 | -0.0024 | 2.29 -> 2.26 (-0.03) |
+| CC | −0.0060 | 1.74 -> 1.86 (+0.12) |
+| CC_CELL2 | −0.0024 | 2.29 -> 2.26 (−0.03) |
 
-**손실이 한 셀에 몰려 있다는 29.4 의 관찰은 유지된다** — BOOST_REST 가
-+0.52 이고 나머지 다섯의 평균은 +0.05 다. 두 셀은 오히려 미세하게
-좋아지는데 이는 잡음 수준으로 본다.
+**§29.4's observation that the loss is concentrated in one cell holds** —
+BOOST_REST is +0.52 and the mean of the other five is +0.05. Two cells actually
+improve marginally, which is taken as noise level.
 
-**갱신된 "세 팔이 모두 정답 SOH 위에 서 있었다" 의 대가**:
-방전 70 -> 67 %, 충전 57 -> 53 %, **SOC 2.05 -> 2.17 %p**.
+**Updated price of "all three arms were standing on true SOH"**: discharge
+70 -> 67 %, charge 57 -> 53 %, **SOC 2.05 -> 2.17 %p.**
 
-주의: 36 런을 고를 때 `np.linspace` 가 BOOST_NEGPULSE_1S 에서 같은 파일을
-두 번 집었다 (사이클 1149 이 두 번). 그 셀의 유효 런은 5 개다.
+Note: when picking the 36 runs, `np.linspace` picked the same file twice on
+BOOST_NEGPULSE_1S (cycle 1149 twice). That cell has 5 effective runs.
 
-## 31. 팩 수준을 추정 SOH 위에서 다시 (2026-08-26)
+## 31. Pack level again, on estimated SOH (2026-08-26)
 
-28 절의 수치는 전부 정답 SOH 위에 있었다 (29 절 지적). 여기서 다시 잰다.
+Every number in §28 sat on true SOH (the point §29 raised). It is re-measured
+here.
 
-### 31.1 채택 평가 구성을 특정했다
+### 31.1 The adopted evaluation configuration was pinned down
 
-28 절의 팩 스크립트가 파일로 남아 있지 않아 다시 만들었다
-(`analysis/sop_pack2.py`). 그 과정에서 16 절의 lambda 를 재현하는 설정을
-찾아 기록해 둔다 — 지금까지 문서에 없었다:
+§28's pack script was not kept as a file, so it was rebuilt
+(`analysis/sop_pack2.py`). In the process the settings that reproduce §16's
+lambda were found and are recorded here — they were not in the documentation
+until now:
 
-| 방향 | 트림 디렉터리 | 집계 | 허용 | lambda(10s / 2s) |
+| Direction | Trim directory | Aggregation | Tolerance | lambda(10s / 2s) |
 |---|---|---|---|---|
-| 방전 | `runs_trim_v2` | `max` | 0.0 A | **0.679 / 0.462** |
-| 충전 | `runs_trim_chg_v2` | `max` | **0.5 A** | **0.567 / 0.544** |
+| discharge | `runs_trim_v2` | `max` | 0.0 A | **0.679 / 0.462** |
+| charge | `runs_trim_chg_v2` | `max` | **0.5 A** | **0.567 / 0.544** |
 
-허용 0.5 A 는 25 절이 충전의 무릎으로 정한 값이다. 충전 lambda 를 허용
-0 으로 세면 0.438 / 0.421 이 나오므로, 이 값을 빼면 16 절 수치를 재현할 수
-없다.
+The 0.5 A tolerance is the value §25 set as charge's knee. Counting the charge
+lambda at zero tolerance gives 0.438 / 0.421, so without this value §16's numbers
+cannot be reproduced.
 
-### 31.2 추정 SOH 는 lambda 를 조이고 전류를 깎는다
+### 31.2 Estimated SOH tightens lambda and cuts current
 
-lambda 를 홀드아웃 셀을 빼고 정답판·추정판 각각 다시 잡았다.
-팩은 조건 그룹(SOH 대역 x SOC 대역) 안에서 N 셀을 복원추출해 4,000 회 모사.
+lambda was re-set leave-one-cell-out for the true and estimated versions
+separately. Packs were simulated 4,000 times by resampling N cells with
+replacement within condition groups (SOH band x SOC band).
 
-| 방향 | tau | SOH 입력 | lambda | N=192 초과 | N=192 최악 | N=192 쓸 수 있는 전류 |
+| Direction | tau | SOH input | lambda | N=192 exceed | N=192 worst | N=192 usable current |
 |---|---:|---|---:|---:|---:|---:|
-| 방전 | 10 s | 정답 | 0.679 | 0.0 % | 0.00 A | **82.9 %** |
-| 방전 | 10 s | **추정** | **0.628** | 0.0 % | 0.00 A | **66.7 %** |
-| 방전 | 2 s | 정답 | 0.462 | 0.0 % | 0.00 A | 83.5 % |
-| 방전 | 2 s | **추정** | 0.456 | 0.0 % | 0.00 A | 81.7 % |
-| 충전 | 10 s | 정답 | 0.567 | 4.4 % | 0.10 A | 58.3 % |
-| 충전 | 10 s | **추정** | **0.501** | 0.0 % | 0.00 A | 53.3 % |
-| 충전 | 2 s | 정답 | 0.544 | 0.0 % | 0.00 A | 56.4 % |
-| 충전 | 2 s | **추정** | 0.512 | 0.0 % | 0.00 A | 54.5 % |
+| discharge | 10 s | true | 0.679 | 0.0 % | 0.00 A | **82.9 %** |
+| discharge | 10 s | **estimated** | **0.628** | 0.0 % | 0.00 A | **66.7 %** |
+| discharge | 2 s | true | 0.462 | 0.0 % | 0.00 A | 83.5 % |
+| discharge | 2 s | **estimated** | 0.456 | 0.0 % | 0.00 A | 81.7 % |
+| charge | 10 s | true | 0.567 | 4.4 % | 0.10 A | 58.3 % |
+| charge | 10 s | **estimated** | **0.501** | 0.0 % | 0.00 A | 53.3 % |
+| charge | 2 s | true | 0.544 | 0.0 % | 0.00 A | 56.4 % |
+| charge | 2 s | **estimated** | 0.512 | 0.0 % | 0.00 A | 54.5 % |
 
-**lambda 를 추정 SOH 위에서 다시 잡으면 28.4 의 "초과 0" 이 유지된다.**
-충전 10 s 정답판의 4.4 % 는 초과를 허용 0 으로 센 것이고, 최악이 0.10 A
-로 충전의 설계 허용 0.5 A 안이다 — 즉 충전 기준으로는 초과가 아니다.
+**Re-setting lambda on estimated SOH preserves §28.4's "zero exceedance".** The
+4.4 % on the charge 10 s true version counts exceedance at zero tolerance, and
+its worst is 0.10 A, inside charge's design tolerance of 0.5 A — i.e. not an
+exceedance by the charge criterion.
 
-**대가는 쓸 수 있는 전류다.** 방전 10 s 에서 82.9 -> 66.7 %, 16.2 %p 를
-잃는다. tau = 2 s 는 거의 안 움직인다 (83.5 -> 81.7 %).
+**The price is usable current.** Discharge 10 s loses 16.2 %p, 82.9 -> 66.7 %.
+tau = 2 s barely moves (83.5 -> 81.7 %).
 
-### 31.3 여유를 다시 안 잡으면 tau = 2 s 방전이 뚫린다
+### 31.3 Without re-setting the margin, discharge at tau = 2 s breaks through
 
-정답 SOH 로 잡은 lambda 를 추정 SOH 판에 그대로 쓰면:
+Using the lambda set on true SOH directly on the estimated-SOH version:
 
-| 방향 | tau | 쓴 lambda | N=1 | N=12 | N=48 | N=96 | N=192 | N=192 최악 |
+| Direction | tau | lambda used | N=1 | N=12 | N=48 | N=96 | N=192 | N=192 worst |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| 방전 | 10 s | 0.679 | 0.0 % | 0.0 % | 0.0 % | 0.0 % | 0.0 % | 0.00 A |
-| **방전** | **2 s** | 0.462 | 0.9 % | 7.8 % | 23.9 % | 34.5 % | **42.0 %** | 0.19 A |
-| 충전 | 10 s | 0.567 | 0.5 % | 2.9 % | 1.7 % | 0.3 % | 0.0 % | 0.04 A |
-| 충전 | 2 s | 0.544 | 1.1 % | 1.3 % | 0.0 % | 0.0 % | 0.0 % | 0.00 A |
+| discharge | 10 s | 0.679 | 0.0 % | 0.0 % | 0.0 % | 0.0 % | 0.0 % | 0.00 A |
+| **discharge** | **2 s** | 0.462 | 0.9 % | 7.8 % | 23.9 % | 34.5 % | **42.0 %** | 0.19 A |
+| charge | 10 s | 0.567 | 0.5 % | 2.9 % | 1.7 % | 0.3 % | 0.0 % | 0.04 A |
+| charge | 2 s | 0.544 | 1.1 % | 1.3 % | 0.0 % | 0.0 % | 0.0 % | 0.00 A |
 
-씨앗 3 개에서 41.5 / 42.1 / 43.2 % 로 안정적이다.
+It is stable across three seeds at 41.5 / 42.1 / 43.2 %.
 
-**크기는 작다.** 최악 초과 0.18 A 는 그 조건의 참 |I*| 중앙값 31.9 A 의
-0.59 % 다. 초과 *비율* 이 42 % 로 뛰는 것은 lambda 가 정의상 무초과 경계에
-정확히 놓이기 때문이고, 경계에서는 아주 작은 변화가 비율을 크게 흔든다.
-비율만 인용하면 과장이 된다 — 비율과 크기를 같이 봐야 한다.
+**The magnitude is small.** The worst overshoot of 0.18 A is 0.59 % of that
+condition's true median |I*| of 31.9 A. The exceedance *rate* jumping to 42 % is
+because lambda sits by definition exactly on the zero-exceedance boundary, and at
+a boundary a very small change swings the rate a lot. Quoting the rate alone
+would exaggerate — the rate and the magnitude must be read together.
 
-**함의**: 28.4 가 "여유를 줄이려는 어떤 시도도 팩에서 다시 검증해야 한다"
-고 했는데, **SOH 추정기를 붙이는 것도 그 "시도" 중 하나다.** 셀 수준에서는
-tau=2 s 의 lambda 가 0.462 -> 0.456 으로 거의 안 움직여 무해해 보이지만,
-팩의 min 을 거치면 그 1.3 % 차이가 초과 비율 0 -> 42 % 가 된다. 두 효과
-(추정 SOH, 팩 min) 는 따로 보면 둘 다 무해하고 겹칠 때만 드러난다.
+**Implication**: §28.4 said "any attempt to reduce the margin must be revalidated
+on a pack", and **attaching an SOH estimator is one of those "attempts".** At
+cell level the tau=2 s lambda barely moves, 0.462 -> 0.456, and looks harmless,
+but passing through the pack's min turns that 1.3 % difference into an exceedance
+rate of 0 -> 42 %. The two effects (estimated SOH, pack min) are each harmless
+alone and only surface when they overlap.
 
-### 31.4 28.2 는 재현되지 않았다
+### 31.4 §28.2 did not reproduce
 
-28.2 의 평평한 lambda 표(방전 lambda=0.70 에서 N=1 4.1 %, N=96 14.1 %)는
-같은 정의로 재현되지 않는다. 다시 만든 것으로는 N=1 9.2 %, N=96 28.6 %
-로 약 두 배다. 다만 N=1 값은 같은 데이터의 셀 수준 직접 계산(10.0 %)과
-맞으므로 재구현 자체는 내부적으로 일관된다. 28.2 가 어떤 lambda 정의를
-썼는지 문서에서 복원할 수 없다 (조건별 보정 lambda 를 썼을 가능성이 크다).
+§28.2's flat lambda table (discharge at lambda=0.70: N=1 4.1 %, N=96 14.1 %) does
+not reproduce under the same definition. The rebuild gives N=1 9.2 %, N=96
+28.6 %, about double. The N=1 value does agree with a direct cell-level
+calculation on the same data (10.0 %), so the reimplementation is at least
+internally consistent. Which lambda definition §28.2 used cannot be recovered
+from the documentation (it likely used a per-condition calibrated lambda).
 
-**28.2 의 절대 수치는 인용하지 않는다.** 방향성 주장(방전은 셀이 많을수록
-나빠지고 충전은 나아진다)은 재구현에서도 방전에 대해 유지된다
-(9.2 -> 21.6 -> 28.6 %). 충전은 재구현에서 단조롭지 않아 (5.5 -> 12.8 ->
-10.7 %) 28.2 의 충전 주장은 확인되지 않았다.
+**§28.2's absolute numbers are not quoted.** The directional claim (discharge
+gets worse with more cells, charge gets better) does hold for discharge in the
+reimplementation (9.2 -> 21.6 -> 28.6 %). Charge is not monotone in the
+reimplementation (5.5 -> 12.8 -> 10.7 %), so §28.2's charge claim is
+unconfirmed.
 
-28.3 의 상관은 충전에서 재현된다 (원문 -0.411, 재구현 -0.378). 방전은
-원문 -0.385 대 재구현 **-0.608** 로 다르다.
+§28.3's correlation reproduces on charge (original −0.411, rebuild −0.378).
+Discharge differs: original −0.385 vs rebuild **−0.608**.
 
-(이 수치는 채택 트림 A8 의 평가에서 나온다 — `results/tables/correlation.csv`.
-처음 재구현할 때는 기본 트림으로 재어 -0.400 / -0.587 이 나왔다. 트림이
-바뀌면 상관도 바뀌므로 어느 판인지 함께 적어야 한다.)
+(These numbers come from the evaluation of the adopted trim A8 —
+`results/tables/correlation.csv`. The first rebuild measured with the default
+trim and gave −0.400 / −0.587. Changing the trim changes the correlation, so
+which version it is must be written alongside.)
 
-## 32. 문헌 비교군 — 온라인 적응은 왜 그대로는 안 되는가 (2026-08-26)
+## 32. Literature comparison group — why online adaptation does not work as-is (2026-08-26)
 
-리뷰어가 물을 당연한 질문: "26 개 파라미터를 오프라인으로 배울 것 없이
-온라인 RLS 로 저항을 갱신하면 되지 않나." 적응형 SOP 의 표준 기법이다.
+The obvious question a reviewer will ask: "instead of learning 26 parameters
+offline, why not just update the resistance with online RLS?" That is the
+standard technique for adaptive SOP.
 
-### 32.1 트림의 주 특징은 이미 RLS 다
+### 32.1 The trim's main feature is already RLS
 
-`sop_trim_features.py` 의 주 특징은
+The main feature in `sop_trim_features.py` is
 
-    dR_fast = EW{I * r} / EW{I * I},    r = V - V_hat (주행 전압, 명목 모델 대비)
+    dR_fast = EW{I * r} / EW{I * I},    r = V - V_hat (drive voltage vs nominal model)
 
-인데 이것은 잔차를 전류에 회귀시킨 **지수가중 최소자승** 이다. 즉 트림은
-"온라인 RLS + 그 추정치를 배수로 바꾸는 학습된 사상" 이고, 29.3 에서
-dR_fast 하나로 이득의 92 % 가 나온다.
+and that is an **exponentially weighted least squares** regression of the
+residual on the current. That is, the trim is "online RLS plus a learned map
+turning that estimate into a multiplier", and §29.3 shows dR_fast alone gives
+92 % of the gain.
 
-그러면 진짜 질문은 **"학습된 사상이 값을 하는가, dR_fast 를 그대로 쓰면
-되는가"** 다. `sop_baselines.py` / `sop_shrink.py` 로 쟀다.
+So the real question is **"is the learned map worth anything, or would using
+dR_fast directly do?"** It was measured with `sop_baselines.py` /
+`sop_shrink.py`.
 
-### 32.2 파라미터 사다리
+### 32.2 The parameter ladder
 
-셀 하나씩 빼고, 전압 RMSE(셀별 RMSE 의 평균 — 트림 표와 같은 규약):
+Leave-one-cell-out, voltage RMSE (mean of per-cell RMSE — the same convention as
+the trim tables):
 
-| 방법 | 파라미터 | RMSE | A0 대비 |
+| Method | Parameters | RMSE | vs A0 |
 |---|---:|---:|---:|
-| **A0** 보정 없음 (= HPPC 저항표 고전 SOP) | 0 | 85.36 mV | — |
-| **직접 대입** k = 1 + dR/R_nom | 0 | **134.71 mV** | **+57.8 %** |
-| **직접 대입** k = exp(dR/R_nom) | 0 | 145.78 mV | +70.8 % |
-| **축소 계수** k = exp(a * dR/R_nom) | 2 | 69.10 mV | -19.0 % |
-| **A8** dR_fast 하나 | 4 | 62.81 mV | -26.4 % |
-| **A3** 12 특징 | 26 | 58.76 mV | -31.2 % |
+| **A0** no correction (= classical SOP on the HPPC resistance table) | 0 | 85.36 mV | — |
+| **direct plug-in** k = 1 + dR/R_nom | 0 | **134.71 mV** | **+57.8 %** |
+| **direct plug-in** k = exp(dR/R_nom) | 0 | 145.78 mV | +70.8 % |
+| **shrinkage coefficient** k = exp(a * dR/R_nom) | 2 | 69.10 mV | −19.0 % |
+| **A8** dR_fast alone | 4 | 62.81 mV | −26.4 % |
+| **A3** 12 features | 26 | 58.76 mV | −31.2 % |
 
-**RLS 추정치를 그대로 쓰면 아무것도 안 하는 것보다 나쁘다** (+57.8 %).
+**Using the RLS estimate directly is worse than doing nothing** (+57.8 %).
 
-### 32.3 이유 — 부호가 아니라 크기다
+### 32.3 The reason — it is magnitude, not sign
 
-직접 대입의 k 는 학습된 k 와 상관이 0.67 ~ 0.94 다 (문서가 인용한 +0.89 와
-일치). 방향은 맞는다. 틀린 것은 크기다:
+The direct plug-in's k correlates 0.67–0.94 with the learned k (consistent with
+the +0.89 the documentation quotes). The direction is right. What is wrong is
+the magnitude:
 
-| 셀 | dR_fast 중앙 (mOhm) | R_fast_nom (mOhm) | 학습 k_f 중앙 | 직접 k_f 중앙 |
+| Cell | median dR_fast (mOhm) | R_fast_nom (mOhm) | median learned k_f | median direct k_f |
 |---|---:|---:|---:|---:|
 | BOOST | +2.92 | 12.71 | 1.027 | 1.214 |
-| BOOST_NEGPULSE | -2.85 | 16.21 | 0.955 | 0.800 |
+| BOOST_NEGPULSE | −2.85 | 16.21 | 0.955 | 0.800 |
 | CC | +3.06 | 12.11 | 1.032 | 1.245 |
 
-직접 대입이 **5 ~ 7 배 과보정** 한다. 축소 계수를 맞추면 그 값이 나온다:
+The direct plug-in **overcorrects by 5–7×**. Fitting the shrinkage coefficient
+recovers that value:
 
-| 홀드아웃 | a_f | a_s |
+| Holdout | a_f | a_s |
 |---|---:|---:|
 | BOOST | 0.160 | 0.400 |
 | BOOST_NEGPULSE | 0.180 | 0.300 |
@@ -3665,416 +4113,444 @@ dR_fast 하나로 이득의 92 % 가 나온다.
 | CC | 0.200 | 0.320 |
 | CC_CELL2 | 0.240 | 0.220 |
 
-**a_f 가 0.16 ~ 0.24 로 셀에 무관하게 안정적이다.** 물리적으로 읽힌다 —
-드라이브 사이클은 대부분 5 A 아래에서 돌고 SOP 는 30 A 부근에서 산다.
-R 이 전류에 크게 의존하므로 저전류에서 잰 잔차 기울기는 고전류로 **약
-1/5 만 전이된다.** 학습된 사상이 하는 일의 본체가 이 전달비다.
+**a_f is stable at 0.16–0.24 independently of cell.** It reads physically — drive
+cycles mostly run below 5 A while SOP lives around 30 A. Because R depends
+strongly on current, a residual slope measured at low current **transfers only
+about 1/5 to high current.** That transfer ratio is the substance of what the
+learned map does.
 
-이것이 29.3 의 A5 falsifier 와 같은 결론을 반대편에서 다시 준다 — 보정을
-만드는 것은 잔차 채널이 맞지만(그래서 dR_fast 하나로 92 %), **잔차를
-그대로 믿으면 안 된다**(그래서 학습이 필요하다).
+This gives §29.3's A5 falsifier the same conclusion from the other side — what
+creates the correction is indeed the residual channels (hence 92 % from dR_fast
+alone), but **the residual must not be trusted as-is** (hence learning is
+needed).
 
-### 32.4 상한 — 차에서 HPPC 를 돌릴 수 있다면
+### 32.4 Upper bound — if HPPC could be run in the vehicle
 
-같은 셀의 **과거 HPPC 측정 dV** 로 RLS 를 돌리면 (인과적, 망각계수 훑음):
+Running RLS on the **same cell's past HPPC measured dV** (causal, forgetting
+factor swept):
 
-| 망각계수 | 1.0 | 0.9999 | 0.999 | 0.99 | 0.95 |
+| Forgetting factor | 1.0 | 0.9999 | 0.999 | 0.99 | 0.95 |
 |---|---:|---:|---:|---:|---:|
 | RMSE | 49.92 mV | 43.02 | 32.06 | 27.89 | **21.07** |
 
-트림(58.76 mV)보다 낫다. **그러나 배포 가능한 비교군이 아니다** — 실차
-BMS 는 HPPC 를 돌리지 않는다. 망각계수 0.95 는 유효 기억이 약 20 표본이라
-사실상 "몇 분 전 비슷한 조건에서 잰 값을 읽는" 것에 가깝다.
+Better than the trim (58.76 mV). **But it is not a deployable comparison group**
+— a real vehicle BMS does not run HPPC. A forgetting factor of 0.95 has an
+effective memory of about 20 samples, so it is effectively "reading a value
+measured a few minutes ago under similar conditions".
 
-이 줄의 쓸모는 순위가 아니라 **주기적 특성화의 값** 을 수치화하는 데 있다.
-**전압에서 보이는 이 이득은 전류로 옮기면 사라진다** — 32.5 를 볼 것.
+The use of this row is not ranking but quantifying the **value of periodic
+characterisation**. **This gain, visible in voltage, disappears when moved to
+current** — see §32.5.
 
-### 32.5 전류로 다시 — 사다리가 더 벌어진다
+### 32.5 In current again — the ladder spreads further
 
-29.7 이 보였듯 전압에서 이긴 것이 전류에서 이긴다는 보장이 없으므로,
-같은 다섯 판을 SOP 반전까지 통과시켜 다시 쟀다 (방전, tau = 10 s,
-허용 0.0 A, 셀 하나씩 빼고 lambda 보정):
+Since §29.7 showed that winning on voltage does not guarantee winning on current,
+the same five versions were run through the SOP inversion and re-measured
+(discharge, tau = 10 s, tolerance 0.0 A, lambda calibrated leave-one-cell-out):
 
-| 방법 | 파라미터 | 낙관율 | RMSE | lambda | **쓸 수 있는 전류** | 최악 초과 |
+| Method | Parameters | Optimism | RMSE | lambda | **Usable current** | Worst overshoot |
 |---|---:|---:|---:|---:|---:|---:|
-| A0 보정 없음 | 0 | 79.8 % | 5.62 A | 0.520 | **59.3 %** | 0.00 A |
-| 직접 대입 | 0 | 4.3 % | 10.10 A | 0.461 | **32.6 %** | 0.00 A |
-| 축소 계수 | 2 | 15.7 % | 4.72 A | 0.692 | **62.4 %** | 0.00 A |
-| **A8** dR_fast 하나 | 4 | 54.4 % | 3.21 A | 0.683 | **69.1 %** | 0.00 A |
-| **A3** 12 특징 | 26 | 61.9 % | 3.39 A | 0.679 | **70.3 %** | 0.00 A |
+| A0 no correction | 0 | 79.8 % | 5.62 A | 0.520 | **59.3 %** | 0.00 A |
+| direct plug-in | 0 | 4.3 % | 10.10 A | 0.461 | **32.6 %** | 0.00 A |
+| shrinkage coefficient | 2 | 15.7 % | 4.72 A | 0.692 | **62.4 %** | 0.00 A |
+| **A8** dR_fast alone | 4 | 54.4 % | 3.21 A | 0.683 | **69.1 %** | 0.00 A |
+| **A3** 12 features | 26 | 61.9 % | 3.39 A | 0.679 | **70.3 %** | 0.00 A |
 
-배치를 결정하는 값(쓸 수 있는 전류)으로 읽으면:
+Read on the value that decides deployment (usable current):
 
-- **직접 대입은 재앙이다** — 59.3 -> 32.6 %. 아무것도 안 하느니 못하다.
-  RLS 추정치를 그대로 저항 배수로 쓰면 안 된다는 것이 전류에서 더 크게
-  드러난다.
-- **축소 계수 두 개는 A0 대비 3.1 %p 밖에 못 산다** (59.3 -> 62.4 %).
-  전달비 하나로는 부족하다.
-- **A8 이 축소 계수 대비 6.7 %p 를 더 산다** (62.4 -> 69.1 %). 이것이
-  학습된 사상이 실제로 값하는 몫이다.
-- A3 은 A8 대비 1.2 %p 를 더한다 (69.1 -> 70.3 %). 파라미터 26 대 4 의
-  차이치고 작다 — 29.7 의 A8 채택과 같은 방향이다.
+- **The direct plug-in is a disaster** — 59.3 -> 32.6 %. Worse than doing
+  nothing. That an RLS estimate must not be used directly as a resistance
+  multiplier shows up even more strongly in current.
+- **Two shrinkage coefficients buy only 3.1 %p over A0** (59.3 -> 62.4 %). One
+  transfer ratio is not enough.
+- **A8 buys a further 6.7 %p over the shrinkage coefficient** (62.4 -> 69.1 %).
+  That is what the learned map is actually worth.
+- A3 adds 1.2 %p over A8 (69.1 -> 70.3 %). Small for a difference of 26
+  parameters versus 4 — the same direction as the A8 adoption in §29.7.
 
-전압 기준(축소 69.10 mV 대 A8 62.81 mV, 9 % 차)보다 전류 기준의 격차가
-크다. 순서는 같지만 크기가 다르다.
+The gap on the current basis is larger than on the voltage basis (shrinkage
+69.10 mV vs A8 62.81 mV, a 9 % difference). The order is the same but the
+magnitude is not.
 
-### 32.6 양방향 전체 사다리
+### 32.6 The full ladder in both directions
 
-충전 트림 형식으로도 내보내고(`sop_baseline_fill.py`), HPPC-RLS 의 k 도
-사이클 단위로 모아 전류로 옮겼다.
+The charge trim format was exported too (`sop_baseline_fill.py`), and the
+HPPC-RLS k was collected per cycle and moved into current.
 
-전압 RMSE (셀별 RMSE 의 평균):
+Voltage RMSE (mean of per-cell RMSE):
 
-| 방법 | 방전 | 충전 |
+| Method | Discharge | Charge |
 |---|---:|---:|
 | A0 | 85.36 mV | 49.90 mV |
-| 직접 대입 | 134.71 | 87.32 |
-| 축소 계수 | 69.10 | 39.82 |
+| direct plug-in | 134.71 | 87.32 |
+| shrinkage coefficient | 69.10 | 39.82 |
 | HPPC-RLS (ff=1.0) | 49.89 | 33.59 |
 
-맞춘 축소 계수:
+Fitted shrinkage coefficients:
 
-| 방향 | a_f | a_s |
+| Direction | a_f | a_s |
 |---|---|---|
-| 방전 | 0.16 ~ 0.24 | 0.16 ~ 0.40 |
-| 충전 | 0.26 ~ 0.32 | **0.00 ~ 0.02** |
+| discharge | 0.16–0.24 | 0.16–0.40 |
+| charge | 0.26–0.32 | **0.00–0.02** |
 
-**충전의 a_s 는 사실상 0 이다** — 느린 가지가 충전 보정에 기여하지 않는다.
+**Charge's a_s is effectively zero** — the slow branch does not contribute to the
+charge correction.
 
-쓸 수 있는 전류 (tau = 10 s, 방전 허용 0.0 A / 충전 허용 0.5 A):
+Usable current (tau = 10 s, discharge tolerance 0.0 A / charge tolerance 0.5 A):
 
-| 방법 | 파라미터 | 방전 전압 | 방전 전류 | 충전 전압 | 충전 전류 |
+| Method | Parameters | Discharge voltage | Discharge current | Charge voltage | Charge current |
 |---|---:|---:|---:|---:|---:|
-| A0 보정 없음 | 0 | 85.36 mV | 59.3 % | 49.90 mV | 50.7 % |
-| 직접 대입 | 0 | 134.71 | 32.6 % (-26.8) | 87.32 | 39.6 % (-11.1) |
-| 축소 계수 | 2 | 69.10 | 62.4 % (+3.1) | 39.82 | 57.4 % (+6.8) |
-| **A8** dR_fast 하나 | 4 | 62.81 | 69.1 % (+9.8) | **36.73** | **59.6 % (+8.9)** |
-| **A3** 12 특징 | 26 | **58.76** | **70.3 % (+10.9)** | 34.13 | 57.9 % (+7.2) |
-| [상한] HPPC-RLS | 0 | 49.89 | 71.1 % (+11.8) | **33.59** | 55.2 % (+4.5) |
+| A0 no correction | 0 | 85.36 mV | 59.3 % | 49.90 mV | 50.7 % |
+| direct plug-in | 0 | 134.71 | 32.6 % (−26.8) | 87.32 | 39.6 % (−11.1) |
+| shrinkage coefficient | 2 | 69.10 | 62.4 % (+3.1) | 39.82 | 57.4 % (+6.8) |
+| **A8** dR_fast alone | 4 | 62.81 | 69.1 % (+9.8) | **36.73** | **59.6 % (+8.9)** |
+| **A3** 12 features | 26 | **58.76** | **70.3 % (+10.9)** | 34.13 | 57.9 % (+7.2) |
+| [upper bound] HPPC-RLS | 0 | 49.89 | 71.1 % (+11.8) | **33.59** | 55.2 % (+4.5) |
 
-**두 가지가 새로 드러난다.**
+**Two new things surface.**
 
-**(1) 충전에서는 A8(4 개)이 A3(26 개)를 이긴다** — 59.6 % 대 57.9 %.
-방전에서는 A3 가 1.2 %p 앞선다(70.3 대 69.1). 두 방향을 합치면 **A8 이
-파라미터 6 분의 1 로 A3 와 동등 이상이다.** 29.7 의 A8 채택 결정이 이제
-양방향에서 뒷받침된다.
+**(1) On charge, A8 (4 parameters) beats A3 (26)** — 59.6 % vs 57.9 %. On
+discharge A3 leads by 1.2 %p (70.3 vs 69.1). Taking both directions together,
+**A8 matches or beats A3 with one sixth the parameters.** The A8 adoption
+decision of §29.7 is now supported in both directions.
 
-축소 계수(2 개)와의 격차는 방향에 따라 다르다 — 방전 6.7 %p (62.4 ->
-69.1), 충전 2.2 %p (57.4 -> 59.6). 위의 a_s ~ 0 과 맞는다: 충전 보정은
-사실상 빠른 가지의 스칼라 하나에 가까워 파라미터 두 개로도 상당 부분
-잡히고, 그래서 학습이 사는 몫이 방전보다 작다.
+The gap against the shrinkage coefficient (2 parameters) differs by direction —
+discharge 6.7 %p (62.4 -> 69.1), charge 2.2 %p (57.4 -> 59.6). That matches the
+a_s ~ 0 above: the charge correction is effectively close to a single scalar on
+the fast branch, so two parameters already capture much of it, and learning is
+worth less than on discharge.
 
-**(2) HPPC 상한이 상한이 아니다.** 충전에서 55.2 % 로 축소 계수(57.4 %)
-보다도 낮다. 전압 RMSE 는 33.59 mV 로 표에서 제일 좋은데도 그렇다.
-방전에서도 A3 대비 +0.8 %p 에 그친다.
+**(2) The HPPC upper bound is not an upper bound.** On charge it is 55.2 %, below
+even the shrinkage coefficient (57.4 %). That is so even though its voltage RMSE
+of 33.59 mV is the best in the table. On discharge it beats A3 by only +0.8 %p.
 
-즉 **차가 주기적 HPPC 를 감당해도 배치 성능은 거의 안 는다.** 32.4 의
-전압 이득(58.76 -> 49.89 mV)은 전류로 옮기면 사라진다. 29.7 이 A8 에서
-보인 것과 같은 현상이 여기서 세 번째로 나온다 — 전압 오차를 저항으로
-나누어 전류로 바꾸는 연산은 순위를 보존하지 않는다.
+That is, **even if a vehicle could afford periodic HPPC, deployment performance
+would barely improve.** The voltage gain of §32.4 (58.76 -> 49.89 mV) disappears
+when moved to current. The same phenomenon §29.7 showed on A8 appears here for
+the third time — the operation that turns voltage error into current by dividing
+by resistance does not preserve rank.
 
-**이 세 번의 사례가 방법론적 주장을 하나 만든다**: SOP 를 전압 RMSE 로
-평가하면 배치 성능을 잘못 고른다. 문헌이 전압 모델 정확도로 SOP 기법을
-비교하는 관행에 대한 직접적인 반례다.
+**These three cases make one methodological claim**: evaluating SOP by voltage
+RMSE selects the wrong deployment performance. It is a direct counterexample to
+the literature's practice of comparing SOP techniques by voltage-model accuracy.
 
-### 32.7 A8 을 양방향에서 채택한다
+### 32.7 A8 is adopted in both directions
 
-충전 A8 을 학습해(`runs_trim_a8_chg`) 표를 완성했다. 전압 49.90 ->
-36.73 mV (+26.4 %) 로 방전의 +26.4 % 와 같은 폭이다.
+Charge A8 was trained (`runs_trim_a8_chg`) to complete the table. Voltage
+49.90 -> 36.73 mV (+26.4 %), the same margin as discharge's +26.4 %.
 
-**예상은 "축소 계수와 A3 사이" 였는데 틀렸다 — A8 이 A3 를 넘었다**
-(전류 59.6 % 대 57.9 %). 전압에서는 A3 가 앞서고(34.13 대 36.73 mV)
-전류에서는 A8 이 앞선다. 32.6 이 말한 현상이 여기서 네 번째로 나온다.
+**The expectation was "between the shrinkage coefficient and A3", and it was
+wrong — A8 overtook A3** (current 59.6 % vs 57.9 %). A3 leads on voltage (34.13
+vs 36.73 mV) and A8 leads on current. The phenomenon of §32.6 appears here for
+the fourth time.
 
-최종 구성: **양방향 모두 A8**. 파라미터 26 -> 4, EW 상태 12 -> 2.
+Final configuration: **A8 in both directions.** Parameters 26 -> 4, EW states
+12 -> 2.
 
-### 30.12 SOH 데이터셋만 결함을 안 걸렀다
+### 30.12 Only the SOH dataset failed to filter defects
 
-재현 패키지를 만들면서 `run.py` 가 `soh_data` 단계를 "상류가 더 새것" 으로
-표시했다. 확인해 보니 실제 결함이었다.
+While building the reproduction package, `run.py` marked the `soh_data` stage as
+"upstream is newer". Checking it showed a real defect.
 
-**온도 채널 결함 제외는 특성화 층에서만 일어난다** — `uypydj_ecm.py`,
-`uypydj_ocv.py`, `uypydj_hppc_resistance.py` 가 `temp_defects` 를 쓴다.
-그래서 SOP 는 표면과 라벨 양쪽에서 걸러진다.
+**Temperature-channel defect exclusion happens only in the characterisation
+layer** — `uypydj_ecm.py`, `uypydj_ocv.py` and `uypydj_hppc_resistance.py` use
+`temp_defects`. So SOP is filtered on both the surface and the label side.
 
-`soh_charge_dataset.py` 는 원본을 직접 읽으면서 아무것도 안 걸렀다.
-SOH 곡선 290 개 중 **8 개가 결함 사이클 위** 에 있었다:
+`soh_charge_dataset.py` reads the raw data directly and filtered nothing. Of the
+290 SOH curves, **8 sat on defective cycles**:
 
     BOOST#1459, BOOST_NEGPULSE_1S#3, #1315, CC#1384, CC#1497,
     CC_CELL2#640, #753, #1878
 
-측정한 영향 (셀 홀드아웃, 시드 3 개 평균):
+Measured impact (cell holdout, mean over 3 seeds):
 
-| | 결함 포함 (기존) | 결함 제외 |
+| | defects included (previous) | defects excluded |
 |---|---:|---:|
 | RMSE | 0.0128 | 0.0135 |
-| **편향** | **+0.0010** | **+0.0001** |
+| **bias** | **+0.0010** | **+0.0001** |
 
-**RMSE 는 오히려 나빠지고(표본 8 개 감소) 편향이 열 배 줄어든다.**
+**RMSE actually worsens (8 fewer samples) and the bias falls tenfold.**
 
-이것이 29.1 의 서술을 바꾼다. 29.1 은 "채택 SOH 팔의 편향이 +0.0010 으로
-하필 위험한 쪽이다" 라고 적었고 그것을 안전 논증의 근거로 썼는데,
-**그 편향의 90 % 가 결함 곡선에서 왔다.** 깨끗한 데이터에서는 +0.0001 로
-사실상 0 이다. SOH 편향이 SOP 를 낙관적으로 민다는 기전(29.1 의 주입 실험)
-자체는 유효하지만, **채택 팔이 그 위험한 방향으로 치우쳐 있다는 주장은
-철회한다.**
+This changes §29.1's account. §29.1 wrote "the adopted SOH arm's bias of +0.0010
+is, of all things, on the dangerous side" and used it as grounds for a safety
+argument, but **90 % of that bias came from the defective curves.** On clean data
+it is +0.0001, effectively zero. The mechanism itself (§29.1's injection
+experiment, where SOH bias pushes SOP optimistic) remains valid, but **the claim
+that the adopted arm is skewed in that dangerous direction is retracted.**
 
-하류로 전파한 결과 (추정 SOH 판, tau = 10 s):
+Propagated downstream (estimated-SOH version, tau = 10 s):
 
-| 방향 | 결함 포함 | 결함 제외 |
+| Direction | defects included | defects excluded |
 |---|---:|---:|
-| 방전 쓸 수 있는 전류 | 67.1 % | 67.2 % |
-| 충전 쓸 수 있는 전류 | 54.6 % | **56.6 %** |
+| discharge usable current | 67.1 % | 67.2 % |
+| charge usable current | 54.6 % | **56.6 %** |
 
-충전이 2.0 %p 좋아진다. 정답 SOH 대비 대가가 59.6 -> 56.6 % 로 줄었다
-(기존 표기 59.6 -> 54.6).
+Charge improves by 2.0 %p. The price against true SOH shrinks from 59.6 -> 54.6 %
+(as previously written) to 59.6 -> 56.6 %.
 
-**그리고 결함은 18 건이 아니라 64 건이다.** 지금까지 문서가 인용한 18 건
-(HPPC 6, OCV 2, 주행 10) 은 특성화 층이 거르는 부분집합이다. 감사가 찾은
-전체는:
+**And there are 64 defects, not 18.** The 18 the documentation has quoted so far
+(HPPC 6, OCV 2, drive 10) are the subset the characterisation layer filters. The
+full set the audit found is:
 
-| 종류 | 결함 | 어디서 걸리나 |
+| Kind | Defects | Where it is filtered |
 |---|---:|---|
-| HPPC | 6 | 특성화 층 |
-| OCV | 2 | 특성화 층 |
-| drive | 10 | 특성화 층 |
-| **halfC** | **20** | **아무 데서도 (이번에 SOH 만 수정)** |
-| **other** | **20** | **아무 데서도** |
-| **schedule** | **6** | **아무 데서도** |
+| HPPC | 6 | characterisation layer |
+| OCV | 2 | characterisation layer |
+| drive | 10 | characterisation layer |
+| **halfC** | **20** | **nowhere (SOH only, fixed this time)** |
+| **other** | **20** | **nowhere** |
+| **schedule** | **6** | **nowhere** |
 | CAP | 0 | — |
 
-halfC / other / schedule 결함이 다른 경로로도 흘러가는지는 아직 안 봤다.
+Whether the halfC / other / schedule defects flow down other paths has not yet
+been examined.
 
-**고친 것**: `soh_charge_dataset.py` 가 일곱 종류 전부를 제외한다.
-원본에서 다시 지어 마스킹본과 바이트 단위로 동일함을 확인했다 (282 곡선).
+**Fixed**: `soh_charge_dataset.py` now excludes all seven kinds. It was rebuilt
+from the raw data and confirmed byte-identical to the masked version (282
+curves).
 
-## 33. A8 을 보드에 올려 다시 쟀다 (2026-08-26)
+## 33. A8 put on the board and re-measured (2026-08-26)
 
-29.7 / 32.7 에서 채택 구성을 A8 로 바꿨는데 27 절의 MCU 수치는 A3 로 잰
-것이었다. 펌웨어에 A8 경로(`sop_feat_update_a8`, 명령 0x6D)를 넣고 다시
-쟀다. NUCLEO-H563ZI, 250 MHz, n = 500, 인터럽트 차단, DWT 사이클 카운터.
+§29.7 / §32.7 changed the adopted configuration to A8, but §27's MCU numbers were
+measured with A3. The A8 path (`sop_feat_update_a8`, command 0x6D) was added to
+the firmware and re-measured. NUCLEO-H563ZI, 250 MHz, n = 500, interrupts
+disabled, DWT cycle counter.
 
-### 33.1 특징 갱신이 55 % 빨라진다
+### 33.1 The feature update is 55 % faster
 
-| 단계 | A3 (12 특징) | A8 (dR_fast 하나) | 변화 |
+| Stage | A3 (12 features) | A8 (dR_fast alone) | Change |
 |---|---:|---:|---:|
-| 트림 특징 갱신 | 13.25 us | **5.99 us** | **-55 %** |
+| Trim feature update | 13.25 us | **5.99 us** | **−55 %** |
 | p95 | 13.46 | 6.17 | |
-| 최대 | 14.92 | 6.42 | |
+| Max | 14.92 | 6.42 | |
 
-A8 이 지우는 것은 EW 갱신 여덟 개와 부수 상태다. 남는 것은 명목 전파
-(v2n, h), 표 조회 둘(`nominal_rf_rs`, `ocv_lookup`), EW 둘(e_ir, e_ii).
-**남는 쪽이 비싼 부분이라 절반 아래로는 안 내려간다** — 5.99 us 중
-표 조회 둘이 3 us 안팎을 차지한다 (REFF 단독 3.11 us).
+What A8 deletes is eight EW updates and their auxiliary state. What remains is
+the nominal propagation (v2n, h), two table lookups (`nominal_rf_rs`,
+`ocv_lookup`), and two EWs (e_ir, e_ii). **What remains is the expensive part, so
+it does not fall below half** — of the 5.99 us, the two table lookups take around
+3 us (REFF alone is 3.11 us).
 
-EW 상태는 12 개에서 2 개로 준다. 구조체가 15 float 에서 5 float 로 줄어
-키 사이클을 건너는 NVM 도 64 B 에서 24 B 가 된다.
+EW states drop from 12 to 2. The struct shrinks from 15 floats to 5, so the NVM
+needed to survive a key cycle goes from 64 B to 24 B.
 
-### 33.2 주기 예산
+### 33.2 Cycle budget
 
-| 무엇 | 주기 | A3 | A8 |
+| What | Period | A3 | A8 |
 |---|---|---:|---:|
-| SOC EKF | 샘플마다 | 7.5 us | 7.1 us |
-| 트림 특징 갱신 | 샘플마다 | 12.4 us | **6.0 us** |
-| SOP (방·충전 x tau 2·10 s = 4 회) | 결정마다 | 197.1 us | 201.7 us |
-| **합계** | | **217.0 us** | **214.8 us** |
+| SOC EKF | per sample | 7.5 us | 7.1 us |
+| Trim feature update | per sample | 12.4 us | **6.0 us** |
+| SOP (discharge/charge x tau 2/10 s = 4 calls) | per decision | 197.1 us | 201.7 us |
+| **Total** | | **217.0 us** | **214.8 us** |
 
-**주기 합계는 1 % 밖에 안 준다.** 반전이 94 % 를 차지하기 때문이다.
-특징 갱신이 절반 이하로 줄어도 전체에서는 보이지 않는다.
+**The period total falls by only 1 %.** It is because inversion accounts for
+94 %. Halving the feature update is invisible in the total.
 
-**그러나 샘플마다 도는 것만 보면 다르다** — SOC EKF + 특징 갱신이
-19.9 us 에서 13.1 us 로 34 % 준다. SOP 반전은 결정할 때만 돌고 특징
-갱신은 모든 샘플에서 도므로, 100 Hz 로 도는 시스템에서는 이쪽이 실제
-부하다: 1.99 ms/s 에서 1.31 ms/s.
+**But looking only at what runs every sample it is different** — SOC EKF +
+feature update falls 34 %, from 19.9 us to 13.1 us. SOP inversion runs only on a
+decision while the feature update runs on every sample, so in a system running at
+100 Hz this is the real load: 1.99 ms/s down to 1.31 ms/s.
 
-같은 빌드 안에서도 표 조회가 2.91 -> 3.11 us 로 움직였다 (27.3 이 기록한
-바이너리 구성 의존성). **A8 과 A3 를 같은 바이너리에서 나란히 쟀으므로
-위 비교는 그 영향을 받지 않는다.**
+Within the same build the table lookup moved 2.91 -> 3.11 us (the binary-layout
+dependence recorded in §27.3). **A8 and A3 were measured side by side in the same
+binary, so the comparison above is unaffected by it.**
 
-### 33.3 재현 패키지에서 고친 것 둘
+### 33.3 Two things fixed in the reproduction package
 
-**(1) `sop_core.c/h` 가 두 벌이었다.** `mcu/` 와 `fw_sop/Inc|Src/` 가
-독립 파일이었다. 파일 머리말은 "호스트와 MCU 가 같은 코드를 쓴다" 고
-적혀 있고 MCU 측정의 해석이 거기 걸려 있는데, **아무것도 그것을 강제하지
-않았다.** 확인해 보니 지금까지는 우연히 같았다. 심링크로 바꿔 구조적으로
-막았다 (`soh_core`, `soh_simd` 도 같이).
+**(1) There were two copies of `sop_core.c/h`.** `mcu/` and `fw_sop/Inc|Src/`
+were independent files. The file header says "host and MCU use the same code",
+and the interpretation of the MCU measurements hangs on that, yet **nothing
+enforced it.** Checking showed they had happened to match so far. They were
+changed to symlinks to make it structural (`soh_core` and `soh_simd` too).
 
-**(2) 새 명령이 조용히 무시됐다.** `CEMA_Protocol_Loop` 의 디스패치가
-명령을 명시 목록으로 거르는데 0x6D 를 빠뜨렸다. 펌웨어는 명령을 버리고
-호스트는 **이전 응답을 읽어** 0 사이클을 그럴듯하게 돌려줬다 — 오류가
-아니라 잘못된 값으로 나왔다. 목록에 넣어 고쳤다.
+**(2) A new command was silently ignored.** `CEMA_Protocol_Loop`'s dispatch
+filters commands through an explicit list, and 0x6D was missing. The firmware
+dropped the command and the host **read the previous response**, plausibly
+returning 0 cycles — it came back as a wrong value, not an error. Fixed by adding
+it to the list.
 
-두 번째는 프로토콜 설계의 문제다. 모르는 명령에 오류를 돌려주지 않으면
-새 측정을 추가할 때마다 같은 함정에 빠진다.
+The second is a protocol design problem. Without returning an error on an unknown
+command, every new measurement added falls into the same trap.
 
-### 33.4 주행 결함 — 확인했으나 적용 보류
+### 33.4 Drive defects — verified but application deferred
 
-30.12 가 SOH 데이터셋의 결함 누락을 고치면서, 같은 질문을 SOP 경로에도
-던졌다. **주행 결함 10 건은 어디서도 걸리지 않는다** — 결함 제외는
-특성화 층(`uypydj_ecm` / `_ocv` / `_hppc_resistance`)에만 있고,
-`build_uypydj_cache` 와 `sop_trim_dataset` 은 쓰지 않는다.
+While §30.12 fixed the missing defect filtering in the SOH dataset, the same
+question was put to the SOP path. **The 10 drive defects are filtered nowhere** —
+defect exclusion exists only in the characterisation layer (`uypydj_ecm` /
+`_ocv` / `_hppc_resistance`), and `build_uypydj_cache` and `sop_trim_dataset` do
+not use it.
 
-**얼마나 닿는가**
+**How far it reaches**
 
-| 경로 | 닿는 정도 |
+| Path | Reach |
 |---|---|
-| SOC 벤치 36 런 | **0 건** — 고른 파일에 결함이 없다 |
-| 트림 데이터셋 | 라벨 7,098 개 중 **18 개** (BOOST_NEGPULSE 한 셀) |
+| SOC benchmark, 36 runs | **0** — the chosen files contain no defects |
+| Trim dataset | **18** of 7,098 labels (one cell, BOOST_NEGPULSE) |
 
-트림 쪽을 실제로 재구축해 확인했다 (BOOST_NEGPULSE, 결함 주행 파일 두 개
-제외):
+The trim side was actually rebuilt and checked (BOOST_NEGPULSE, the two
+defective drive files excluded):
 
-- 짝지음 행 수는 10,296 으로 **변하지 않는다.** 그 18 개 라벨이 더 이른
-  주행 런에 붙기 때문이다.
-- **216 행(2.1 %) 의 특징이 바뀐다.** dR_fast 가 중앙 1.70 mOhm, 최대
-  7.58 mOhm 움직인다 — 이 셀의 명목 R_fast(약 16 mOhm)의 10 % 수준이라
-  그 행들에는 큰 변화다.
-- 전체 데이터셋(63,108 행) 기준으로는 **0.34 %** 다.
+- The paired row count is 10,296, **unchanged.** Those 18 labels attach to an
+  earlier drive run instead.
+- **216 rows (2.1 %) have changed features.** dR_fast moves by a median of
+  1.70 mOhm and a maximum of 7.58 mOhm — about 10 % of this cell's nominal
+  R_fast (roughly 16 mOhm), a large change for those rows.
+- Over the whole dataset (63,108 rows) it is **0.34 %.**
 
-**적용해 보고 정본을 유지하기로 했다.** 정본을 건드리지 않고 별도
-디렉터리(`cache/trim_v3`, `cache/trim_chg_v3`)에 결함 제외판을 조립해
-A8 을 양방향 재학습하고 평가까지 돌렸다.
+**It was applied and the canonical version was kept.** Without touching the
+canonical cache, a defect-excluded version was assembled in separate directories
+(`cache/trim_v3`, `cache/trim_chg_v3`), A8 was retrained in both directions, and
+the evaluation was run.
 
-전압 (셀 홀드아웃 평균):
+Voltage (mean over cell holdouts):
 
-| 방향 | 정본 (결함 포함) | 결함 제외 (v3) |
+| Direction | canonical (defects included) | defects excluded (v3) |
 |---|---:|---:|
-| 방전 | 62.81 mV | 62.78 mV |
-| 충전 | 36.73 mV | 36.70 mV |
+| discharge | 62.81 mV | 62.78 mV |
+| charge | 36.73 mV | 36.70 mV |
 
-배치 지표 (셀 하나씩 빼고 lambda 보정):
+Deployment metrics (lambda calibrated leave-one-cell-out):
 
-| 방향 | tau | lambda 정본/v3 | 낙관율 정본/v3 | 쓸 수 있는 전류 정본/v3 |
+| Direction | tau | lambda canon/v3 | Optimism canon/v3 | Usable current canon/v3 |
 |---|---:|---|---|---|
-| 방전 | 10 s | 0.683 / **0.683** | 54.4 / **54.4 %** | 69.1 / **69.1 %** |
-| 방전 | 2 s | 0.470 / **0.470** | 92.1 / **92.1 %** | 55.8 / **55.8 %** |
-| 충전 | 10 s | 0.586 / **0.586** | 57.1 / **57.1 %** | 59.6 / **59.6 %** |
-| 충전 | 2 s | 0.560 / **0.560** | 59.9 / **59.9 %** | 57.5 / **57.5 %** |
+| discharge | 10 s | 0.683 / **0.683** | 54.4 / **54.4 %** | 69.1 / **69.1 %** |
+| discharge | 2 s | 0.470 / **0.470** | 92.1 / **92.1 %** | 55.8 / **55.8 %** |
+| charge | 10 s | 0.586 / **0.586** | 57.1 / **57.1 %** | 59.6 / **59.6 %** |
+| charge | 2 s | 0.560 / **0.560** | 59.9 / **59.9 %** | 57.5 / **57.5 %** |
 
-**여덟 값이 소수점 아래까지 같다.**
+**All eight values agree to the decimal.**
 
-예측 자체는 방전 평가 행의 83.8 % 에서 바뀌지만 **중앙 변화가 6 mA** 다 —
-|I*| 30 A 의 0.02 %. 모든 셀이 바뀌는 것은 셀 홀드아웃 구조 때문이다:
-BOOST_NEGPULSE 의 수정된 데이터가 나머지 다섯 셀 모델의 **학습셋** 에
-들어간다.
+The predictions themselves change on 83.8 % of the discharge evaluation rows, but
+**the median change is 6 mA** — 0.02 % of a 30 A |I*|. Every cell changing is due
+to the cell-holdout structure: BOOST_NEGPULSE's corrected data enters the
+**training set** of the other five cells' models.
 
-닿지 않는 이유도 확인했다 — BOOST_NEGPULSE 의 신뢰 라벨은 tau=10 s 에서
-43 개, **tau=2 s 에서는 0 개** 다. 오염된 26 개 라벨이 평가에 거의 닿지
-않는다.
+The reason it does not reach was also confirmed — BOOST_NEGPULSE has 43
+trustworthy labels at tau=10 s and **zero at tau=2 s.** The 26 contaminated
+labels barely touch the evaluation.
 
-**결론: 정본을 유지한다.** 결함 제외가 옳은 처리지만 배치 수치를 바꾸지
-않으므로, 검증된 38 개 수치가 서 있는 현재 캐시를 흔들 이유가 없다.
-`sop_trim_dataset.py` 에는 제외 코드가 들어 있으므로 **다음에 데이터셋을
-다시 지으면 자동으로 반영된다.** v3 판은 `cache/trim_v3` 와
-`cache/trim_chg_v3` 에 남긴다 (다섯 셀은 정본으로의 심링크, BOOST_NEGPULSE
-만 실파일).
+**Conclusion: keep the canonical version.** Excluding the defects is the correct
+treatment but it does not change the deployment numbers, so there is no reason to
+disturb the current cache that 38 verified numbers stand on.
+`sop_trim_dataset.py` contains the exclusion code, so **rebuilding the dataset
+next time picks it up automatically.** The v3 version is left in `cache/trim_v3`
+and `cache/trim_chg_v3` (five cells are symlinks to the canonical version; only
+BOOST_NEGPULSE is a real file).
 
-**고친 것 하나**: `sop_trim_dataset.py` 가 `feat_cycle`(특징이 어느 주행
-런에서 왔는지)을 메타에 남기지 않고 버리고 있었다. 그래서 이번 대조를
-짝짓기 재현으로 우회해야 했다. 지금은 `m_feat_cycle` 로 저장된다 — 다음에
-같은 질문이 나오면 재구축 없이 답할 수 있다.
+**One thing fixed**: `sop_trim_dataset.py` was discarding `feat_cycle` (which
+drive run a feature came from) instead of keeping it in the metadata. That forced
+this comparison to go the long way round by reproducing the pairing. It is now
+stored as `m_feat_cycle` — the next time the same question comes up it can be
+answered without a rebuild.
 
-**보류 상태 기록**: `analysis/cache/trim_backup/` 에 두 판이 있다
-(`_predrivefix` = 현재 정본과 같은 것, `_drivefixed` = 결함 제외판).
-`sop_trim_dataset.py` 는 이미 제외 코드를 갖고 있으므로, 다시 지으면
-자동으로 제외판이 나온다.
+**Deferred-state record**: `analysis/cache/trim_backup/` holds two versions
+(`_predrivefix` = the same as the current canonical version, `_drivefixed` = the
+defect-excluded version). `sop_trim_dataset.py` already has the exclusion code,
+so rebuilding produces the excluded version automatically.
 
-### 33.5 결함 64 건의 정체 — 저온 시험이 아니라 기록 고장이다
+### 33.5 What the 64 defects really are — a logging fault, not a cold test
 
-30.12 에서 결함이 18 건이 아니라 64 건임을 확인하고, 나머지 46 건이 SOP
-경로로 가는지 물었다. 그 과정에서 **더 근본적인 질문**이 나왔다: 감사가
-"결함" 으로 판정한 것이 정말 고장인가, 아니면 의도한 온도 시험인가.
+After §30.12 confirmed there are 64 defects rather than 18, the question was
+whether the other 46 reach the SOP path. In the process **a more fundamental
+question** arose: is what the audit ruled a "defect" really a fault, or an
+intentional temperature test?
 
-감사의 규칙은 단순하다 — 기록 온도가 15 ~ 45 C 밖인 표본의 비율.
-그 규칙은 세 가지를 구분하지 못한다.
+The audit's rule is simple — the fraction of samples whose recorded temperature
+is outside 15–45 C. That rule cannot distinguish three things.
 
-기록 온도의 중앙값으로 64 건을 갈라 보면:
+Splitting the 64 by the median of the recorded temperature:
 
-| 판정 | 건수 | 예 |
+| Ruling | Count | Example |
 |---|---:|---|
-| 물리적으로 불가능 (T_med < -40 C) | 9 | BOOST_NEGPULSE_1S#2 (-195 C), #3 (-200 C) |
-| **0 C 부근** | 28 | BOOST#1458~1463, CC#1495~1501 |
-| 26 ~ 75 C | 6 | BOOST_NEGPULSE#487 (26 C, 부분 구간만 밖) |
-| T_med 값 없음 | 21 | |
+| physically impossible (T_med < −40 C) | 9 | BOOST_NEGPULSE_1S#2 (−195 C), #3 (−200 C) |
+| **near 0 C** | 28 | BOOST#1458–1463, CC#1495–1501 |
+| 26–75 C | 6 | BOOST_NEGPULSE#487 (26 C, only part of the region outside) |
+| no T_med value | 21 | |
 
-**0 C 부근 28 건이 문제였다.** 데이터셋 전체(T_med 가 있는 3,713 파일)에서
-0 C 부근은 28 개뿐이고, 그것들이 **완결된 블록** 을 이룬다:
+**The 28 near 0 C were the problem.** Across the whole dataset (3,713 files with
+a T_med), only 28 are near 0 C, and they form **complete blocks**:
 
-| 셀 | 사이클 | 파일 종류 |
+| Cell | Cycles | File kinds |
 |---|---|---|
-| BOOST | 1458 ~ 1463 | HPPC, drive, halfC, other, schedule (8 개) |
-| CC | 1495 ~ 1501 | HPPC, **OCV**, drive, halfC, other, schedule (9 개) |
+| BOOST | 1458–1463 | HPPC, drive, halfC, other, schedule (8 files) |
+| CC | 1495–1501 | HPPC, **OCV**, drive, halfC, other, schedule (9 files) |
 
-한 특성화 회차의 모든 종류가 함께 0 C 를 가리킨다. **의도한 저온 시험처럼
-보인다.** 그렇다면 우리는 유효한 데이터를 "결함" 으로 버려 온 것이고,
-26 절의 "UYPYDJ 는 25 C 뿐" 이라는 전제도 틀린 것이 된다.
+Every kind of file from one characterisation round points at 0 C together. **It
+looks like an intentional low-temperature test.** If so, valid data has been
+discarded as "defective", and §26's premise that "UYPYDJ is 25 C only" would be
+wrong too.
 
-**물리로 갈랐다.** 0 C 에서 리튬이온 셀의 저항은 25 C 의 3 ~ 5 배다.
-제외 필터를 끄고 그 HPPC 들의 저항을 뽑아 이웃 사이클과 비교했다
-(방전, tau = 10 s, 사이클별 중앙값):
+**Physics settled it.** At 0 C a lithium-ion cell's resistance is 3–5× the 25 C
+value. The exclusion filter was turned off, those HPPCs' resistances were
+extracted, and they were compared with neighbouring cycles (discharge,
+tau = 10 s, per-cycle medians):
 
-| 셀 | 1425 | **문제 사이클** | 1537 | 비 |
+| Cell | 1425 | **cycle in question** | 1537 | Ratio |
 |---|---:|---:|---:|---:|
 | BOOST | 33.68 | **1462: 34.88** | 39.69 | **0.98** |
 | CC | 32.86 | **1500: 37.06** | 40.10 | 1.00 |
 
-**노화 추세선 위에 정확히 앉는다.** 3 ~ 5 배가 아니라 0.98 ~ 1.00 배다.
-셀은 0 C 가 아니었다 — **온도 채널이 0 C 를 기록했을 뿐이다.**
+**They sit exactly on the ageing trend line.** Not 3–5× but 0.98–1.00×. The cell
+was not at 0 C — **the temperature channel merely recorded 0 C.**
 
-블록을 이루는 것도 설명된다: 온도 센서 하나가 한 회차 동안 고장 나면
-그 회차의 모든 파일이 같이 0 C 를 기록한다.
+Forming blocks is explained too: if one temperature sensor fails during a round,
+every file in that round records 0 C together.
 
-**결론**
-- 감사의 판정은 옳다. 제외는 유지한다.
-- 26 절의 "UYPYDJ 는 25 C 뿐" 도 유지된다.
-- 다만 **감사의 판정 근거를 온도 범위 하나에서 "온도 범위 + 저항이
-  추세선에서 벗어나는가" 로 바꾸는 편이 낫다.** 지금 규칙은 진짜 저온
-  시험이 있었다면 그것도 결함으로 버렸을 것이다. 이 데이터셋에는 없었지만
-  RPCWBY 처럼 온도 축이 있는 데이터셋에 같은 코드를 쓰면 전부 버린다.
+**Conclusion**
+- The audit's ruling is correct. The exclusion stands.
+- §26's "UYPYDJ is 25 C only" stands as well.
+- However, **it would be better to change the audit's basis from temperature
+  range alone to "temperature range + does the resistance depart from the trend
+  line".** The present rule would have discarded a genuine low-temperature test
+  as defective too. There was none in this dataset, but applying the same code to
+  a dataset with a temperature axis, such as RPCWBY, would discard everything.
 
-**이 절이 남는 이유**: "0 C 블록을 찾았다" 는 그럴듯한 발견이었고 문서에
-그렇게 적힐 뻔했다. 물리 검사 하나가 막았다. 온도 기록만 보고 판단하면
-안 된다는 것이 요점이다.
+**Why this section stays**: "a 0 C block was found" was a plausible finding and
+came close to being written into the documentation as such. One physics check
+stopped it. The point is that a temperature record must not be judged on its own.
 
-### 33.6 배치 빌드 — A8 만 남기면
+### 33.6 Deployment build — keeping A8 only
 
-33.1 은 A3 와 A8 을 **같은 바이너리** 에 넣고 나란히 쟀다. 실제 배치판은
-A8 만 남긴다. `make EXTRA_CFLAGS=-DSOP_A8_ONLY` 로 12 특징 경로를 뺀다.
+§33.1 put A3 and A8 in the **same binary** and measured them side by side. A real
+deployment build keeps A8 only. `make EXTRA_CFLAGS=-DSOP_A8_ONLY` removes the
+12-feature path.
 
-| | 비교용 (둘 다) | 배치용 (A8 만) | 차이 |
+| | comparison (both) | deployment (A8 only) | Difference |
 |---|---:|---:|---:|
-| Flash (text) | 143,932 B | 142,060 B | **-1,872 B** |
+| Flash (text) | 143,932 B | 142,060 B | **−1,872 B** |
 | RAM (bss) | 28,276 B | 28,276 B | 0 |
 
-빠진 것을 ELF 심볼로 확인했다 — `sop_feat_update` 가 배치판에 없다
-(`sop_feat_update_a8` 만 남는다).
+What was removed was confirmed by ELF symbols — `sop_feat_update` is absent from
+the deployment build (only `sop_feat_update_a8` remains).
 
-**절감이 1.3 % 로 작다.** 143 KB 를 SOH 표(약 100 KB)와 ECM 격자(32 KB)가
-지배하므로 코드 1.9 KB 는 묻힌다. RAM 이 안 주는 것은 `sop_feat_t` 가 두
-경로 공용이기 때문이다.
+**The saving is small, 1.3 %.** The 143 KB is dominated by the SOH tables (about
+100 KB) and the ECM grid (32 KB), so 1.9 KB of code is buried. RAM does not fall
+because `sop_feat_t` is shared by both paths.
 
-**의미가 있는 쪽은 NVM 이다.** 구조체 16 float 중 A8 이 쓰는 것은 6 개다
-(v1n, v2n, h, e_ir, e_ii, age_s). 키 사이클을 건너려고 저장해야 할 양이
-**64 B 에서 24 B** 로 준다. 실차에서 제약이 되는 것은 RAM 이 아니라 NVM
-쓰기이므로 이쪽이 배치 논거다.
+**Where it matters is NVM.** Of the struct's 16 floats, A8 uses 6 (v1n, v2n, h,
+e_ir, e_ii, age_s). The amount that must be stored to survive a key cycle falls
+from **64 B to 24 B**. What constrains a real vehicle is not RAM but NVM writes,
+so this is the deployment argument.
 
-**주의 — 배치판에서 FEAT_A8 이 오히려 느려진다**: 5.99 us (비교용) 대 
-6.96 us (배치용), +16 %. 27.3 이 기록한 바이너리 구성 의존성이다(표 조회가
-2.41 -> 2.91 us 로 움직인 것과 같은 원인: ICACHE 와 플래시 배치).
-**33.1 의 A3 대 A8 비교는 같은 바이너리 안에서 했으므로 이 영향을 받지
-않는다.** 절대값을 인용할 때는 어느 빌드인지 함께 적어야 한다.
+**Note — FEAT_A8 is actually slower in the deployment build**: 5.99 us
+(comparison) vs 6.96 us (deployment), +16 %. This is the binary-layout dependence
+recorded in §27.3 (the same cause as the table lookup moving 2.41 -> 2.91 us:
+ICACHE and flash placement). **The A3 vs A8 comparison of §33.1 was done within
+one binary, so it is unaffected.** Any absolute value must be quoted with the
+build it came from.
 
-### 33.7 빌드에서 고친 것 둘
+### 33.7 Two things fixed in the build
 
-**(1) Makefile 에 외부 정의 훅이 없었다.** `CFLAGS :=` 라 명령줄에서
-`make CFLAGS=...` 를 주면 툴체인 플래그가 통째로 날아가 빌드가 깨진다.
-`CFLAGS += $(EXTRA_CFLAGS)` 를 넣었다.
+**(1) The Makefile had no external-definition hook.** It used `CFLAGS :=`, so
+passing `make CFLAGS=...` on the command line wipes out the toolchain flags
+entirely and breaks the build. `CFLAGS += $(EXTRA_CFLAGS)` was added.
 
-**(2) 없는 명령을 확인하는 방법이 잘못됐다.** 배치판에서 FEAT(0x65)가
-빠졌는지 보려고 그 명령을 보냈더니 32 B 가 돌아왔다. 빠지지 않은 것처럼
-보였지만 아니다 — 펌웨어가 명령 바이트를 무시하면 **뒤따르는 73 B 본문이
-다시 명령으로 해석되어** 그중 유효한 바이트가 응답을 만든다. 33.3 이
-지적한 함정이 정확히 다시 나왔다. ELF 심볼로 확인하는 것이 맞다.
+**(2) The method for checking a removed command was wrong.** To see whether
+FEAT (0x65) was absent from the deployment build, that command was sent and 32 B
+came back. It looked as though it had not been removed, but no — when the
+firmware ignores a command byte, **the following 73 B body is reinterpreted as
+commands** and a valid byte among them produces a response. Exactly the trap
+§33.3 pointed out, again. Checking via ELF symbols is the correct method.
 
-이것으로 33.3 의 지적이 두 번 확인됐다: **모르는 명령에 오류를 돌려주지
-않는 프로토콜은 측정을 조용히 망친다.** 펌웨어 수정 대상으로 남긴다.
+With that, §33.3's point is confirmed twice: **a protocol that does not return an
+error on an unknown command silently ruins measurements.** It is left as a
+firmware fix to make.
