@@ -114,13 +114,67 @@ soc_arm:
 
 sop_baselines:
   status: PARTIAL
-  present: "A0 physics-only, direct RLS plug-in, shrinkage coefficient, A8, A3, HPPC-RLS upper bound — all on identical splits and horizons (ladder.csv)"
-  missing:
-    - "Pure LSTM and pure GRU SOP heads"
-    - "Online RLS / FFRLS ECM updated causally during the drive"
-    - "Chen 2026 (doi 10.1016/j.est.2026.123023) LSTM voltage + numerical search on the same RPCWBY data"
-    - "Frequency-dependent integer/fractional-order SOP (doi 10.1016/j.jpowsour.2023.234000)"
-  status_of_missing: EVIDENCE REQUIRED
+  present:
+    - "A0 physics-only"
+    - "direct RLS plug-in"
+    - "two-parameter shrinkage map"
+    - "A8 (adopted), A3"
+    - "HPPC-RLS upper bound"
+    - "pure LSTM over the 12 causal drive blocks (5,954 parameters) - ADDED by the audit"
+    - "pure GRU over the same sequence (4,482 parameters) - ADDED by the audit"
+    - "forgetting-factor RLS adaptive ECM, block level - ADDED by the audit"
+  protocol: >
+    Identical leave-one-cell-out splits, identical 12x12 causal input,
+    identical output head k = exp(span*tanh(u)), identical Huber loss and
+    log-k regulariser, identical Adam/schedule/3 seeds, scored through the
+    same eval_sop_amps.py inversion, voltage limits and lambda calibration.
+    Sequence-model hyperparameters were declared in advance (hidden 32, one
+    layer, 300 epochs) and not tuned on any held-out cell; the FFRLS
+    forgetting factor was selected on grouped inner folds of the training
+    cells only.
+  result_voltage:
+    discharge_mV: "GRU 44.8, LSTM 45.4, HPPC-RLS 49.9, A3 58.8, A8 62.8, shrink 69.1, A0 85.4, FFRLS 106.1, direct 134.7"
+    charge_mV: "GRU 25.8, LSTM 26.6, HPPC-RLS 33.6, A3 34.1, A8 36.7, shrink 39.8, A0 49.9, FFRLS 65.0, direct 87.3"
+  result_current_strict_lambda_tau10:
+    discharge_usable_pct: "A3 70.0 [65.5-72.7], A8 69.6 [65.5-72.1], GRU 69.5 [67.1-71.2], LSTM 69.1 [67.0-70.5], shrink 65.0, FFRLS 43.3"
+    charge_usable_pct: "LSTM 60.0 [57.7-62.1], GRU 59.9 [58.0-61.6], A8 59.5 [56.3-62.4], A3 58.0 [54.6-61.0], shrink 57.4, FFRLS 49.1"
+  finding: >
+    The sequence models are 28-30 % better than A8 on voltage RMSE and
+    statistically indistinguishable from it on usable current - all four of
+    A3, A8, LSTM and GRU have overlapping cell-cluster bootstrap intervals
+    in both directions.  A8 reaches that with 4 effective coefficients
+    against 4,482-5,954 parameters, roughly 1,100-1,500x fewer, and would
+    need ~18-24 KB of flash for the weights alone if deployed.  This is the
+    paper's own voltage-does-not-predict-current claim, now demonstrated
+    against far larger models rather than only against simpler ones.
+  finding_ffrls: >
+    A block-level forgetting-factor RLS adaptive ECM plugged straight into
+    the resistance is worse than no correction at all (43.3 vs 59.3 %
+    usable on discharge), reproducing the direct-plug-in result: an RLS
+    estimate of the residual slope must be shrunk before it becomes a
+    resistance multiplier.
+  limits:
+    ffrls_granularity: >
+      cache/trim stores exponentially-weighted aggregates per 600 s block,
+      not raw samples, so the FFRLS runs at block granularity over 12
+      blocks.  A sample-level FFRLS would need the drive cache rebuilt with
+      per-sample retention.
+    inference_cost: >
+      The 38-41 us per-sample figures are GPU-side and are not an MCU
+      claim.  No sequence model was ported to the board.
+  still_missing:
+    - claim: "Chen 2026 (doi 10.1016/j.est.2026.123023) LSTM voltage + numerical search"
+      status: SOURCE REQUIRED
+      blocker: >
+        Paywalled.  The DOI resolves to an Elsevier landing page that
+        returns no content to this host, and no preprint was found.
+        Reimplementing the method from its title would be inventing a
+        baseline and attributing it to those authors.
+    - claim: "frequency-dependent integer/fractional-order SOP (doi 10.1016/j.jpowsour.2023.234000)"
+      status: SOURCE REQUIRED
+      blocker: "Same paywall situation; also needs EIS data this project does not have."
+  producer: "python3 repro/run_sop_seq_baselines.py --data cache/trim --suffix '' (and --data cache/trim_chg --suffix _chg), then repro/run_evals.py and repro/run_safety_strict.py --method lstm|gru|ffrls"
+
 
 external_validation:
   status: NOT_FOUND

@@ -123,6 +123,9 @@ def main():
                          'est = the SOH arm\'s own prediction')
     ap.add_argument('--tol-sweep', default='0.0,0.25,0.5,1.0',
                     help='tolerances for the sensitivity table, in A')
+    ap.add_argument('--method', default='a8',
+                    help='which evaluation tag to score: a8, a3, lstm, gru, '
+                         'ffrls, shrink, direct, rls')
     a = ap.parse_args()
 
     os.makedirs(TABLES, exist_ok=True)
@@ -130,7 +133,7 @@ def main():
 
     for direction in ('discharge', 'charge'):
         tag = 'disc' if direction == 'discharge' else 'char'
-        path = os.path.join(a.eval_dir, f'a8_{tag}_{a.arm}.csv')
+        path = os.path.join(a.eval_dir, f'{a.method}_{tag}_{a.arm}.csv')
         if not os.path.exists(path):
             print(f'  MISSING {path} — run repro/run_evals.py', file=sys.stderr)
             return 1
@@ -153,12 +156,12 @@ def main():
             worst_i = int(np.argmin(us))
 
             for r in recs:
-                percell.append([direction, f'{tau:.1f}', a.arm, r['cell'],
+                percell.append([direction, f'{tau:.1f}', a.method, a.arm, r['cell'],
                                 r['n'], f'{r["lam"]:.4f}', r['exceed'],
                                 f'{r["worst"]:.3f}', f'{r["usable"]:.2f}',
                                 f'{r["optimism"]:.1f}', f'{r["rmse"]:.3f}'])
             summary.append([
-                direction, f'{tau:.1f}', a.arm, len(recs), n, k,
+                direction, f'{tau:.1f}', a.method, a.arm, len(recs), n, k,
                 f'{np.average(us, weights=ws):.2f}',
                 f'{np.median(us):.2f}', f'{us[worst_i]:.2f}',
                 recs[worst_i]['cell'],
@@ -174,7 +177,8 @@ def main():
                 kk = sum(r['exceed'] for r in rs)
                 uu = np.array([r['usable'] for r in rs])
                 ww = np.array([r['n'] for r in rs], float)
-                sens.append([direction, f'{tau:.1f}', a.arm, f'{ts:.2f}', nn,
+                sens.append([direction, f'{tau:.1f}', a.method, a.arm,
+                             f'{ts:.2f}', nn,
                              kk, f'{np.average(uu, weights=ww):.2f}',
                              f'{uu.min():.2f}',
                              f'{clopper_pearson_upper(kk, nn) * 100:.3f}'])
@@ -187,19 +191,22 @@ def main():
             w.writerows(rows)
         print(f'  -> {os.path.relpath(p, ROOT)}  ({len(rows)} rows)')
 
-    write(f'safety_strict_percell_{a.arm}.csv',
-          ['direction', 'tau_s', 'soh_arm', 'cell', 'n', 'lambda_i',
+    suf = a.arm if a.method == 'a8' else f'{a.method}_{a.arm}'
+    write(f'safety_strict_percell_{suf}.csv',
+          ['direction', 'tau_s', 'method', 'soh_arm', 'cell', 'n', 'lambda_i',
            'exceed', 'worst_A', 'usable_pct', 'optimism_pct', 'rmse_A'],
           percell)
-    write(f'safety_strict_{a.arm}.csv',
-          ['direction', 'tau_s', 'soh_arm', 'n_cells', 'n_rows', 'exceed',
+    write(f'safety_strict_{suf}.csv',
+          ['direction', 'tau_s', 'method', 'soh_arm', 'n_cells', 'n_rows',
+           'exceed',
            'usable_mean_pct', 'usable_median_pct', 'usable_worst_pct',
            'worst_cell', 'lambda_min', 'lambda_median', 'lambda_max',
            'lambda_pooled_shipped', 'exceed_ub95_pct',
            'usable_boot_lo_pct', 'usable_boot_hi_pct'],
           summary)
-    write(f'safety_strict_tolsens_{a.arm}.csv',
-          ['direction', 'tau_s', 'soh_arm', 'tolerance_A', 'n_rows', 'exceed',
+    write(f'safety_strict_tolsens_{suf}.csv',
+          ['direction', 'tau_s', 'method', 'soh_arm', 'tolerance_A', 'n_rows',
+           'exceed',
            'usable_mean_pct', 'usable_worst_pct', 'exceed_ub95_pct'],
           sens)
 
@@ -208,8 +215,8 @@ def main():
           f"{'ub95%':>8}{'usable':>8}{'worst':>8}  worst cell")
     print('  ' + '-' * 104)
     for s in summary:
-        print(f'  {s[0]:<10}{s[1]:>5}{s[10]:>9}{s[11]:>9}{s[12]:>9}{s[13]:>9}'
-              f'{s[5]:>5}{s[4]:>7}{s[14]:>8}{s[6]:>8}{s[8]:>8}  {s[9]}')
+        print(f'  {s[0]:<10}{s[1]:>5}{s[11]:>9}{s[12]:>9}{s[13]:>9}{s[14]:>9}'
+              f'{s[6]:>5}{s[5]:>7}{s[15]:>8}{s[7]:>8}{s[9]:>8}  {s[10]}')
     print('\n  Zero observed exceedance is a measurement, not a guarantee: '
           'read exceed_ub95_pct.')
     return 0

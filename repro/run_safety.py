@@ -33,7 +33,10 @@ LADDER = [('A0  no correction', 0, 'a8', 'ecm'),
           ('shrinkage coefficient', 2, 'shrink', 'hyb'),
           ('A8  dR_fast alone', 4, 'a8', 'hyb'),
           ('A3  12 features', 26, 'a3', 'hyb'),
-          ('[upper bound] HPPC-RLS', 0, 'rls', 'hyb')]
+          ('[upper bound] HPPC-RLS', 0, 'rls', 'hyb'),
+          ('LSTM (seq, 5954)', 5954, 'lstm', 'hyb'),
+          ('GRU (seq, 4482)', 4482, 'gru', 'hyb'),
+          ('FFRLS adaptive ECM', 1, 'ffrls', 'hyb')]
 
 
 def load(path):

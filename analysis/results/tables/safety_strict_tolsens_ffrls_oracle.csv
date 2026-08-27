@@ -1,0 +1,17 @@
+direction,tau_s,method,soh_arm,tolerance_A,n_rows,exceed,usable_mean_pct,usable_worst_pct,exceed_ub95_pct
+discharge,10.0,ffrls,oracle,0.00,490,3,43.28,35.03,1.575
+discharge,10.0,ffrls,oracle,0.25,490,3,43.72,35.40,1.575
+discharge,10.0,ffrls,oracle,0.50,490,3,44.16,35.77,1.575
+discharge,10.0,ffrls,oracle,1.00,490,3,45.03,36.51,1.575
+discharge,2.0,ffrls,oracle,0.00,140,2,49.02,38.95,4.428
+discharge,2.0,ffrls,oracle,0.25,140,2,49.49,39.25,4.428
+discharge,2.0,ffrls,oracle,0.50,140,2,49.96,39.55,4.428
+discharge,2.0,ffrls,oracle,1.00,140,2,50.91,40.16,4.428
+charge,10.0,ffrls,oracle,0.00,2461,2,42.68,39.80,0.256
+charge,10.0,ffrls,oracle,0.25,2461,11,46.39,42.55,0.739
+charge,10.0,ffrls,oracle,0.50,2461,12,49.06,44.94,0.789
+charge,10.0,ffrls,oracle,1.00,2461,11,50.35,46.14,0.739
+charge,2.0,ffrls,oracle,0.00,2082,1,41.74,40.22,0.228
+charge,2.0,ffrls,oracle,0.25,2082,2,45.63,43.31,0.302
+charge,2.0,ffrls,oracle,0.50,2082,9,49.35,46.12,0.753
+charge,2.0,ffrls,oracle,1.00,2082,9,54.48,49.58,0.753

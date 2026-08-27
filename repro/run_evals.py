@@ -27,6 +27,12 @@ TRIMS = [
     ('direct', 'runs_trim_direct',  'runs_trim_direct_chg',  False),
     ('shrink', 'runs_trim_shrink',  'runs_trim_shrink_chg',  False),
     ('rls',    'runs_trim_rls',     'runs_trim_rls_chg',     False),
+    # Added by the audit: a sequence model over the same 12 causal drive
+    # blocks, and a forgetting-factor RLS adaptive ECM.  Same splits, same
+    # output head, same inversion.
+    ('lstm',   'runs_trim_lstm',    'runs_trim_lstm_chg',    False),
+    ('gru',    'runs_trim_gru',     'runs_trim_gru_chg',     False),
+    ('ffrls',  'runs_trim_ffrls',   'runs_trim_ffrls_chg',   False),
 ]
 
 # The adopted evaluation configuration.  31.1 confirmed it reproduces

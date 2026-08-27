@@ -56,6 +56,11 @@ LABEL = {'A0': 'A0  no correction (classical HPPC)',
 COLOR = {'A0': '#8c8c8c', 'direct': '#c0392b', 'shrink': '#e08b3c',
          'A8': '#1f6fb4', 'A3': '#7cb0d8', 'RLS': '#4d9e6a'}
 ORDER = ['A0', 'direct', 'shrink', 'A8', 'A3', 'RLS']
+# ladder.csv also carries the audit's LSTM, GRU and FFRLS rows.  The
+# figure keeps the original six so the published comparison is
+# unchanged; the sequence models are reported in
+# safety_strict_{lstm,gru,ffrls}_oracle.csv, where they land inside
+# A8's cell-cluster bootstrap interval.
 
 
 def usable():
