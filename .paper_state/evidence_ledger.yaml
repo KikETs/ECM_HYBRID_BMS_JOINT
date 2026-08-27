@@ -568,6 +568,28 @@ reproduction_pipeline:
       exclusion is the right processing - but it changes seven published
       voltage RMSE values and the spec tables in 32.2 and 32.6 that quote
       them.  The audit did not make that switch silently.
+    byte_level_reproduction:
+      cache: >
+        All 12 cache_t files rebuilt from the raw archives are BIT-IDENTICAL
+        to the reference cache - same sample counts (55,078,978 drive plus
+        9,734,557 HPPC) and byte-equal voltage arrays.
+      intermediates: >
+        8 of the 9 tracked intermediate CSVs reproduce byte-for-byte:
+        temp_audit_all, uypydj_ocv, uypydj_hppc_resistance, uypydj_ecm,
+        mendeley_ecm, ecm_temp_factor, sop_label_measured, sop_label_charge.
+      the_ninth: >
+        rpcwby_ecm.csv does not: the rebuild writes 2,865 rows against the
+        committed 3,451.  It is an orphan - nothing in the repository reads
+        it - and it has TWO producers that disagree, rpcwby_to_ecm.py and
+        rpcwby_resistance.py.  The stage this audit added runs the former
+        without checking which had produced the committed file.  No
+        published number depends on it.  Marked in stages.py; pick one
+        producer or delete the artifact.
+      only_script_that_skips: >
+        build_uypydj_cache.py was the only stage script with skip-if-exists
+        logic.  The other twelve rewrite unconditionally, so --force not
+        propagating affected the cache stage alone.
+
     defects_found_by_this_run:
       - "The cache stage declared 12 outputs and its command built 6: build_uypydj_cache.py --part defaults to Fifteen_Drive_Cycles and the second invocation was missing.  run.py reported the stage done because it exited 0."
       - "run.py treated exit 0 as completion without checking the declared outputs existed - the same hole verify.py had, closed earlier in this audit."

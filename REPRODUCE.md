@@ -26,7 +26,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 
 | id | min | command | outputs |
 |---|---:|---|---|
-| `cache` | 210~ | `python3 build_uypydj_cache.py --raw ../raw/UYPYDJ --cache cache_t` | `cache_t/uypydj_BOOST_Fifteen_Drive_Cycles.npz +11` |
+| `cache` | 210~ | `python3 build_uypydj_cache.py --raw ../raw/UYPYDJ --cache cache_t --part Fifteen_Drive_Cycles && python3 build_uypydj_cache.py --raw ../raw/UYPYDJ --cache cache_t --part HPPC` | `cache_t/uypydj_BOOST_Fifteen_Drive_Cycles.npz +11` |
 | `temp_audit` | 35 | `python3 temp_audit_all.py --out temp_audit_all.csv` | `temp_audit_all.csv` |
 
 ### tier 2 — characterisation tables

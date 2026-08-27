@@ -95,8 +95,14 @@ STAGES = [
          cmd='{py} rpcwby_to_ecm.py',
          inputs=['../raw/RPCWBY'],
          outputs=['rpcwby_ecm.csv'],
-         why='2RC parameters from the RPCWBY external dataset.  Used by the '
-             'external-validation path, not by ecm_temp_factor.'),
+         why='2RC parameters from the RPCWBY external dataset.  ORPHANED: '
+             'nothing in the repository reads rpcwby_ecm.csv, and TWO '
+             'scripts write it - rpcwby_to_ecm.py (2,865 rows) and '
+             'rpcwby_resistance.py (3,451 rows, the committed file).  They '
+             'filter differently and disagree.  The stage runs the former, '
+             'so a rebuild replaces the committed file with a smaller one; '
+             'no published number moves because none depends on it.  Pick '
+             'one producer or delete the artifact.'),
 
     dict(id='temp_factor', tier=2, minutes=3, measured=False,
          cmd='{py} ecm_temp_factor.py --out ecm_temp_factor.csv',
