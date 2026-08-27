@@ -120,8 +120,13 @@ def show(ss):
     return tot
 
 
-def run_one(s, dry):
+def run_one(s, dry, force=False):
     cmd = s['cmd'].replace('{py}', sys.executable)
+    if force and s.get('force_flag'):
+        # --force at the graph level does not reach a stage script that skips
+        # existing outputs on its own.  Stages that need it declare the flag.
+        cmd = ' && '.join(part.strip() + ' ' + s['force_flag']
+                          for part in cmd.split('&&'))
     print(f"\n  == {s['id']}  (about {s['minutes']} min)\n     {cmd}",
           flush=True)
     if dry:
@@ -209,7 +214,7 @@ def main():
         return 0
     show(todo)
     for s in todo:
-        if not run_one(s, a.dry_run):
+        if not run_one(s, a.dry_run, force=a.force):
             print(f'\n  stopping at {s["id"]}.', flush=True)
             return 1
     return 0

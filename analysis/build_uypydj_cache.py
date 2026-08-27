@@ -235,6 +235,11 @@ def main():
     ap.add_argument("--cache", default=CACHE)
     ap.add_argument("--part", default="Fifteen_Drive_Cycles")
     ap.add_argument("--only", default=None)
+    ap.add_argument("--force", action="store_true",
+                    help="Rebuild even when the output exists.  Without this "
+                         "the script skips, so repro/run.py --force does not "
+                         "actually force anything here - a 'forced' rebuild "
+                         "would silently reuse whatever was already on disk.")
     args = ap.parse_args()
 
     os.makedirs(args.cache, exist_ok=True)
@@ -242,8 +247,9 @@ def main():
     total = 0
     for key in keys:
         out = os.path.join(args.cache, f"uypydj_{key}_{args.part}.npz")
-        if os.path.exists(out):
-            print(f"{key}: 이미 있음 - 건너뜀 ({os.path.getsize(out)/1e6:.0f} MB)")
+        if os.path.exists(out) and not args.force:
+            print(f"{key}: 이미 있음 - 건너뜀 ({os.path.getsize(out)/1e6:.0f} MB)"
+                  f"  [--force 로 다시 짓는다]")
             continue
         t0 = time.time()
         zips = [os.path.join(args.raw, z) for z in PROTOCOLS[key]]

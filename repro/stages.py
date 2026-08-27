@@ -44,6 +44,7 @@ STAGES = [
              '--part Fifteen_Drive_Cycles && '
              '{py} build_uypydj_cache.py --raw ../raw/UYPYDJ --cache cache_t '
              '--part HPPC',
+         force_flag='--force',
          inputs=['../raw/UYPYDJ'],
          outputs=[f'cache_t/uypydj_{c}_{p}.npz'
                   for c in CELLS for p in ('Fifteen_Drive_Cycles', 'HPPC')],

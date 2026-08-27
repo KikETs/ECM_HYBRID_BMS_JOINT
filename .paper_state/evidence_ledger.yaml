@@ -526,8 +526,52 @@ reproduction_pipeline:
       weights: safety.csv, ladder.csv and soh_cost.csv came back
       byte-identical.
   raw_to_result:
-    status: EVIDENCE REQUIRED
-    detail: "Not attempted in this audit.  Needs the 24 GB raw archives and about 12 h; the cache stage alone is ~3.5 h."
+    status: VERIFIED_PROCESSED
+    detail: >
+      Run on 2026-08-27: 30 stages, tiers 1-5, --force, from the raw
+      archives.  3.2 h wall clock, no stage failed.  The per-stage minutes
+      in stages.py are stale and pessimistic on this machine (the recorded
+      total is 13.4 h).
+    result: >
+      235 differing numeric cells across the schema-compatible tables,
+      median relative change 0.073 %, p95 0.607 %, max 6.25 %.  Unchanged
+      exactly: every A8 lambda, every A8 usable current, soh.csv in full,
+      and mcu / pack / soc_perturb / end_to_end / external_a8.
+    cause_is_known_not_noise: >
+      Not nondeterminism.  sop_trim_dataset.py carries the drive-defect
+      exclusion added in sec 33.4 and the shipped cache predates it.  Sec
+      33.4 states this ("rebuilding the dataset next time picks it up
+      automatically") and prints the exact numbers a rebuild would give:
+      discharge 62.78 mV, charge 36.70 mV.  The rebuild produced 62.78 and
+      36.70.  A documented prediction, confirmed by an independent rebuild.
+    concentration: >
+      The movement concentrates in the BOOST_NEGPULSE column, the single
+      cell sec 33.4 identified as carrying defective drive files.  The other
+      five move because leave-one-cell-out puts BOOST_NEGPULSE's corrected
+      data into their training sets - also predicted in 33.4.
+    largest_mover_is_a_grid_quantum: >
+      alpha_slow 0.32 -> 0.34 (6.25 %) is one step of the
+      np.linspace(0, 1, 51) grid fit_alpha searches, not a drift.
+    why_not_verified_outright: >
+      The rebuild does not byte-reproduce the shipped tables, and should not
+      be reported as if it did.  It reproduces the deployment numbers
+      exactly and moves seven voltage RMSE values in the third decimal, for
+      a reason the repository itself documents.
+    action_taken: >
+      The committed artifacts were restored, respecting sec 33.4's recorded
+      decision to keep the pre-fix cache.  The rebuilt set is preserved at
+      ../preserved/rawrebuild_output/rebuilt_artifacts.tar.gz and compared
+      cell by cell in manifests/raw_rebuild.yaml.
+    open_choice: AUTHOR DECISION REQUIRED
+    open_choice_detail: >
+      Adopting the rebuilt set is arguably more correct - the defect
+      exclusion is the right processing - but it changes seven published
+      voltage RMSE values and the spec tables in 32.2 and 32.6 that quote
+      them.  The audit did not make that switch silently.
+    defects_found_by_this_run:
+      - "The cache stage declared 12 outputs and its command built 6: build_uypydj_cache.py --part defaults to Fifteen_Drive_Cycles and the second invocation was missing.  run.py reported the stage done because it exited 0."
+      - "run.py treated exit 0 as completion without checking the declared outputs existed - the same hole verify.py had, closed earlier in this audit."
+      - "repro/run.py --force did not reach the stage scripts: build_uypydj_cache.py skips existing outputs and had no --force, so a forced rebuild silently reused what was on disk.  Stages now declare a force_flag and run.py appends it."
   stage_graph_defects_fixed:
     - "temp_factor declared rpcwby_ecm.csv but ecm_temp_factor.py reads mendeley_ecm.csv"
     - "no stage produced rpcwby_ecm.csv or mendeley_ecm.csv (added)"

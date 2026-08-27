@@ -1,0 +1,95 @@
+# raw-to-result rebuild, 2026-08-27
+#
+# The full pipeline was rebuilt from the raw archives (30 stages, tier 1-5,
+# --force) and the resulting tables compared cell by cell against the ones
+# committed at 816e9c4.
+
+run:
+  stages: 30
+  wall_clock_h: 3.2
+  recorded_estimate_h: 13.4
+  note: "the per-stage minutes in stages.py are stale and pessimistic on this machine"
+
+result:
+  differing_numeric_cells: 235
+  tables_affected: 10
+  relative_change_median_pct: 0.0729
+  relative_change_p95_pct: 0.6072
+  relative_change_max_pct: 6.2500
+
+unchanged_exactly:
+  - "safety.csv lambda for A8, both directions and both horizons (0.470, 0.679, 0.553, 0.561)"
+  - "safety.csv usable current for A8 (55.8, 56.6, 57.8, 70.3 %)"
+  - "ladder.csv usable current for A3 and A8"
+  - "soh.csv in full - the SOH arm does not touch the trim cache"
+  - "mcu.csv, pack.csv, soc_perturb.csv, end_to_end.csv, external_a8.csv"
+
+cause: >
+  Not nondeterminism.  sop_trim_dataset.py carries the drive-defect
+  exclusion added in sec 33.4; the shipped cache predates it.  Section 33.4
+  states this explicitly - "rebuilding the dataset next time picks it up
+  automatically" - and predicts the exact numbers a rebuild would give.
+
+prediction_confirmed:
+  source: "docs/sop_hybrid_spec.md sec 33.4, the defects-excluded (v3) column"
+  predicted_discharge_mV: 62.78
+  observed_discharge_mV: 62.78
+  predicted_charge_mV: 36.70
+  observed_charge_mV: 36.70
+
+concentration:
+  boost_negpulse_column_cells: 24
+  note: >
+    The movement concentrates in the BOOST_NEGPULSE column, the one cell
+    sec 33.4 identified as carrying the defective drive files.  The other
+    five cells move too because leave-one-cell-out puts BOOST_NEGPULSE's
+    corrected data into their training sets - which sec 33.4 also predicted.
+
+largest_movers:
+  - table: alpha.csv
+    column: alpha_slow
+    committed: 0.32
+    rebuilt: 0.34
+    rel_pct: 6.250
+  - table: voltage.csv
+    column: CC
+    committed: 67.61
+    rebuilt: 69.3
+    rel_pct: 2.500
+  - table: voltage.csv
+    column: CC
+    committed: 58.26
+    rebuilt: 59.23
+    rel_pct: 1.665
+  - table: ladder.csv
+    column: rmse_A
+    committed: 4.72
+    rebuilt: 4.77
+    rel_pct: 1.059
+  - table: safety_strict_percell_oracle.csv
+    column: worst_A
+    committed: 0.386
+    rebuilt: 0.383
+    rel_pct: 0.777
+  - table: safety_strict_percell_oracle.csv
+    column: worst_A
+    committed: 0.13
+    rebuilt: 0.131
+    rel_pct: 0.769
+
+alpha_slow_note: >
+  The single largest relative move, alpha_slow 0.32 -> 0.34 (6.25 %), is one
+  step of the np.linspace(0, 1, 51) grid that fit_alpha searches.  It is a
+  grid quantum, not a measurement drift.
+
+decision: AUTHOR DECISION REQUIRED
+decision_detail: >
+  Section 33.4 decided to keep the pre-fix cache because the deployment
+  metrics do not move and 38 verified numbers stood on it.  This rebuild
+  confirms the deployment metrics still do not move.  The audit therefore
+  restored the committed artifacts rather than silently switching which
+  numbers the paper reports.  Adopting the rebuilt set is defensible and
+  arguably more correct - the defect exclusion is the right processing -
+  but it would change seven published voltage RMSE values and the spec
+  tables in sec 32.2 and 32.6 that quote them.  That is the author's call.
+rebuilt_artifacts: "../preserved/rawrebuild_output/rebuilt_artifacts.tar.gz"
