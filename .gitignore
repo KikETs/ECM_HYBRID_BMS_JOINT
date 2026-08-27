@@ -64,3 +64,12 @@ mcu/parity_simd
 # pre-audit copies kept locally for diffing
 env/*.orig
 env/*.csv.orig
+# Audit: sequence-model and adaptive-ECM baseline run dirs (rebuilt by
+# repro/run_sop_seq_baselines.py); predictions only, no unique artifact.
+analysis/runs_trim_lstm*/
+analysis/runs_trim_gru*/
+analysis/runs_trim_ffrls*/
+# Deployment fit: keep the weights, not the 9 MB of predictions.
+analysis/runs_trim_*_deploy/pred_*.npz
+# Audit: cache_t is a symlink to the local 2.5 GB drive cache.
+analysis/cache_t

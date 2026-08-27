@@ -1,0 +1,42 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Applies to: the derived data, result tables, figures and prose documentation
+in this repository — specifically analysis/results/, docs/, manifests/,
+.paper_state/, REPRODUCE.md, DATA.md, README.md and the results_fig_*.png
+files. The source code is under the MIT License; see LICENSE.
+
+Full text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+## Upstream attribution
+
+This repository contains work derived from three datasets. Two of them are
+themselves CC BY 4.0, which carries an attribution requirement that passes
+through to anything derived from them. Cite all three:
+
+  Kollmeyer, P. J., & da Silva Duque, J. "Battery Aging Dataset for 15
+  Minute Fast Charging of Samsung 30T Cells." Borealis (McMaster University
+  Dataverse). doi:10.5683/SP3/UYPYDJ
+  — Licence not stated in the dataset readme; confirm terms with the
+    depositor before redistributing anything derived from it.
+
+  Chen, J., Emadi, A., & Kollmeyer, P. "Battery State-of-power Measurement
+  Dataset — Samsung 30T 3Ah, BYD Blade 135Ah, A123 APR18650M1A 1.1Ah, Tesla
+  Panasonic 4.8Ah." Borealis. doi:10.5683/SP3/RPCWBY
+  — CC BY 4.0.
+
+  Kollmeyer, P., & Skells, M. "Samsung INR21700 30T 3Ah Li-ion Battery Data."
+  Mendeley Data, v2. doi:10.17632/9xyvy2njj3.2
+  — CC BY 4.0.
+
+No raw data from any of these is redistributed here; see DATA.md and
+manifests/raw_data.yaml.
+
+## Methods reproduced from publications
+
+  Chen, J., Yao, Q., Kollmeyer, P., Vidal, C., Naguib, M., Panchal, S., &
+  Emadi, A. (2026). "Battery state-of-power estimation: A machine learning
+  battery model with numerical searching approach." Journal of Energy
+  Storage, 175, 123023. doi:10.1016/j.est.2026.123023 — CC BY-NC 4.0.
+  Their constant-power binary search is reimplemented in
+  repro/run_chen2026_baseline.py. Their LSTM battery model is not
+  reproduced. Note the NC clause on that article.

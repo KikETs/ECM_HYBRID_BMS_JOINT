@@ -93,8 +93,39 @@ soh_arm:
     status: VERIFIED
     detail: "soh.csv had no producer at all.  repro/run_soh_table.py now regenerates it byte-identically from results/soh_pred.npz."
   ablations:
-    status: EVIDENCE REQUIRED
-    detail: "voltage-only / residual-only / window length / charge coverage / update cadence ablations not run."
+    status: VERIFIED
+    producer: "python3 repro/run_soh_ablations.py"
+    artifact: "analysis/results/tables/soh_ablations.csv"
+    representation: >
+      dQ/dV (shipped), time-per-voltage-bin, and both concatenated are
+      indistinguishable under ridge: 0.0094 / 0.0096 / 0.0095 pooled.  They
+      are two views of the same curve.  The choice of representation is not
+      load-bearing and should not be presented as one.
+    single_feature_baseline: >
+      The 3.6-3.7 V band-crossing time alone gives 0.0261, reproducing the
+      0.0254 the dataset docstring cites.  The full 64-bin curve is 2.8x
+      better, so the curve representation IS worth something over the single
+      band - that part of the design does hold.
+    window: >
+      The full 3.55-4.05 V window is needed.  The low-voltage 48 of 64 bins
+      (3.55-3.92 V) gives 0.0132 and the high-voltage 48 gives 0.0169,
+      against 0.0094 for the whole window.  This qualifies the docstring's
+      claim that "the signal sits at the low-voltage end": the low end is
+      the better half, but neither half alone reaches the whole.
+    charge_coverage: >
+      Read as coverage, a car delivering only the first 25 % of the window
+      (3.55-3.67 V) gives 0.0141 and the first 12 % gives 0.0226.
+    update_cadence: >
+      Refreshing every characterisation gives 0.0095; every 2nd 0.0108;
+      every 4th 0.0157; every 8th 0.0302.  Characterisations are every 30
+      cycles, so a refresh every ~120 cycles roughly doubles the error.
+    cnn_recipe_check: >
+      The ablation CNN reproduces the shipped model to 0.0134 against
+      soh.csv's 0.0135 once it mirrors soh_cnn.train_fold exactly (mini-batch
+      32 plus the MultiStepLR).  A first version used a full-batch loop and
+      scored 0.0166, which would have made the CNN column look worse for
+      reasons unrelated to the ablation.  Ridge still beats it on every
+      input block.
 
 soc_arm:
   headline_number:
@@ -248,14 +279,41 @@ sop_baselines:
 
 
 external_validation:
-  status: NOT_FOUND
+  status: VERIFIED_PROCESSED
   detail: >
-    The only external artifact, analysis/sop_rpcwby_eval.csv, has columns
-    holdout,sheet,cell,cycle,SOH,SOC,T_C,I_meas_A,I_pred_A,P_meas_W,P_pred_W,
-    g_temp,v_pre — no trim, no k_f/k_s.  It is a PHYSICS-ONLY evaluation.
-    The frozen A8 has never been scored outside UYPYDJ.
-  do_not: "Do not present Test#3 physics-only results as A8 external validation."
-  path_exists: "analysis/rpcwby_us06_trim.py extracts trim features from RPCWBY US06; it was not run for the adopted model."
+    The frozen A8 is now scored outside UYPYDJ.  RPCWBY Test#2 is the only
+    sheet in either archive carrying a drive cycle (US06) and SOP
+    measurements on the SAME cell, which is what a trim indexed on preceding
+    drive history needs.  14 characterisations x 12 blocks of US06 features
+    were extracted, the frozen A8 weights applied (max over the 12 blocks,
+    the deployed convention), and the result run through Chen 2026's
+    constant-power search under Test#2's own limits (2.55-4.15 V,
+    30 A / -15 A, tau = 10 s).  375 SOP rows, 10 and 25 C, SOH 0.98 to 0.80.
+  frozen: >
+    Nothing was refitted.  A8 weights and lambda are the UYPYDJ values.  No
+    feature, aggregation or tolerance was chosen after seeing an RPCWBY
+    number.  All six leave-one-cell-out folds were run - RPCWBY is external
+    to every one - so the fold spread states how much the answer depends on
+    which fold happens to ship.
+  result_watts:
+    charge: "A0 8.36 -> A8 7.21 RMSE (-14 %); bias +3.44 -> +2.52..+3.03; fold spread 6.78-8.07"
+    discharge: "A0 2.25 -> A8 3.65 RMSE (+62 %); bias +0.05 -> -1.61..-2.11; fold spread 3.44-3.85"
+    optimism: "discharge 51.2 % -> 20.7 %; charge 43.1 % -> 44.0 %"
+  finding: >
+    The trim transfers, and the two directions transfer differently.  On
+    charge it improves both accuracy and bias.  On discharge it costs 1.4 W
+    of RMSE and buys a sign flip: the bias goes from +0.05 W to about -2 W,
+    so the model becomes conservative, and the fraction of rows where it
+    over-predicts falls from 51 % to 21 %.  On RMSE that is worse; on the
+    adoption criterion this project actually uses - safety, not RMSE - it is
+    the direction that counts.  Report both and let the criterion decide.
+  limits:
+    coverage: "1,656 of 4,356 model calls (38 %) fell outside the pooled surface hull and are excluded."
+    temperature: "Test#2 is 10 and 25 C only.  It says nothing about the cold behaviour run_chen2026_baseline.py measured on Test#3."
+    single_cell: "One external cell, one laboratory.  Not a population."
+  producer: "python3 analysis/rpcwby_us06_trim.py --test 2 && python3 repro/run_external_a8.py"
+  artifact: "analysis/results/tables/external_a8.csv"
+  do_not: "Do not present Test#3 physics-only results as A8 external validation; that is a different experiment."
 
 mcu_deployment:
   header_firmware_mismatch:
@@ -280,13 +338,29 @@ mcu_deployment:
     detail: "repro/stages.py ran ; the exporter had no --rung argument and exited with argparse error 2.  The exporter's own defaults pointed at runs_trim_v2 (A3)."
     action: "--rung added and cross-checked against the directory; defaults moved to the adopted A8 directories."
   deployment_model:
-    status: AUTHOR DECISION REQUIRED
+    status: VERIFIED
     detail: >
-      The exported weights are still the leave-one-cell-out fold that
-      excluded CC (--holdout CC), not a fit on all six cells.  A shipped
-      model should be trained on everything by a pre-declared recipe.
-      export_mcu_tables.py --deployment now refuses to export until an
-      all-cell fit (model_A*_ALL.pt) exists.  Training it is not done.
+      The shipping model is now fitted on all six cells, by a recipe declared
+      before it was fitted: the SAME rung, epochs, lr, seeds and lam as the
+      leave-one-cell-out folds that were validated, differing only in that no
+      cell is held out (sop_trim.py --deployment, written into separate
+      runs_trim_a8*_deploy directories so it cannot contaminate the LOCO
+      artifacts).  The ECM pool it is exported against is likewise all-cell
+      (ecm_pool.build("ALL")); previously no such pool existed and the
+      exporter had to borrow one leave-one-out surface.
+    fit: "discharge 87.24 -> 60.61 mV (+30.5 %) on 63,108 rows; charge 50.66 -> 35.86 mV (+29.2 %) on 46,848"
+    no_heldout_score: >
+      By construction this fit has no held-out score.  Every validated number
+      stays the LOCO folds.  Nothing is scored on the ALL pool - the guard in
+      ecm_pool.build says so in the source.
+    binary_evidence: >
+      The flashed image contains the all-cell weight 0.2105654 and NOT the
+      LOCO-CC fold value 0.2146806 nor the A3 value 0.2283459.
+    timing_unchanged: >
+      Re-measured after flashing: FULL 50.52 us median against 50.44 for the
+      LOCO header, SOLVE 44.00 against 43.98.  Changing which weights ship
+      does not change the timing, which is what the array shapes predict.
+    parity: "PASS on the deployment header, max relative difference 1.3e-06 over 3000 states."
   parameter_count_language:
     status: VERIFIED
     detail: >
@@ -313,13 +387,27 @@ mcu_deployment:
     status: VERIFIED
     detail: "mcu.csv had no producer; repro/run_mcu_table.py now reduces the board CSV to it."
   serial_protocol:
-    status: PARTIAL
+    status: VERIFIED
     detail: >
-      sec 33.3 and 33.7 record that an unknown command is silently ignored
-      and its 73-byte body is reinterpreted as commands, which returns a
-      plausible wrong value instead of an error.  Still unfixed in the
-      firmware; no NACK, no length validation, no CRC.
-    status_of_fix: EVIDENCE REQUIRED
+      Fixed and confirmed on the board.  CEMA_Protocol_Loop used to fall
+      through in silence on an unrecognised opcode, so the 72-byte body that
+      followed was read back as a stream of command bytes and a valid byte
+      inside it produced a plausible response to a command that was never
+      handled.  sec 33.7 hit this while probing whether FEAT had been
+      compiled out and got 32 bytes back from a binary that provably did not
+      contain it.
+    fix: >
+      An else branch now drains SOP_WIRE_BYTES and replies with
+      iters = SOP_NACK_UNKNOWN_CMD (0xFFFFFFFE) and the rejected opcode
+      echoed in `cycles`, so a host can tell "not supported" from "wrong
+      answer".  Costs 32 bytes of flash.
+    measured: >
+      Flashed and probed: opcodes 0x7F and 0x00 both return a 32-byte NACK
+      with the correct magic and the opcode echoed.  bench_sop.py still runs
+      unchanged on the same firmware.
+    still_open:
+      - "No CRC on the wire."
+      - "No length field; the body length is implied by the opcode."
 
 pack:
   status: PARTIAL

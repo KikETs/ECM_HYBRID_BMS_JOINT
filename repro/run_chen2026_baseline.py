@@ -112,15 +112,23 @@ class OutOfHull(Exception):
     """
 
 
-def params(surf, soc, soh, cur, T):
+def params(surf, soc, soh, cur, T, kf=1.0, ks=1.0):
+    """2RC parameters, optionally scaled by the trim's branch multipliers.
+
+    kf scales the fast branch (R0, R1) and ks the slow branch (R2), which is
+    the same split eval_sop_test3.r_eff uses:
+        kf * (R0 + R1 * (1 - exp(-tau/t1))) + ks * R2 * (1 - exp(-tau/t2))
+    """
     th = surf.theta(soc, soh, cur, T)
     if not bool(np.atleast_1d(th['in_hull'])[0]):
         raise OutOfHull()
-    return tuple(float(th[k][0])
-                 for k in ('R0', 'R1', 'tau1', 'R2', 'tau2'))
+    R0, R1, t1, R2, t2 = (float(th[k][0])
+                          for k in ('R0', 'R1', 'tau1', 'R2', 'tau2'))
+    return kf * R0, kf * R1, t1, ks * R2, t2
 
 
-def simulate_power(surf, soc0, soh, P, T, L, ocv_fn):
+def simulate_power(surf, soc0, soh, P, T, L, ocv_fn, kf=1.0, ks=1.0,
+                   sign=-1.0, v_stop=0.05):
     """Run L seconds at constant discharge power P > 0.  Returns (V_L, I_L).
 
     The RC states are propagated, not recomputed from scratch each step.
@@ -141,17 +149,17 @@ def simulate_power(surf, soc0, soh, P, T, L, ocv_fn):
         ocv, m_half = ocv_fn(soc)
         if not np.isfinite(ocv):
             raise OutOfHull()
-        I = -P / max(ocv - m_half, 1e-3)
+        I = sign * P / max(ocv - m_half, 1e-3)
         R0 = R1 = t1 = R2 = t2 = np.nan
         for _ in range(60):                       # fixed point on (3)
-            R0, R1, t1, R2, t2 = params(surf, soc, soh, I, T)
+            R0, R1, t1, R2, t2 = params(surf, soc, soh, I, T, kf, ks)
             a1, a2 = np.exp(-DT / t1), np.exp(-DT / t2)
             nv1 = v1 * a1 + I * R1 * (1 - a1)
             nv2 = v2 * a2 + I * R2 * (1 - a2)
             V = ocv - m_half + I * R0 + nv1 + nv2
-            if not np.isfinite(V) or V <= 0.05:
+            if not np.isfinite(V) or V <= v_stop:
                 return np.nan, np.nan             # genuine voltage collapse
-            I_new = -P / V
+            I_new = sign * P / V
             if abs(I_new - I) < 1e-6:
                 I = I_new
                 break
@@ -160,7 +168,7 @@ def simulate_power(surf, soc0, soh, P, T, L, ocv_fn):
         v1 = v1 * a1 + I * R1 * (1 - a1)
         v2 = v2 * a2 + I * R2 * (1 - a2)
         soc = soc + I * DT / 3600.0 / Q_NOM       # eq (4), I < 0 discharges
-        if soc <= 0.0:
+        if soc <= 0.0 or soc >= 1.5:
             return np.nan, np.nan
     return V, I
 

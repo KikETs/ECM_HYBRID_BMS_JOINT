@@ -103,7 +103,10 @@ redistributed.
 
 ## Licence
 
-`[AUTHOR DECISION REQUIRED]` — no LICENSE file is present and none was
-chosen by the audit. Note that the Mendeley source is CC BY 4.0, which
-carries attribution obligations for anything derived from it; the two
-Borealis datasets' terms are unconfirmed (`manifests/raw_data.yaml`).
+Code is [MIT](LICENSE). Derived data, tables, figures and documentation are
+[CC BY 4.0](LICENSE-DATA).
+
+Two of the three upstream datasets (RPCWBY, Mendeley) are CC BY 4.0, so
+attribution passes through to anything derived from them — the citations are
+in [LICENSE-DATA](LICENSE-DATA). UYPYDJ states no licence in its readme;
+confirm with the depositor before redistributing derived material.

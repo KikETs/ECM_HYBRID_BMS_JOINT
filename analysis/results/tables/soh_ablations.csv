@@ -1,0 +1,23 @@
+axis,variant,rmse_pooled,rmse_worst_cell,worst_cell,note
+"input, ridge",dQ/dV only (shipped),0.0094,0.0130,BOOST_REST,
+"input, ridge",time-per-bin only,0.0096,0.0131,BOOST_REST,
+"input, ridge",dQ/dV + time-per-bin,0.0095,0.0134,BOOST_REST,
+"input, ridge",single 3.6-3.7 V band time,0.0261,0.0438,BOOST_REST,
+"input, CNN",dQ/dV only (shipped),0.0134,0.0291,BOOST_REST,
+"input, CNN",time-per-bin only,0.0132,0.0284,BOOST_REST,
+"input, CNN",dQ/dV + time-per-bin,0.0141,0.0310,BOOST_REST,
+window (low end),"8/64 bins, 3.55-3.61 V",0.0226,0.0296,BOOST_REST,12% coverage
+window (low end),"16/64 bins, 3.55-3.67 V",0.0141,0.0202,BOOST_REST,25% coverage
+window (low end),"24/64 bins, 3.55-3.74 V",0.0143,0.0199,BOOST_REST,38% coverage
+window (low end),"32/64 bins, 3.55-3.80 V",0.0144,0.0195,BOOST_REST,50% coverage
+window (low end),"48/64 bins, 3.55-3.92 V",0.0132,0.0178,BOOST_NEGPULSE,75% coverage
+window (low end),"64/64 bins, 3.55-4.05 V",0.0094,0.0130,BOOST_REST,100% coverage
+window (high end),"last 8/64 bins, 3.99-4.05 V",0.0311,0.0363,CC,12% coverage
+window (high end),"last 16/64 bins, 3.92-4.05 V",0.0194,0.0264,BOOST_REST,25% coverage
+window (high end),"last 24/64 bins, 3.86-4.05 V",0.0172,0.0213,BOOST_REST,38% coverage
+window (high end),"last 32/64 bins, 3.80-4.05 V",0.0176,0.0233,BOOST_REST,50% coverage
+window (high end),"last 48/64 bins, 3.67-4.05 V",0.0169,0.0201,BOOST_REST,75% coverage
+update cadence,refresh every 1 characterisation(s),0.0095,0.0139,BOOST_REST,alpha fixed at 1.0
+update cadence,refresh every 2 characterisation(s),0.0108,0.0142,BOOST_NEGPULSE,alpha fixed at 1.0
+update cadence,refresh every 4 characterisation(s),0.0157,0.0188,CC_CELL2,alpha fixed at 1.0
+update cadence,refresh every 8 characterisation(s),0.0302,0.0360,BOOST_REST,alpha fixed at 1.0

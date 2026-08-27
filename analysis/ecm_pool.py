@@ -233,7 +233,11 @@ def build(holdout, outdir=POOL_DIR, ecm_csv=ECM_CSV, ocv_csv=OCV_CSV,
           key_mode="rank", extra_csv=None, align=False):
     e, o = _rows(ecm_csv), _rows(ocv_csv)
     cells = sorted({r["cell"] for r in e})
-    if holdout not in cells:
+    # "ALL" is the deployment pool: nothing is held out.  Every validated
+    # number comes from a per-cell holdout surface, and must; this one exists
+    # only so the model that ships is not blinded to a sixth of the evidence.
+    # It has no held-out score by construction - do not score anything on it.
+    if holdout != "ALL" and holdout not in cells:
         raise ValueError(f"unknown cell {holdout}; have {cells}")
     keep = [c for c in cells if c != holdout]
     if extra_csv and align:

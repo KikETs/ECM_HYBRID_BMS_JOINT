@@ -209,6 +209,11 @@ def main():
                          "not have to retrain to get them")
     ap.add_argument("--quantile", type=float, default=0.0,
                     help="0 = symmetric Huber (the shipped trim). >0 trains a\n                         pinball loss so |dV_hat| targets that quantile of\n                         |dV|, which sets the SOP exceedance rate to 1-q")
+    ap.add_argument("--deployment", action="store_true",
+                    help="Fit ONE model on all six cells and save it as "
+                         "model_<rung>_ALL.pt, for export to the board.  "
+                         "Same recipe as the LOCO folds; no cell held out, "
+                         "so it carries no held-out score of its own.")
     ap.add_argument("--rung", default="A4",
                     help="A0 no model | A3 linear | A4 MLP | A5 strip residual "
                          "channels | A7 tie k_s=k_f | A8 dR_fast 하나만 "
@@ -225,14 +230,31 @@ def main():
     ablate = (list(range(6)) if args.rung == "A5"
               else (list(range(1, 12)) if args.rung == "A8" else None))
 
+    if args.deployment:
+        # The shipping model, by a recipe declared before it is fitted: the
+        # SAME rung, epochs, lr, seeds and lam as the leave-one-cell-out
+        # folds that were validated, differing only in that no cell is held
+        # out.  Exporting one LOCO fold as the deployed model - which is
+        # what export_mcu_tables.py --holdout used to do - ships a model
+        # deliberately blinded to a sixth of the evidence.
+        #
+        # It has no held-out score by construction.  The validated numbers
+        # are the LOCO folds; this fit is what gets flashed.
+        cells = {"ALL": {k: np.concatenate([cells[o][k] for o in cells])
+                         for k in ("X", "Y", "NOM", "I", "cycle", "SOC",
+                                   "SOH", "rank", "exc")}}
+
     print(f"rung {args.rung}   셀 {list(cells)}   {dev}")
     print(f"  {'홀드아웃':<22} {'n':>6} {'A0(k=1)':>9} {'모델':>9} {'개선':>8} "
           f"{'k_f 중앙':>9} {'k_s 중앙':>9} {'상한포화':>8}")
     summ = []
     for c in cells:
         te = cells[c]
-        tr = {k: np.concatenate([cells[o][k] for o in cells if o != c])
-              for k in ("X", "Y", "NOM", "I")}
+        if args.deployment:
+            tr = {k: te[k] for k in ("X", "Y", "NOM", "I")}
+        else:
+            tr = {k: np.concatenate([cells[o][k] for o in cells if o != c])
+                  for k in ("X", "Y", "NOM", "I")}
         base = dv_hat(torch.ones(len(te["I"])), torch.ones(len(te["I"])),
                       torch.from_numpy(te["NOM"]),
                       torch.from_numpy(te["I"])).numpy()

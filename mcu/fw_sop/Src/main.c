@@ -57,6 +57,11 @@
 #define SOP_CMD_EKF2     0x6BU  /* 완전 2RC + float32 */
 #define SOP_CMD_EKF2_F64 0x6CU  /* 완전 2RC + double */
 #define SOP_CMD_FEAT_A8  0x6DU  /* 특징 갱신 1 샘플 — dR_fast 하나만 (채택) */
+
+/* iters values that are status codes, not iteration counts.  0xFFFFFFFF is
+ * already used for "body receive failed"; this one says the opcode itself
+ * was not recognised, and `cycles` carries the opcode that was rejected. */
+#define SOP_NACK_UNKNOWN_CMD 0xFFFFFFFEU
 #define STACK_PATTERN 0xA5A5A5A5UL
 /* USER CODE END PD */
 
@@ -355,6 +360,27 @@ static void CEMA_Protocol_Loop(void)
              )
     {
       SOP_Handle(command);
+    }
+    else
+    {
+      /* An unknown command must be answered, not dropped.  The loop used to
+       * fall through here in silence, so the 72-byte body that followed was
+       * read back as a stream of command bytes; a valid byte inside it then
+       * produced a plausible response to a command that was never handled.
+       * sec 33.7 hit exactly this while probing whether FEAT had been
+       * compiled out of the deployment build, and got 32 bytes back from a
+       * binary that provably did not contain it.
+       *
+       * Drain the body, then NACK with the rejected opcode echoed back so a
+       * host can tell "not supported" from "wrong answer". */
+      uint8_t drain[SOP_WIRE_BYTES];
+      SOP_Response nack = {0};
+      (void)HAL_UART_Receive(&huart3, drain, (uint16_t)sizeof(drain), 500U);
+      nack.magic = CEMA_PROTOCOL_MAGIC;
+      nack.iters = SOP_NACK_UNKNOWN_CMD;
+      nack.cycles = (uint32_t)command;
+      nack.stack_highwater_bytes = (uint32_t)sizeof(drain);
+      UART_Send(&nack, (uint16_t)sizeof(nack));
     }
   }
 }

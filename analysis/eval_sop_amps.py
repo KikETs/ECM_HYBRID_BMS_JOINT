@@ -238,6 +238,30 @@ def solve_I(surf, soc, soh, v_pre, v_min, tau, kf, ks, I0=-25.0, iters=12,
 SOH_EST = None
 
 
+SOC_EST = None
+
+
+def soc_estimated(cell, cycle, soc_true):
+    """SOC as the EKF would have it when this pulse happens.
+
+    SOC_EST maps a cell to (cycles, soc_error).  The error is the adopted
+    EKF's terminal SOC error on the drive run nearest at or before this
+    characterisation, which is the state the filter carries into the pulse.
+    Nearest-preceding, not interpolated: a filter does not average its
+    future.
+    """
+    if SOC_EST is None:
+        return soc_true
+    key = f"{cell}_cycle"
+    if key not in SOC_EST:
+        return soc_true
+    cc, ee = SOC_EST[key], SOC_EST[f"{cell}_err"]
+    prior = cc <= cycle
+    e = (float(ee[prior][int(np.argmax(cc[prior]))]) if prior.any()
+         else float(ee[int(np.argmin(cc))]))
+    return float(np.clip(soc_true + e, 0.02, 1.0))
+
+
 def soh_estimated(cell, cycle, fallback):
     """직전 충전에서 추정한 SOH.  그 앞이 없으면 가장 이른 예측."""
     key = f"{cell}_cycle"
@@ -286,6 +310,10 @@ def main():
     ap.add_argument("--trim-rung", default=None,
                     help="트림 run 디렉터리 안의 rung 이름 (A3, A8, ...). "
                          "생략하면 디렉터리에서 자동으로 찾는다.")
+    ap.add_argument("--soc-est", default=None,
+                    help="npz of per-cell (cycle, SOC error) from the SOC "
+                         "EKF.  Feeds ESTIMATED SOC into the inversion "
+                         "instead of the label's true SOC.")
     ap.add_argument("--soh-est", default=None,
                     help="SOH 팔의 예측 npz.  주면 라벨의 정답 SOH 대신 "
                          "직전 충전에서 추정한 SOH 를 반전에 넣는다. "
@@ -297,6 +325,8 @@ def main():
         globals()["TRIM_RUNG"] = args.trim_rung
     if args.soh_est:
         globals()["SOH_EST"] = dict(np.load(args.soh_est))
+    if args.soc_est:
+        globals()["SOC_EST"] = dict(np.load(args.soc_est))
     globals()["USE_DTAU"] = args.interp == "dtau"
     if args.label is None:
         args.label = LABEL_CHG if charge else LABEL
@@ -321,6 +351,8 @@ def main():
         soc = float(r["SOC"]); soh = float(r["SOH"])
         if SOH_EST is not None:
             soh = soh_estimated(c, int(r["cycle"]), soh)
+        if SOC_EST is not None:
+            soc = soc_estimated(c, cyc, soc)
         v_pre = float(r["V_pre_V"]); v_min = float(r["V_min_V"])
         tau = float(r["tau_s"])
         mkey = "I_star_lin2hi_A" if args.label_fit == "lin2hi" else "I_star_lin4_A"
