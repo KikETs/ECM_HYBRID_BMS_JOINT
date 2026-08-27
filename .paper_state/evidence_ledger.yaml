@@ -34,8 +34,13 @@ data_provenance:
     status: VERIFIED
     detail: "SHA-256 and byte size for all 30 top-level archive/doc files in manifests/raw_data.yaml"
   licences:
-    status: SOURCE REQUIRED
-    detail: "Mendeley is CC BY 4.0.  UYPYDJ and RPCWBY licence terms are not stated in the local readmes; confirm on the Borealis landing pages before redistributing anything derived."
+    status: PARTIAL
+    detail: >
+      Mendeley is CC BY 4.0 (landing page).  RPCWBY is CC BY 4.0, stated in
+      its own readme ("Licenses/restrictions: CC BY 4.0") - confirmed
+      2026-08-27, so the earlier SOURCE REQUIRED is withdrawn for it.
+      UYPYDJ remains SOURCE REQUIRED: its readme states no licence and the
+      Borealis landing page was not reachable from this host.
 
 safety_calibration:
   claim: "lambda calibrated leave-one-cell-out to zero exceedance"
@@ -162,17 +167,83 @@ sop_baselines:
     inference_cost: >
       The 38-41 us per-sample figures are GPU-side and are not an MCU
       claim.  No sequence model was ported to the board.
-  still_missing:
-    - claim: "Chen 2026 (doi 10.1016/j.est.2026.123023) LSTM voltage + numerical search"
-      status: SOURCE REQUIRED
-      blocker: >
-        Paywalled.  The DOI resolves to an Elsevier landing page that
-        returns no content to this host, and no preprint was found.
-        Reimplementing the method from its title would be inventing a
-        baseline and attributing it to those authors.
-    - claim: "frequency-dependent integer/fractional-order SOP (doi 10.1016/j.jpowsour.2023.234000)"
-      status: SOURCE REQUIRED
-      blocker: "Same paywall situation; also needs EIS data this project does not have."
+  chen2026:
+    status: PARTIAL
+    reference: >
+      Chen, Yao, Kollmeyer, Vidal, Naguib, Panchal, Emadi, J. Energy Storage
+      175 (2026) 123023, CC BY-NC 4.0.  Obtained 2026-08-27; the earlier
+      SOURCE REQUIRED is withdrawn.
+    what_was_implemented: >
+      Their SOP estimator is a model-agnostic binary search on constant
+      power (Fig. 1b, eqs 3-4, Table 3 tolerances), which the paper states
+      can wrap LSTM, ECM or EM.  That search is implemented exactly and
+      driven by this project's pooled 2RC ECM, on RPCWBY Test#3 tau = 10 s
+      across all six temperatures, in watts - their metric and units.
+      Their LSTM battery model (about 1.05 M parameters, 4.1 MB) was not
+      retrained.
+    deviation: >
+      Their LSTM consumes power directly so eq (3) is one forward pass.  An
+      ECM is written in current, so V and I are coupled at constant power
+      and eq (3) becomes a fixed point, relaxed here to 1e-6 V.  The 2RC
+      states are propagated across the pulse.
+    result_rmse_W:
+      minus20: "36.19  (bias +29.17 against a measured mean of 30.8 W)"
+      minus10: "17.48  (bias +14.79 against 54.4 W)"
+      zero: "2.59"
+      ten: "4.19"
+      twentyfive: "1.67"
+      forty: "3.29"
+      overall: "16.77 over the 47 of 84 rows the pooled surface can answer"
+    chen_published_for_reference: "LSTM 1.87 W overall; their ECM 6.17 W; their EM 7.94 W"
+    finding: >
+      At 0 C and above, this project's ECM under their search framework
+      lands at 1.7-4.2 W, the same order as their published ECM.  At -20 and
+      -10 C it is badly optimistic: it predicts nearly double the measured
+      power (+29.2 W bias on a 30.8 W mean).  That is direct external
+      evidence for the generalization limit recorded in
+      manifests/generalization_scope.yaml - the temperature factor is
+      borrowed from the Mendeley sweep on a different, un-aged cell, and
+      there is no aged low-temperature data anywhere in this project.
+    coverage_limit: >
+      Only 47 of 84 rows are estimable at all; the pooled surface hull does
+      not reach SOC <= 0.1 (18 rows) or SOC >= 0.95 (6 rows).  Chen report
+      all rows, so the overall column is not a like-for-like total.
+    not_a_controlled_comparison: >
+      Their Table 3 sets V_min = 3.2 V, chosen so voltage-limited cases
+      appear.  The Test#3 measurements were taken at 2.55-4.1 V per the
+      dataset readme, and Table 5's test split ("10 s SOP measurement with
+      UDDS discharge profile") does not identify a single sheet in the
+      archive.  The run here uses Test#3's documented limits.  Their numbers
+      are quoted as published and are indicative only.
+    harness_bugs_found_and_fixed: >
+      The first version of this harness gave 30.28 W overall.  Three defects
+      in it, not in their method: the RC states were recomputed per step
+      instead of propagated, so ten one-second steps produced the
+      one-second voltage; out-of-hull was conflated with limit-violation, so
+      the bisection walked down to 10.8 W against a 107.4 W measurement at
+      the SOC = 1.000 hull edge; and a stray `soh and T` expression.
+    producer: "python3 repro/run_chen2026_baseline.py"
+    artifact: "analysis/results/tables/chen2026_baseline.csv"
+
+  lai2024_fractional_order:
+    status: EVIDENCE REQUIRED
+    reference: >
+      Lai, Yuan, Tang, Zheng, Zhu, Sun, Zhou, Gao, J. Power Sources 594
+      (2024) 234000.  Obtained 2026-08-27; the earlier SOURCE REQUIRED is
+      withdrawn - the blocker is data, not access.
+    blocker: >
+      The frequency-dependent integer-order model is identified in the
+      FREQUENCY domain from electrochemical impedance spectroscopy, by a
+      random-search pseudo-gradient-descent fit to a target EIS trajectory
+      (their sec 2.5).  Its three sub-models are then weighted by the
+      single-sided amplitude spectrum of the current trajectory (eqs 19a-c).
+      Neither UYPYDJ nor RPCWBY contains any EIS measurement - the RPCWBY
+      readme lists only time-domain HPPC, drive-cycle and SOP tests.  There
+      is nothing to identify the model from.
+    what_would_unblock_it: >
+      EIS sweeps on the same cells at the same aging states.  Substituting a
+      time-domain fit would not be their method and must not be labelled as
+      such.
   producer: "python3 repro/run_sop_seq_baselines.py --data cache/trim --suffix '' (and --data cache/trim_chg --suffix _chg), then repro/run_evals.py and repro/run_safety_strict.py --method lstm|gru|ffrls"
 
 

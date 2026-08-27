@@ -55,13 +55,13 @@ UYPYDJ:
       sha256: "7bd935c50024afabd287b29b36df8ace298867461f03398ed5d03db13979772d"
 
 RPCWBY:
-  title: "Samsung INR21700-30T direct SOP measurement dataset (Chen et al.)"
+  title: "Battery State-of-power Measurement Dataset - Samsung 30T 3Ah, BYD Blade 135Ah, A123 APR18650M1A 1.1Ah, Tesla Panasonic 4.8Ah"
   doi: "10.5683/SP3/RPCWBY"
   repo: "Borealis (McMaster University Dataverse)"
-  version: "[SOURCE REQUIRED] landing page not reachable from this host (redirect loop); confirm version string"
+  version: "readme generated 2026-04-08 by Junran Chen; no numbered version in the readme"
   cell: "Samsung INR21700-30T"
-  authors: "Chen et al."
-  license: "[SOURCE REQUIRED]"
+  authors: "Junran Chen; Ali Emadi; Phillip Kollmeyer"
+  license: "CC BY 4.0 (stated in raw/RPCWBY/0_readme.txt, confirmed 2026-08-27)"
   role: "external validation only; never used for training, calibration or selection"
   code_path: "raw/RPCWBY/"
   verified: "2026-08-27"

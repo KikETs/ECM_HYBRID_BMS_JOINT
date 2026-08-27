@@ -89,6 +89,11 @@ redistributed.
   single-cell evaluation rows and models no inter-cell correlation, shared
   current trajectory, thermal gradient or imbalance. There is no pack
   hardware and no HIL behind any number here.
+- External, cross-laboratory: run on RPCWBY Test#3 (Chen et al.'s own SOP
+  measurement set) through their published constant-power binary search, the
+  physics model scores 1.7–4.2 W RMSE at 0–40 °C but 17.5 W at −10 °C and
+  36.2 W at −20 °C, over-predicting available power by +29 W against a 30.8 W
+  mean. Aged low-temperature behaviour is outside what this data supports.
 - The SOP targets are **pulse-derived current-limit references**, not direct
   SOP measurements. A 30 A cycler cannot reach the discharge current the
   cell can take, so I\* is projected from a fit through four HPPC rates:

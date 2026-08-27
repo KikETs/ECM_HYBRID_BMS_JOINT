@@ -1943,6 +1943,38 @@
         "usable_worst_pct": "[EVIDENCE REQUIRED]",
         "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
       }
+    },
+    "chen2026_baseline.csv": {
+      "producer": "python3 repro/run_chen2026_baseline.py",
+      "stage": "chen2026",
+      "required": false,
+      "rows": 84,
+      "columns": [
+        "temp_set_C",
+        "temp_cell_C",
+        "SOC",
+        "SOP_meas_W",
+        "SOP_pred_W",
+        "error_W",
+        "limit_hit"
+      ],
+      "numeric": [
+        "temp_set_C",
+        "temp_cell_C",
+        "SOC",
+        "SOP_meas_W",
+        "SOP_pred_W",
+        "error_W"
+      ],
+      "units": {
+        "temp_set_C": "C",
+        "temp_cell_C": "C",
+        "SOC": "fraction",
+        "SOP_meas_W": "W",
+        "SOP_pred_W": "W",
+        "error_W": "W"
+      },
+      "note": "RPCWBY Test#3 external validation, physics-only model under Chen 2026 search"
     }
   },
   "completeness": {

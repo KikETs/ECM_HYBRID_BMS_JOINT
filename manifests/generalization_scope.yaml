@@ -21,6 +21,13 @@ axes:
     detail: "SOH 1.00 down to ~0.68, ~1400-1900 cycles per cell."
   temperature:
     status: NOT COVERED
+    measured_consequence: >
+      Quantified on 2026-08-27.  Running Chen 2026's constant-power search
+      with this project's pooled ECM on RPCWBY Test#3 (tau = 10 s) gives an
+      SOP RMSE of 1.7-4.2 W at 0, 10, 25 and 40 C but 17.5 W at -10 C and
+      36.2 W at -20 C, with a +29.2 W optimistic bias against a 30.8 W
+      measured mean.  The model predicts roughly double the available power
+      at -20 C.  See analysis/results/tables/chen2026_baseline.csv.
     detail: >
       UYPYDJ is 25 C throughout.  The 28 files logging ~0 C are a sensor
       fault, not a cold test - HPPC resistance in those cycles sits on the
@@ -31,11 +38,16 @@ axes:
       Do not claim aged low-temperature generalization.  Temperature and
       aging are never crossed in this evidence.
   laboratory:
-    status: EVIDENCE REQUIRED
+    status: PARTIAL
     detail: >
-      RPCWBY is a second dataset but the only external evaluation in the
-      repository (sop_rpcwby_eval.csv) is physics-only - it has no trim
-      columns.  The frozen A8 has not been scored outside UYPYDJ.
+      The physics-only model is now scored on RPCWBY Test#3 across six
+      temperatures under Chen 2026's search framework (see
+      chen2026_baseline.csv), which is a real cross-laboratory result for
+      the ECM.  The frozen A8 trim is still NOT scored outside UYPYDJ:
+      Test#3 carries no paired drive cycle, so no drive features exist to
+      feed the trim.  Test#2 (US06 plus SOP in one cell) is the only sheet
+      that could support it, via analysis/rpcwby_us06_trim.py, which has
+      not been run for the adopted model.
   drive_profile:
     status: PARTIAL
     detail: >
