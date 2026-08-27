@@ -68,8 +68,19 @@ def usable():
         open(os.path.join(TABLES, 'ladder.csv'), encoding='utf-8')))
     out = {}
     for r in rows:
-        out.setdefault((r['direction'], r['tau_s']), {})[
-            KEY[r['method']]] = float(r['usable_pct'])
+        # ladder.csv carries more methods than this figure draws (the audit
+        # added LSTM, GRU and FFRLS).  Skip what ORDER does not name instead
+        # of raising: a new row in the table must never break the figure.
+        k = KEY.get(r['method'])
+        if k is None:
+            continue
+        out.setdefault((r['direction'], r['tau_s']), {})[k] = \
+            float(r['usable_pct'])
+    missing = {s: [k for k in ORDER if k not in v] for s, v in out.items()}
+    bad = {s: m for s, m in missing.items() if m}
+    if bad:
+        raise SystemExit(f'  ladder.csv is missing rows the figure needs: '
+                         f'{bad}')
     return out
 
 

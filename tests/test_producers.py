@@ -107,3 +107,19 @@ def test_no_table_is_empty():
         rows = list(csv.DictReader(open(os.path.join(TABLES, f),
                                         encoding='utf-8')))
         assert rows, f'{f} has a header but no rows'
+
+
+def test_figures_survive_extra_ladder_rows():
+    """Adding a method to ladder.csv must not break the figure.
+
+    It did: fig_ladder indexed a dict by every method name in the table and
+    raised KeyError the moment the audit added LSTM, GRU and FFRLS rows.
+    """
+    rc, out, err = run([os.path.join('repro', 'fig_ladder.py')])
+    assert rc == 0, f'fig_ladder.py failed:\n{out}\n{err}'
+
+
+def test_every_figure_renders():
+    for f in ('fig_ladder.py', 'fig_soh_traj.py'):
+        rc, out, err = run([os.path.join('repro', f)])
+        assert rc == 0, f'{f} failed:\n{out}\n{err}'
