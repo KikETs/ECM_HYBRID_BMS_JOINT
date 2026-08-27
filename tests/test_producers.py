@@ -123,3 +123,31 @@ def test_every_figure_renders():
     for f in ('fig_ladder.py', 'fig_soh_traj.py'):
         rc, out, err = run([os.path.join('repro', f)])
         assert rc == 0, f'{f} failed:\n{out}\n{err}'
+
+
+def test_paper_state_yaml_has_no_duplicate_top_level_keys():
+    """A spliced edit duplicated `pack` and `end_to_end` in the ledger.
+
+    YAML silently keeps the last of a duplicate key, so a stale block
+    overrode a corrected one and the status read EVIDENCE REQUIRED after the
+    work was done.  Nothing warned.
+    """
+    import re
+    for name in ('evidence_ledger.yaml', 'paper_map.yaml', 'freeze_log.yaml'):
+        p = os.path.join(ROOT, '.paper_state', name)
+        if not os.path.exists(p):
+            continue
+        keys = [m.group(1) for m in
+                (re.match(r'^([A-Za-z_]+):', ln)
+                 for ln in open(p, encoding='utf-8'))
+                if m]
+        dupes = {k for k in keys if keys.count(k) > 1}
+        assert not dupes, f'{name} has duplicate top-level keys: {dupes}'
+
+
+def test_paper_state_yaml_parses():
+    yaml = pytest.importorskip('yaml')
+    for name in ('evidence_ledger.yaml', 'paper_map.yaml', 'freeze_log.yaml'):
+        p = os.path.join(ROOT, '.paper_state', name)
+        if os.path.exists(p):
+            assert yaml.safe_load(open(p, encoding='utf-8'))

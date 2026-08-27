@@ -514,21 +514,6 @@ end_to_end:
     Quote the both-estimated row as the system number, or say plainly which
     oracle the quoted number still uses.
 
-pack:
-  status: PARTIAL
-  detail: "analysis/sop_pack2.py resamples single-cell rows within condition groups.  No pack hardware, no HIL."
-  language: "pack-level simulation sensitivity, never pack validation"
-  missing_effects: "inter-cell error correlation beyond the condition bin, shared current trajectory, thermal gradient, SOC imbalance"
-
-end_to_end:
-  status: EVIDENCE REQUIRED
-  detail: >
-    The four-way grid (oracle/estimated SOH x oracle/estimated SOC feeding
-    SOP) is not run.  The estimated-SOH arm exists (a8_*_est evaluations) but
-    SOC is never fed forward into the SOP inversion, and stale-estimate,
-    missing-observation, sensor-noise and fallback behaviour are not modelled.
-  do_not: "Do not call the current chain fully end-to-end; ground-truth SOC still reaches the SOP input."
-
 reproduction_pipeline:
   stored_table_verification:
     status: VERIFIED
@@ -553,5 +538,19 @@ reproduction_pipeline:
     - "run_extras.py read cold-check input from /tmp"
 
 licence:
-  status: AUTHOR DECISION REQUIRED
-  detail: "No LICENSE file in the repository.  Not chosen by the audit."
+  status: VERIFIED
+  detail: >
+    Chosen by the author on 2026-08-27: MIT for the source code (LICENSE),
+    CC BY 4.0 for the derived data, tables, figures and documentation
+    (LICENSE-DATA).  The upstream attribution chain is recorded there:
+    RPCWBY and Mendeley are both CC BY 4.0 and that obligation passes
+    through to anything derived from them.
+  remaining: >
+    UYPYDJ states no licence in its readme and the Borealis landing page was
+    not reachable from this host - see data_provenance.licences.  Confirm
+    with the depositor before redistributing material derived from it.
+  note_on_chen: >
+    The Chen 2026 article is CC BY-NC 4.0.  Only its search algorithm is
+    reimplemented, from the published equations, in
+    repro/run_chen2026_baseline.py; no text or figure is reproduced.  The NC
+    clause is noted in LICENSE-DATA.
