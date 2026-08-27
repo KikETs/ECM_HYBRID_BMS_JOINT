@@ -145,8 +145,47 @@ soc_arm:
       evaluated cell's own characterisation surface.  That is per-cell
       calibrated deployment, not leave-one-cell-out.  The wording must say so.
   baselines:
-    status: EVIDENCE REQUIRED
-    detail: "Coulomb counting and the adopted 2RC EKF are present.  1RC-EKF, UKF and adaptive/dual estimation are not run."
+    status: VERIFIED
+    producer: "python3 repro/run_soc_baselines.py"
+    artifact: "analysis/results/tables/soc_baselines.csv"
+    protocol: >
+      Same 36 drive runs, same causal sensor inputs, same ECM surfaces and
+      the same seven perturbation conditions as soc_perturb_bench.py.  The
+      UKF subclasses the EKF so both share the identical model functions and
+      only the filter algebra differs.
+    result_pct:
+      header: "undisturbed / mean over the six disturbances / mean over all seven / worst disturbance"
+      coulomb_counting: "0.125 / 6.892 / 5.926 / 10.390"
+      one_rc_ekf: "1.511 / 2.185 / 2.088 / 3.929"
+      two_rc_ekf_adopted: "1.509 / 2.140 / 2.050 / 3.773"
+      adaptive_r_ekf: "0.836 / 3.248 / 2.903 / 8.154"
+      dual_ekf_current_bias: "1.654 / 2.072 / 2.012 / 3.304"
+      ukf: "1.425 / 2.439 / 2.294 / 4.589"
+    findings:
+      dual_beats_adopted: >
+        The current-bias augmented filter is the best of the six on the
+        headline (2.072 vs the adopted 2.140) and clearly best in the worst
+        condition (3.304 vs 3.773, 12 % better).  Section 30.8 measured a
+        1.9 % gain and recommended leaving it off; on this wider comparison
+        it wins on both the mean and the tail.  Whether one extra state is
+        worth it is a deployment call, but "not worth it" is no longer what
+        the numbers say.
+      second_rc_branch_barely_matters: >
+        1RC is 2.185 against 2RC's 2.140 - a 2 % difference.  The second RC
+        branch buys almost nothing for SOC, which the paper should say
+        rather than presenting 2RC as necessary.
+      ukf_does_not_pay: >
+        The UKF is worse than the EKF (2.439 vs 2.140) at roughly seven
+        times the compute.  The model is not nonlinear enough over one
+        sample to repay sigma-point propagation.  A clean negative result.
+      adaptive_r_reproduces_the_circular_trap: >
+        Best of all six undisturbed (0.836) and third worst under
+        disturbance (3.248).  This independently reproduces section 30.4:
+        the residual-spread rule wins on the circular benchmark and loses on
+        the honest one.
+      aggregation: >
+        mean6 and mean7 differ for every estimator, which is the same
+        discrepancy soc_headline.csv records.
 
 sop_baselines:
   status: PARTIAL
@@ -408,6 +447,72 @@ mcu_deployment:
     still_open:
       - "No CRC on the wire."
       - "No length field; the body length is implied by the opcode."
+
+pack:
+  status: PARTIAL
+  detail: "analysis/sop_pack2.py resamples single-cell rows within condition groups.  No pack hardware, no HIL."
+  language: "pack-level simulation sensitivity, never pack validation"
+  missing_effects: "inter-cell error correlation beyond the condition bin, shared current trajectory, thermal gradient, SOC imbalance"
+
+end_to_end:
+  status: VERIFIED_PROCESSED
+  producer: "python3 repro/run_end_to_end.py"
+  artifact: "analysis/results/tables/end_to_end.csv"
+  method: >
+    The four corners of oracle/estimated SOH x oracle/estimated SOC feeding
+    the SOP inversion, each scored under strict per-cell held-out lambda.
+    SOC estimation is carried in as the adopted EKF's terminal SOC error on
+    the drive run nearest at or before each characterisation - the error the
+    filter is actually carrying when the pulse happens.  Measured errors:
+    mean -0.0096, largest 0.0463 over the 36 runs.
+  result_discharge_tau10:
+    oracle_oracle: "1 exceedance / 491 rows, lambda 0.683, usable 69.6 %"
+    est_soh_oracle_soc: "1 / 514, lambda 0.659, usable 68.5 %"
+    oracle_soh_est_soc: "20 / 455, lambda 0.589, usable 66.9 %"
+    est_est: "26 / 488, lambda 0.573, usable 65.5 %, worst cell 51.4 %"
+  result_charge_tau10:
+    oracle_oracle: "1 / 2461, lambda 0.586, usable 59.5 %"
+    est_soh_oracle_soc: "3 / 2443, lambda 0.553, usable 57.7 %"
+    oracle_soh_est_soc: "1 / 2449, lambda 0.404, usable 41.4 %"
+    est_est: "6 / 2430, lambda 0.526, usable 56.3 %"
+  finding_soc_dominates: >
+    Estimated SOC costs far more than estimated SOH.  Swapping SOH for its
+    estimate costs about 1 %p of usable current and leaves exceedance where
+    it was.  Swapping SOC for its estimate takes discharge exceedance from
+    1 of 491 rows to 20 of 455 - roughly 4 % - and on charge collapses
+    lambda from 0.586 to 0.404 and usable current from 59.5 % to 41.4 %.
+    The paper's SOP numbers are all computed on the label's own SOC, and
+    that is the assumption carrying the most weight.
+  finding_exceedance_survives_recalibration: >
+    Those 20 and 26 exceedances are AFTER lambda is refitted per held-out
+    cell on the same estimated-SOC data.  Recalibration does not absorb the
+    SOC error; it is not a bias the safety factor can price out.
+  unexplained: >
+    On charge the both-estimated corner (56.3 % usable, lambda 0.526) is
+    BETTER than oracle-SOH-plus-estimated-SOC (41.4 %, lambda 0.404).  The
+    ordering is not monotone.  A plausible reading is that the SOH and SOC
+    errors displace the operating point on the resistance surface in
+    opposing directions and partially cancel, but that is a guess and was
+    not tested.  Do not build an argument on this row.
+  limits:
+    soc_error_granularity: >
+      soc_runs.pkl holds 6 drive runs per cell while SOP labels span far
+      more cycles, so one measured EKF error is reused across a stretch of
+      cycles.  Real errors at real SOC and aging states, but coarse in cycle.
+    row_counts_move: >
+      n changes between corners (491 / 514 / 455 / 488 on discharge) because
+      shifting SOC moves rows in and out of the trustworthy-label and hull
+      filters.  The corners are therefore not scored on identical row sets.
+    not_modelled:
+      - "sensor dropout and fallback logic"
+      - "temperature-sensor error"
+      - "drift between the pulse and the end of the preceding drive"
+      - "a missing partial-charge observation is covered only through the SOH estimate itself, not as a separate condition"
+  claim_limit: >
+    The both-estimated corner is the only one a vehicle can execute.  Every
+    row above it still receives a ground truth the vehicle does not have.
+    Quote the both-estimated row as the system number, or say plainly which
+    oracle the quoted number still uses.
 
 pack:
   status: PARTIAL

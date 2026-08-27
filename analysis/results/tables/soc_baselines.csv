@@ -1,0 +1,43 @@
+estimator,perturbation,rmse_mean_pct,rmse_worst_run_pct
+coulomb counting,no distortion,0.125,0.483
+coulomb counting,initial SOC +10 %p,9.953,10.143
+coulomb counting,initial SOC -10 %p,10.032,10.370
+coulomb counting,current offset +0.10 A,10.319,10.862
+coulomb counting,current offset -0.10 A,10.390,11.156
+coulomb counting,current gain +1 %,0.368,0.713
+coulomb counting,current gain -1 %,0.293,0.513
+1RC-EKF,no distortion,1.511,3.851
+1RC-EKF,initial SOC +10 %p,1.577,3.880
+1RC-EKF,initial SOC -10 %p,1.569,3.865
+1RC-EKF,current offset +0.10 A,2.964,6.715
+1RC-EKF,current offset -0.10 A,3.929,6.916
+1RC-EKF,current gain +1 %,1.554,3.776
+1RC-EKF,current gain -1 %,1.514,3.935
+2RC-EKF (adopted),no distortion,1.509,3.855
+2RC-EKF (adopted),initial SOC +10 %p,1.575,3.884
+2RC-EKF (adopted),initial SOC -10 %p,1.567,3.869
+2RC-EKF (adopted),current offset +0.10 A,2.864,6.286
+2RC-EKF (adopted),current offset -0.10 A,3.773,6.650
+2RC-EKF (adopted),current gain +1 %,1.551,3.780
+2RC-EKF (adopted),current gain -1 %,1.513,3.939
+adaptive-R EKF,no distortion,0.836,3.816
+adaptive-R EKF,initial SOC +10 %p,1.044,4.260
+adaptive-R EKF,initial SOC -10 %p,0.939,3.521
+adaptive-R EKF,current offset +0.10 A,8.154,10.175
+adaptive-R EKF,current offset -0.10 A,7.561,9.047
+adaptive-R EKF,current gain +1 %,0.980,3.659
+adaptive-R EKF,current gain -1 %,0.809,3.984
+dual EKF (current bias),no distortion,1.654,4.294
+dual EKF (current bias),initial SOC +10 %p,1.714,4.313
+dual EKF (current bias),initial SOC -10 %p,1.707,4.297
+dual EKF (current bias),current offset +0.10 A,2.354,5.389
+dual EKF (current bias),current offset -0.10 A,3.304,6.328
+dual EKF (current bias),current gain +1 %,1.685,4.264
+dual EKF (current bias),current gain -1 %,1.666,4.291
+UKF,no distortion,1.425,4.359
+UKF,initial SOC +10 %p,1.429,3.858
+UKF,initial SOC -10 %p,1.530,4.696
+UKF,current offset +0.10 A,4.197,8.190
+UKF,current offset -0.10 A,4.589,7.690
+UKF,current gain +1 %,1.456,4.427
+UKF,current gain -1 %,1.430,4.792

@@ -524,6 +524,105 @@
       "value": 0.98,
       "tol": 0.02,
       "source": "sec 33.5 — same check on the second cell"
+    },
+    {
+      "id": "soc.base.adopted.ibias",
+      "table": "soc_baselines.csv",
+      "where": {
+        "estimator": "2RC-EKF (adopted)",
+        "perturbation": "current offset +0.10 A"
+      },
+      "column": "rmse_mean_pct",
+      "value": 2.864,
+      "tol": 0.01,
+      "source": "sec 30.4 cross-check — the same number soc_perturb.csv reports, via a different producer"
+    },
+    {
+      "id": "soc.base.dual.mean_ibias",
+      "table": "soc_baselines.csv",
+      "where": {
+        "estimator": "dual EKF (current bias)",
+        "perturbation": "current offset +0.10 A"
+      },
+      "column": "rmse_mean_pct",
+      "value": 2.353,
+      "tol": 0.3,
+      "source": "audit — the current-bias state is what the offset condition rewards"
+    },
+    {
+      "id": "soc.base.ukf.undist",
+      "table": "soc_baselines.csv",
+      "where": {
+        "estimator": "UKF",
+        "perturbation": "no distortion"
+      },
+      "column": "rmse_mean_pct",
+      "value": 1.425,
+      "tol": 0.05,
+      "source": "audit — the UKF does not pay for itself on this model"
+    },
+    {
+      "id": "soh.abl.dqdv",
+      "table": "soh_ablations.csv",
+      "where": {
+        "axis": "input, ridge",
+        "variant": "dQ/dV only (shipped)"
+      },
+      "column": "rmse_pooled",
+      "value": 0.0094,
+      "tol": 0.0003,
+      "source": "audit — ridge on the shipped input"
+    },
+    {
+      "id": "soh.abl.time_only",
+      "table": "soh_ablations.csv",
+      "where": {
+        "axis": "input, ridge",
+        "variant": "time-per-bin only"
+      },
+      "column": "rmse_pooled",
+      "value": 0.0096,
+      "tol": 0.0003,
+      "source": "audit — the representation is not load-bearing"
+    },
+    {
+      "id": "e2e.disch.oracle.usable",
+      "table": "end_to_end.csv",
+      "where": {
+        "condition": "oracle SOH + oracle SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "usable_mean_pct",
+      "value": 69.61,
+      "tol": 0.05,
+      "source": "audit — the corner the paper reports"
+    },
+    {
+      "id": "e2e.disch.est_est.usable",
+      "table": "end_to_end.csv",
+      "where": {
+        "condition": "estimated SOH + estimated SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "usable_mean_pct",
+      "value": 65.54,
+      "tol": 0.05,
+      "source": "audit — the only corner a vehicle can execute"
+    },
+    {
+      "id": "e2e.disch.est_est.exceed",
+      "table": "end_to_end.csv",
+      "where": {
+        "condition": "estimated SOH + estimated SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "exceed",
+      "value": 26,
+      "tol": 0,
+      "source": "audit — exceedance survives per-cell recalibration"
     }
   ],
   "tables": {
@@ -1975,20 +2074,133 @@
         "error_W": "W"
       },
       "note": "RPCWBY Test#3 external validation, physics-only model under Chen 2026 search"
+    },
+    "end_to_end.csv": {
+      "producer": "python3 repro/run_end_to_end.py",
+      "stage": "end_to_end",
+      "required": true,
+      "rows": 16,
+      "columns": [
+        "condition",
+        "direction",
+        "tau_s",
+        "n_rows",
+        "exceed",
+        "lambda_median",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "worst_cell"
+      ],
+      "numeric": [
+        "tau_s",
+        "n_rows",
+        "exceed",
+        "lambda_median",
+        "usable_mean_pct",
+        "usable_worst_pct"
+      ],
+      "units": {}
+    },
+    "external_a8.csv": {
+      "rows": 4356,
+      "columns": [
+        "fold",
+        "direction",
+        "cycle",
+        "SOH",
+        "temp_C",
+        "SOC",
+        "SOP_meas_W",
+        "SOP_A0_W",
+        "SOP_A8_W",
+        "k_f",
+        "k_s",
+        "limit_hit"
+      ],
+      "numeric": [
+        "cycle",
+        "SOH",
+        "temp_C",
+        "SOC",
+        "SOP_meas_W",
+        "SOP_A0_W",
+        "SOP_A8_W",
+        "k_f",
+        "k_s"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_external_a8.py",
+      "stage": "external_a8",
+      "units": {
+        "cycle": "[EVIDENCE REQUIRED]",
+        "SOH": "[EVIDENCE REQUIRED]",
+        "temp_C": "[EVIDENCE REQUIRED]",
+        "SOC": "[EVIDENCE REQUIRED]",
+        "SOP_meas_W": "[EVIDENCE REQUIRED]",
+        "SOP_A0_W": "[EVIDENCE REQUIRED]",
+        "SOP_A8_W": "[EVIDENCE REQUIRED]",
+        "k_f": "[EVIDENCE REQUIRED]",
+        "k_s": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "soc_baselines.csv": {
+      "rows": 42,
+      "columns": [
+        "estimator",
+        "perturbation",
+        "rmse_mean_pct",
+        "rmse_worst_run_pct"
+      ],
+      "numeric": [
+        "rmse_mean_pct",
+        "rmse_worst_run_pct"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_soc_baselines.py",
+      "stage": "soc_baselines",
+      "units": {
+        "rmse_mean_pct": "[EVIDENCE REQUIRED]",
+        "rmse_worst_run_pct": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "soh_ablations.csv": {
+      "rows": 22,
+      "columns": [
+        "axis",
+        "variant",
+        "rmse_pooled",
+        "rmse_worst_cell",
+        "worst_cell",
+        "note"
+      ],
+      "numeric": [
+        "rmse_pooled",
+        "rmse_worst_cell"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_soh_ablations.py",
+      "stage": "soh_ablations",
+      "units": {
+        "rmse_pooled": "[EVIDENCE REQUIRED]",
+        "rmse_worst_cell": "[EVIDENCE REQUIRED]"
+      }
     }
   },
   "completeness": {
-    "total_checks": 43,
+    "total_checks": 51,
     "checks_per_table": {
       "alpha.csv": 2,
       "cold_ratio.csv": 2,
       "correlation.csv": 1,
+      "end_to_end.csv": 3,
       "ladder.csv": 9,
       "mcu.csv": 4,
       "pack.csv": 3,
       "safety.csv": 6,
+      "soc_baselines.csv": 3,
       "soc_perturb.csv": 4,
       "soh.csv": 2,
+      "soh_ablations.csv": 2,
       "voltage.csv": 10
     },
     "check_ids": [
@@ -1997,6 +2209,9 @@
       "cold.BOOST.ratio",
       "cold.CC.ratio",
       "corr.disc.10s",
+      "e2e.disch.est_est.exceed",
+      "e2e.disch.est_est.usable",
+      "e2e.disch.oracle.usable",
       "ladder.chg.A3",
       "ladder.chg.A8_beats_A3",
       "ladder.chg.rls_bound_loses",
@@ -2015,8 +2230,13 @@
       "pack.disc.10s.exceed.est.N192",
       "soc.adopted.ibias",
       "soc.adopted.no_perturb",
+      "soc.base.adopted.ibias",
+      "soc.base.dual.mean_ibias",
+      "soc.base.ukf.undist",
       "soc.open_loop.ibias",
       "soc.open_loop.no_perturb",
+      "soh.abl.dqdv",
+      "soh.abl.time_only",
       "soh.bias",
       "soh.rmse",
       "sop.chg.10s.lambda",

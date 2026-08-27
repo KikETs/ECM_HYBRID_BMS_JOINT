@@ -87,10 +87,56 @@ claims:
     status: PARTIAL
     replacement: "four effective deployed coefficients; the header ships a 12-input layer (50 floats)."
 
-  - id: external.rpcwby
-    text: "external validation on RPCWBY"
-    status: NOT_FOUND
-    note: "The only external artifact is physics-only.  A8 has never been scored outside UYPYDJ."
+  - id: external.rpcwby.a8
+    text: "external validation of the frozen A8 on RPCWBY"
+    table: external_a8.csv
+    producer: "python3 analysis/rpcwby_us06_trim.py --test 2 && python3 repro/run_external_a8.py"
+    ledger: external_validation
+    status: VERIFIED_PROCESSED
+    note: >
+      Test#2, 375 rows, 10 and 25 C, all six frozen folds.  Charge: RMSE
+      8.36 -> 7.21 W.  Discharge: RMSE 2.25 -> 3.65 W but optimism 51.2 ->
+      20.7 % and the bias flips negative.  State both; do not quote only the
+      one that flatters.
+
+  - id: external.rpcwby.physics
+    text: "cross-temperature behaviour of the physics model on RPCWBY"
+    table: chen2026_baseline.csv
+    producer: "python3 repro/run_chen2026_baseline.py"
+    status: VERIFIED_PROCESSED
+    note: >
+      Test#3 under Chen 2026's search: 1.7-4.2 W at 0-40 C, 17.5 W at -10 C,
+      36.2 W at -20 C with a +29 W optimistic bias.  A separate experiment
+      from the A8 validation above - do not merge them.
+
+  - id: sop.seq_baselines
+    text: "a larger sequence model would do better"
+    table: ladder.csv + safety_strict_{lstm,gru,ffrls}_oracle.csv
+    producer: "python3 repro/run_sop_seq_baselines.py"
+    status: CONTRADICTED
+    note: >
+      LSTM and GRU are 28-30 % better than A8 on voltage RMSE and
+      statistically indistinguishable on usable current - all four bootstrap
+      intervals overlap - with 1,100-1,500x the parameters.
+
+  - id: soh.representation
+    text: "the dQ/dV representation is what makes the SOH arm work"
+    table: soh_ablations.csv
+    producer: "python3 repro/run_soh_ablations.py"
+    status: CONTRADICTED
+    note: >
+      dQ/dV, time-per-bin and both are 0.0094 / 0.0096 / 0.0095.  The
+      representation is not load-bearing.  The full voltage window is.
+
+  - id: mcu.deployment_fit
+    text: "the shipped model"
+    ledger: mcu_deployment.deployment_model
+    status: VERIFIED
+    note: >
+      Now an all-cell fit by a pre-declared recipe, exported against an
+      all-cell ECM pool, flashed and confirmed in the binary.  It carries no
+      held-out score by construction; the validated numbers stay the LOCO
+      folds.
 
   - id: pack.no_exceedance
     text: "zero pack exceedance for N = 1..192"

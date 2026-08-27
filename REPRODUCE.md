@@ -136,6 +136,14 @@ Full rebuild: about 830 minutes (14 h). `~` marks an estimate that was never tim
 | `corr.disc.10s` | -0.608 | `correlation.csv` | sec 31.4 |
 | `cold.BOOST.ratio` | 0.98 | `cold_ratio.csv` | sec 33.5 |
 | `cold.CC.ratio` | 0.98 | `cold_ratio.csv` | sec 33.5 |
+| `soc.base.adopted.ibias` | 2.864 | `soc_baselines.csv` | sec 30.4 cross-check |
+| `soc.base.dual.mean_ibias` | 2.353 | `soc_baselines.csv` | audit |
+| `soc.base.ukf.undist` | 1.425 | `soc_baselines.csv` | audit |
+| `soh.abl.dqdv` | 0.0094 | `soh_ablations.csv` | audit |
+| `soh.abl.time_only` | 0.0096 | `soh_ablations.csv` | audit |
+| `e2e.disch.oracle.usable` | 69.61 | `end_to_end.csv` | audit |
+| `e2e.disch.est_est.usable` | 65.54 | `end_to_end.csv` | audit |
+| `e2e.disch.est_est.exceed` | 26 | `end_to_end.csv` | audit |
 
 ## Cells
 

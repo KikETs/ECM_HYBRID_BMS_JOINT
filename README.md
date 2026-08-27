@@ -29,9 +29,10 @@ text 142 060 B = 138.7 KiB. Measured on a NUCLEO-H563ZI after flashing;
 > several numbers above and contradicted others. `.paper_state/paper_map.yaml`
 > lists every claim with its status; `.paper_state/evidence_ledger.yaml`
 > carries the measurements. In particular: ridge regression beats the SOH
-> CNN on the same splits, the frozen A8 has never been validated outside
-> UYPYDJ, and 78 % of the discharge SOP labels are extrapolated rather than
-> measured.
+> CNN on the same splits; 78 % of the discharge SOP labels are extrapolated
+> rather than measured; and the numbers above are computed on the label's
+> own SOC, which turns out to be the assumption carrying the most weight —
+> see below.
 
 ## Reproduce
 
@@ -89,6 +90,22 @@ redistributed.
   single-cell evaluation rows and models no inter-cell correlation, shared
   current trajectory, thermal gradient or imbalance. There is no pack
   hardware and no HIL behind any number here.
+- **Feeding the chain its own estimates changes the answer, and SOC is the
+  term that matters.** Swapping oracle SOH for the SOH arm's own estimate
+  costs about 1 %p of usable current. Swapping oracle SOC for the EKF's
+  estimate takes discharge exceedance from 1 of 491 rows to 20 of 455 and,
+  on charge, collapses λ from 0.586 to 0.404 and usable current from 59.5 %
+  to 41.4 %. Those exceedances survive refitting λ per held-out cell on the
+  same data, so they are not a bias the safety factor can price out. The
+  both-estimated corner — the only one a vehicle can execute — gives 65.5 %
+  discharge and 56.3 % charge at τ = 10 s
+  (`analysis/results/tables/end_to_end.csv`).
+- External validation of the **frozen** A8 on RPCWBY Test#2 (US06 drive plus
+  SOP on the same cell, 375 rows, 10 and 25 °C, nothing refitted): on charge
+  RMSE improves 8.36 → 7.21 W; on discharge RMSE worsens 2.25 → 3.65 W while
+  the bias flips from +0.05 to about −2 W and over-prediction falls from
+  51 % of rows to 21 %. Worse on RMSE, better on the criterion this project
+  adopts by. Both belong in the paper.
 - External, cross-laboratory: run on RPCWBY Test#3 (Chen et al.'s own SOP
   measurement set) through their published constant-power binary search, the
   physics model scores 1.7–4.2 W RMSE at 0–40 °C but 17.5 W at −10 °C and
