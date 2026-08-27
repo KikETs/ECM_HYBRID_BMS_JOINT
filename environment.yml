@@ -1,0 +1,14 @@
+# 이 작업이 실제로 돈 환경.  버전을 고정한 이유는 아래 주의 참고.
+name: samsung30t
+channels: [conda-forge, pytorch, nvidia]
+dependencies:
+  - python=3.12
+  - numpy=2.*          # 주의: np.ptp(arr) 를 쓴다.  NumPy 2.0 에서
+                       # arr.ptp() 가 사라졌으므로 1.x 로 내리면 안 된다.
+  - scipy
+  - pytorch            # SOP 트림과 SOH CNN 학습에만 필요
+  - pytorch-cuda=12.*  # CPU 만 있어도 돈다 (느릴 뿐)
+  - pandas
+  - matplotlib
+  - py7zr              # UYPYDJ 의 zip/7z 를 푼다
+  - pip

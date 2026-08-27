@@ -1,0 +1,20 @@
+checkpoint: analysis/runs/lstm_ratio05_e1000.pt   (trained split: mixed->named)
+
+ T[C]       UDDS     HWFET      LA92      US06      mean
+  -20      30.10     27.38     26.74     34.24     29.61
+  -10      26.18     23.32     30.27     31.10     27.72
+    0      23.78     17.58     22.69     29.74     23.45
+   10      15.71     13.50     20.39     26.29     18.97
+   25      18.42     11.51     19.35     23.87     18.29
+   40      15.51     12.79     15.00     23.28     16.65
+ mean      21.62     17.68     22.41     28.09     22.45
+
+overall mean RMSE over 24 conditions: 22.45 mV
+reference paper (LSTM, same 24 conditions): 21.54 mV
+
+worst conditions
+   -20C US06   RMSE    34.24 mV   max |err|    239.7 mV
+   -10C US06   RMSE    31.10 mV   max |err|    330.0 mV
+   -10C LA92   RMSE    30.27 mV   max |err|    257.6 mV
+   -20C UDDS   RMSE    30.10 mV   max |err|    204.7 mV
+     0C US06   RMSE    29.74 mV   max |err|    390.7 mV

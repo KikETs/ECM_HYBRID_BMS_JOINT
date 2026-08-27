@@ -1,0 +1,20 @@
+checkpoint: /tmp/ckpt_ep340.pt   (trained split: mixed->named)
+
+ T[C]       UDDS     HWFET      LA92      US06      mean
+  -20      38.08     29.24     57.84     58.84     46.00
+  -10      34.80     27.63     43.11     46.38     37.98
+    0      27.84     23.71     41.82     45.14     34.63
+   10      25.64     16.98     41.78     40.59     31.25
+   25      25.83     26.19     45.39     35.97     33.34
+   40      36.49     16.21     25.05     44.21     30.49
+ mean      31.45     23.33     42.50     45.19     35.62
+
+overall mean RMSE over 24 conditions: 35.62 mV
+reference paper (LSTM, same 24 conditions): 21.54 mV
+
+worst conditions
+   -20C US06   RMSE    58.84 mV   max |err|    512.1 mV
+   -20C LA92   RMSE    57.84 mV   max |err|    430.0 mV
+   -10C US06   RMSE    46.38 mV   max |err|    384.3 mV
+    25C LA92   RMSE    45.39 mV   max |err|    629.5 mV
+     0C US06   RMSE    45.14 mV   max |err|    311.9 mV

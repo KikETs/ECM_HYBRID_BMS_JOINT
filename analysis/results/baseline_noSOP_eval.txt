@@ -1,0 +1,20 @@
+checkpoint: analysis/results/baseline_noSOP.pt   (trained split: mixed->named)
+
+ T[C]       UDDS     HWFET      LA92      US06      mean
+  -20      80.87     61.05     81.12     66.91     72.48
+  -10      61.87     45.75     63.00     66.01     59.15
+    0      39.75     36.39     50.69     56.99     45.96
+   10      25.75     35.85     45.03     48.78     38.86
+   25      24.40     21.05     30.53     43.50     29.87
+   40      21.15     17.10     27.61     45.88     27.94
+ mean      42.30     36.20     49.66     54.68     45.71
+
+overall mean RMSE over 24 conditions: 45.71 mV
+reference paper (LSTM, same 24 conditions): 21.54 mV
+
+worst conditions
+   -20C LA92   RMSE    81.12 mV   max |err|    363.1 mV
+   -20C UDDS   RMSE    80.87 mV   max |err|    512.8 mV
+   -20C US06   RMSE    66.91 mV   max |err|    384.1 mV
+   -10C US06   RMSE    66.01 mV   max |err|    491.8 mV
+   -10C LA92   RMSE    63.00 mV   max |err|    378.9 mV

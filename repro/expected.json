@@ -1,0 +1,519 @@
+{
+  "note": "Numbers cited in the paper and the table row each comes from. verify.py recomputes them; a mismatch means the paper is wrong.",
+  "generated": "2026-08-26",
+  "adopted_config": {
+    "trim": "A8 (dR_fast only, 4 parameters, 2 EW states)",
+    "trim_agg": "max",
+    "tolerance_A": {
+      "discharge": 0.0,
+      "charge": 0.5
+    },
+    "note": "The 0.5 A charge tolerance is the knee established in sec 25. Without it the published charge lambda cannot be reproduced."
+  },
+  "checks": [
+    {
+      "id": "sop.disc.10s.lambda",
+      "table": "safety.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "soh": "oracle"
+      },
+      "column": "lambda",
+      "value": 0.683,
+      "source": "sec 32.6 — discharge lambda, 10 s"
+    },
+    {
+      "id": "sop.disc.10s.usable",
+      "table": "safety.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "soh": "oracle"
+      },
+      "column": "usable_pct",
+      "value": 69.1,
+      "source": "sec 32.6 — usable current, discharge 10 s"
+    },
+    {
+      "id": "sop.chg.10s.lambda",
+      "table": "safety.csv",
+      "where": {
+        "direction": "charge",
+        "tau_s": "10.0",
+        "soh": "oracle"
+      },
+      "column": "lambda",
+      "value": 0.586,
+      "source": "sec 32.7 — charge lambda, 10 s"
+    },
+    {
+      "id": "sop.chg.10s.usable",
+      "table": "safety.csv",
+      "where": {
+        "direction": "charge",
+        "tau_s": "10.0",
+        "soh": "oracle"
+      },
+      "column": "usable_pct",
+      "value": 59.6,
+      "source": "sec 32.7 — usable current, charge 10 s"
+    },
+    {
+      "id": "sop.disc.10s.usable.est_soh",
+      "table": "safety.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "soh": "est"
+      },
+      "column": "usable_pct",
+      "value": 67.2,
+      "source": "sec 29 / 30.11 — estimated SOH, not oracle"
+    },
+    {
+      "id": "sop.chg.10s.usable.est_soh",
+      "table": "safety.csv",
+      "where": {
+        "direction": "charge",
+        "tau_s": "10.0",
+        "soh": "est"
+      },
+      "column": "usable_pct",
+      "value": 56.6,
+      "source": "sec 29 / 30.11 — estimated SOH, not oracle"
+    },
+    {
+      "id": "ladder.disc.A0",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "A0  보정 없음"
+      },
+      "column": "usable_pct",
+      "value": 59.3,
+      "source": "sec 32.5 — classical HPPC resistance table"
+    },
+    {
+      "id": "ladder.disc.direct",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "직접 대입"
+      },
+      "column": "usable_pct",
+      "value": 32.6,
+      "source": "sec 32.5 — raw RLS estimate is worse than no correction"
+    },
+    {
+      "id": "ladder.disc.shrink",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "축소 계수"
+      },
+      "column": "usable_pct",
+      "value": 62.4,
+      "source": "sec 32.5 — two-parameter transfer gain"
+    },
+    {
+      "id": "ladder.disc.A8",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "A8  dR_fast 하나"
+      },
+      "column": "usable_pct",
+      "value": 69.1,
+      "source": "sec 32.5 — adopted trim"
+    },
+    {
+      "id": "ladder.disc.A3",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "A3  12 특징"
+      },
+      "column": "usable_pct",
+      "value": 70.3,
+      "source": "sec 32.5 — 12-feature comparison"
+    },
+    {
+      "id": "ladder.disc.rls_bound",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "[상한] HPPC-RLS"
+      },
+      "column": "usable_pct",
+      "value": 71.1,
+      "source": "sec 32.5 — upper bound if the vehicle could run HPPC"
+    },
+    {
+      "id": "ladder.chg.A8_beats_A3",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "charge",
+        "tau_s": "10.0",
+        "method": "A8  dR_fast 하나"
+      },
+      "column": "usable_pct",
+      "value": 59.6,
+      "source": "sec 32.7 — 4 parameters beat 26 on charge"
+    },
+    {
+      "id": "ladder.chg.A3",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "charge",
+        "tau_s": "10.0",
+        "method": "A3  12 특징"
+      },
+      "column": "usable_pct",
+      "value": 57.9,
+      "source": "sec 32.7 — 12-feature comparison"
+    },
+    {
+      "id": "ladder.chg.rls_bound_loses",
+      "table": "ladder.csv",
+      "where": {
+        "direction": "charge",
+        "tau_s": "10.0",
+        "method": "[상한] HPPC-RLS"
+      },
+      "column": "usable_pct",
+      "value": 55.2,
+      "source": "sec 32.6 — best on voltage, fourth on current"
+    },
+    {
+      "id": "pack.disc.10s.exceed.N192",
+      "table": "pack.csv",
+      "where": {
+        "direction": "방전",
+        "tau_s": "10.0",
+        "soh": "정답",
+        "N": "192"
+      },
+      "column": "exceed_pct",
+      "value": 0.0,
+      "source": "sec 31.2 — zero exceedance after recalibration"
+    },
+    {
+      "id": "pack.disc.10s.exceed.est.N192",
+      "table": "pack.csv",
+      "where": {
+        "direction": "방전",
+        "tau_s": "10.0",
+        "soh": "추정",
+        "N": "192"
+      },
+      "column": "exceed_pct",
+      "value": 0.0,
+      "source": "sec 31.2 — same under estimated SOH"
+    },
+    {
+      "id": "pack.chg.10s.worst.N192",
+      "table": "pack.csv",
+      "where": {
+        "direction": "충전",
+        "tau_s": "10.0",
+        "soh": "정답",
+        "N": "192"
+      },
+      "column": "worst_A",
+      "value": 0.09,
+      "source": "sec 31.2 — within the 0.5 A charge tolerance",
+      "tol": 0.02
+    },
+    {
+      "id": "soc.adopted.no_perturb",
+      "table": "soc_perturb.csv",
+      "where": {
+        "config": "EKF 현재 채택 (게이트)",
+        "perturbation": "틀어짐 없음"
+      },
+      "column": "rmse_full_pct",
+      "value": 1.51,
+      "source": "sec 30.1 — circular benchmark, not the headline number",
+      "tol": 0.01
+    },
+    {
+      "id": "soc.open_loop.no_perturb",
+      "table": "soc_perturb.csv",
+      "where": {
+        "config": "순수 전류 적분",
+        "perturbation": "틀어짐 없음"
+      },
+      "column": "rmse_full_pct",
+      "value": 0.12,
+      "source": "sec 30.1 — not using voltage wins 12x; the circularity",
+      "tol": 0.01
+    },
+    {
+      "id": "soc.open_loop.ibias",
+      "table": "soc_perturb.csv",
+      "where": {
+        "config": "순수 전류 적분",
+        "perturbation": "전류 옵셋 +0.10 A"
+      },
+      "column": "rmse_full_pct",
+      "value": 10.32,
+      "source": "sec 30.4 — coulomb counting diverges once decoupled",
+      "tol": 0.02
+    },
+    {
+      "id": "soc.adopted.ibias",
+      "table": "soc_perturb.csv",
+      "where": {
+        "config": "EKF 현재 채택 (게이트)",
+        "perturbation": "전류 옵셋 +0.10 A"
+      },
+      "column": "rmse_full_pct",
+      "value": 2.86,
+      "source": "sec 30.4 — the only weakness of the adopted filter",
+      "tol": 0.02
+    },
+    {
+      "id": "volt.disc.A0",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "discharge",
+        "method": "A0"
+      },
+      "column": "rmse_mV",
+      "value": 85.36,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.disc.direct",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "discharge",
+        "method": "direct"
+      },
+      "column": "rmse_mV",
+      "value": 134.71,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.disc.shrink",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "discharge",
+        "method": "shrink"
+      },
+      "column": "rmse_mV",
+      "value": 69.1,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.disc.A8",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "discharge",
+        "method": "A8"
+      },
+      "column": "rmse_mV",
+      "value": 62.81,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.disc.A3",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "discharge",
+        "method": "A3"
+      },
+      "column": "rmse_mV",
+      "value": 58.76,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.disc.RLS",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "discharge",
+        "method": "RLS"
+      },
+      "column": "rmse_mV",
+      "value": 49.89,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.char.A0",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "charge",
+        "method": "A0"
+      },
+      "column": "rmse_mV",
+      "value": 49.9,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.char.A8",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "charge",
+        "method": "A8"
+      },
+      "column": "rmse_mV",
+      "value": 36.73,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.char.A3",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "charge",
+        "method": "A3"
+      },
+      "column": "rmse_mV",
+      "value": 34.13,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "volt.char.RLS",
+      "table": "voltage.csv",
+      "where": {
+        "direction": "charge",
+        "method": "RLS"
+      },
+      "column": "rmse_mV",
+      "value": 33.59,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+    },
+    {
+      "id": "mcu.feat",
+      "table": "mcu.csv",
+      "where": {
+        "stage": "FEAT"
+      },
+      "column": "median_us",
+      "value": 13.25,
+      "tol": 0.6,
+      "source": "sec 33.1 — A3 feature update"
+    },
+    {
+      "id": "mcu.feat_a8",
+      "table": "mcu.csv",
+      "where": {
+        "stage": "FEAT_A8"
+      },
+      "column": "median_us",
+      "value": 5.99,
+      "tol": 0.6,
+      "source": "sec 33.1 — adopted A8, 55% faster"
+    },
+    {
+      "id": "mcu.ekf",
+      "table": "mcu.csv",
+      "where": {
+        "stage": "EKF"
+      },
+      "column": "median_us",
+      "value": 7.1,
+      "tol": 0.6,
+      "source": "sec 33.2 — SOC EKF step"
+    },
+    {
+      "id": "mcu.full",
+      "table": "mcu.csv",
+      "where": {
+        "stage": "FULL"
+      },
+      "column": "median_us",
+      "value": 50.43,
+      "tol": 0.6,
+      "source": "sec 33.2 — one SOP inversion"
+    },
+    {
+      "id": "soh.rmse",
+      "table": "soh.csv",
+      "where": {
+        "cell": "ALL"
+      },
+      "column": "rmse",
+      "value": 0.0135,
+      "tol": 0.0002,
+      "source": "sec 30.12 — after excluding 8 temperature-fault curves"
+    },
+    {
+      "id": "soh.bias",
+      "table": "soh.csv",
+      "where": {
+        "cell": "ALL"
+      },
+      "column": "bias",
+      "value": 0.0001,
+      "tol": 0.0002,
+      "source": "sec 30.12 — bias fell 10x once the faults were removed"
+    },
+    {
+      "id": "alpha.disc.CC",
+      "table": "alpha.csv",
+      "where": {
+        "direction": "discharge",
+        "holdout": "CC"
+      },
+      "column": "alpha_fast",
+      "value": 0.2,
+      "tol": 0.001,
+      "source": "sec 32.3 — low-current residual transfers at about 1/5"
+    },
+    {
+      "id": "alpha.chg.CC.slow",
+      "table": "alpha.csv",
+      "where": {
+        "direction": "charge",
+        "holdout": "CC"
+      },
+      "column": "alpha_slow",
+      "value": 0.02,
+      "tol": 0.001,
+      "source": "sec 32.6 — the slow branch contributes nothing on charge"
+    },
+    {
+      "id": "corr.disc.10s",
+      "table": "correlation.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10"
+      },
+      "column": "corr_meas_vs_ratio",
+      "value": -0.608,
+      "tol": 0.005,
+      "source": "sec 31.4 — weaker cells are estimated more optimistically"
+    },
+    {
+      "id": "cold.BOOST.ratio",
+      "table": "cold_ratio.csv",
+      "where": {
+        "cell": "BOOST",
+        "cycle": "1462"
+      },
+      "column": "ratio",
+      "value": 0.98,
+      "tol": 0.02,
+      "source": "sec 33.5 — 0 C would give 3-5x; 1x means only the log broke"
+    },
+    {
+      "id": "cold.CC.ratio",
+      "table": "cold_ratio.csv",
+      "where": {
+        "cell": "CC",
+        "cycle": "1500"
+      },
+      "column": "ratio",
+      "value": 0.98,
+      "tol": 0.02,
+      "source": "sec 33.5 — same check on the second cell"
+    }
+  ]
+}

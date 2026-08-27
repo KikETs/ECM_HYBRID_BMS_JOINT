@@ -1,0 +1,7 @@
+#ifndef SOH_QPARAM_H
+#define SOH_QPARAM_H
+#define SOHQ_S_IN 0.030845218f
+#define SOHQ_S_A1 0.030567023f
+#define SOHQ_S_A2 0.0095191143f
+#define SOHQ_S_H  0.0074098899f
+#endif
