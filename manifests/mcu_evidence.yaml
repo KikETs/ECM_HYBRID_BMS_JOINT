@@ -1,0 +1,66 @@
+# MCU deployment evidence, measured during the audit on 2026-08-27.
+board:
+  part: "STM32H563ZIT6 (NUCLEO-H563ZI)"
+  core: "Cortex-M33, 250 MHz, FPv5-SP hard FPU, ICACHE on"
+  probe: "ST-LINK V3, serial 0024003C3235511138363730"
+  port: "/dev/ttyACM0, USART3 921600 baud"
+  clock_hz_reported_by_firmware: 250000000
+toolchain:
+  compiler: "arm-none-eabi-gcc (GNU Tools for STM32 14.3.rel1.20251027-0700) 14.3.1 20250623"
+  cflags: "-mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -std=gnu11 -Os -ffunction-sections -fdata-sections -fstack-usage --specs=nano.specs"
+  hal: "STM32Cube_FW_H5_V1.7.0"
+  programmer: "STM32_Programmer_CLI 2.2.500"
+firmware:
+  comparison_build:
+    model_id: nmc_dst_cc
+    text_B: 143932
+    data_B: 92
+    bss_B: 28276
+    elf_sha256: "10a3b1722d3bbb8fd1c6d13740b383b565906f238277edeacb7d753f37a80974"
+    bin_sha256: "51f018d99a4649ef2a78c63ce51b3a11a222d11b85d359c06c2dc3a2dc8fb9df"
+  deployment_build_a8_only:
+    model_id: a8_only
+    text_B: 142060
+    data_B: 92
+    bss_B: 28276
+    elf_sha256: "836ae6f91d1b00e87a0fc1a3c486c3197de2e3a94e86c6549daa0cb8f743759d"
+    note: "make EXTRA_CFLAGS=-DSOP_A8_ONLY MODEL_ID=a8_only; 1872 B smaller"
+model_on_board:
+  rung: A8
+  header: "mcu/sop_tables.h (fw_sop/Inc/sop_tables.h is now a symlink to it)"
+  header_sha256: "39f74ebc871857c80f2bb15b17a04fed2a9a1ccea5f8ee5197b0e5c1617a786f"
+  binary_evidence: >
+    trim_w_dis[0] = 0.2146806 (A8) is present in the flashed binary and the
+    A3 value 0.2283459 is absent, confirmed by searching the objcopy'd
+    image for the IEEE-754 little-endian pattern.
+  effective_coefficients: 4
+  shipped_coefficients: >
+    50 floats (24 weights + 2 biases + 12 mu + 12 sd).  The layer is a
+    12-input linear map with 11 input columns trained to ~1e-41.  Report
+    "four effective deployed coefficients", not "four parameters".
+  provenance_caveat: >
+    [AUTHOR DECISION REQUIRED] The exported weights are still the
+    leave-one-cell-out fold that excluded CC (--holdout CC), not a model
+    fitted on all six cells.  export_mcu_tables.py --deployment now refuses
+    to export until an all-cell fit exists.  Training one is not done.
+size_units:
+  note: "text/data/bss are bytes. 142060 B = 138.7 KiB = 142.1 kB (decimal)."
+timing_us:
+  n: 500
+  method: "DWT CYCCNT, interrupts disabled, call region only"
+  per_sample_median: 13.09
+  per_sample_wcet: 13.85
+  per_decision_median: 201.74
+  per_decision_wcet: 293.26
+  full_cycle_median: 214.83
+  full_cycle_wcet: 307.12
+  stack_high_water_B: 624
+  load_at_100Hz_median_pct: 2.148
+  load_at_100Hz_wcet_pct: 3.071
+  soh_cnn: "not in the control cycle; runs once per charge (17.9 ms, unmeasured in this audit)"
+parity:
+  script: "python3 repro/run_parity.py --n 5000"
+  max_rel_diff: 9.233e-06
+  quantities: "kf, ks, R_eff, I_star"
+  iteration_diffs: "12 / 5000 cases differ by 1 (float32 rounding at the stopping threshold)"
+  result: PASS

@@ -61,33 +61,57 @@ def main():
     print(f'  {len(todo)} evaluations, {a.jobs} at a time', flush=True)
     running = []
     failed = []
+    skipped = []
 
     def reap(block):
         while running and (block or len(running) >= a.jobs):
-            nm, p = running.pop(0)
-            rc = p.wait()
+            nm, out_csv, p = running.pop(0)
+            # communicate(), not wait(): a full stderr pipe deadlocks the
+            # child, and the previous version never read the pipe at all, so
+            # every error message was discarded.
+            _, err = p.communicate()
+            rc = p.returncode
+            if rc == 0 and not os.path.exists(out_csv):
+                rc = -1
+                err = (err or '') + (
+                    f'\n    exited 0 but wrote no {os.path.basename(out_csv)}')
             print(f'    {"OK  " if rc == 0 else "FAIL"} {nm}', flush=True)
             if rc:
                 failed.append(nm)
+                for line in (err or '').strip().splitlines()[-12:]:
+                    print(f'        | {line}', flush=True)
 
     for nm, direction, trim, soh in todo:
+        out_csv = os.path.join(OUT, f'{nm}.csv')
         if not os.path.isdir(os.path.join(ANALYSIS, trim)):
-            print(f'    skipped {nm} — no {trim}', flush=True)
+            # Not a skip to shrug at: a missing trim directory means an
+            # upstream training stage never ran, and the evaluation matrix
+            # this script exists to fill will come out with holes in it.
+            print(f'    MISSING {nm} — no {trim}/ (run its training stage)',
+                  flush=True)
+            skipped.append(nm)
             continue
         cmd = [sys.executable, 'eval_sop_amps.py', '--direction', direction,
-               '--trim', trim, '--trim-agg', AGG,
-               '--out', os.path.join(OUT, f'{nm}.csv')]
+               '--trim', trim, '--trim-agg', AGG, '--out', out_csv]
         if soh:
             cmd += ['--soh-est', soh]
         reap(False)
-        running.append((nm, subprocess.Popen(
+        running.append((nm, out_csv, subprocess.Popen(
             cmd, cwd=ANALYSIS, stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE)))
+            stderr=subprocess.PIPE, text=True)))
     reap(True)
-    if failed:
-        print(f'\n  {len(failed)} failed: {", ".join(failed)}', flush=True)
+
+    if failed or skipped:
+        if failed:
+            print(f'\n  {len(failed)} failed: {", ".join(failed)}', flush=True)
+        if skipped:
+            print(f'  {len(skipped)} not run for want of inputs: '
+                  f'{", ".join(skipped)}', flush=True)
+        print('  The evaluation matrix is incomplete — downstream tables '
+              'built from it would be partial.', flush=True)
         return 1
-    print(f'\n  -> {OUT}', flush=True)
+    print(f'\n  -> {OUT}   ({len(todo)} evaluations, all complete)',
+          flush=True)
     return 0
 
 

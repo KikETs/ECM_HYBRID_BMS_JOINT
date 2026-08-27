@@ -37,8 +37,19 @@ RUNS = [
 ]
 
 
-def per_cell_rmse(run_dir, rung):
-    """Per-cell voltage RMSE (mV).  rung='A0' is the uncorrected version."""
+def per_cell_rmse(run_dir, rung, horizon=None):
+    """Per-cell voltage RMSE (mV).  rung='A0' is the uncorrected version.
+
+    horizon=None pools both columns of Y, which is what the shipped table
+    did.  horizon=0 is tau = 2 s and horizon=1 is tau = 10 s.
+
+    Pooling matters: the figure that compares "ranked by voltage" against
+    "ranked by usable current" drew the *same* pooled voltage number in the
+    tau = 2 s and tau = 10 s panels, so a horizon-specific current metric
+    was being set against a horizon-agnostic voltage metric.  Any ranking
+    difference between the two panels on the left axis was structurally
+    impossible.
+    """
     out = {}
     for f in sorted(glob.glob(os.path.join(ANALYSIS, run_dir,
                                             'pred_A*_*.npz'))):
@@ -59,41 +70,61 @@ def per_cell_rmse(run_dir, rung):
             kf, ks = z['k_f'].astype(float), z['k_s'].astype(float)
             p = np.stack([I * (kf * NOM[:, 0] + ks * NOM[:, 1]),
                           I * (kf * NOM[:, 2] + ks * NOM[:, 3])], 1)
-        out[cell] = float(np.sqrt(np.mean((p - z['Y']) ** 2)) * 1000)
+        Y = z['Y']
+        if horizon is None:
+            e = p - Y
+        else:
+            e = p[:, horizon] - Y[:, horizon]
+        out[cell] = float(np.sqrt(np.mean(e ** 2)) * 1000)
     return out
 
 
 def main():
     rows = []
+    failures = []
     for name, dis, chg in RUNS:
         for direction, run in (('discharge', dis), ('charge', chg)):
             if not os.path.isdir(os.path.join(ANALYSIS, run)):
+                failures.append(f'{name}/{direction}: no {run}/')
                 continue
-            try:
-                per = per_cell_rmse(run, 'A0' if name == 'A0' else name)
-            except Exception as e:                       # noqa: BLE001
-                print(f'  skipped {name}/{direction}: {e}', flush=True)
-                continue
-            if not per:
-                continue
-            mean = float(np.mean(list(per.values())))
-            rows.append([direction, name, len(per), f'{mean:.2f}']
-                        + [f'{per[c]:.2f}' for c in sorted(per)])
-            print(f'  {direction:<10}{name:<8}{mean:>9.2f} mV   '
-                  f'({len(per)} cells)', flush=True)
+            for tau, hz in (('pooled', None), ('2.0', 0), ('10.0', 1)):
+                try:
+                    per = per_cell_rmse(run, 'A0' if name == 'A0' else name,
+                                        hz)
+                except Exception as e:                   # noqa: BLE001
+                    failures.append(f'{name}/{direction}/tau={tau}: {e}')
+                    continue
+                if not per:
+                    failures.append(f'{name}/{direction}/tau={tau}: no cells')
+                    continue
+                mean = float(np.mean(list(per.values())))
+                rows.append([direction, tau, name, len(per), f'{mean:.2f}']
+                            + [f'{per[c]:.2f}' for c in sorted(per)])
+                if tau == 'pooled':
+                    print(f'  {direction:<10}{name:<8}{mean:>9.2f} mV   '
+                          f'({len(per)} cells)', flush=True)
 
     cells = sorted(per_cell_rmse('runs_trim_a8', 'A8'))
     os.makedirs(TABLES, exist_ok=True)
     out = os.path.join(TABLES, 'voltage.csv')
     with open(out, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
-        w.writerow(['direction', 'method', 'n_cells', 'rmse_mV'] + cells)
+        w.writerow(['direction', 'tau_s', 'method', 'n_cells', 'rmse_mV']
+                   + cells)
         w.writerows(rows)
     print(f'\n  -> {os.path.relpath(out, ROOT)}  ({len(rows)} rows)',
           flush=True)
     print('  convention: mean of per-cell RMSE (not a pooled RMSE — same as '
           'sop_trim.py)', flush=True)
+    print("  tau_s='pooled' reproduces the previous horizon-agnostic number; "
+          "2.0 and 10.0 are the horizon-specific ones.", flush=True)
+    if failures:
+        print(f'\n  {len(failures)} incomplete:', flush=True)
+        for f in failures:
+            print(f'    {f}', flush=True)
+        return 1
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main() or 0)

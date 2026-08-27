@@ -92,11 +92,27 @@ def quant_grid(G):
     return Q, S
 
 
+def cfloat(x):
+    """A C float literal that is always a *floating* constant.
+
+    "%.7g" % 0.0 is "0", and "0f" is an integer constant with a float
+    suffix, which is invalid C.  gcc and arm-none-eabi-gcc both reject it:
+        error: invalid suffix "f" on integer constant
+    Any exactly-zero weight therefore produced a header that would not
+    compile.  A8 has 27 of them (the eleven masked feature columns of
+    trim_mu), so the adopted configuration's header never built.
+    """
+    s = f"{float(x):.7g}"
+    if not any(c in s for c in ".eE") and s.lstrip("-").isdigit():
+        s += ".0"
+    return s + "f"
+
+
 def carr(name, a, per=8):
     flat = np.asarray(a, np.float32).ravel()
     s = [f"static const float {name}[{flat.size}] = {{"]
     for i in range(0, flat.size, per):
-        s.append("  " + ", ".join(f"{x:.7g}f" for x in flat[i:i + per]) + ",")
+        s.append("  " + ", ".join(cfloat(x) for x in flat[i:i + per]) + ",")
     s.append("};")
     return "\n".join(s)
 
@@ -104,10 +120,29 @@ def carr(name, a, per=8):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--holdout", default="CC",
-                    help="풀 변형. 배치용이라면 전 셀 풀이 맞지만, 이 벤치는 "
-                         "연산 비용을 재는 것이므로 어느 것이든 크기가 같다")
-    ap.add_argument("--trim", default="runs_trim_v2")
-    ap.add_argument("--trim-chg", default="runs_trim_chg_v2")
+                    help="Which leave-one-cell-out fold to export.  This is a "
+                         "BENCHMARK artifact: the exported weights are the "
+                         "model fitted without this cell, not a model fitted "
+                         "on all six.  Sizes and timings are identical for "
+                         "any fold, so it is fine for measuring cost, but a "
+                         "header exported this way is not the deployment "
+                         "model.  See --deployment.")
+    ap.add_argument("--deployment", action="store_true",
+                    help="Refuse to export unless the trim directory holds an "
+                         "all-cell fit (model_A*_ALL.pt).  Use this for the "
+                         "header that actually ships.")
+    ap.add_argument("--rung", default=None,
+                    help="Accepted and checked against the rung found in the "
+                         "trim directory.  It does not select anything - the "
+                         "rung comes from the directory - but the stage graph "
+                         "passes it, and silently ignoring it would let the "
+                         "graph claim A8 while exporting A3.")
+    # Default to the ADOPTED configuration (A8).  These used to default to
+    # runs_trim_v2 / runs_trim_chg_v2, which are A3 - the superseded
+    # comparison group - so an operator running the exporter with no
+    # arguments shipped the wrong model.
+    ap.add_argument("--trim", default="runs_trim_a8")
+    ap.add_argument("--trim-chg", default="runs_trim_a8_chg")
     ap.add_argument("--ns", type=int, default=32)
     ap.add_argument("--nh", type=int, default=16)
     ap.add_argument("--int8", action="store_true",
@@ -116,6 +151,17 @@ def main():
                                                   "sop_tables.h"))
     a = ap.parse_args()
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
+
+    if a.deployment:
+        import glob as _g
+        for d in (a.trim, a.trim_chg):
+            if not _g.glob(os.path.join(HERE, d, "model_A*_ALL.pt")):
+                raise SystemExit(
+                    f"  --deployment: {d} has no all-cell fit "
+                    f"(model_A*_ALL.pt).  Train one before exporting a "
+                    f"header that ships; exporting a leave-one-out fold as "
+                    f"the deployment model is not defensible.")
+        a.holdout = "ALL"
 
     sd, sc = surfaces(a.holdout)
     Gd, Gc = grid(sd, a.ns, a.nh), grid(sc, a.ns, a.nh)
@@ -133,6 +179,12 @@ def main():
                 f"{runs} 에 model_A*_{a.holdout}.pt 가 없다")
         if len(_hit) > 1:
             raise RuntimeError(f"{runs} 에 rung 이 여럿이다: {_hit}")
+        _found = os.path.basename(_hit[0]).split("_")[1]
+        if a.rung is not None and _found != a.rung:
+            raise SystemExit(
+                f"  --rung {a.rung} was requested but {runs} holds {_found}. "
+                f"Exporting it would put {_found} weights on the board while "
+                f"the stage graph claims {a.rung}.")
         ck = torch.load(_hit[0],
                         map_location="cpu", weights_only=False)
         W, B, MU, SD = [], [], [], []

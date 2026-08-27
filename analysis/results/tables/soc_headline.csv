@@ -1,0 +1,6 @@
+config,n_rows,undisturbed_pct,mean_6_disturbances_pct,mean_7_rows_pct,median_6_pct,worst_of_6_pct,mean_of_3_pair_means_pct
+EKF adopted (gate),7,1.509,2.140,2.050,1.571,3.773,2.140
+EKF gate + spread k=20,7,0.836,3.248,2.903,1.012,8.154,3.248
+EKF gate + spread k=200,7,0.775,3.584,3.182,1.274,8.640,3.584
+EKF no gate,7,3.105,3.133,3.129,3.106,3.956,3.133
+pure current integration,7,0.125,6.893,5.926,9.992,10.390,6.893

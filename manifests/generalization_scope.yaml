@@ -1,0 +1,57 @@
+# Out-of-distribution scope matrix.
+# What the six-cell UYPYDJ evidence does and does not cover.
+# Status vocabulary: COVERED / PARTIAL / NOT COVERED / EVIDENCE REQUIRED
+
+axes:
+  cell:
+    status: COVERED
+    detail: >
+      Six cells, leave-one-cell-out everywhere.  Six is the whole population,
+      so cell-to-cell uncertainty is estimated from six clusters - wide
+      intervals, reported as a cell-cluster bootstrap in
+      safety_strict_*.csv.
+  protocol:
+    status: COVERED
+    detail: >
+      Five distinct fast-charge protocols (CC, CC second cell, boost,
+      boost+negative pulse, boost+1 s negative pulse, boost+rest).  This is
+      the axis the dataset was built to vary.
+  aging_state:
+    status: COVERED
+    detail: "SOH 1.00 down to ~0.68, ~1400-1900 cycles per cell."
+  temperature:
+    status: NOT COVERED
+    detail: >
+      UYPYDJ is 25 C throughout.  The 28 files logging ~0 C are a sensor
+      fault, not a cold test - HPPC resistance in those cycles sits on the
+      aging trend line (ratio 0.98 vs neighbours where 0 C would give 3-5x).
+      The temperature factor comes from the Mendeley sweep on a DIFFERENT,
+      un-aged cell.  No aged-cell low-temperature data exists here.
+    claim_limit: >
+      Do not claim aged low-temperature generalization.  Temperature and
+      aging are never crossed in this evidence.
+  laboratory:
+    status: EVIDENCE REQUIRED
+    detail: >
+      RPCWBY is a second dataset but the only external evaluation in the
+      repository (sop_rpcwby_eval.csv) is physics-only - it has no trim
+      columns.  The frozen A8 has not been scored outside UYPYDJ.
+  drive_profile:
+    status: PARTIAL
+    detail: >
+      UYPYDJ drive cycles only.  RPCWBY US06 feature extraction exists
+      (rpcwby_us06_trim.py) but was not run for the adopted model.
+  chemistry:
+    status: NOT COVERED
+    detail: "One chemistry, one cell model (Samsung INR21700-30T)."
+    claim_limit: "No chemistry-wide claim is supported."
+  pack:
+    status: NOT COVERED
+    detail: >
+      analysis/sop_pack2.py resamples single-cell evaluation rows within
+      condition groups.  There is no pack hardware and no HIL.  Missing from
+      the simulation: inter-cell error correlation beyond the condition
+      bin, a shared current trajectory through time, thermal gradient, and
+      state-of-charge imbalance.
+    claim_limit: >
+      Call it "pack-level simulation sensitivity", never "pack validation".

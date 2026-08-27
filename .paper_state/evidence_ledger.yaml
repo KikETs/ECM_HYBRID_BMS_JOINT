@@ -1,0 +1,239 @@
+# Evidence ledger — eTransportation readiness audit, 2026-08-27
+# Base commit: fa44137ad7ca39b75a044538d7b4db3cbf3a5ed1
+# Branch: audit/etransportation-readiness
+#
+# Status vocabulary:
+#   VERIFIED             recomputed from artifacts in this repository
+#   VERIFIED_PROCESSED   recomputed from committed intermediates, not from raw
+#   PARTIAL              partly established, gap named
+#   CONTRADICTED         the repository's own data disagrees with the claim
+#   NOT_FOUND            asserted but no artifact or producer exists
+#   EVIDENCE REQUIRED    an experiment must be run
+#   SOURCE REQUIRED      an external fact must be confirmed
+#   AUTHOR DECISION REQUIRED
+
+environment:
+  status: VERIFIED
+  python: "3.12.0 (conda env torch_env)"
+  key_versions: "numpy 2.3.4, scipy 1.16.3, pandas 3.0.1, matplotlib 3.10.6, torch 2.9.1+cu128, openpyxl 3.1.5, pyserial 3.5, scikit-learn 1.7.2"
+  gpu: "NVIDIA RTX 5090, driver 580.178.04, CUDA 12.8"
+  board: "NUCLEO-H563ZI via ST-LINK V3 on /dev/ttyACM0 — PRESENT and used"
+  note: >
+    The shipped environment.yml declared py7zr (never imported anywhere) and
+    omitted openpyxl (5 files) and pyserial (mcu/bench_sop.py).  Replaced.
+
+data_provenance:
+  mendeley_doi:
+    status: CONTRADICTED
+    was: "10.17632/cp3473x7xv.3"
+    is: "LG 18650HG2 Li-ion Battery Data (Kollmeyer, Vidal, Naguib, Skells; v3, 2020-03-05)"
+    should_be: "10.17632/9xyvy2njj3.2 — Samsung INR21700 30T 3Ah (Kollmeyer & Skells; v2, 2023-12-04, CC BY 4.0)"
+    evidence: "Both landing pages fetched 2026-08-27; local raw/Mendeley carries the Samsung 30T readme and technical report."
+    action: "corrected in DATA.md and repro/stages.py"
+  file_hashes:
+    status: VERIFIED
+    detail: "SHA-256 and byte size for all 30 top-level archive/doc files in manifests/raw_data.yaml"
+  licences:
+    status: SOURCE REQUIRED
+    detail: "Mendeley is CC BY 4.0.  UYPYDJ and RPCWBY licence terms are not stated in the local readmes; confirm on the Borealis landing pages before redistributing anything derived."
+
+safety_calibration:
+  claim: "lambda calibrated leave-one-cell-out to zero exceedance"
+  status: CONTRADICTED
+  detail: >
+    run_safety.py calibrates six LOCO lambdas and applies their MEDIAN to
+    every cell, so the evaluated cell contributes to the lambda it is scored
+    under.  Under strict per-cell held-out calibration the exceedance count
+    is not zero.
+  measured:
+    discharge_10s: "1 exceedance / 491 rows, worst 0.386 A, 95% upper bound 0.96%"
+    discharge_2s:  "2 / 140, worst 0.966 A, ub 4.43%"
+    charge_10s:    "1 / 2461, worst 0.518 A, ub 0.19%"
+    charge_2s:     "2 / 2082, worst 0.634 A, ub 0.30%"
+  usable_current_cost: "69.8 -> 69.6 % (discharge 10 s); the cost is small, the claim is what changes"
+  worst_cell: "BOOST_REST in 3 of 4 settings (59.9 / 53.5 / 49.7 % usable)"
+  artifacts: "analysis/results/tables/safety_strict_*.csv"
+  producer: "python3 repro/run_safety_strict.py --arm oracle|est"
+  language: "Report 'zero observed exceedance' with its upper bound.  Never 'zero risk' or 'guaranteed'."
+
+sop_labels:
+  status: VERIFIED
+  detail: >
+    78.0 % of discharge SOP labels extrapolate past 1.5x the largest measured
+    current (median extrap 2.67); only 8.0 % are interpolated.  Charge is
+    better: 34.1 % interpolated.
+  terminology: "Call them pulse-derived / inferred current-limit references, not directly measured SOP."
+  robustness: >
+    A8 beats A0 at every extrap ceiling in every direction and horizon,
+    including extrap <= 1 (discharge 10 s 74.7 vs 70.6 %; charge 10 s 62.5 vs
+    54.4 %).  The adoption conclusion does NOT depend on the extrapolated
+    labels.
+  artifacts: "label_quality.csv, label_sensitivity.csv"
+
+soh_arm:
+  cnn_vs_baselines:
+    status: CONTRADICTED
+    detail: >
+      Under identical nested cell-held-out splits, identical 64-bin features
+      and identical target, ridge regression beats the 10,945-parameter CNN:
+      pooled RMSE 0.0094 vs 0.0135, worst cell 0.0130 vs 0.0293.  PLS, SVR
+      and gradient boosting also beat it.  Confirmed with a fixed alpha and
+      no inner selection (0.0093-0.0095), so it is not a selection artifact.
+    implication: "The CNN is not justified on this dataset, and ridge would remove the 17.9 ms SOH inference entirely."
+    artifacts: "soh_baselines.csv"
+  architecture_naming:
+    status: CONTRADICTED
+    detail: "analysis/soh_cnn.py is a plain two-layer 1D CNN.  There is no physics or residual term; do not call it physics-aware."
+  soh_csv_producer:
+    status: VERIFIED
+    detail: "soh.csv had no producer at all.  repro/run_soh_table.py now regenerates it byte-identically from results/soh_pred.npz."
+  ablations:
+    status: EVIDENCE REQUIRED
+    detail: "voltage-only / residual-only / window length / charge coverage / update cadence ablations not run."
+
+soc_arm:
+  headline_number:
+    status: CONTRADICTED
+    detail: >
+      README quotes "2.05 %p under sensor perturbation".  2.05 is the mean
+      over all SEVEN rows including the UNDISTURBED case.  The mean over the
+      six disturbance conditions is 2.14 %p, which sec 30.4's own table
+      prints.  Undisturbed alone is 1.51 %p; worst single condition is
+      3.77 %p (current offset -0.10 A).
+    artifacts: "soc_headline.csv"
+    producer: "python3 repro/run_soc_headline.py"
+  per_cell_calibration:
+    status: PARTIAL
+    detail: >
+      build_soc_runs.py constructs ECMSurface(cell, ...) per cell, i.e. the
+      evaluated cell's own characterisation surface.  That is per-cell
+      calibrated deployment, not leave-one-cell-out.  The wording must say so.
+  baselines:
+    status: EVIDENCE REQUIRED
+    detail: "Coulomb counting and the adopted 2RC EKF are present.  1RC-EKF, UKF and adaptive/dual estimation are not run."
+
+sop_baselines:
+  status: PARTIAL
+  present: "A0 physics-only, direct RLS plug-in, shrinkage coefficient, A8, A3, HPPC-RLS upper bound — all on identical splits and horizons (ladder.csv)"
+  missing:
+    - "Pure LSTM and pure GRU SOP heads"
+    - "Online RLS / FFRLS ECM updated causally during the drive"
+    - "Chen 2026 (doi 10.1016/j.est.2026.123023) LSTM voltage + numerical search on the same RPCWBY data"
+    - "Frequency-dependent integer/fractional-order SOP (doi 10.1016/j.jpowsour.2023.234000)"
+  status_of_missing: EVIDENCE REQUIRED
+
+external_validation:
+  status: NOT_FOUND
+  detail: >
+    The only external artifact, analysis/sop_rpcwby_eval.csv, has columns
+    holdout,sheet,cell,cycle,SOH,SOC,T_C,I_meas_A,I_pred_A,P_meas_W,P_pred_W,
+    g_temp,v_pre — no trim, no k_f/k_s.  It is a PHYSICS-ONLY evaluation.
+    The frozen A8 has never been scored outside UYPYDJ.
+  do_not: "Do not present Test#3 physics-only results as A8 external validation."
+  path_exists: "analysis/rpcwby_us06_trim.py extracts trim features from RPCWBY US06; it was not run for the adopted model."
+
+mcu_deployment:
+  header_firmware_mismatch:
+    status: CONTRADICTED
+    detail: >
+      mcu/fw_sop/Inc/sop_tables.h was an independent FILE, not a symlink to
+      mcu/sop_tables.h.  At the base commit it held A3 weights
+      (trim_w_dis[0]=0.2283459) while the exporter's output held A8
+      (0.2146806).  The firmware that produced the published timings
+      compiled A3 trim weights.
+    action: "fw_sop/Inc/{sop_tables,soh_tables,soh_qparam}.h are now symlinks; tests/test_mcu.py pins it."
+  header_did_not_compile:
+    status: CONTRADICTED
+    detail: >
+      The A8 header emitted 27 literals of the form '0f', an integer constant
+      with a float suffix.  gcc and arm-none-eabi-gcc both reject it.  The
+      adopted configuration's header had therefore never been built.
+    cause: "carr() formatted with '%.7g' + 'f'; exact zeros became '0f'.  A8 has exact zeros because 11 of 12 feature columns are masked."
+    action: "export_mcu_tables.py now emits a floating constant; tests/test_mcu.py pins it."
+  stage_command_broken:
+    status: CONTRADICTED
+    detail: "repro/stages.py ran ; the exporter had no --rung argument and exited with argparse error 2.  The exporter's own defaults pointed at runs_trim_v2 (A3)."
+    action: "--rung added and cross-checked against the directory; defaults moved to the adopted A8 directories."
+  deployment_model:
+    status: AUTHOR DECISION REQUIRED
+    detail: >
+      The exported weights are still the leave-one-cell-out fold that
+      excluded CC (--holdout CC), not a fit on all six cells.  A shipped
+      model should be trained on everything by a pre-declared recipe.
+      export_mcu_tables.py --deployment now refuses to export until an
+      all-cell fit (model_A*_ALL.pt) exists.  Training it is not done.
+  parameter_count_language:
+    status: VERIFIED
+    detail: >
+      A8 has 2 non-negligible weights + 2 biases = 4 effective coefficients
+      (max |w| on the 11 masked columns is 5.6e-41).  But the header ships a
+      12-input layer: 24 weights + 2 biases + 12 mu + 12 sd = 50 floats.
+      Write "four effective deployed coefficients", not "four parameters".
+  parity:
+    status: VERIFIED
+    detail: "max relative difference 9.2e-06 over 5000 random states for kf, ks, R_eff and I*; 12/5000 iteration counts differ by 1 (float32 rounding at the stopping threshold)."
+    producer: "python3 repro/run_parity.py --n 5000"
+  timing:
+    status: VERIFIED
+    detail: >
+      Re-measured on hardware after flashing the rebuilt A8 firmware
+      (ELF sha256 10a3b172..., verified by STM32_Programmer_CLI).  Full
+      control cycle: median 214.83 us, WCET 307.12 us.  Per-sample subtotal
+      13.09 / 13.85 us.  Stack high-water 624 B.  Load at 100 Hz: 2.15 %
+      median, 3.07 % worst case.  Published per-stage medians reproduced to
+      within 0.01 us.
+    detail_binary: "trim_w_dis[0]=0.2146806 (A8) present in the flashed image; the A3 value 0.2283459 absent."
+    artifacts: "manifests/mcu_evidence.yaml, mcu/sop_mcu_bench.csv, analysis/results/tables/mcu.csv"
+  mcu_csv_producer:
+    status: VERIFIED
+    detail: "mcu.csv had no producer; repro/run_mcu_table.py now reduces the board CSV to it."
+  serial_protocol:
+    status: PARTIAL
+    detail: >
+      sec 33.3 and 33.7 record that an unknown command is silently ignored
+      and its 73-byte body is reinterpreted as commands, which returns a
+      plausible wrong value instead of an error.  Still unfixed in the
+      firmware; no NACK, no length validation, no CRC.
+    status_of_fix: EVIDENCE REQUIRED
+
+pack:
+  status: PARTIAL
+  detail: "analysis/sop_pack2.py resamples single-cell rows within condition groups.  No pack hardware, no HIL."
+  language: "pack-level simulation sensitivity, never pack validation"
+  missing_effects: "inter-cell error correlation beyond the condition bin, shared current trajectory, thermal gradient, SOC imbalance"
+
+end_to_end:
+  status: EVIDENCE REQUIRED
+  detail: >
+    The four-way grid (oracle/estimated SOH x oracle/estimated SOC feeding
+    SOP) is not run.  The estimated-SOH arm exists (a8_*_est evaluations) but
+    SOC is never fed forward into the SOP inversion, and stale-estimate,
+    missing-observation, sensor-noise and fallback behaviour are not modelled.
+  do_not: "Do not call the current chain fully end-to-end; ground-truth SOC still reaches the SOP input."
+
+reproduction_pipeline:
+  stored_table_verification:
+    status: VERIFIED
+    detail: "43/43 checks pass; verify.py now fails on absent tables, schema drift, row-count drift, non-numeric cells, truncated rows and manifest drift."
+  artifact_to_result:
+    status: VERIFIED_PROCESSED
+    detail: >
+      results/eval/ is gitignored, so a fresh clone cannot re-run the safety
+      stage until it is rebuilt.  Rebuilt here from the committed trim
+      weights: safety.csv, ladder.csv and soh_cost.csv came back
+      byte-identical.
+  raw_to_result:
+    status: EVIDENCE REQUIRED
+    detail: "Not attempted in this audit.  Needs the 24 GB raw archives and about 12 h; the cache stage alone is ~3.5 h."
+  stage_graph_defects_fixed:
+    - "temp_factor declared rpcwby_ecm.csv but ecm_temp_factor.py reads mendeley_ecm.csv"
+    - "no stage produced rpcwby_ecm.csv or mendeley_ecm.csv (added)"
+    - "soc_runs did not declare uypydj_ecm.csv / uypydj_ocv.csv / ecm_temp_factor.csv, which ECMSurface opens"
+    - "cold_ratio.csv, build_size.csv and soh_cost.csv were produced but undeclared"
+    - "mcu_measure claimed to output mcu.csv; nothing wrote it"
+    - "run_evals.py set stderr=PIPE and never read it, and treated a missing trim directory as a skip"
+    - "run_extras.py read cold-check input from /tmp"
+
+licence:
+  status: AUTHOR DECISION REQUIRED
+  detail: "No LICENSE file in the repository.  Not chosen by the audit."

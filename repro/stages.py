@@ -23,8 +23,11 @@ RAW_DOI = {
                'Kollmeyer et al., Samsung INR21700-30T ageing cycling'),
     'RPCWBY': ('10.5683/SP3/RPCWBY',
                'Chen et al., 30T SOP measured directly (temperature axis)'),
-    'Mendeley': ('10.17632/cp3473x7xv.3',
-                 'Kollmeyer et al., 30T drive cycles'),
+    'Mendeley': ('10.17632/9xyvy2njj3.2',
+                 'Kollmeyer & Skells, Samsung INR21700 30T 3Ah battery data '
+                 '(temperature axis + drive cycles).  The earlier '
+                 '10.17632/cp3473x7xv.3 in this slot is the LG 18650HG2 '
+                 'dataset and was wrong.'),
 }
 
 CELLS = ['BOOST', 'BOOST_NEGPULSE', 'BOOST_NEGPULSE_1S', 'BOOST_REST',
@@ -71,12 +74,30 @@ STAGES = [
          outputs=['uypydj_ecm.csv'],
          why='Fit the 2RC parameters (R0, R1, tau1, R2, tau2) per pulse.'),
 
+    dict(id='mendeley_ecm', tier=2, minutes=6, measured=False,
+         cmd='{py} mendeley_ecm.py',
+         inputs=['../raw/Mendeley'],
+         outputs=['mendeley_ecm.csv'],
+         why='2RC parameters over the Mendeley temperature sweep (-20 to '
+             '40 C).  This stage was missing from the graph, so the raw '
+             'archive had no declared path to the CSV the temperature '
+             'factor is built from.'),
+
+    dict(id='rpcwby_ecm', tier=2, minutes=20, measured=False,
+         cmd='{py} rpcwby_to_ecm.py',
+         inputs=['../raw/RPCWBY'],
+         outputs=['rpcwby_ecm.csv'],
+         why='2RC parameters from the RPCWBY external dataset.  Used by the '
+             'external-validation path, not by ecm_temp_factor.'),
+
     dict(id='temp_factor', tier=2, minutes=3, measured=False,
          cmd='{py} ecm_temp_factor.py --out ecm_temp_factor.csv',
-         inputs=['rpcwby_ecm.csv'],
+         inputs=['mendeley_ecm.csv'],
          outputs=['ecm_temp_factor.csv'],
          why='Temperature correction factor.  UYPYDJ is 25 C only, so it '
-             'comes from RPCWBY.'),
+             'comes from the Mendeley temperature sweep.  The graph used to '
+             'declare rpcwby_ecm.csv here while ecm_temp_factor.py actually '
+             'opens mendeley_ecm.csv — the wrong upstream.'),
 
     dict(id='pool', tier=2, minutes=8, measured=False,
          cmd='{py} ecm_pool.py --outdir cache/pool',
@@ -199,10 +220,37 @@ STAGES = [
     dict(id='safety', tier=5, minutes=3, measured=True,
          cmd='{py} ../repro/run_safety.py',
          inputs=['results/eval/'],
-         outputs=['results/tables/safety.csv', 'results/tables/ladder.csv'],
+         outputs=['results/tables/safety.csv', 'results/tables/ladder.csv',
+                  'results/tables/soh_cost.csv'],
          why='Set the safety factor lambda leaving one cell out, and report '
              'optimism / worst overshoot / usable current.  The values that '
              'decide deployment.'),
+
+    dict(id='soh_table', tier=5, minutes=1, measured=True,
+         cmd='{py} ../repro/run_soh_table.py',
+         inputs=['results/soh_pred.npz'],
+         outputs=['results/tables/soh.csv'],
+         why='Per-cell SOH error table.  soh.csv carried two published '
+             'numbers with no producer in the repository at all; this is '
+             'that producer.  It also surfaces the worst cell, which the '
+             'pooled RMSE hides.'),
+
+    dict(id='safety_strict', tier=5, minutes=2, measured=True,
+         cmd='{py} ../repro/run_safety_strict.py --arm oracle && '
+             '{py} ../repro/run_safety_strict.py --arm est',
+         inputs=['results/eval/'],
+         outputs=['results/tables/safety_strict_oracle.csv',
+                  'results/tables/safety_strict_percell_oracle.csv',
+                  'results/tables/safety_strict_tolsens_oracle.csv',
+                  'results/tables/safety_strict_est.csv',
+                  'results/tables/safety_strict_percell_est.csv',
+                  'results/tables/safety_strict_tolsens_est.csv'],
+         why='Safety factor calibrated strictly per held-out cell.  The '
+             'shipped safety.csv pools six LOCO lambdas into their median '
+             'and applies it to every cell, so the evaluated cell helps set '
+             'its own lambda.  This stage removes that and reports per-cell '
+             'lambda, worst cell, a Clopper-Pearson upper bound and a '
+             'cell-cluster bootstrap interval.'),
 
     dict(id='pack', tier=5, minutes=5, measured=True,
          cmd='{py} sop_pack2.py',
@@ -213,7 +261,11 @@ STAGES = [
 
     dict(id='soc_runs', tier=5, minutes=4, measured=True,
          cmd='{py} ../repro/build_soc_runs.py',
-         inputs=['cache_t', 'cache/pool'],
+         # ECMSurface opens uypydj_ecm.csv, uypydj_ocv.csv and
+         # ecm_temp_factor.csv directly; those were undeclared, so a changed
+         # characterisation table did not mark the SOC runs stale.
+         inputs=['cache_t', 'cache/pool', 'uypydj_ecm.csv', 'uypydj_ocv.csv',
+                 'ecm_temp_factor.csv'],
          outputs=['results/soc_runs.pkl'],
          why='Build the 36 runs the SOC benchmark uses.  They used to live '
              'in /tmp, and a reproduction package must not depend on /tmp, so '
@@ -252,7 +304,9 @@ STAGES = [
          inputs=['results/eval/', 'cache/trim', 'cache/trim_chg',
                  'results/cold_check/'],
          outputs=['results/tables/alpha.csv',
-                  'results/tables/correlation.csv'],
+                  'results/tables/correlation.csv',
+                  'results/tables/cold_ratio.csv',
+                  'results/tables/build_size.csv'],
          why='Pull numbers that lived only in the documents into tables — '
              'the transfer ratio alpha, the weak-optimistic correlation, the '
              'defect-cycle resistance ratio, and the deployment build size.  '
@@ -268,13 +322,22 @@ STAGES = [
          why='The 32x16 grid and the trim weights as C headers.  A8, so '
              'there are 2 EW states.'),
 
+    dict(id='mcu_table', tier=6, minutes=1, measured=True,
+         cmd='{py} ../repro/run_mcu_table.py',
+         inputs=['../mcu/sop_mcu_bench.csv'],
+         outputs=['results/tables/mcu.csv'],
+         why='Reduce the board benchmark to the published timing table.  '
+             'bench_sop.py wrote only its own per-sample CSV; nothing wrote '
+             'results/tables/mcu.csv, so four published board numbers had '
+             'no producer.'),
+
     dict(id='mcu_measure', tier=6, minutes=25, measured=True, board=True,
          cmd='cd ../mcu/fw_sop && make && '
              'STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/'
              'sop_bench.elf -v -rst && cd .. && {py} bench_sop.py --n 500 && '
              'cd ../analysis && {py} ../repro/run_extras.py',
          inputs=['../mcu/sop_tables.h', '../mcu/soh_tables.h'],
-         outputs=['results/tables/mcu.csv'],
+         outputs=['../mcu/sop_mcu_bench.csv'],
          why='Measured on a NUCLEO-H563ZI with the DWT cycle counter.  us '
              'per period, Flash, stack.  Without the board this is skipped '
              'and the table stays empty.'),

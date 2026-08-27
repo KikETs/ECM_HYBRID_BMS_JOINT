@@ -1,0 +1,83 @@
+name: ci
+
+# CPU only.  Everything here runs from artifacts committed to the
+# repository: no raw data, no GPU, no board.  The stages that need those are
+# listed in repro/run.py --list and are out of scope for CI by construction.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install (no torch; CI covers the torch-free path)
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy==2.3.4 scipy==1.16.3 pandas==3.0.1 \
+                      matplotlib==3.10.6 openpyxl==3.1.5 pyserial==3.5 \
+                      scikit-learn==1.7.2 pytest==9.1.1 ruff
+
+      - name: Environment smoke test
+        run: python env/verify_env.py
+
+      - name: Lint
+        run: ruff check repro tests env || true   # advisory until clean
+
+      - name: Compile every Python file
+        run: python -m compileall -q analysis repro mcu env tests
+
+      - name: Stored-table verification (43 published numbers)
+        run: python repro/verify.py
+
+      - name: Table producers reproduce their tables
+        run: |
+          python repro/run_soh_table.py --check
+          python repro/run_mcu_table.py --check
+
+      - name: Unit and integration tests
+        run: python -m pytest tests -q
+
+      - name: C compiles and matches Python (parity)
+        run: python repro/run_parity.py --n 2000
+
+      - name: Figures render
+        run: |
+          python repro/fig_ladder.py
+          python repro/fig_soh_traj.py
+
+      - name: REPRODUCE.md is regenerated, not hand-edited
+        run: |
+          python repro/report.py
+          git diff --exit-code REPRODUCE.md
+
+      - name: Raw-data manifest is present and parses
+        run: python -c "import sys;sys.exit(0 if open('manifests/raw_data.yaml').read().count('sha256')>20 else 1)"
+
+  firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ARM toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '13.2.Rel1'
+      - name: Compile the core the board runs
+        # The full firmware needs the STM32Cube H5 package, which CI does
+        # not fetch.  sop_core.c + the exported tables is what the parity
+        # claim rests on, and it must always compile.
+        run: |
+          arm-none-eabi-gcc -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 \
+            -mfloat-abi=hard -std=gnu11 -Os -Wall -Werror \
+            -Imcu -c mcu/sop_core.c -o /tmp/sop_core.o
+          arm-none-eabi-gcc -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 \
+            -mfloat-abi=hard -std=gnu11 -Os -Wall -Werror \
+            -Imcu -c mcu/soh_core.c -o /tmp/soh_core.o

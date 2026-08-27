@@ -36,8 +36,13 @@ def voltage():
         open(os.path.join(TABLES, 'voltage.csv'), encoding='utf-8')))
     out = {}
     for r in rows:
-        out.setdefault(r['direction'], {})[ALIAS[r['method']]] = \
-            float(r['rmse_mV'])
+        # Keyed by (direction, tau_s).  It used to be keyed by direction
+        # alone, so the tau = 2 s and tau = 10 s panels drew the SAME pooled
+        # voltage RMSE on the left axis while the right axis was
+        # horizon-specific.  Any left-axis difference between the two panels
+        # was structurally impossible, which flattered the comparison.
+        out.setdefault((r['direction'], r['tau_s']), {})[
+            ALIAS[r['method']]] = float(r['rmse_mV'])
     return out
 
 
@@ -46,8 +51,8 @@ KEY = {'A0  no correction': 'A0', 'direct plug-in': 'direct',
        'A3  12 features': 'A3', '[upper bound] HPPC-RLS': 'RLS'}
 LABEL = {'A0': 'A0  no correction (classical HPPC)',
          'direct': 'direct plug-in (RLS as-is)',
-         'shrink': 'shrinkage coeff. (2 params)', 'A8': 'A8 (4 params)',
-         'A3': 'A3 (26 params)', 'RLS': 'HPPC-RLS (upper bound)'}
+         'shrink': 'shrinkage coeff. (2 params)', 'A8': 'A8 (4 effective coeff.)',
+         'A3': 'A3 (26 coeff.)', 'RLS': 'HPPC-RLS (upper bound)'}
 COLOR = {'A0': '#8c8c8c', 'direct': '#c0392b', 'shrink': '#e08b3c',
          'A8': '#1f6fb4', 'A3': '#7cb0d8', 'RLS': '#4d9e6a'}
 ORDER = ['A0', 'direct', 'shrink', 'A8', 'A3', 'RLS']
@@ -71,7 +76,8 @@ def rank(d, better_low):
 
 def panel(ax, direction, tau, title, use, VOLT):
     u = use[(direction, tau)]
-    rv = rank(VOLT[direction], better_low=True)
+    v = VOLT[(direction, tau)]
+    rv = rank(v, better_low=True)
     ru = rank(u, better_low=False)
     for k in ORDER:
         crossed = rv[k] != ru[k]
@@ -81,7 +87,7 @@ def panel(ax, direction, tau, title, use, VOLT):
                 solid_capstyle='round', zorder=3 if crossed else 2)
         ax.scatter([0, 1], [rv[k], ru[k]], s=54, color=COLOR[k],
                    zorder=4, edgecolor='white', linewidth=1.4)
-        ax.annotate(f"{VOLT[direction][k]:.1f} mV", (0, rv[k]),
+        ax.annotate(f"{v[k]:.1f} mV", (0, rv[k]),
                     xytext=(-10, 0), textcoords='offset points',
                     ha='right', va='center', fontsize=9.5,
                     color=COLOR[k], weight='bold')
@@ -98,7 +104,7 @@ def panel(ax, direction, tau, title, use, VOLT):
     ax.set_yticks(range(1, 7))
     ax.set_yticklabels([f'{i}' for i in range(1, 7)], fontsize=9.5)
     from scipy.stats import spearmanr
-    rho = spearmanr([VOLT[direction][k] for k in ORDER],
+    rho = spearmanr([v[k] for k in ORDER],
                     [-u[k] for k in ORDER]).statistic
     n_cross = sum(rv[k] != ru[k] for k in ORDER)
     note = ('ranking preserved' if n_cross == 0
@@ -126,8 +132,9 @@ def main():
                  'three of the four settings',
                  fontsize=15.5, weight='bold', y=0.983)
     fig.text(0.5, 0.955,
-             'Same six versions, same cell holdout.  A thick line = the two '
-             'metrics rank that version differently.',
+             'Same six versions, same cell holdout, voltage RMSE taken at '
+             'the same horizon as the current.  Thick line = the two metrics '
+             'rank that version differently.',
              ha='center', fontsize=10.8, color='#555555')
 
     handles = [Line2D([], [], color=COLOR[k], lw=3, label=LABEL[k])
@@ -136,14 +143,22 @@ def main():
                fontsize=9, bbox_to_anchor=(0.5, 0.003),
                columnspacing=1.4, handlelength=1.8)
 
+    # Derived, not typed in.  The previous footnote asserted "HPPC-RLS ranks
+    # first on voltage in all four settings", which stopped being true once
+    # the voltage metric was taken at the matching horizon.
+    settings = [(d, tau) for d in ('discharge', 'charge')
+                for tau in ('10.0', '2.0')]
+    rls_v = sum(rank(VOLT[s], True)['RLS'] == 1 for s in settings)
+    rls_u = [rank(use[s], False)['RLS'] for s in settings]
     fig.text(0.5, 0.062,
              'Turning voltage error into current is a division by resistance, '
              'so it has no reason to preserve rank.\n'
              'The exception is, of all settings, discharge 10 s — the one the '
              'literature reports as standard, so looking only there hides the '
              'problem.\n'
-             'HPPC-RLS ranks first on voltage in all four settings but fourth '
-             'on charge current.  Only the direct plug-in is last everywhere.',
+             f'HPPC-RLS ranks first on voltage in {rls_v} of 4 settings but '
+             f'{min(rls_u)}–{max(rls_u)} on current.  Only the direct plug-in '
+             f'is last everywhere.',
              ha='center', fontsize=10.2, color='#333333', linespacing=1.7)
 
     fig.subplots_adjust(left=0.075, right=0.955, top=0.905, bottom=0.135,
@@ -156,9 +171,10 @@ def main():
     for d, nm in (('discharge', 'discharge'), ('charge', 'charge')):
         for tau in ('10.0', '2.0'):
             u = use[(d, tau)]
-            rv, ru = rank(VOLT[d], True), rank(u, False)
+            vv = VOLT[(d, tau)]
+            rv, ru = rank(vv, True), rank(u, False)
             cross = [k for k in ORDER if rv[k] != ru[k]]
-            rho = spearmanr([VOLT[d][k] for k in ORDER],
+            rho = spearmanr([vv[k] for k in ORDER],
                             [-u[k] for k in ORDER]).statistic
             print(f'  {nm:<10} tau={tau:>4}: {len(cross)}/6 changed  '
                   f'Spearman {rho:+.3f}  {", ".join(cross) or "-"}')

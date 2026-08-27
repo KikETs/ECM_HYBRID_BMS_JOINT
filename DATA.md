@@ -7,10 +7,26 @@ under the names below, then run `python3 repro/run.py cache`.
 |---|---|---|---|
 | UYPYDJ | `10.5683/SP3/UYPYDJ` | 22 GB | Everything: aging cycling, HPPC, OCV, drive cycles |
 | RPCWBY | `10.5683/SP3/RPCWBY` | 1.7 GB | External validation; temperature axis (−20 to 40 °C) |
-| Mendeley | `10.17632/cp3473x7xv.3` | 438 MB | Drive cycles (UDDS, HWFET, LA92, US06) |
+| Mendeley | `10.17632/9xyvy2njj3.2` | 438 MB | Temperature axis for `ecm_temp_factor`; drive cycles (UDDS, HWFET, LA92, US06) |
 
 UYPYDJ arrives as six `.zip` files, one per protocol. Do not unpack them;
 `build_uypydj_cache.py` reads inside the archives.
+
+`10.17632/cp3473x7xv.3` appeared here in earlier revisions. That DOI is the
+LG 18650HG2 dataset, not this cell; it was corrected on 2026-08-27 after
+fetching both Mendeley landing pages. The local tree carries the Samsung
+INR21700-30T readme and technical report, so the data in use was always the
+Samsung release — only the citation was wrong.
+
+File-level SHA-256, sizes, licence and role for all three sources are in
+[manifests/raw_data.yaml](manifests/raw_data.yaml).
+
+## Roles
+
+No dataset crosses roles. UYPYDJ carries train, calibration, selection and
+the internal leave-one-cell-out test. RPCWBY is external validation only and
+is never used to fit, calibrate or select. Mendeley supplies the temperature
+factor and drive-cycle profiles.
 
 ## Cells
 

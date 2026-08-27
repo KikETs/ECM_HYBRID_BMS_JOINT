@@ -1,14 +1,23 @@
-# 이 작업이 실제로 돈 환경.  버전을 고정한 이유는 아래 주의 참고.
+# CPU environment.  Reproduces every stored-table verification, all figures,
+# and CPU training.  For CUDA training use environment-gpu.yml instead.
+#
+# Versions are pinned to the interpreter these results were produced on;
+# env/requirements.lock.txt carries the exact pip freeze.
+#
+# NumPy must stay on 2.x: the code calls np.ptp(arr), and arr.ptp() was
+# removed in NumPy 2.0, so downgrading to 1.x silently changes behaviour.
 name: samsung30t
-channels: [conda-forge, pytorch, nvidia]
+channels: [conda-forge]
 dependencies:
   - python=3.12
-  - numpy=2.*          # 주의: np.ptp(arr) 를 쓴다.  NumPy 2.0 에서
-                       # arr.ptp() 가 사라졌으므로 1.x 로 내리면 안 된다.
-  - scipy
-  - pytorch            # SOP 트림과 SOH CNN 학습에만 필요
-  - pytorch-cuda=12.*  # CPU 만 있어도 돈다 (느릴 뿐)
-  - pandas
-  - matplotlib
-  - py7zr              # UYPYDJ 의 zip/7z 를 푼다
+  - numpy=2.3.*
+  - scipy=1.16.*
+  - pandas=3.0.*
+  - matplotlib=3.10.*
+  - openpyxl=3.1.*        # reads the RPCWBY/Mendeley .xlsx summaries
+  - pyserial=3.5.*        # mcu/bench_sop.py talks to the board over USART3
+  - pytest=9.*            # tests/
+  - ruff                  # lint
   - pip
+  - pip:
+      - torch==2.9.1      # CPU wheel; SOP trim and SOH CNN training only

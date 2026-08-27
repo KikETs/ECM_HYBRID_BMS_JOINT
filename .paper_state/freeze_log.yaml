@@ -1,0 +1,33 @@
+# What is frozen, and what a rerun is allowed to change.
+version: 1
+audited: "2026-08-27"
+
+frozen:
+  - artifact: analysis/runs_trim_a8/, analysis/runs_trim_a8_chg/
+    what: "adopted SOP trim (A8), 6 LOCO folds x 3 seeds"
+    frozen_because: "every SOP number in the paper descends from these"
+    reproduces: "results/eval/ regenerated from them gives safety.csv, ladder.csv and soh_cost.csv byte-identically (checked 2026-08-27)"
+  - artifact: analysis/results/soh_pred.npz
+    what: "SOH CNN predictions, 6 LOCO folds x 3 seeds"
+    reproduces: "soh.csv byte-identically via repro/run_soh_table.py"
+  - artifact: mcu/sop_tables.h
+    sha256_after_fix: "regenerated during the audit; the pre-audit file did not compile"
+    what: "A8 ECM grid + OCV + trim weights"
+  - artifact: mcu/sop_mcu_bench.csv
+    what: "board timing, n=500 per stage, A8 firmware"
+    superseded: "the pre-audit A3-firmware measurement is preserved at ../preserved/sop_mcu_bench.a3header.csv"
+
+not_frozen:
+  - "results/eval/ — gitignored, rebuilt by repro/run_evals.py in ~1 min from the frozen trim weights"
+  - "analysis/cache/, analysis/cache_t/ — 4.6 GB, rebuilt from raw"
+
+changed_during_audit:
+  - "mcu/sop_tables.h: regenerated so it compiles (0f -> 0.0f) and from the A8 directories"
+  - "mcu/fw_sop/Inc/{sop_tables,soh_tables,soh_qparam}.h: file -> symlink"
+  - "mcu/sop_mcu_bench.csv + analysis/results/tables/mcu.csv: re-measured on the A8 firmware"
+  - "analysis/results/tables/voltage.csv: gained a tau_s column (pooled rows reproduce the old values)"
+  - "repro/expected.json: voltage checks re-keyed with tau_s=pooled; schema and completeness manifest added"
+
+preserved:
+  path: "../preserved/results_original_fa44137.tar.gz"
+  contents: "analysis/results, mcu/sop_mcu_bench*.csv and the five figures as of the base commit"

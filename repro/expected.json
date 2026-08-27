@@ -284,6 +284,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "discharge",
+        "tau_s": "pooled",
         "method": "A0"
       },
       "column": "rmse_mV",
@@ -295,6 +296,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "discharge",
+        "tau_s": "pooled",
         "method": "direct"
       },
       "column": "rmse_mV",
@@ -306,6 +308,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "discharge",
+        "tau_s": "pooled",
         "method": "shrink"
       },
       "column": "rmse_mV",
@@ -317,6 +320,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "discharge",
+        "tau_s": "pooled",
         "method": "A8"
       },
       "column": "rmse_mV",
@@ -328,6 +332,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "discharge",
+        "tau_s": "pooled",
         "method": "A3"
       },
       "column": "rmse_mV",
@@ -339,6 +344,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "discharge",
+        "tau_s": "pooled",
         "method": "RLS"
       },
       "column": "rmse_mV",
@@ -350,6 +356,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "charge",
+        "tau_s": "pooled",
         "method": "A0"
       },
       "column": "rmse_mV",
@@ -361,6 +368,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "charge",
+        "tau_s": "pooled",
         "method": "A8"
       },
       "column": "rmse_mV",
@@ -372,6 +380,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "charge",
+        "tau_s": "pooled",
         "method": "A3"
       },
       "column": "rmse_mV",
@@ -383,6 +392,7 @@
       "table": "voltage.csv",
       "where": {
         "direction": "charge",
+        "tau_s": "pooled",
         "method": "RLS"
       },
       "column": "rmse_mV",
@@ -515,5 +525,811 @@
       "tol": 0.02,
       "source": "sec 33.5 — same check on the second cell"
     }
-  ]
+  ],
+  "tables": {
+    "alpha.csv": {
+      "producer": "python3 repro/run_extras.py",
+      "stage": "extras",
+      "required": true,
+      "rows": 12,
+      "columns": [
+        "direction",
+        "holdout",
+        "alpha_fast",
+        "alpha_slow"
+      ],
+      "numeric": [
+        "alpha_fast",
+        "alpha_slow"
+      ],
+      "units": {
+        "alpha_fast": "dimensionless",
+        "alpha_slow": "dimensionless"
+      }
+    },
+    "build_size.csv": {
+      "producer": "python3 repro/run_extras.py",
+      "stage": "extras",
+      "required": false,
+      "rows": 1,
+      "columns": [
+        "build",
+        "text_B",
+        "bss_B"
+      ],
+      "numeric": [
+        "text_B",
+        "bss_B"
+      ],
+      "units": {
+        "text_B": "B",
+        "bss_B": "B"
+      }
+    },
+    "cold_ratio.csv": {
+      "producer": "python3 repro/run_extras.py",
+      "stage": "extras",
+      "required": true,
+      "rows": 2,
+      "columns": [
+        "cell",
+        "cycle",
+        "R_mOhm",
+        "neighbour_mOhm",
+        "ratio"
+      ],
+      "numeric": [
+        "cycle",
+        "R_mOhm",
+        "neighbour_mOhm",
+        "ratio"
+      ],
+      "units": {
+        "cycle": "cycle index",
+        "R_mOhm": "mOhm",
+        "neighbour_mOhm": "mOhm",
+        "ratio": "dimensionless"
+      }
+    },
+    "correlation.csv": {
+      "producer": "python3 repro/run_extras.py",
+      "stage": "extras",
+      "required": true,
+      "rows": 4,
+      "columns": [
+        "direction",
+        "tau_s",
+        "n",
+        "corr_meas_vs_ratio"
+      ],
+      "numeric": [
+        "tau_s",
+        "n",
+        "corr_meas_vs_ratio"
+      ],
+      "units": {
+        "tau_s": "s",
+        "n": "count",
+        "corr_meas_vs_ratio": "dimensionless"
+      }
+    },
+    "ladder.csv": {
+      "producer": "python3 repro/run_safety.py",
+      "stage": "safety",
+      "required": true,
+      "rows": 24,
+      "columns": [
+        "direction",
+        "tau_s",
+        "method",
+        "params",
+        "n",
+        "lambda",
+        "optimism_pct",
+        "rmse_A",
+        "usable_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "params",
+        "n",
+        "lambda",
+        "optimism_pct",
+        "rmse_A",
+        "usable_pct"
+      ],
+      "units": {
+        "tau_s": "s",
+        "params": "count",
+        "n": "count",
+        "lambda": "dimensionless",
+        "optimism_pct": "%",
+        "rmse_A": "A",
+        "usable_pct": "%"
+      }
+    },
+    "mcu.csv": {
+      "producer": "python3 repro/run_mcu_table.py",
+      "stage": "mcu_table",
+      "required": true,
+      "rows": 8,
+      "columns": [
+        "stage",
+        "n",
+        "median_us",
+        "p95_us",
+        "max_us"
+      ],
+      "numeric": [
+        "n",
+        "median_us",
+        "p95_us",
+        "max_us"
+      ],
+      "units": {
+        "n": "count",
+        "median_us": "us",
+        "p95_us": "us",
+        "max_us": "us"
+      }
+    },
+    "pack.csv": {
+      "producer": "python3 analysis/sop_pack2.py",
+      "stage": "pack",
+      "required": true,
+      "rows": 40,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh",
+        "lambda",
+        "N",
+        "exceed_pct",
+        "worst_A",
+        "usable_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "lambda",
+        "N",
+        "exceed_pct",
+        "worst_A",
+        "usable_pct"
+      ],
+      "units": {
+        "tau_s": "s",
+        "lambda": "dimensionless",
+        "N": "cells",
+        "exceed_pct": "%",
+        "worst_A": "A",
+        "usable_pct": "%"
+      }
+    },
+    "safety.csv": {
+      "producer": "python3 repro/run_safety.py",
+      "stage": "safety",
+      "required": true,
+      "rows": 8,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh",
+        "n",
+        "lambda",
+        "optimism_pct",
+        "rmse_A",
+        "usable_pct",
+        "worst_A"
+      ],
+      "numeric": [
+        "tau_s",
+        "n",
+        "lambda",
+        "optimism_pct",
+        "rmse_A",
+        "usable_pct",
+        "worst_A"
+      ],
+      "units": {
+        "tau_s": "s",
+        "n": "count",
+        "lambda": "dimensionless",
+        "optimism_pct": "%",
+        "rmse_A": "A",
+        "usable_pct": "%",
+        "worst_A": "A"
+      }
+    },
+    "soc_perturb.csv": {
+      "producer": "python3 analysis/soc_perturb_bench.py",
+      "stage": "soc",
+      "required": true,
+      "rows": 35,
+      "columns": [
+        "config",
+        "perturbation",
+        "rmse_full_pct",
+        "rmse_tail_pct",
+        "worst_pct"
+      ],
+      "numeric": [
+        "rmse_full_pct",
+        "rmse_tail_pct",
+        "worst_pct"
+      ],
+      "units": {
+        "rmse_full_pct": "%p",
+        "rmse_tail_pct": "%p",
+        "worst_pct": "%p"
+      }
+    },
+    "soh.csv": {
+      "producer": "python3 repro/run_soh_table.py",
+      "stage": "soh_table",
+      "required": true,
+      "rows": 7,
+      "columns": [
+        "cell",
+        "n",
+        "rmse",
+        "mae",
+        "bias"
+      ],
+      "numeric": [
+        "n",
+        "rmse",
+        "mae",
+        "bias"
+      ],
+      "units": {
+        "n": "count",
+        "rmse": "fraction SOH",
+        "mae": "fraction SOH",
+        "bias": "fraction SOH"
+      }
+    },
+    "soh_cost.csv": {
+      "producer": "python3 repro/run_safety.py",
+      "stage": "safety",
+      "required": false,
+      "rows": 8,
+      "columns": [
+        "direction",
+        "tau_s",
+        "trim",
+        "lambda_oracle",
+        "lambda_est",
+        "usable_oracle_pct",
+        "usable_est_pct",
+        "delta_pct_pt"
+      ],
+      "numeric": [
+        "tau_s",
+        "lambda_oracle",
+        "lambda_est",
+        "usable_oracle_pct",
+        "usable_est_pct",
+        "delta_pct_pt"
+      ],
+      "units": {
+        "tau_s": "s",
+        "lambda_oracle": "dimensionless",
+        "lambda_est": "dimensionless",
+        "usable_oracle_pct": "%",
+        "usable_est_pct": "%",
+        "delta_pct_pt": "%p"
+      }
+    },
+    "voltage.csv": {
+      "producer": "python3 repro/run_voltage.py",
+      "stage": "voltage",
+      "required": true,
+      "rows": 36,
+      "columns": [
+        "direction",
+        "tau_s",
+        "method",
+        "n_cells",
+        "rmse_mV",
+        "BOOST",
+        "BOOST_NEGPULSE",
+        "BOOST_NEGPULSE_1S",
+        "BOOST_REST",
+        "CC",
+        "CC_CELL2"
+      ],
+      "numeric": [
+        "n_cells",
+        "rmse_mV",
+        "BOOST",
+        "BOOST_NEGPULSE",
+        "BOOST_NEGPULSE_1S",
+        "BOOST_REST",
+        "CC",
+        "CC_CELL2"
+      ],
+      "units": {
+        "n_cells": "count",
+        "rmse_mV": "mV",
+        "BOOST": "mV",
+        "BOOST_NEGPULSE": "mV",
+        "BOOST_NEGPULSE_1S": "mV",
+        "BOOST_REST": "mV",
+        "CC": "mV",
+        "CC_CELL2": "mV"
+      }
+    },
+    "label_quality.csv": {
+      "rows": 6,
+      "columns": [
+        "direction",
+        "extrap_band",
+        "n",
+        "share_pct",
+        "extrap_median",
+        "spread_A_median",
+        "spread_rel_pct",
+        "fit_r2_median",
+        "fit_r2_min",
+        "n_with_lin2hi",
+        "abs_I_star_median_A"
+      ],
+      "numeric": [
+        "n",
+        "share_pct",
+        "extrap_median",
+        "spread_A_median",
+        "spread_rel_pct",
+        "fit_r2_median",
+        "fit_r2_min",
+        "n_with_lin2hi",
+        "abs_I_star_median_A"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_label_quality.py",
+      "stage": "label_quality",
+      "units": {
+        "n": "[EVIDENCE REQUIRED]",
+        "share_pct": "[EVIDENCE REQUIRED]",
+        "extrap_median": "[EVIDENCE REQUIRED]",
+        "spread_A_median": "[EVIDENCE REQUIRED]",
+        "spread_rel_pct": "[EVIDENCE REQUIRED]",
+        "fit_r2_median": "[EVIDENCE REQUIRED]",
+        "fit_r2_min": "[EVIDENCE REQUIRED]",
+        "n_with_lin2hi": "[EVIDENCE REQUIRED]",
+        "abs_I_star_median_A": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "label_sensitivity.csv": {
+      "rows": 30,
+      "columns": [
+        "direction",
+        "tau_s",
+        "extrap_max",
+        "method",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_worst_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "extrap_max",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_worst_pct"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_label_quality.py",
+      "stage": "label_quality",
+      "units": {
+        "tau_s": "[EVIDENCE REQUIRED]",
+        "extrap_max": "[EVIDENCE REQUIRED]",
+        "n_rows": "[EVIDENCE REQUIRED]",
+        "exceed": "[EVIDENCE REQUIRED]",
+        "usable_mean_pct": "[EVIDENCE REQUIRED]",
+        "usable_worst_pct": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "safety_strict_est.csv": {
+      "rows": 4,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh_arm",
+        "n_cells",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_median_pct",
+        "usable_worst_pct",
+        "worst_cell",
+        "lambda_min",
+        "lambda_median",
+        "lambda_max",
+        "lambda_pooled_shipped",
+        "exceed_ub95_pct",
+        "usable_boot_lo_pct",
+        "usable_boot_hi_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "n_cells",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_median_pct",
+        "usable_worst_pct",
+        "lambda_min",
+        "lambda_median",
+        "lambda_max",
+        "lambda_pooled_shipped",
+        "exceed_ub95_pct",
+        "usable_boot_lo_pct",
+        "usable_boot_hi_pct"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_safety_strict.py --arm est",
+      "stage": "safety_strict",
+      "units": {
+        "tau_s": "[EVIDENCE REQUIRED]",
+        "n_cells": "[EVIDENCE REQUIRED]",
+        "n_rows": "[EVIDENCE REQUIRED]",
+        "exceed": "[EVIDENCE REQUIRED]",
+        "usable_mean_pct": "[EVIDENCE REQUIRED]",
+        "usable_median_pct": "[EVIDENCE REQUIRED]",
+        "usable_worst_pct": "[EVIDENCE REQUIRED]",
+        "lambda_min": "[EVIDENCE REQUIRED]",
+        "lambda_median": "[EVIDENCE REQUIRED]",
+        "lambda_max": "[EVIDENCE REQUIRED]",
+        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "safety_strict_oracle.csv": {
+      "rows": 4,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh_arm",
+        "n_cells",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_median_pct",
+        "usable_worst_pct",
+        "worst_cell",
+        "lambda_min",
+        "lambda_median",
+        "lambda_max",
+        "lambda_pooled_shipped",
+        "exceed_ub95_pct",
+        "usable_boot_lo_pct",
+        "usable_boot_hi_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "n_cells",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_median_pct",
+        "usable_worst_pct",
+        "lambda_min",
+        "lambda_median",
+        "lambda_max",
+        "lambda_pooled_shipped",
+        "exceed_ub95_pct",
+        "usable_boot_lo_pct",
+        "usable_boot_hi_pct"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_safety_strict.py --arm oracle",
+      "stage": "safety_strict",
+      "units": {
+        "tau_s": "[EVIDENCE REQUIRED]",
+        "n_cells": "[EVIDENCE REQUIRED]",
+        "n_rows": "[EVIDENCE REQUIRED]",
+        "exceed": "[EVIDENCE REQUIRED]",
+        "usable_mean_pct": "[EVIDENCE REQUIRED]",
+        "usable_median_pct": "[EVIDENCE REQUIRED]",
+        "usable_worst_pct": "[EVIDENCE REQUIRED]",
+        "lambda_min": "[EVIDENCE REQUIRED]",
+        "lambda_median": "[EVIDENCE REQUIRED]",
+        "lambda_max": "[EVIDENCE REQUIRED]",
+        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "safety_strict_percell_est.csv": {
+      "rows": 22,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh_arm",
+        "cell",
+        "n",
+        "lambda_i",
+        "exceed",
+        "worst_A",
+        "usable_pct",
+        "optimism_pct",
+        "rmse_A"
+      ],
+      "numeric": [
+        "tau_s",
+        "n",
+        "lambda_i",
+        "exceed",
+        "worst_A",
+        "usable_pct",
+        "optimism_pct",
+        "rmse_A"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_safety_strict.py --arm est",
+      "stage": "safety_strict",
+      "units": {
+        "tau_s": "[EVIDENCE REQUIRED]",
+        "n": "[EVIDENCE REQUIRED]",
+        "lambda_i": "[EVIDENCE REQUIRED]",
+        "exceed": "[EVIDENCE REQUIRED]",
+        "worst_A": "[EVIDENCE REQUIRED]",
+        "usable_pct": "[EVIDENCE REQUIRED]",
+        "optimism_pct": "[EVIDENCE REQUIRED]",
+        "rmse_A": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "safety_strict_percell_oracle.csv": {
+      "rows": 22,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh_arm",
+        "cell",
+        "n",
+        "lambda_i",
+        "exceed",
+        "worst_A",
+        "usable_pct",
+        "optimism_pct",
+        "rmse_A"
+      ],
+      "numeric": [
+        "tau_s",
+        "n",
+        "lambda_i",
+        "exceed",
+        "worst_A",
+        "usable_pct",
+        "optimism_pct",
+        "rmse_A"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_safety_strict.py --arm oracle",
+      "stage": "safety_strict",
+      "units": {
+        "tau_s": "[EVIDENCE REQUIRED]",
+        "n": "[EVIDENCE REQUIRED]",
+        "lambda_i": "[EVIDENCE REQUIRED]",
+        "exceed": "[EVIDENCE REQUIRED]",
+        "worst_A": "[EVIDENCE REQUIRED]",
+        "usable_pct": "[EVIDENCE REQUIRED]",
+        "optimism_pct": "[EVIDENCE REQUIRED]",
+        "rmse_A": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "safety_strict_tolsens_est.csv": {
+      "rows": 16,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh_arm",
+        "tolerance_A",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "exceed_ub95_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "tolerance_A",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "exceed_ub95_pct"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_safety_strict.py --arm est",
+      "stage": "safety_strict",
+      "units": {
+        "tau_s": "[EVIDENCE REQUIRED]",
+        "tolerance_A": "[EVIDENCE REQUIRED]",
+        "n_rows": "[EVIDENCE REQUIRED]",
+        "exceed": "[EVIDENCE REQUIRED]",
+        "usable_mean_pct": "[EVIDENCE REQUIRED]",
+        "usable_worst_pct": "[EVIDENCE REQUIRED]",
+        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "safety_strict_tolsens_oracle.csv": {
+      "rows": 16,
+      "columns": [
+        "direction",
+        "tau_s",
+        "soh_arm",
+        "tolerance_A",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "exceed_ub95_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "tolerance_A",
+        "n_rows",
+        "exceed",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "exceed_ub95_pct"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_safety_strict.py --arm oracle",
+      "stage": "safety_strict",
+      "units": {
+        "tau_s": "[EVIDENCE REQUIRED]",
+        "tolerance_A": "[EVIDENCE REQUIRED]",
+        "n_rows": "[EVIDENCE REQUIRED]",
+        "exceed": "[EVIDENCE REQUIRED]",
+        "usable_mean_pct": "[EVIDENCE REQUIRED]",
+        "usable_worst_pct": "[EVIDENCE REQUIRED]",
+        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "soc_headline.csv": {
+      "rows": 5,
+      "columns": [
+        "config",
+        "n_rows",
+        "undisturbed_pct",
+        "mean_6_disturbances_pct",
+        "mean_7_rows_pct",
+        "median_6_pct",
+        "worst_of_6_pct",
+        "mean_of_3_pair_means_pct"
+      ],
+      "numeric": [
+        "n_rows",
+        "undisturbed_pct",
+        "mean_6_disturbances_pct",
+        "mean_7_rows_pct",
+        "median_6_pct",
+        "worst_of_6_pct",
+        "mean_of_3_pair_means_pct"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_soc_headline.py",
+      "stage": "soc_headline",
+      "units": {
+        "n_rows": "[EVIDENCE REQUIRED]",
+        "undisturbed_pct": "[EVIDENCE REQUIRED]",
+        "mean_6_disturbances_pct": "[EVIDENCE REQUIRED]",
+        "mean_7_rows_pct": "[EVIDENCE REQUIRED]",
+        "median_6_pct": "[EVIDENCE REQUIRED]",
+        "worst_of_6_pct": "[EVIDENCE REQUIRED]",
+        "mean_of_3_pair_means_pct": "[EVIDENCE REQUIRED]"
+      }
+    },
+    "soh_baselines.csv": {
+      "rows": 6,
+      "columns": [
+        "method",
+        "rmse_pooled",
+        "rmse_mean_of_cells",
+        "rmse_worst_cell",
+        "worst_cell",
+        "hyperparameter_per_fold",
+        "BOOST",
+        "BOOST_NEGPULSE",
+        "BOOST_NEGPULSE_1S",
+        "BOOST_REST",
+        "CC",
+        "CC_CELL2"
+      ],
+      "numeric": [
+        "rmse_pooled",
+        "rmse_mean_of_cells",
+        "rmse_worst_cell",
+        "BOOST",
+        "BOOST_NEGPULSE",
+        "BOOST_NEGPULSE_1S",
+        "BOOST_REST",
+        "CC",
+        "CC_CELL2"
+      ],
+      "required": false,
+      "producer": "python3 repro/run_soh_baselines.py",
+      "stage": "soh_baselines",
+      "units": {
+        "rmse_pooled": "[EVIDENCE REQUIRED]",
+        "rmse_mean_of_cells": "[EVIDENCE REQUIRED]",
+        "rmse_worst_cell": "[EVIDENCE REQUIRED]",
+        "BOOST": "[EVIDENCE REQUIRED]",
+        "BOOST_NEGPULSE": "[EVIDENCE REQUIRED]",
+        "BOOST_NEGPULSE_1S": "[EVIDENCE REQUIRED]",
+        "BOOST_REST": "[EVIDENCE REQUIRED]",
+        "CC": "[EVIDENCE REQUIRED]",
+        "CC_CELL2": "[EVIDENCE REQUIRED]"
+      }
+    }
+  },
+  "completeness": {
+    "total_checks": 43,
+    "checks_per_table": {
+      "alpha.csv": 2,
+      "cold_ratio.csv": 2,
+      "correlation.csv": 1,
+      "ladder.csv": 9,
+      "mcu.csv": 4,
+      "pack.csv": 3,
+      "safety.csv": 6,
+      "soc_perturb.csv": 4,
+      "soh.csv": 2,
+      "voltage.csv": 10
+    },
+    "check_ids": [
+      "alpha.chg.CC.slow",
+      "alpha.disc.CC",
+      "cold.BOOST.ratio",
+      "cold.CC.ratio",
+      "corr.disc.10s",
+      "ladder.chg.A3",
+      "ladder.chg.A8_beats_A3",
+      "ladder.chg.rls_bound_loses",
+      "ladder.disc.A0",
+      "ladder.disc.A3",
+      "ladder.disc.A8",
+      "ladder.disc.direct",
+      "ladder.disc.rls_bound",
+      "ladder.disc.shrink",
+      "mcu.ekf",
+      "mcu.feat",
+      "mcu.feat_a8",
+      "mcu.full",
+      "pack.chg.10s.worst.N192",
+      "pack.disc.10s.exceed.N192",
+      "pack.disc.10s.exceed.est.N192",
+      "soc.adopted.ibias",
+      "soc.adopted.no_perturb",
+      "soc.open_loop.ibias",
+      "soc.open_loop.no_perturb",
+      "soh.bias",
+      "soh.rmse",
+      "sop.chg.10s.lambda",
+      "sop.chg.10s.usable",
+      "sop.chg.10s.usable.est_soh",
+      "sop.disc.10s.lambda",
+      "sop.disc.10s.usable",
+      "sop.disc.10s.usable.est_soh",
+      "volt.char.A0",
+      "volt.char.A3",
+      "volt.char.A8",
+      "volt.char.RLS",
+      "volt.disc.A0",
+      "volt.disc.A3",
+      "volt.disc.A8",
+      "volt.disc.RLS",
+      "volt.disc.direct",
+      "volt.disc.shrink"
+    ],
+    "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
+  }
 }

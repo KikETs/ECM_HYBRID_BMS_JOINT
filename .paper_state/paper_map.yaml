@@ -1,0 +1,99 @@
+# Which artifact backs which paper claim.
+# Every entry names a table, a producer command, and its ledger status.
+version: 1
+base_commit: fa44137ad7ca39b75a044538d7b4db3cbf3a5ed1
+audit_branch: audit/etransportation-readiness
+audited: "2026-08-27"
+
+claims:
+  - id: sop.usable_current
+    text: "usable current 69.1 % discharge, 59.6 % charge at zero exceedance"
+    table: safety.csv
+    producer: "python3 repro/run_safety.py"
+    ledger: safety_calibration
+    status: CONTRADICTED
+    replacement: >
+      Use safety_strict_oracle.csv.  Strict per-cell held-out calibration
+      gives 69.6 % discharge / 59.5 % charge at 10 s with 1 exceedance each,
+      not zero.
+
+  - id: sop.lambda
+    text: "discharge 0.683 / 0.470, charge 0.586 / 0.560"
+    table: safety.csv
+    producer: "python3 repro/run_safety.py"
+    ledger: safety_calibration
+    status: PARTIAL
+    note: "These are the pooled-median lambdas.  Per-cell held-out lambdas span 0.683-0.708 (discharge 10 s)."
+
+  - id: sop.ladder
+    text: "A8 beats A0 by ~10 %p usable current; A8 >= A3 on charge"
+    table: ladder.csv
+    producer: "python3 repro/run_safety.py"
+    status: VERIFIED
+    robustness: "Holds at every extrapolation ceiling (label_sensitivity.csv)."
+
+  - id: sop.voltage_rank_flip
+    text: "ranking by voltage RMSE picks wrong in 3 of 4 settings"
+    table: voltage.csv + ladder.csv
+    producer: "python3 repro/run_voltage.py && python3 repro/fig_ladder.py"
+    status: VERIFIED
+    note: >
+      The figure previously drew one horizon-agnostic voltage RMSE in both
+      the 2 s and 10 s panels.  voltage.csv now carries tau_s and the figure
+      matches horizons.  Discharge 10 s still preserves rank exactly
+      (Spearman +1.00); charge 10 s moved from 3/6 to 4/6.
+
+  - id: soh.rmse
+    text: "SOH RMSE 0.0135, bias +0.0001"
+    table: soh.csv
+    producer: "python3 repro/run_soh_table.py"
+    status: VERIFIED
+    note: "Worst cell BOOST_REST is 0.0293 — 2.2x the pooled value.  Report it."
+
+  - id: soh.cnn_needed
+    text: "a CNN is the right model for partial-charge SOH"
+    table: soh_baselines.csv
+    producer: "python3 repro/run_soh_baselines.py"
+    status: CONTRADICTED
+    replacement: "Ridge is better on the same splits (0.0094 vs 0.0135 pooled, 0.0130 vs 0.0293 worst cell)."
+
+  - id: soc.headline
+    text: "2.05 %p under sensor perturbation"
+    table: soc_headline.csv
+    producer: "python3 repro/run_soc_headline.py"
+    status: CONTRADICTED
+    replacement: "2.14 %p over the six disturbances; 2.05 %p only if the undisturbed row is included; worst condition 3.77 %p."
+
+  - id: mcu.cycle_time
+    text: "214.8 us per control cycle, 142.1 KB flash"
+    table: mcu.csv
+    producer: "python3 repro/run_mcu_table.py"
+    status: VERIFIED
+    note: >
+      Re-measured on hardware with the corrected A8 firmware: median
+      214.83 us, WCET 307.12 us.  Flash: deployment build text 142060 B
+      = 138.7 KiB = 142.1 kB decimal — state the unit.
+
+  - id: mcu.model_identity
+    text: "the board runs the adopted A8 model"
+    ledger: mcu_deployment
+    status: VERIFIED
+    note: >
+      True only after this audit.  At the base commit the firmware compiled
+      A3 weights and the A8 header did not compile at all.
+
+  - id: mcu.parameter_count
+    text: "4 parameters"
+    status: PARTIAL
+    replacement: "four effective deployed coefficients; the header ships a 12-input layer (50 floats)."
+
+  - id: external.rpcwby
+    text: "external validation on RPCWBY"
+    status: NOT_FOUND
+    note: "The only external artifact is physics-only.  A8 has never been scored outside UYPYDJ."
+
+  - id: pack.no_exceedance
+    text: "zero pack exceedance for N = 1..192"
+    table: pack.csv
+    status: PARTIAL
+    note: "Resampling simulation of single-cell rows, not a pack measurement.  Say 'pack-level simulation sensitivity'."

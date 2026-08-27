@@ -1209,8 +1209,8 @@ static const float trim_b_dis[2] = {
   -0.05173321f, -0.01677474f,
 };
 static const float trim_mu_dis[12] = {
-  0.6173546f, 0f, 0f, 0f, 0f, 0f, 0f, 0f,
-  0f, 0f, 0f, 0f,
+  0.6173546f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 0.0f,
 };
 static const float trim_sd_dis[12] = {
   6.530676f, 1e-08f, 1e-08f, 1e-08f, 1e-08f, 1e-08f, 1e-08f, 1e-08f,
@@ -1225,8 +1225,8 @@ static const float trim_b_chg[2] = {
   -0.02256906f, -0.005384269f,
 };
 static const float trim_mu_chg[12] = {
-  0.6270932f, 0f, 0f, 0f, 0f, 0f, 0f, 0f,
-  0f, 0f, 0f, 0f,
+  0.6270932f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 0.0f, 0.0f,
 };
 static const float trim_sd_chg[12] = {
   6.031107f, 1e-08f, 1e-08f, 1e-08f, 1e-08f, 1e-08f, 1e-08f, 1e-08f,

@@ -1,0 +1,19 @@
+# CUDA environment.  Same as environment.yml but with the CUDA 12.8 torch
+# wheel.  Only the two training stages (trim_*, soh) use the GPU; every
+# verification and figure stage runs on CPU.
+name: samsung30t-gpu
+channels: [conda-forge]
+dependencies:
+  - python=3.12
+  - numpy=2.3.*
+  - scipy=1.16.*
+  - pandas=3.0.*
+  - matplotlib=3.10.*
+  - openpyxl=3.1.*
+  - pyserial=3.5.*
+  - pytest=9.*
+  - ruff
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.9.1+cu128

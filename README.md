@@ -7,18 +7,31 @@ leave-one-cell-out throughout. Timing measured on a NUCLEO-H563ZI
 
 ## Results
 
-| Arm | Model | Size | Leave-one-cell-out |
-|---|---|---|---|
-| SOP | 2RC table + trim (A8) | 4 parameters, 2 EW states | usable current 69.1 % discharge, 59.6 % charge |
-| SOH | dQ/dV CNN | 10,945 parameters | RMSE 0.0135, bias +0.0001 |
-| SOC | 2RC EKF, low-current gate | 3 states | 2.05 %p under sensor perturbation |
+| Arm | Model | Size | Leave-one-cell-out | Worst cell |
+|---|---|---|---|---|
+| SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
+| SOH | dQ/dV CNN | 10,945 parameters | RMSE 0.0135, bias +0.0001 | 0.0293 (BOOST_REST) |
+| SOC | 2RC EKF, low-current gate | 3 states | 2.14 %p over six sensor disturbances | 3.77 %p (current offset −0.10 A) |
 
-Safety factor λ is calibrated leave-one-cell-out to zero exceedance:
-discharge 0.683 (10 s) / 0.470 (2 s), charge 0.586 / 0.560 at a 0.5 A
-tolerance. "Usable current" is the median of λ·predicted / measured.
+Safety factor λ is calibrated **per held-out cell**: cell *i* is scored under
+a λ fitted with cell *i* removed entirely. Per-cell λ spans 0.683–0.708
+(discharge 10 s). Observed exceedance is 1 of 491 rows on discharge 10 s and
+1 of 2461 on charge 10 s, with one-sided 95 % upper bounds of 0.96 % and
+0.19 %. **Zero observed exceedance is not zero risk**; the bound is the
+number to quote. "Usable current" is the median of λ·predicted / measured.
 
-Per-cycle cost on the board: 214.8 µs (SOC EKF 7.1, trim features 6.0,
-four SOP inversions 201.7). Flash 142.1 KB for the deployment build.
+Per-cycle cost on the board: median 214.8 µs, worst case 307.1 µs (SOC EKF
+7.1, A8 feature update 6.0, four SOP inversions 201.7). Deployment build
+text 142 060 B = 138.7 KiB. Measured on a NUCLEO-H563ZI after flashing;
+`repro/run_parity.py` checks the C against Python to 9.2 × 10⁻⁶.
+
+> An audit on 2026-08-27 (branch `audit/etransportation-readiness`) revised
+> several numbers above and contradicted others. `.paper_state/paper_map.yaml`
+> lists every claim with its status; `.paper_state/evidence_ledger.yaml`
+> carries the measurements. In particular: ridge regression beats the SOH
+> CNN on the same splits, the frozen A8 has never been validated outside
+> UYPYDJ, and 78 % of the discharge SOP labels are extrapolated rather than
+> measured.
 
 ## Reproduce
 
@@ -64,14 +77,28 @@ redistributed.
   a benchmark that perturbs the current the filter sees (initial SOC error,
   sensor offset, gain error) while the label keeps the true current.
 - Voltage RMSE and usable current rank the six SOP methods differently in
-  three of four direction × horizon settings. They agree only at discharge
-  τ = 10 s.
+  three of four direction × horizon settings, with the voltage metric taken
+  at the same horizon as the current. They agree only at discharge
+  τ = 10 s (Spearman +1.00).
 - All three arms are also evaluated with estimated rather than oracle SOH:
   discharge 69.1 → 67.2 %, charge 59.6 → 56.6 %, SOC 2.05 → 2.17 %p.
 - Cell-level λ does not transfer to a pack without recalibration. Keeping
   the oracle-SOH λ under estimated SOH gives 42 % pack exceedance at
-  N = 192 for discharge τ = 2 s (worst overshoot 0.18 A).
+  N = 192 for discharge τ = 2 s (worst overshoot 0.18 A). This is a
+  **pack-level simulation sensitivity**, not a pack validation: it resamples
+  single-cell evaluation rows and models no inter-cell correlation, shared
+  current trajectory, thermal gradient or imbalance. There is no pack
+  hardware and no HIL behind any number here.
+- The SOP targets are **pulse-derived current-limit references**, not direct
+  SOP measurements. A 30 A cycler cannot reach the discharge current the
+  cell can take, so I\* is projected from a fit through four HPPC rates:
+  78 % of discharge labels extrapolate past 1.5× the largest measured
+  current. The A8-over-A0 result survives restricting to interpolated
+  labels only (`analysis/results/tables/label_sensitivity.csv`).
 
 ## Licence
 
-None set; all rights reserved.
+`[AUTHOR DECISION REQUIRED]` — no LICENSE file is present and none was
+chosen by the audit. Note that the Mendeley source is CC BY 4.0, which
+carries attribution obligations for anything derived from it; the two
+Borealis datasets' terms are unconfirmed (`manifests/raw_data.yaml`).

@@ -52,3 +52,15 @@ __pycache__/
 # --- Local Korean originals kept for diffing after translation ---
 docs/_ko_backup/
 analysis/results/tables_backup/
+
+# --- audit additions ---
+# raw/ is a symlink to the dataset tree during the audit
+/raw
+# host parity harness binaries (rebuilt by repro/run_parity.py)
+mcu/parity_host_audit
+mcu/parity_host
+mcu/parity_soh
+mcu/parity_simd
+# pre-audit copies kept locally for diffing
+env/*.orig
+env/*.csv.orig

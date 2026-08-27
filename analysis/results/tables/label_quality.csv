@@ -1,0 +1,7 @@
+direction,extrap_band,n,share_pct,extrap_median,spread_A_median,spread_rel_pct,fit_r2_median,fit_r2_min,n_with_lin2hi,abs_I_star_median_A
+discharge,<=1  interpolated,578,8.0,0.940,1.405,6.6,0.96557,0.90575,402,22.1
+discharge,1-1.5 mild extrap,1019,14.1,1.233,1.720,5.8,0.99239,0.55568,1019,32.5
+discharge,>1.5  strong extrap,5653,78.0,2.669,3.916,4.8,0.99893,0.12210,5653,78.6
+charge,<=1  interpolated,2318,34.1,0.970,0.206,2.6,0.98879,0.28571,1628,9.5
+charge,1-1.5 mild extrap,2385,35.1,1.145,0.718,3.2,0.99618,0.88226,2282,27.0
+charge,>1.5  strong extrap,2097,30.8,1.819,2.252,4.7,0.99834,0.73148,2097,49.0
