@@ -1,7 +1,7 @@
-"""SOH 궤적 — 부분 충전 구간 CNN 이 셀 하나씩 빼고 무엇을 맞히나.
+"""SOH trajectories — what the partial-charge CNN predicts leaving one cell out.
 
-각 셀은 그 셀을 한 번도 못 본 모델이 맞힌다 (나머지 다섯 셀로 학습).
-파라미터 10,945 개, 시드 3 개 평균.
+Each cell is predicted by a model that never saw it (trained on the other
+five).  10,945 parameters, mean over 3 seeds.
 
     python3 repro/fig_soh_traj.py
 """
@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt          # noqa: E402
 import numpy as np                       # noqa: E402
 
-plt.rcParams['font.family'] = 'Noto Sans CJK JP'
+plt.rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['axes.unicode_minus'] = False
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -41,15 +41,16 @@ def main():
         cy, y, p = cy[o], y[o], p[o]
         e = (p - y) * 100
         all_err.append(e)
-        ax.plot(cy, y * 100, color=C_TRUE, lw=2.0, label='참 SOH', zorder=3)
+        ax.plot(cy, y * 100, color=C_TRUE, lw=2.0, label='true SOH',
+                zorder=3)
         bad = np.abs(e) > 2.0
         ax.scatter(cy[~bad], p[~bad] * 100, s=17, color=C_PRED, zorder=4,
-                   label='추정 (홀드아웃)')
+                   label='estimated (holdout)')
         if bad.any():
             ax.scatter(cy[bad], p[bad] * 100, s=26, color=C_BAD, zorder=5,
-                       label='오차 > 2 %p')
+                       label='error > 2 %p')
         ax.set_title(f'{c}   RMSE {np.sqrt(np.mean(e**2)):.2f} %p   '
-                     f'편향 {e.mean():+.2f}',
+                     f'bias {e.mean():+.2f}',
                      fontsize=11, weight='bold', loc='left', pad=6)
         ax.set_ylim(64, 104)
         ax.grid(color='#ececec', lw=0.8)
@@ -58,11 +59,11 @@ def main():
         if i % 3 == 0:
             ax.set_ylabel('SOH  [%]', fontsize=10.5)
         if i >= 3:
-            ax.set_xlabel('사이클', fontsize=10.5)
+            ax.set_xlabel('cycle', fontsize=10.5)
         if i == 0:
             ax.legend(fontsize=9, loc='lower left', framealpha=0.94)
 
-    # 아래 폭: 오차 분포와 1:1
+    # bottom band: error over cycles, and the 1:1 plot
     axl = fig.add_subplot(gs[2, :2])
     for c in CELLS:
         cy = z[f'{c}_cycle']
@@ -71,9 +72,9 @@ def main():
         axl.plot(cy[o], e[o], lw=1.5, alpha=0.85, label=c)
     axl.axhline(0, color=C_TRUE, lw=1.4)
     axl.axhspan(-2, 2, color='#ececec', zorder=0)
-    axl.set_xlabel('사이클', fontsize=10.5)
-    axl.set_ylabel('오차  [%p]', fontsize=10.5)
-    axl.set_title('셀별 오차 — 회색 띠는 ±2 %p', fontsize=11,
+    axl.set_xlabel('cycle', fontsize=10.5)
+    axl.set_ylabel('error  [%p]', fontsize=10.5)
+    axl.set_title('error per cell — the grey band is ±2 %p', fontsize=11,
                   weight='bold', loc='left', pad=6)
     axl.legend(fontsize=8.5, ncol=3, framealpha=0.94, loc='lower left')
     axl.grid(color='#ececec', lw=0.8)
@@ -88,31 +89,36 @@ def main():
     axr.plot([lo, hi], [lo, hi], color=C_TRUE, lw=1.4)
     axr.set_xlim(lo, hi)
     axr.set_ylim(lo, hi)
-    axr.set_xlabel('참 SOH  [%]', fontsize=10.5)
-    axr.set_ylabel('추정  [%]', fontsize=10.5)
+    axr.set_xlabel('true SOH  [%]', fontsize=10.5)
+    axr.set_ylabel('estimated  [%]', fontsize=10.5)
     e = pp - yy
-    axr.set_title(f'전체  RMSE {np.sqrt(np.mean(e**2)):.2f} %p  '
-                  f'편향 {e.mean():+.2f}',
+    axr.set_title(f'overall  RMSE {np.sqrt(np.mean(e**2)):.2f} %p  '
+                  f'bias {e.mean():+.2f}',
                   fontsize=11, weight='bold', loc='left', pad=6)
     axr.grid(color='#ececec', lw=0.8)
     for sp in ('top', 'right'):
         axr.spines[sp].set_visible(False)
 
-    fig.suptitle('SOH — 부분 충전 구간 CNN, 셀 하나씩 빼고',
+    fig.suptitle('SOH — partial-charge CNN, leave one cell out',
                  fontsize=15, weight='bold', y=0.988)
-    fig.text(0.5, 0.938,
-             '파라미터 10,945 개, 시드 3 개 평균.  각 셀은 그 셀을 한 번도 '
-             '못 본 모델이 맞힌다.  '
-             '편향이 +0.10 %p 로 위험한 쪽이다 — SOH 를 높게 보면 SOP 가 '
-             '낙관적이 된다 (29.1).',
-             ha='center', fontsize=10.4, color='#555555')
-    fig.subplots_adjust(left=0.058, right=0.982, top=0.872, bottom=0.075)
+    # The bias is read off the predictions, not hard-coded: an earlier caption
+    # said "+0.10 %p, the dangerous side", which came from the run that still
+    # contained the 8 temperature-fault curves.  Sec 30.12 retracted that.
+    fig.text(0.5, 0.947,
+             '10,945 parameters, mean over 3 seeds.  Each cell is predicted '
+             'by a model that never saw it.\n'
+             f'Bias {e.mean():+.2f} %p — reading SOH high makes SOP '
+             'optimistic (29.1), so the sign matters; here it is effectively '
+             'zero (30.12).',
+             ha='center', va='top', fontsize=10.4, color='#555555',
+             linespacing=1.6)
+    fig.subplots_adjust(left=0.058, right=0.982, top=0.862, bottom=0.075)
 
     out = os.path.join(ROOT, 'results_fig_soh_traj.png')
     fig.savefig(out, dpi=190, facecolor='white')
     print(f'  -> {out}')
-    print(f'    전체 RMSE {np.sqrt(np.mean(e**2))/100:.4f}  '
-          f'편향 {e.mean()/100:+.4f}')
+    print(f'    overall RMSE {np.sqrt(np.mean(e**2))/100:.4f}  '
+          f'bias {e.mean()/100:+.4f}')
 
 
 if __name__ == '__main__':

@@ -1,16 +1,19 @@
-"""팩 수준 재측정 — 28 절을 추정 SOH 위에서 다시.
+"""Pack level re-measured — section 28 redone on estimated SOH.
 
-28 절의 결론(28.4)은 "채택 lambda 에서는 N=1 부터 192 까지 초과 0 이고,
-위험은 여유를 줄이려 할 때만 드러난다" 였다.  그런데 그 lambda 는 정답
-SOH 로 잡은 값이다 (29 절 지적).  추정 SOH 를 쓰면 lambda 가 조여지므로
-(방전 0.679 -> 0.594) 팩도 그 위에서 다시 봐야 한다.
+Section 28's conclusion (28.4) was "at the adopted lambda, exceedance is zero
+for N = 1 to 192, and the risk only shows when the margin is reduced".  But
+that lambda was set on true SOH (the point section 29 raised).  Estimated SOH
+tightens lambda (discharge 0.679 -> 0.594), so the pack must be re-examined on
+top of that.
 
-채택 평가 구성.  31.1 에서 A3 판이 16 절의 lambda 를 재현하는 것으로
-설정을 특정했고(방전 허용 0.0 A, 충전 허용 0.5 A), 32.7 이후 채택 트림이
-A8 로 바뀌었다.  A8 의 lambda 는 방전 0.683 / 0.470, 충전 0.586 / 0.560.
+The adopted evaluation configuration.  Section 31.1 pinned the settings down
+by finding the A3 version that reproduces section 16's lambda (discharge
+tolerance 0.0 A, charge tolerance 0.5 A); after 32.7 the adopted trim became
+A8.  A8's lambda is discharge 0.683 / 0.470, charge 0.586 / 0.560.
 
-여기서는 lambda 를 홀드아웃 셀을 빼고 다시 잡은 뒤(정답판·추정판 각각),
-그 lambda 로 N 셀 팩을 모사해 초과와 쓸 수 있는 전류를 낸다.
+Here lambda is re-set leaving out the holdout cell (separately for the oracle
+and estimated versions), and that lambda is used to simulate N-cell packs and
+report exceedance and usable current.
 """
 import argparse
 import csv
@@ -43,7 +46,7 @@ def keep(d, tau):
 
 
 def lam_loco(d, tau, tol):
-    """홀드아웃 셀을 빼고 잡은 lambda 의 중앙값 (16 절과 같은 방식)."""
+    """Median of the lambdas set leaving out each cell (as in section 16)."""
     m = keep(d, tau)
     out = []
     for c in sorted(set(d['cell'][m])):
@@ -101,25 +104,27 @@ def main():
 
     E = a.eval_dir
     j = lambda n: __import__('os').path.join(E, n + '.csv')
-    SETS = [('방전', 10.0, 0.0, j('a8_disc_oracle'), j('a8_disc_est')),
-            ('방전', 2.0, 0.0, j('a8_disc_oracle'), j('a8_disc_est')),
-            ('충전', 10.0, 0.5, j('a8_char_oracle'), j('a8_char_est')),
-            ('충전', 2.0, 0.5, j('a8_char_oracle'), j('a8_char_est'))]
+    SETS = [('discharge', 10.0, 0.0, j('a8_disc_oracle'), j('a8_disc_est')),
+            ('discharge', 2.0, 0.0, j('a8_disc_oracle'), j('a8_disc_est')),
+            ('charge', 10.0, 0.5, j('a8_char_oracle'), j('a8_char_est')),
+            ('charge', 2.0, 0.5, j('a8_char_oracle'), j('a8_char_est'))]
 
-    print(f"  {'방향':<6}{'tau':>5}{'SOH 입력':>10}{'lambda':>9}{'셀 n':>7}"
-          + ''.join(f"{f'N={n} 초과':>11}" for n in NS)
-          + f"{'N=192 최악':>12}{'N=192 전류':>12}", flush=True)
-    print('  ' + '-' * (37 + 11 * len(NS) + 24), flush=True)
+    print(f"  {'direction':<11}{'tau':>5}{'SOH in':>11}{'lambda':>9}"
+          f"{'cell n':>8}"
+          + ''.join(f"{f'N={n} exc':>11}" for n in NS)
+          + f"{'N=192 worst':>13}{'N=192 curr':>12}", flush=True)
+    print('  ' + '-' * (44 + 11 * len(NS) + 25), flush=True)
     store = {}
     for nm, tau, tol, po, pe in SETS:
-        for arm, path in (('정답', po), ('추정', pe)):
+        for arm, path in (('oracle', po), ('estimated', pe)):
             d = load(path)
             lam = lam_loco(d, tau, tol)
             r = pack(d, tau, lam, rng)
             store[(nm, tau, arm)] = (lam, r)
-            print(f"  {nm:<6}{tau:>5.0f}{arm:>10}{lam:>9.3f}{keep(d, tau).sum():>7}"
+            print(f"  {nm:<11}{tau:>5.0f}{arm:>11}{lam:>9.3f}"
+                  f"{keep(d, tau).sum():>8}"
                   + ''.join(f"{r[n]['exc']:>10.1f}%" for n in NS)
-                  + f"{r[NS[-1]]['worst']:>11.2f}A{r[NS[-1]]['util']:>11.1f}%",
+                  + f"{r[NS[-1]]['worst']:>12.2f}A{r[NS[-1]]['util']:>11.1f}%",
                   flush=True)
 
     import csv as _csv, os as _os
@@ -135,18 +140,18 @@ def main():
                             f"{r[N]['util']:.1f}"])
     print(f"\n  -> {a.out}", flush=True)
 
-    print("\n  == 정답 SOH 의 lambda 를 추정 SOH 판에 그대로 쓰면"
-          " (여유를 안 다시 잡았을 때)", flush=True)
-    print(f"  {'방향':<6}{'tau':>5}{'쓴 lambda':>11}"
-          + ''.join(f"{f'N={n} 초과':>11}" for n in NS)
-          + f"{'N=192 최악':>12}", flush=True)
+    print("\n  == using the oracle-SOH lambda directly on the estimated-SOH"
+          " version (margin not re-set)", flush=True)
+    print(f"  {'direction':<11}{'tau':>5}{'lambda used':>13}"
+          + ''.join(f"{f'N={n} exc':>11}" for n in NS)
+          + f"{'N=192 worst':>13}", flush=True)
     for nm, tau, tol, po, pe in SETS:
-        lam_o = store[(nm, tau, '정답')][0]
+        lam_o = store[(nm, tau, 'oracle')][0]
         d = load(pe)
         r = pack(d, tau, lam_o, rng)
-        print(f"  {nm:<6}{tau:>5.0f}{lam_o:>11.3f}"
+        print(f"  {nm:<11}{tau:>5.0f}{lam_o:>13.3f}"
               + ''.join(f"{r[n]['exc']:>10.1f}%" for n in NS)
-              + f"{r[NS[-1]]['worst']:>11.2f}A", flush=True)
+              + f"{r[NS[-1]]['worst']:>12.2f}A", flush=True)
 
 
 if __name__ == '__main__':

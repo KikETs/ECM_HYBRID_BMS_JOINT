@@ -1,15 +1,17 @@
-"""평가 CSV 에서 논문 표를 만든다.
+"""Build the paper's tables from the evaluation CSVs.
 
-내는 것:
-  results/tables/safety.csv   채택 구성의 안전계수와 배치 지표
-  results/tables/ladder.csv   파라미터 사다리 (32 절)
-  results/tables/soh_cost.csv 정답 SOH 대 추정 SOH (29 절)
+Produces:
+  results/tables/safety.csv   safety factors and deployment metrics of the
+                              adopted configuration
+  results/tables/ladder.csv   the parameter ladder (section 32)
+  results/tables/soh_cost.csv oracle SOH vs estimated SOH (section 29)
 
-모든 lambda 는 셀 하나씩 빼고 잡은 값의 중앙값이다.  평가한 셀은 그 lambda 를
-잡을 때 쓰이지 않았다.
+Every lambda is the median of the values set leaving one cell out.  The cell
+being evaluated was not used to set its lambda.
 
-허용치는 방향마다 다르다 — 방전 0.0 A, 충전 0.5 A.  충전의 0.5 A 는 25 절이
-정한 무릎이고, 이것을 빼면 16 절의 lambda 를 재현할 수 없다 (31.1).
+The tolerance differs by direction — discharge 0.0 A, charge 0.5 A.  Charge's
+0.5 A is the knee section 25 settled on; without it section 16's lambda cannot
+be reproduced (31.1).
 """
 import argparse
 import csv
@@ -26,12 +28,12 @@ EXTRAP_MAX = 1.5
 TOL = {'discharge': 0.0, 'charge': 0.5}
 TAUS = (10.0, 2.0)
 
-LADDER = [('A0  보정 없음', 0, 'a8', 'ecm'),
-          ('직접 대입', 0, 'direct', 'hyb'),
-          ('축소 계수', 2, 'shrink', 'hyb'),
-          ('A8  dR_fast 하나', 4, 'a8', 'hyb'),
-          ('A3  12 특징', 26, 'a3', 'hyb'),
-          ('[상한] HPPC-RLS', 0, 'rls', 'hyb')]
+LADDER = [('A0  no correction', 0, 'a8', 'ecm'),
+          ('direct plug-in', 0, 'direct', 'hyb'),
+          ('shrinkage coefficient', 2, 'shrink', 'hyb'),
+          ('A8  dR_fast alone', 4, 'a8', 'hyb'),
+          ('A3  12 features', 26, 'a3', 'hyb'),
+          ('[upper bound] HPPC-RLS', 0, 'rls', 'hyb')]
 
 
 def load(path):
@@ -90,7 +92,8 @@ def write(path, header, rows):
         w = csv.writer(f)
         w.writerow(header)
         w.writerows(rows)
-    print(f'  -> {os.path.relpath(path, ROOT)}  ({len(rows)} 행)', flush=True)
+    print(f'  -> {os.path.relpath(path, ROOT)}  ({len(rows)} rows)',
+          flush=True)
 
 
 def main():
@@ -99,7 +102,7 @@ def main():
     a = ap.parse_args()
     ev = lambda n: os.path.join(a.eval_dir, f'{n}.csv')
 
-    # --- 채택 구성 ---------------------------------------------------
+    # --- adopted configuration ---------------------------------------
     rows = []
     for direction in ('discharge', 'charge'):
         for tau in TAUS:
@@ -117,7 +120,7 @@ def main():
           ['direction', 'tau_s', 'soh', 'n', 'lambda', 'optimism_pct',
            'rmse_A', 'usable_pct', 'worst_A'], rows)
 
-    # --- 파라미터 사다리 ----------------------------------------------
+    # --- parameter ladder ---------------------------------------------
     rows = []
     for direction in ('discharge', 'charge'):
         for tau in TAUS:
@@ -134,7 +137,7 @@ def main():
           ['direction', 'tau_s', 'method', 'params', 'n', 'lambda',
            'optimism_pct', 'rmse_A', 'usable_pct'], rows)
 
-    # --- 추정 SOH 의 대가 ---------------------------------------------
+    # --- the price of estimated SOH -----------------------------------
     rows = []
     for direction in ('discharge', 'charge'):
         for tau in TAUS:

@@ -1,11 +1,14 @@
-"""전압 RMSE 표를 만든다 — 지금까지 그림과 문서에 손으로 박혀 있던 값.
+"""Build the voltage RMSE table — values that until now were hard-coded into
+the figures and the documents.
 
-왜 따로 두는가: `fig_ladder.py` 가 전압 RMSE 여섯 개 x 두 방향을 상수로
-갖고 있었다.  표가 바뀌어도 그림은 안 바뀌고, 그림의 숫자가 맞는지
-확인할 방법도 없었다.  verify.py 가 볼 수 있게 표로 뺀다.
+Why it is separate: `fig_ladder.py` held six voltage RMSEs x two directions as
+constants.  The figure would not change when the table did, and there was no
+way to check that the figure's numbers were right.  Pulling them into a table
+lets verify.py see them.
 
-규약은 트림 표와 같다 — **셀별 RMSE 를 낸 뒤 평균** 한다 (통합 RMSE 가
-아니다).  이것을 안 맞추면 A0 가 85.36 이 아니라 87.24 로 나온다.
+The convention matches the trim tables — **per-cell RMSE first, then the
+mean** (not a pooled RMSE).  Get that wrong and A0 comes out as 87.24 instead
+of 85.36.
 
     python3 repro/run_voltage.py
 """
@@ -22,8 +25,8 @@ ANALYSIS = os.path.join(ROOT, 'analysis')
 TABLES = os.path.join(ANALYSIS, 'results', 'tables')
 sys.path.insert(0, ANALYSIS)
 
-# (표에 쓸 이름, 방전 run 디렉터리, 충전 run 디렉터리)
-# A0 는 디렉터리의 pred_A0_*.npz 에 들어 있다 (k=1 판).
+# (name used in the table, discharge run dir, charge run dir)
+# A0 lives in the directory's pred_A0_*.npz (the k=1 version).
 RUNS = [
     ('A0', 'runs_trim_a8', 'runs_trim_a8_chg'),
     ('direct', 'runs_trim_direct', 'runs_trim_direct_chg'),
@@ -35,7 +38,7 @@ RUNS = [
 
 
 def per_cell_rmse(run_dir, rung):
-    """셀별 전압 RMSE (mV).  rung='A0' 이면 보정 없는 판."""
+    """Per-cell voltage RMSE (mV).  rung='A0' is the uncorrected version."""
     out = {}
     for f in sorted(glob.glob(os.path.join(ANALYSIS, run_dir,
                                             'pred_A*_*.npz'))):
@@ -45,8 +48,9 @@ def per_cell_rmse(run_dir, rung):
         cell = base.split('_', 2)[2][:-4]
         z = np.load(f, allow_pickle=True)
         if rung == 'A0':
-            # 보정 없는 판은 학습 때 이미 저장돼 있다 (`base`).  직접 다시
-            # 계산하면 sop_trim.py 와 미세하게 어긋날 수 있으므로 그것을 쓴다.
+            # The uncorrected version was already saved at training time
+            # (`base`).  Recomputing it here could drift slightly from
+            # sop_trim.py, so use the stored one.
             p = z['base']
         elif 'pred' in z:
             p = z['pred']
@@ -68,7 +72,7 @@ def main():
             try:
                 per = per_cell_rmse(run, 'A0' if name == 'A0' else name)
             except Exception as e:                       # noqa: BLE001
-                print(f'  건너뜀 {name}/{direction}: {e}', flush=True)
+                print(f'  skipped {name}/{direction}: {e}', flush=True)
                 continue
             if not per:
                 continue
@@ -76,7 +80,7 @@ def main():
             rows.append([direction, name, len(per), f'{mean:.2f}']
                         + [f'{per[c]:.2f}' for c in sorted(per)])
             print(f'  {direction:<10}{name:<8}{mean:>9.2f} mV   '
-                  f'({len(per)} 셀)', flush=True)
+                  f'({len(per)} cells)', flush=True)
 
     cells = sorted(per_cell_rmse('runs_trim_a8', 'A8'))
     os.makedirs(TABLES, exist_ok=True)
@@ -85,9 +89,10 @@ def main():
         w = csv.writer(f)
         w.writerow(['direction', 'method', 'n_cells', 'rmse_mV'] + cells)
         w.writerows(rows)
-    print(f'\n  -> {os.path.relpath(out, ROOT)}  ({len(rows)} 행)', flush=True)
-    print('  규약: 셀별 RMSE 의 평균 (통합 RMSE 가 아님 — sop_trim.py 와 같게)',
+    print(f'\n  -> {os.path.relpath(out, ROOT)}  ({len(rows)} rows)',
           flush=True)
+    print('  convention: mean of per-cell RMSE (not a pooled RMSE — same as '
+          'sop_trim.py)', flush=True)
 
 
 if __name__ == '__main__':

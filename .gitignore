@@ -42,6 +42,7 @@ analysis/sop_amps_eval*.csv
 analysis/results/eval/
 analysis/results/*.pkl
 analysis/results/*.pt
+analysis/results/soc_perturb.npz
 analysis/*.npz
 analysis/sop_mcu_bench.csv
 
@@ -50,3 +51,4 @@ __pycache__/
 
 # --- Local Korean originals kept for diffing after translation ---
 docs/_ko_backup/
+analysis/results/tables_backup/

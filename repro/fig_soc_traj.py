@@ -1,14 +1,16 @@
-"""SOC 궤적 — 순환 벤치가 무엇을 보고 있었나.
+"""SOC trajectories — what the circular benchmark was looking at.
 
-한 장에 두 가지를 보인다.
+Two things in one figure.
 
-  위  틀어짐이 없을 때.  순수 전류 적분이 정답 라벨 위에 정확히 얹힌다.
-      라벨이 SOC = 1 + Ah/3.0 이고 필터 예측이 soc + I dt/3600/3.0 이라
-      같은 식이기 때문이다.  이 벤치에서는 전압을 쓰는 쪽이 질 수밖에 없다.
+  top     with no distortion.  Pure current integration lands exactly on the
+          true label, because the label is SOC = 1 + Ah/3.0 and the filter
+          prediction is soc + I dt/3600/3.0 — the same equation.  On this
+          benchmark, using voltage can only lose.
 
-  아래 전류 센서에 0.1 A 옵셋을 넣었을 때.  적분은 갈 곳 없이 표류하고,
-      전압 보정이 그것을 잡는다.  칼만 필터를 쓰는 이유가 여기 있고,
-      순환 벤치는 이 장면을 볼 수 없었다.
+  bottom  with a 0.1 A offset on the current sensor.  The integration drifts
+          with nothing to stop it, and the voltage correction catches it.
+          This is the reason to use a Kalman filter, and the circular
+          benchmark could not see this scene.
 
     python3 repro/fig_soc_traj.py [--cell CC --pick 4]
 """
@@ -22,7 +24,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt          # noqa: E402
 import numpy as np                       # noqa: E402
 
-plt.rcParams['font.family'] = 'Noto Sans CJK JP'
+plt.rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['axes.unicode_minus'] = False
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -44,7 +46,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--cell', default='CC')
     ap.add_argument('--pick', type=int, default=4,
-                    help='그 셀의 몇 번째 런 (0 = 신품, 5 = 가장 노화)')
+                    help='which run of that cell (0 = fresh, 5 = most aged)')
     a = ap.parse_args()
 
     from ekf_soc import run as ekf_run
@@ -77,17 +79,20 @@ def main():
                                           'hspace': 0.34, 'wspace': 0.20})
 
     for row, (tag, sub) in enumerate((
-            ('clean', '틀어짐 없음 — 순환 벤치가 보던 것'),
-            ('bias', f'전류 센서 옵셋 +{IBIAS:.2f} A — 실차의 조건'))):
+            ('clean', 'no distortion — what the circular benchmark saw'),
+            ('bias', f'current-sensor offset +{IBIAS:.2f} A — the real-vehicle'
+                     f' condition'))):
         ax, axe = axes[row]
-        ax.plot(t, tr * 100, color=C_TRUE, lw=2.4, label='참 SOC (라벨)',
+        ax.plot(t, tr * 100, color=C_TRUE, lw=2.4, label='true SOC (label)',
                 zorder=4)
         ax.plot(t, series[f'{tag}_open'] * 100, color=C_OPEN, lw=1.7,
                 ls=(0, (5, 2)),
-                label=f'순수 전류 적분   RMSE {rmse[f"{tag}_open"]:.2f} %p',
+                label='pure current integration   RMSE '
+                      f'{rmse[f"{tag}_open"]:.2f} %p',
                 zorder=3)
         ax.plot(t, series[f'{tag}_ekf'] * 100, color=C_EKF, lw=1.7,
-                label=f'EKF 채택 구성   RMSE {rmse[f"{tag}_ekf"]:.2f} %p',
+                label='EKF adopted config   RMSE '
+                      f'{rmse[f"{tag}_ekf"]:.2f} %p',
                 zorder=3)
         ax.set_ylabel('SOC  [%]', fontsize=11)
         ax.set_title(sub, fontsize=12.5, weight='bold', loc='left', pad=8)
@@ -96,22 +101,24 @@ def main():
         for sp in ('top', 'right'):
             ax.spines[sp].set_visible(False)
         if row == 1:
-            ax.set_xlabel('시간  [h]', fontsize=11)
+            ax.set_xlabel('time  [h]', fontsize=11)
 
-        # 오른쪽: 오차만
+        # right-hand panel: the error alone
         for k, c, ls in ((f'{tag}_open', C_OPEN, (0, (5, 2))),
                          (f'{tag}_ekf', C_EKF, '-')):
             axe.plot(t, (series[k] - tr) * 100, color=c, lw=1.6, ls=ls)
         axe.axhline(0, color=C_TRUE, lw=1.6, zorder=4)
-        axe.set_ylabel('오차  [%p]', fontsize=10.5)
-        axe.set_title('오차', fontsize=11, loc='left', pad=8, color='#555555')
+        axe.set_ylabel('error  [%p]', fontsize=10.5)
+        axe.set_title('error', fontsize=11, loc='left', pad=8,
+                      color='#555555')
         axe.grid(color='#ececec', lw=0.8)
         for sp in ('top', 'right'):
             axe.spines[sp].set_visible(False)
         if row == 1:
-            axe.set_xlabel('시간  [h]', fontsize=10.5)
+            axe.set_xlabel('time  [h]', fontsize=10.5)
 
-    # 오차 패널의 범위는 실제 값에서 잡는다 (잘라 내면 오해를 준다)
+    # The error panel's range comes from the actual values (clipping would
+    # mislead)
     for row, tag in ((0, 'clean'), (1, 'bias')):
         e = np.concatenate([(series[f'{tag}_{k}'] - tr) * 100
                             for k in ('open', 'ekf')])
@@ -125,18 +132,19 @@ def main():
                 bbox=dict(boxstyle='round,pad=0.42', fc='white',
                           ec=color, lw=1.1, alpha=0.93), zorder=6)
 
-    note(axes[0][0], '적분이 라벨 위에 정확히 얹힌다 — 두 식이 같다',
+    note(axes[0][0], 'integration lands on the label — same equation',
          0.05, 0.13, C_OPEN)
-    note(axes[1][0], '옵셋을 적분하니 표류한다', 0.05, 0.13, C_OPEN)
-    note(axes[1][0], '전압 보정이 되돌린다', 0.05, 0.27, C_EKF)
-    note(axes[0][1], '휴지마다 되돌림', 0.05, 0.12, C_EKF)
+    note(axes[1][0], 'integrating the offset drifts', 0.05, 0.13, C_OPEN)
+    note(axes[1][0], 'the voltage correction pulls it back', 0.05, 0.27, C_EKF)
+    note(axes[0][1], 'pulled back at every rest', 0.05, 0.12, C_EKF)
 
-    fig.suptitle('SOC 벤치가 순환이었다 — 라벨과 필터 예측이 같은 식이다',
+    fig.suptitle('The SOC benchmark was circular — the label and the filter '
+                 'prediction are the same equation',
                  fontsize=15, weight='bold', y=0.982)
     fig.text(0.5, 0.945,
-             f"{a.cell},  SOH {r['soh']:.2f},  드라이브 사이클 "
-             f"{len(t) / 3600:.1f} 시간.   "
-             '라벨 SOC = 1 + Ah/3.0,  예측 soc + I·dt/3600/3.0',
+             f"{a.cell},  SOH {r['soh']:.2f},  drive cycle "
+             f"{len(t) / 3600:.1f} h.   "
+             'label SOC = 1 + Ah/3.0,  prediction soc + I·dt/3600/3.0',
              ha='center', fontsize=10.6, color='#555555')
     fig.subplots_adjust(left=0.062, right=0.982, top=0.885, bottom=0.085)
 

@@ -1,16 +1,17 @@
-"""SOC 벤치가 쓰는 주행 런 묶음을 만든다.
+"""Build the bundle of drive runs the SOC benchmark uses.
 
-이 단계가 따로 있는 이유: 30 절의 SOC 실험들이 원래 /tmp/soc_runs.pkl 을
-읽었다.  탐색 중에는 편했지만 재현 패키지가 /tmp 에 기대면 안 된다 —
-재부팅 한 번에 사라지고, 무엇으로 만들어졌는지 기록이 없다.
+Why this is a separate stage: section 30's SOC experiments originally read
+/tmp/soc_runs.pkl.  That was convenient while exploring, but a reproduction
+package must not depend on /tmp — it disappears on a reboot and carries no
+record of what made it.
 
-여섯 셀에서 드라이브 사이클 파일을 균등 간격으로 6 개씩 골라 36 런을 만든다.
-고르는 규칙은 np.linspace 라 결정적이다.  각 런은 앞 20,000 표본만 쓴다
-(1 Hz 이므로 약 5.5 시간).
+Six drive-cycle files are picked at even spacing from each of the six cells,
+giving 36 runs.  The picking rule is np.linspace, so it is deterministic.
+Each run uses only the first 20,000 samples (about 5.5 hours at 1 Hz).
 
-주의: BOOST_NEGPULSE_1S 는 파일 수가 적어 linspace 가 같은 파일을 두 번
-집는다 (30.11 에 기록).  그 셀의 유효 런은 5 개다.  고치지 않고 남긴 것은
-지금까지의 모든 수치가 이 구성 위에서 나왔기 때문이다.
+Note: BOOST_NEGPULSE_1S has few files, so linspace picks the same file twice
+(recorded in 30.11).  That cell has 5 effective runs.  It is left unfixed
+because every number so far was produced on this configuration.
 """
 import argparse
 import os
@@ -61,17 +62,17 @@ def main():
     ap.add_argument('--out',
                     default=os.path.join(ANALYSIS, 'results', 'soc_runs.pkl'))
     ap.add_argument('--check-against', default=None,
-                    help='기존 pkl 과 같은지 확인만 한다')
+                    help='only check that it matches an existing pkl')
     a = ap.parse_args()
 
     runs = build(a.cache)
-    print(f'  {len(runs)} 런  ({len(set(r["cell"] for r in runs))} 셀)',
+    print(f'  {len(runs)} runs  ({len(set(r["cell"] for r in runs))} cells)',
           flush=True)
     for c in CELLS:
         rs = [r for r in runs if r['cell'] == c]
         sohs = sorted({round(r['soh'], 4) for r in rs})
-        note = '  <- 중복' if len(sohs) < len(rs) else ''
-        print(f'    {c:<20} {len(rs)} 런, 서로 다른 SOH {len(sohs)} 개{note}',
+        note = '  <- duplicate' if len(sohs) < len(rs) else ''
+        print(f'    {c:<20} {len(rs)} runs, {len(sohs)} distinct SOH{note}',
               flush=True)
 
     if a.check_against:
@@ -82,7 +83,8 @@ def main():
             and np.array_equal(o['soc'], n['soc'])
             and np.array_equal(o['I'], n['I'])
             for o, n in zip(old, runs))
-        print(f"\n  {a.check_against} 와 {'동일' if same else '다름'}", flush=True)
+        print(f"  \n  {'identical to' if same else 'DIFFERS from'} "
+              f"{a.check_against}", flush=True)
         return 0 if same else 1
 
     os.makedirs(os.path.dirname(a.out), exist_ok=True)

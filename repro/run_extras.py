@@ -1,12 +1,14 @@
-"""QC 가 '표에 없다' 고 지적한 수치들을 표로 만든다.
+"""Turn the numbers QC flagged as 'not in a table' into tables.
 
-문서에만 있고 표에 없으면 verify.py 가 못 본다.  이번 세션의 오류가
-정확히 그런 자리에서 나왔으므로 표로 뺀다.
+A number that lives only in the documents is invisible to verify.py.  This
+session's errors came from exactly such places, so they are pulled into
+tables.
 
-  전달비 alpha        32.3 — 저전류 잔차 기울기가 고전류로 얼마나 전이되나
-  약함-낙관 상관      28.3 — 약한 셀일수록 더 낙관적으로 추정되나
-  결함 사이클 저항비   33.5 — 0 C 로 기록된 HPPC 가 정말 0 C 였나
-  배치 빌드 크기      33.6 — A8 전용 빌드가 얼마나 작나
+  transfer ratio alpha   32.3 — how much of the low-current residual slope
+                                transfers to high current
+  weak-optimistic corr   28.3 — are weaker cells estimated more optimistically
+  defect cycle R ratio   33.5 — was an HPPC logged at 0 C really at 0 C
+  deployment build size  33.6 — how much smaller is the A8-only build
 
     python3 repro/run_extras.py
 """
@@ -29,7 +31,7 @@ CELLS = ['BOOST', 'BOOST_NEGPULSE', 'BOOST_NEGPULSE_1S', 'BOOST_REST',
 
 
 def alphas():
-    """32.3 의 전달비 — 셀 하나씩 빼고 맞춘 alpha_f, alpha_s."""
+    """32.3's transfer ratio — alpha_f, alpha_s fitted leaving one cell out."""
     from sop_baseline_fill import fit_alpha
     import sop_trim
     rows = []
@@ -44,7 +46,8 @@ def alphas():
 
 
 def correlations():
-    """28.3 — 참 |I*| 와 예측/참 의 상관.  약한 셀이 더 낙관적인가."""
+    """28.3 — correlation of true |I*| with predicted/true.  Are weak cells
+    more optimistic."""
     from run_safety import load, keep
     rows = []
     for direction, path in (('discharge', 'a8_disc_oracle'),
@@ -61,14 +64,28 @@ def correlations():
 
 
 def cold_ratio():
-    """33.5 — 0 C 로 기록된 HPPC 의 저항이 이웃 대비 몇 배인가.
+    """33.5 — how many times the neighbours' resistance an HPPC logged at
+    0 C shows.
 
-    0 C 였다면 3~5 배여야 한다.  1 배면 온도 기록만 깨진 것이다.
+    At a real 0 C it would be 3-5x.  A ratio of 1x means only the temperature
+    log broke.
+
+    Input provenance: results/cold_check/r_all_<cell>.csv is
+    uypydj_hppc_resistance.py run **with the temperature-defect filter
+    disabled** (the defect cycle is the thing being measured, so the normal
+    filter would remove it), reduced to the discharge / tau = 10 s rows this
+    check uses.  It is committed rather than rebuilt because rebuilding needs
+    the 24 GB raw data.  These used to be read from /tmp, which a
+    reproduction package must not depend on — the same defect build_soc_runs
+    was created to remove.
     """
     rows = []
     for cell, tgt in (('BOOST', 1462), ('CC', 1500)):
-        p = f'/tmp/r_all_{cell}.csv'
+        p = os.path.join(ANALYSIS, 'results', 'cold_check',
+                         f'r_all_{cell}.csv')
         if not os.path.exists(p):
+            print(f'    cold_ratio: missing {os.path.relpath(p, ROOT)}',
+                  flush=True)
             continue
         r = list(csv.DictReader(open(p, encoding='utf-8')))
         cy = np.array([int(float(x['cycle'])) for x in r])
@@ -88,7 +105,7 @@ def cold_ratio():
 
 
 def build_size():
-    """33.6 — 비교용 빌드와 배치용(A8 전용) 빌드의 크기."""
+    """33.6 — size of the comparison build vs the deployment (A8-only) build."""
     p = os.path.join(ROOT, 'mcu', 'fw_sop', 'Build', 'nmc_dst_cc', 'size.txt')
     if not os.path.exists(p):
         return (['build', 'text_B', 'bss_B'], [])
@@ -96,7 +113,8 @@ def build_size():
     if len(ln) < 2:
         return (['build', 'text_B', 'bss_B'], [])
     f = ln[1].split()
-    # 현재 빌드가 어느 판인지 심볼로 판정한다 (파일명만으로는 알 수 없다)
+    # Decide which version the current build is from its symbols (the file
+    # name alone does not say)
     elf = os.path.join(os.path.dirname(p), 'sop_bench.elf')
     kind = 'unknown'
     if os.path.exists(elf):
@@ -118,17 +136,17 @@ def main():
         try:
             hdr, rows = fn()
         except Exception as e:                            # noqa: BLE001
-            print(f'  건너뜀 {name}: {type(e).__name__} {e}', flush=True)
+            print(f'  skipped {name}: {type(e).__name__} {e}', flush=True)
             continue
         if not rows:
-            print(f'  건너뜀 {name}: 입력이 없다', flush=True)
+            print(f'  skipped {name}: no input', flush=True)
             continue
         out = os.path.join(TABLES, f'{name}.csv')
         with open(out, 'w', newline='', encoding='utf-8') as f:
             w = csv.writer(f)
             w.writerow(hdr)
             w.writerows(rows)
-        print(f'  -> {name}.csv  ({len(rows)} 행)', flush=True)
+        print(f'  -> {name}.csv  ({len(rows)} rows)', flush=True)
         for r in rows[:4]:
             print(f'       {r}', flush=True)
 

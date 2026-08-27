@@ -89,7 +89,7 @@
       "where": {
         "direction": "discharge",
         "tau_s": "10.0",
-        "method": "A0  보정 없음"
+        "method": "A0  no correction"
       },
       "column": "usable_pct",
       "value": 59.3,
@@ -101,7 +101,7 @@
       "where": {
         "direction": "discharge",
         "tau_s": "10.0",
-        "method": "직접 대입"
+        "method": "direct plug-in"
       },
       "column": "usable_pct",
       "value": 32.6,
@@ -113,7 +113,7 @@
       "where": {
         "direction": "discharge",
         "tau_s": "10.0",
-        "method": "축소 계수"
+        "method": "shrinkage coefficient"
       },
       "column": "usable_pct",
       "value": 62.4,
@@ -125,7 +125,7 @@
       "where": {
         "direction": "discharge",
         "tau_s": "10.0",
-        "method": "A8  dR_fast 하나"
+        "method": "A8  dR_fast alone"
       },
       "column": "usable_pct",
       "value": 69.1,
@@ -137,7 +137,7 @@
       "where": {
         "direction": "discharge",
         "tau_s": "10.0",
-        "method": "A3  12 특징"
+        "method": "A3  12 features"
       },
       "column": "usable_pct",
       "value": 70.3,
@@ -149,7 +149,7 @@
       "where": {
         "direction": "discharge",
         "tau_s": "10.0",
-        "method": "[상한] HPPC-RLS"
+        "method": "[upper bound] HPPC-RLS"
       },
       "column": "usable_pct",
       "value": 71.1,
@@ -161,7 +161,7 @@
       "where": {
         "direction": "charge",
         "tau_s": "10.0",
-        "method": "A8  dR_fast 하나"
+        "method": "A8  dR_fast alone"
       },
       "column": "usable_pct",
       "value": 59.6,
@@ -173,7 +173,7 @@
       "where": {
         "direction": "charge",
         "tau_s": "10.0",
-        "method": "A3  12 특징"
+        "method": "A3  12 features"
       },
       "column": "usable_pct",
       "value": 57.9,
@@ -185,7 +185,7 @@
       "where": {
         "direction": "charge",
         "tau_s": "10.0",
-        "method": "[상한] HPPC-RLS"
+        "method": "[upper bound] HPPC-RLS"
       },
       "column": "usable_pct",
       "value": 55.2,
@@ -195,9 +195,9 @@
       "id": "pack.disc.10s.exceed.N192",
       "table": "pack.csv",
       "where": {
-        "direction": "방전",
+        "direction": "discharge",
         "tau_s": "10.0",
-        "soh": "정답",
+        "soh": "oracle",
         "N": "192"
       },
       "column": "exceed_pct",
@@ -208,9 +208,9 @@
       "id": "pack.disc.10s.exceed.est.N192",
       "table": "pack.csv",
       "where": {
-        "direction": "방전",
+        "direction": "discharge",
         "tau_s": "10.0",
-        "soh": "추정",
+        "soh": "estimated",
         "N": "192"
       },
       "column": "exceed_pct",
@@ -221,9 +221,9 @@
       "id": "pack.chg.10s.worst.N192",
       "table": "pack.csv",
       "where": {
-        "direction": "충전",
+        "direction": "charge",
         "tau_s": "10.0",
-        "soh": "정답",
+        "soh": "oracle",
         "N": "192"
       },
       "column": "worst_A",
@@ -235,8 +235,8 @@
       "id": "soc.adopted.no_perturb",
       "table": "soc_perturb.csv",
       "where": {
-        "config": "EKF 현재 채택 (게이트)",
-        "perturbation": "틀어짐 없음"
+        "config": "EKF adopted (gate)",
+        "perturbation": "no distortion"
       },
       "column": "rmse_full_pct",
       "value": 1.51,
@@ -247,8 +247,8 @@
       "id": "soc.open_loop.no_perturb",
       "table": "soc_perturb.csv",
       "where": {
-        "config": "순수 전류 적분",
-        "perturbation": "틀어짐 없음"
+        "config": "pure current integration",
+        "perturbation": "no distortion"
       },
       "column": "rmse_full_pct",
       "value": 0.12,
@@ -259,8 +259,8 @@
       "id": "soc.open_loop.ibias",
       "table": "soc_perturb.csv",
       "where": {
-        "config": "순수 전류 적분",
-        "perturbation": "전류 옵셋 +0.10 A"
+        "config": "pure current integration",
+        "perturbation": "current offset +0.10 A"
       },
       "column": "rmse_full_pct",
       "value": 10.32,
@@ -271,8 +271,8 @@
       "id": "soc.adopted.ibias",
       "table": "soc_perturb.csv",
       "where": {
-        "config": "EKF 현재 채택 (게이트)",
-        "perturbation": "전류 옵셋 +0.10 A"
+        "config": "EKF adopted (gate)",
+        "perturbation": "current offset +0.10 A"
       },
       "column": "rmse_full_pct",
       "value": 2.86,
