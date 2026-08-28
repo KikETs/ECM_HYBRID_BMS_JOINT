@@ -55,6 +55,13 @@ LABEL = {'A0': 'A0  no correction (classical HPPC)',
          'A3': 'A3 (26 coeff.)', 'RLS': 'HPPC-RLS (upper bound)'}
 COLOR = {'A0': '#8c8c8c', 'direct': '#c0392b', 'shrink': '#e08b3c',
          'A8': '#1f6fb4', 'A3': '#7cb0d8', 'RLS': '#4d9e6a'}
+# A second channel besides hue.  Six lines separated by colour alone is not
+# a print- or colour-vision-safe figure, and the closest pair under
+# deuteranopia here (A0 against HPPC-RLS) is closer than any other.
+DASH = {'A0': (0, (1, 1.6)), 'direct': (0, (5, 2)), 'shrink': (0, (3, 1, 1, 1)),
+        'A8': 'solid', 'A3': (0, (7, 2)), 'RLS': (0, (2, 1, 5, 1))}
+MARK = {'A0': 's', 'direct': 'v', 'shrink': 'D', 'A8': 'o', 'A3': '^',
+        'RLS': 'P'}
 ORDER = ['A0', 'direct', 'shrink', 'A8', 'A3', 'RLS']
 # ladder.csv also carries the audit's LSTM, GRU and FFRLS rows.  The
 # figure keeps the original six so the published comparison is
@@ -97,12 +104,13 @@ def panel(ax, direction, tau, title, use, VOLT):
     ru = rank(u, better_low=False)
     for k in ORDER:
         crossed = rv[k] != ru[k]
-        ax.plot([0, 1], [rv[k], ru[k]], color=COLOR[k],
+        ax.plot([0, 1], [rv[k], ru[k]], color=COLOR[k], ls=DASH[k],
                 lw=3.0 if crossed else 1.6,
                 alpha=0.95 if crossed else 0.45,
-                solid_capstyle='round', zorder=3 if crossed else 2)
-        ax.scatter([0, 1], [rv[k], ru[k]], s=54, color=COLOR[k],
-                   zorder=4, edgecolor='white', linewidth=1.4)
+                dash_capstyle='round', zorder=3 if crossed else 2)
+        ax.scatter([0, 1], [rv[k], ru[k]], s=58, color=COLOR[k],
+                   marker=MARK[k], zorder=4, edgecolor='white',
+                   linewidth=1.3)
         ax.annotate(f"{v[k]:.1f} mV", (0, rv[k]),
                     xytext=(-10, 0), textcoords='offset points',
                     ha='right', va='center', fontsize=9.5,
@@ -153,7 +161,8 @@ def main():
              'rank that version differently.',
              ha='center', fontsize=10.8, color='#555555')
 
-    handles = [Line2D([], [], color=COLOR[k], lw=3, label=LABEL[k])
+    handles = [Line2D([], [], color=COLOR[k], lw=2.6, ls=DASH[k],
+                      marker=MARK[k], markersize=6, label=LABEL[k])
                for k in ORDER]
     fig.legend(handles=handles, loc='lower center', ncol=6, frameon=False,
                fontsize=9, bbox_to_anchor=(0.5, 0.003),

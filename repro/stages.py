@@ -300,15 +300,18 @@ STAGES = [
              '{py} ../repro/fig_soc_traj.py && '
              '{py} ../repro/fig_soh_traj.py && '
              '{py} ../repro/fig_sop_traj.py --direction discharge && '
-             '{py} ../repro/fig_sop_traj.py --direction charge',
+             '{py} ../repro/fig_sop_traj.py --direction charge && '
+             '{py} ../repro/fig_usable_ci.py',
          inputs=['results/tables/ladder.csv', 'results/tables/voltage.csv',
+                 'results/tables/safety_strict_oracle.csv',
                  'results/tables/soc_perturb.csv',
                  'results/soh_pred.npz', 'results/soc_runs.pkl',
                  'results/eval/'],
          outputs=['../results_fig_ladder.png', '../results_fig_soc_traj.png',
                   '../results_fig_soh_traj.png',
                   '../results_fig_sop_traj_discharge.png',
-                  '../results_fig_sop_traj_charge.png'],
+                  '../results_fig_sop_traj_charge.png',
+                  '../results_fig_usable_ci.png'],
          why='The paper\'s five figures.  All of them read straight from '
              'the tables in results/, so a changed table changes the figure '
              '— numbers typed into a figure by hand drift from the table.'),

@@ -172,3 +172,21 @@ def test_run_one_fails_when_a_declared_output_is_absent(tmp_path):
 
     fake_ok = dict(fake, cmd='true', outputs=[])
     assert runner.run_one(fake_ok, dry=False) is True
+
+
+def test_figures_do_not_encode_by_colour_alone():
+    """Six lines separated only by hue is not a print- or CVD-safe figure."""
+    src = open(os.path.join(ROOT, 'repro', 'fig_ladder.py'),
+               encoding='utf-8').read()
+    assert 'DASH' in src and 'ls=DASH' in src, \
+        'fig_ladder must vary line style, not only colour'
+    assert 'MARK' in src and 'marker=MARK' in src, \
+        'fig_ladder must vary marker shape, not only colour'
+
+
+def test_uncertainty_figure_exists_and_renders():
+    """Every table carries a bootstrap interval; at least one figure must
+    show one, or a rank chart is the only thing a reader sees."""
+    rc, out, err = run([os.path.join('repro', 'fig_usable_ci.py')])
+    assert rc == 0, f'fig_usable_ci.py failed:\n{out}\n{err}'
+    assert os.path.exists(os.path.join(ROOT, 'results_fig_usable_ci.png'))

@@ -22,7 +22,7 @@ number to quote. "Usable current" is the median of λ·predicted / measured.
 
 Per-cycle cost on the board: median 214.8 µs, worst case 307.1 µs (SOC EKF
 7.1, A8 feature update 6.0, four SOP inversions 201.7). Deployment build
-text 142 060 B = 138.7 KiB. Measured on a NUCLEO-H563ZI after flashing;
+text 142 060 B = 138.7 KiB = 142.1 kB (decimal). Measured on a NUCLEO-H563ZI after flashing;
 `repro/run_parity.py` checks the C against Python to 9.2 × 10⁻⁶.
 
 > An audit on 2026-08-27 (branch `audit/etransportation-readiness`) revised

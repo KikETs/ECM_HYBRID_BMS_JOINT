@@ -74,7 +74,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `pack` | 5 | `python3 sop_pack2.py` | `results/tables/pack.csv` |
 | `soc_runs` | 4 | `python3 ../repro/build_soc_runs.py` | `results/soc_runs.pkl` |
 | `soc` | 55 | `python3 soc_perturb_bench.py && python3 soc_est_soh.py` | `results/tables/soc_perturb.csv` |
-| `figures` | 3 | `python3 ../repro/fig_ladder.py && python3 ../repro/fig_soc_traj.py && python3 ../repro/fig_soh_traj.py && python3 ../repro/fig_sop_traj.py --direction discharge && python3 ../repro/fig_sop_traj.py --direction charge` | `../results_fig_ladder.png +4` |
+| `figures` | 3 | `python3 ../repro/fig_ladder.py && python3 ../repro/fig_soc_traj.py && python3 ../repro/fig_soh_traj.py && python3 ../repro/fig_sop_traj.py --direction discharge && python3 ../repro/fig_sop_traj.py --direction charge && python3 ../repro/fig_usable_ci.py` | `../results_fig_ladder.png +5` |
 | `extras` | 2 | `python3 ../repro/run_extras.py` | `results/tables/alpha.csv +3` |
 
 ### tier 6 — board
