@@ -2184,6 +2184,35 @@
         "rmse_pooled": "[EVIDENCE REQUIRED]",
         "rmse_worst_cell": "[EVIDENCE REQUIRED]"
       }
+    },
+    "nested_selection.csv": {
+      "producer": "python3 repro/run_nested_selection.py",
+      "stage": "nested_selection",
+      "required": true,
+      "rows": 22,
+      "columns": [
+        "direction",
+        "tau_s",
+        "outer_cell",
+        "picked_rung",
+        "picked_agg",
+        "picked_tol_A",
+        "lambda",
+        "n_rows",
+        "exceed",
+        "outer_usable_pct",
+        "inner_usable_pct"
+      ],
+      "numeric": [
+        "tau_s",
+        "picked_tol_A",
+        "lambda",
+        "n_rows",
+        "exceed",
+        "outer_usable_pct",
+        "inner_usable_pct"
+      ],
+      "units": {}
     }
   },
   "completeness": {

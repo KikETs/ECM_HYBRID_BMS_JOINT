@@ -61,6 +61,68 @@ safety_calibration:
   producer: "python3 repro/run_safety_strict.py --arm oracle|est"
   language: "Report 'zero observed exceedance' with its upper bound.  Never 'zero risk' or 'guaranteed'."
 
+nested_selection:
+  status: VERIFIED
+  producer: "python3 repro/run_nested_selection.py --train && --select"
+  artifact: "analysis/results/tables/nested_selection.csv"
+  problem: >
+    The brief forbids choosing model, feature, aggregation or tolerance after
+    seeing the test set.  Three decisions did: sec 29.7 adopts A8 over A3 by
+    comparing usable current on the leave-one-cell-out evaluation, --trim-agg
+    max was picked from five options the same way, and sec 25's 0.5 A charge
+    tolerance is a knee read off that evaluation.  The LOCO evaluation was
+    both the selection set and the reported test set.
+  method: >
+    Outer leave-one-cell-out; inner leave-one-out again over the five
+    training cells using models trained on the remaining four (120
+    leave-two-out fits, 2.4 h).  The {rung x aggregation} grid is scored on
+    the inner splits only; the winner is applied to the untouched outer cell
+    using the ordinary five-cell model.  Selection never sees the outer cell.
+  tolerance_is_not_selectable: >
+    Tolerance was dropped from the grid after measuring that the objective is
+    defined relative to it: raising it loosens both the lambda fit and what
+    counts as an exceedance, so usable current rises about 1.6 %p per 0.25 A
+    with the exceedance count unmoved.  A search would return the largest
+    value offered every time.  It is a design constraint, declared, not
+    fitted.
+  what_the_inner_splits_chose:
+    rung: "A8 in 16 of 22 outer folds, A3 in 6"
+    aggregation: "q75 in 10, max in 7, median in 3, last 1, q90 1"
+  finding_adoption_corroborated: >
+    A8 is what selection picks in 16 of 22 folds without ever seeing the test
+    cell.  Sec 29.7's adoption is therefore not a selection artifact.
+  finding_aggregation_is_not: >
+    The shipped --trim-agg max is chosen in only 7 of 22 folds; q75 wins 10.
+    The aggregation choice is NOT corroborated - two settings are roughly
+    equally supported and max is not the better of them.  The paper should
+    say the aggregation is a weakly determined choice rather than present
+    max as established.
+  optimism_of_the_old_protocol:
+    discharge_10s: "nested 68.42 % vs shipped 69.61 % (-1.19 %p), exceedance 2 vs 1 of 491"
+    discharge_2s: "nested 59.27 % vs shipped 58.30 % (+0.97 %p), 3 vs 2 of 140"
+    charge_10s: "nested 59.83 % vs shipped 59.49 % (+0.34 %p), 1 vs 1 of 2461"
+    charge_2s: "nested 57.26 % vs shipped 57.53 % (-0.27 %p), 2 vs 2 of 2082"
+    reading: >
+      Selecting on the evaluation was worth at most about 1.2 %p of usable
+      current and one exceedance, and in two of four settings the nested
+      protocol scores HIGHER.  The published numbers are not materially
+      inflated by the selection.  That is a positive result, and it could
+      only be stated after running the nested protocol.
+  caveat: >
+    The nested outer figures use a different configuration per fold, so they
+    are an unbiased estimate of what a properly selected pipeline achieves -
+    not a single deployable configuration.  The deployable configuration is
+    still A8 with a declared aggregation.
+  bug_in_this_script: >
+    The first run produced a zero-row table and exited 0.  eval_sop_amps
+    iterated all six cells while an inner directory holds five by
+    construction, and the harness swallowed the failure with a bare
+    return None.  --only-cells was added to eval_sop_amps, the failure is
+    now printed with its stderr, and an empty result exits non-zero.  The
+    second run then rejected every configuration because it gated on zero
+    inner exceedance, which strict held-out calibration essentially never
+    gives - the criterion is now safety-first lexicographic.
+
 sop_labels:
   status: VERIFIED
   detail: >

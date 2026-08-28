@@ -73,3 +73,6 @@ analysis/runs_trim_ffrls*/
 analysis/runs_trim_*_deploy/pred_*.npz
 # Audit: cache_t is a symlink to the local 2.5 GB drive cache.
 analysis/cache_t
+# Audit: 120 leave-two-out fits for the nested selection (rebuilt by
+# repro/run_nested_selection.py --train, ~2.4 h).
+analysis/runs_nested/

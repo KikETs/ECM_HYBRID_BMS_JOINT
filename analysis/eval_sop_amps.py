@@ -310,6 +310,11 @@ def main():
     ap.add_argument("--trim-rung", default=None,
                     help="트림 run 디렉터리 안의 rung 이름 (A3, A8, ...). "
                          "생략하면 디렉터리에서 자동으로 찾는다.")
+    ap.add_argument("--only-cells", default=None,
+                    help="Comma-separated cells to evaluate.  Needed when the "
+                         "trim directory holds a subset - a nested inner "
+                         "split has no model for the outer cell, and without "
+                         "this the run dies looking for one.")
     ap.add_argument("--soc-est", default=None,
                     help="npz of per-cell (cycle, SOC error) from the SOC "
                          "EKF.  Feeds ESTIMATED SOC into the inversion "
@@ -335,6 +340,11 @@ def main():
             if charge else OUT
 
     rows = [r for r in csv.DictReader(open(args.label, encoding="utf-8"))]
+    if args.only_cells:
+        want = {c.strip() for c in args.only_cells.split(",") if c.strip()}
+        rows = [r for r in rows if r["cell"] in want]
+        if not rows:
+            raise SystemExit(f"  --only-cells {sorted(want)} matched no rows")
     cells = sorted({r["cell"] for r in rows})
     surf = {c: surfaces(c)[1 if charge else 0] for c in cells}
     trim_dir = (os.path.join(HERE, args.trim) if args.trim

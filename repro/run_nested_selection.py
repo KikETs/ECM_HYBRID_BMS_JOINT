@@ -16,7 +16,10 @@ Why this exists
                   finding the version that reproduces sec 16's lambda, which
                   is reverse-engineering from results.
       tolerance   the 0.5 A charge tolerance is sec 25's "knee", read off the
-                  same evaluation.
+                  same evaluation.  It is NOT searched here - see the comment
+                  on TOL: the objective is defined relative to it, so a
+                  search would return the largest value offered every time.
+                  It is a design constraint and stays declared.
 
     So the LOCO evaluation is simultaneously the selection set and the
     reported test set.  That inflates whatever is reported by however much
@@ -60,7 +63,16 @@ TABLES = os.path.join(ANALYSIS, 'results', 'tables')
 
 RUNGS = {'A8': list(range(1, 12)), 'A3': None}     # ablate mask per rung
 AGGS = ['last', 'median', 'q75', 'q90', 'max']
-TOLS = {'discharge': [0.0, 0.25, 0.5], 'charge': [0.0, 0.25, 0.5, 1.0]}
+# Tolerance is NOT in the grid, and putting it there was a mistake.  The
+# objective is defined relative to the tolerance: raising it loosens both the
+# lambda fit and what counts as an exceedance, so usable current rises
+# monotonically with it at constant exceedance (measured: last/max/median all
+# gain about 1.6 %p per 0.25 A with the exceedance count unmoved).  A search
+# would therefore always return the largest value offered, which is not a
+# selection, it is a tautology.  Tolerance is a design constraint - how much
+# overshoot the pack is allowed - and is declared, not fitted.  These are the
+# project's declared values (sec 25 for charge's 0.5 A).
+TOL = {'discharge': 0.0, 'charge': 0.5}
 DATA = {'discharge': 'cache/trim', 'charge': 'cache/trim_chg'}
 SHIPPED = {('discharge', 'A8'): 'runs_trim_a8',
            ('discharge', 'A3'): 'runs_trim_v2',
@@ -105,7 +117,7 @@ def train_all(epochs, lr, seeds):
                           f'{inner:<20}{rung}', flush=True)
 
 
-def eval_dirs(direction, outer, rung, agg):
+def eval_dirs(direction, outer, rung, agg, inner_cells):
     """Score one (rung, agg) on the five inner cells of this outer fold."""
     import subprocess
     d = os.path.join(OUTDIR, direction, f'outer_{outer}', rung)
@@ -113,9 +125,16 @@ def eval_dirs(direction, outer, rung, agg):
     if not os.path.exists(out):
         cmd = [sys.executable, 'eval_sop_amps.py', '--direction', direction,
                '--trim', os.path.relpath(d, ANALYSIS), '--trim-agg', agg,
-               '--out', out]
+               '--only-cells', ','.join(inner_cells), '--out', out]
         p = subprocess.run(cmd, cwd=ANALYSIS, capture_output=True, text=True)
         if p.returncode != 0 or not os.path.exists(out):
+            # Do not swallow this.  Silently returning None is how the first
+            # run of this script produced a table with zero rows and said
+            # nothing about why.
+            print(f'    FAILED eval {direction}/{outer}/{rung}/{agg}',
+                  file=sys.stderr)
+            for ln in (p.stderr or '').strip().splitlines()[-4:]:
+                print(f'      | {ln}', file=sys.stderr)
             return None
     return out
 
@@ -170,17 +189,23 @@ def main():
             for outer in names:
                 # ---- inner: score the whole grid on the five other cells --
                 best = None
+                tol = TOL[direction]
+                inner = [c for c in names if c != outer]
                 for rung, agg in itertools.product(RUNGS, AGGS):
-                    ev = eval_dirs(direction, outer, rung, agg)
+                    ev = eval_dirs(direction, outer, rung, agg, inner)
                     if ev is None:
                         continue
-                    for tol in TOLS[direction]:
-                        r = score(ev, tau, tol)
-                        if r is None or r['exceed'] > 0:
-                            continue
-                        key = (r['usable'], r['worst'])
-                        if best is None or key > best[0]:
-                            best = (key, rung, agg, tol, r)
+                    r = score(ev, tau, tol)
+                    if r is None:
+                        continue
+                    # Safety first, then usable current - the project's own
+                    # adoption criterion.  An earlier version gated on zero
+                    # inner exceedance and rejected every configuration:
+                    # strict per-cell held-out calibration essentially never
+                    # gives zero, which is the whole point of sec 21.
+                    key = (-r['exceed'] / max(r['n'], 1), r['usable'])
+                    if best is None or key > best[0]:
+                        best = (key, rung, agg, tol, r)
                 if best is None:
                     continue
                 _, rung, agg, tol, inner_r = best
@@ -226,6 +251,10 @@ def main():
                     'exceed', 'outer_usable_pct', 'inner_usable_pct'])
         w.writerows(rows)
     print(f'\n  -> {os.path.relpath(out, ROOT)}  ({len(rows)} rows)')
+    if not rows:
+        print('  NO OUTER FOLD PRODUCED A RESULT - the selection did not run.',
+              file=sys.stderr)
+        return 1
 
     c = collections.Counter((r[3], r[4], r[5]) for r in rows)
     print('\n  configurations the inner splits chose:')

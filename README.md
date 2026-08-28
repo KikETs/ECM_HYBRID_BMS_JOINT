@@ -90,6 +90,15 @@ redistributed.
   single-cell evaluation rows and models no inter-cell correlation, shared
   current trajectory, thermal gradient or imbalance. There is no pack
   hardware and no HIL behind any number here.
+- **The A8 adoption survives nested selection; the aggregation choice does
+  not.** Choosing the rung and aggregation on inner splits that never see the
+  test cell picks A8 in 16 of 22 folds, so that adoption is not an artifact
+  of selecting on the evaluation. It picks `q75` in 10 folds against `max` in
+  7, so the shipped `--trim-agg max` is one of two roughly equally supported
+  settings, not an established one. Scored on the untouched outer cell the
+  nested protocol gives 68.4 % discharge and 59.8 % charge at τ = 10 s,
+  within 1.2 %p of the published figures — selecting on the evaluation was
+  worth little (`analysis/results/tables/nested_selection.csv`).
 - **Feeding the chain its own estimates changes the answer, and SOC is the
   term that matters.** Swapping oracle SOH for the SOH arm's own estimate
   costs about 1 %p of usable current. Swapping oracle SOC for the EKF's
