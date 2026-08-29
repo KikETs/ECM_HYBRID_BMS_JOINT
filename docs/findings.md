@@ -1,5 +1,13 @@
 # Samsung INR21700-30T — data audit and reproduction status
 
+> **[Audited 2026-08-27]** Six claims in this file and the spec did not
+> survive an external audit: the zero-exceedance framing (§34.1), the SOC
+> headline 2.05 %p (§34.2), the SOH CNN against ridge (§34.3), the
+> aggregation choice (§34.4), the SOP labels called measured (§34.5), and
+> the model that was actually on the board (§34.9). Each is marked where
+> it was claimed. `.paper_state/paper_map.yaml` maps every claim to its
+> status.
+
 Written 2026-08-15. Subject: `~/바탕화면/DL/Samsung30T`.
 The goal is to reproduce the prior work's SOP prediction model and extend
 it to SOH-dependent SOP.
@@ -619,8 +627,8 @@ All three arms have been evaluated leave-one-cell-out. Adoption status:
 
 | Status | Arm | Model | Score | Basis |
 |---|---|---|---|---|
-| **adopted** | SOP | hybrid linear **A8 (4 parameters)** | usable current **69.1 %** discharge / **59.6 %** charge | `sop_hybrid_spec.md` §32.7, §33 |
-| **adopted** | SOH (charge) | dQ/dV CNN (10,945) | SOH RMSE **0.0135**, bias +0.0001 | `soh_extension_design.md`, §30.12 |
+| **adopted** | SOP | hybrid linear **A8 (4 effective coefficients)** | usable current **69.6 %** discharge / **59.5 %** charge, 1 exceedance each | `sop_hybrid_spec.md` §32.7, §33, **§34.1** |
+| **adopted** | SOH (charge) | dQ/dV CNN (10,945) — **but ridge beats it, §34.3** | SOH RMSE **0.0135**, bias +0.0001; ridge 0.0094 | `soh_extension_design.md`, §30.12, **§34.3** |
 | held | SOH (driving) | (V,I) CNN (16,241) | **0.0191** per file | per-cell bias unresolved |
 | reference | voltage | LSTM M2 (1.08 M) | **21.75 mV** on drive cycles | for conditioning comparison |
 
@@ -939,6 +947,10 @@ genuinely open.
   **0.683/0.470**, charge λ **0.586/0.560**. Usable current **69.1 %**
   discharge, **59.6 %** charge. The ECM (A0) at the same safety level is
   59.3 / 50.7 % — the hybrid uses 9.8 %p and 8.9 %p more.
+  **[Updated — §34.1]** Those λ are the median of six leave-one-cell-out
+  fits applied to every cell. Calibrated strictly per held-out cell the λ
+  span 0.683–0.708 (discharge 10 s), usable current is 69.6 / 59.5 %, and
+  the exceedance is 1 or 2 per setting rather than zero.
   (The A3-era values were discharge 0.679/0.462, charge 0.567/0.544, and
   70.3 / 57.9 % current. The cold-guaranteed λ of 0.623 was measured on A3
   and has not been re-measured on A8 — §26.)

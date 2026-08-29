@@ -190,3 +190,31 @@ def test_uncertainty_figure_exists_and_renders():
     rc, out, err = run([os.path.join('repro', 'fig_usable_ci.py')])
     assert rc == 0, f'fig_usable_ci.py failed:\n{out}\n{err}'
     assert os.path.exists(os.path.join(ROOT, 'results_fig_usable_ci.png'))
+
+
+def test_qc_scans_the_readme_not_just_docs():
+    """README.md carries the headline table and was never scanned.
+
+    A retracted claim sitting there passed silently until qc.docs() was
+    widened; the first widened run found one.
+    """
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    import qc
+    names = [fn for fn, _ in qc.docs()]
+    for want in ('README.md', 'sop_hybrid_spec.md'):
+        assert want in names, f'qc.py does not scan {want}'
+
+
+def test_every_qc_retraction_pattern_is_a_valid_regex():
+    """A pattern that cannot compile, or that matches its own correction,
+    is how the Korean-era guards went dead without anyone noticing."""
+    import re
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    import qc
+    for pat, what, _ in qc.RETRACTED:
+        re.compile(pat)          # raises if malformed
+    # The corrected text must not trip the guard.
+    rc, out, err = run([os.path.join('repro', 'qc.py')])
+    assert rc == 0, f'{out}\n{err}'
+    section = (out + err).split('(2) retracted')[1].split('(3)')[0]
+    assert 'still standing  0 places' in section, section[:400]

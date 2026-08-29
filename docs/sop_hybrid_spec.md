@@ -2014,6 +2014,12 @@ it.
 
 ### 21.1 Setting the calibration target to zero rather than 5 %
 
+> **[Updated — 34.1]** lambda here is the median of six
+> leave-one-cell-out fits applied to every cell, so the evaluated cell
+> helped set the lambda it is scored under. Under strict per-cell
+> held-out calibration the exceedance is 1 or 2 per setting, not zero.
+> The usable current barely moves; the claim does.
+
 lambda is set by bisection, leaving the holdout cell out, so that **not one
 row exceeds**
 on the rest (the same LOCO as §19.5, only with the target at 0).
@@ -3889,10 +3895,15 @@ It is left in `ekf_soc.py` as `q_ib` / `p0_ib` / `ib_clip` (off by default).
 
 ### 30.9 The number this section leaves
 
-The SOC number to use in the paper is not 1.51 %p but **2.05 %p.** The former
-feeds the filter the very current that made the label and starts it at the exact
-initial value; the latter averages over initial SOC error ±10 %p, current offset
-±0.1 A, and gain error ±1 %.
+~~The SOC number to use in the paper is not 1.51 %p but **2.05 %p.**~~
+**[Corrected — 34.2]** 2.05 is the mean over all SEVEN rows, and the seventh is
+the undisturbed case. The mean over the six disturbances this sentence
+describes is **2.14 %p**, which §30.4's own table prints. Quote 2.14 and label
+it, or quote 2.05 and say it includes the undisturbed row.
+
+The former figure, 1.51 %p, feeds the filter the very current that made the
+label and starts it at the exact initial value; the latter averages over
+initial SOC error ±10 %p, current offset ±0.1 A, and gain error ±1 %.
 
 ### 30.10 What remains
 
@@ -4209,6 +4220,13 @@ Usable current (tau = 10 s, discharge tolerance 0.0 A / charge tolerance 0.5 A):
 
 **Two new things surface.**
 
+**[Updated — 34.4, 34.9]** The adoption below is corroborated: nested
+selection that never sees the test cell picks A8 in 16 of 22 folds. The
+**aggregation** is not — `q75` wins 10 folds against `max`'s 7, so `--trim-agg
+max` is weakly determined, not established. And "4 parameters" should read
+**four effective deployed coefficients**: the header ships a twelve-input
+layer, 50 floats, of which four are load-bearing.
+
 **(1) On charge, A8 (4 parameters) beats A3 (26)** — 59.6 % vs 57.9 %. On
 discharge A3 leads by 1.2 %p (70.3 vs 69.1). Taking both directions together,
 **A8 matches or beats A3 with one sixth the parameters.** The A8 adoption
@@ -4310,6 +4328,13 @@ from the raw data and confirmed byte-identical to the masked version (282
 curves).
 
 ## 33. A8 put on the board and re-measured (2026-08-26)
+
+> **[Updated — 34.9]** The timings in this section stand — they were
+> re-measured on corrected firmware and moved by less than 0.1 µs. What
+> did not stand is the model: `fw_sop/Inc/sop_tables.h` was a separate
+> file, not a symlink, and held A3 weights, so the firmware measured
+> here compiled the superseded model. The A8 header did not compile at
+> all until §34.9 fixed it.
 
 §29.7 / §32.7 changed the adopted configuration to A8, but §27's MCU numbers were
 measured with A3. The A8 path (`sop_feat_update_a8`, command 0x6D) was added to
@@ -4554,3 +4579,289 @@ commands** and a valid byte among them produces a response. Exactly the trap
 With that, §33.3's point is confirmed twice: **a protocol that does not return an
 error on an unknown command silently ruins measurements.** It is left as a
 firmware fix to make.
+
+---
+
+## 34. External audit — what did not survive it (2026-08-27)
+
+The repository was cloned fresh and audited against a submission checklist:
+strict held-out calibration, nested selection, fair baselines, external
+validation, an end-to-end chain, and deployment evidence. Sections 34.1–34.9
+record what the audit measured. Six published claims did not survive, and
+they are marked at their original sites rather than deleted — the reasoning
+that produced them is still worth reading, as in §26.5.
+
+The audit's own artifacts are in `.paper_state/` (`paper_map.yaml` maps every
+claim to its status, `evidence_ledger.yaml` carries the measurements) and
+`manifests/`.
+
+### 34.1 "Zero exceedance" was an artefact of pooling the safety factor
+
+`run_safety.py` fits six leave-one-cell-out lambdas and applies their
+**median** to every cell. Cell *i* is therefore scored under a lambda that
+five of the six contributing folds were fitted on data containing. That is
+not a held-out calibration, and the exceedance count it produces is
+optimistic by construction.
+
+Giving each held-out cell its own lambda, fitted with that cell removed
+entirely (`repro/run_safety_strict.py`):
+
+| direction | tau | lambda range | exceed | rows | 95 % upper | usable | worst cell |
+|---|---:|---|---:|---:|---:|---:|---|
+| discharge | 10 s | 0.683–0.708 | **1** | 491 | 0.96 % | 69.6 % | 59.9 % BOOST_REST |
+| discharge | 2 s | 0.470–0.502 | **2** | 140 | 4.43 % | 58.3 % | 54.3 % BOOST |
+| charge | 10 s | 0.586–0.591 | **1** | 2461 | 0.19 % | 59.5 % | 53.5 % BOOST_REST |
+| charge | 2 s | 0.560–0.569 | **2** | 2082 | 0.30 % | 57.5 % | 49.7 % BOOST_REST |
+
+The exceedances come from exactly the cells whose lambda_i is larger than the
+others: removing a cell loosens what constrains lambda, and the looser lambda
+then breaks on the cell it was not allowed to see. Pooling to the median hid
+this by pulling those lambdas back down.
+
+The magnitudes stay small — worst 0.97 A against a median |I\*| near 30 A —
+and the usable current barely moves (69.8 → 69.6 % on discharge 10 s). What
+changes is the claim, not the performance.
+
+**Zero observed exceedance is a measurement. It is not zero risk.** With no
+events in *n* rows the 95 % upper bound on the true rate is about 3/*n*, and
+that bound is the number to quote.
+
+### 34.2 The SOC headline averaged over a set it did not name
+
+§30.9 says the number to use is 2.05 %p and describes it as the average over
+initial-SOC error, current offset and gain error. **2.05 is the mean over all
+seven rows of `soc_perturb.csv`, and the seventh is the undisturbed case.**
+The mean over the six disturbance rows is 2.14 %p — which §30.4's own table
+already prints.
+
+| quantity | value |
+|---|---:|
+| undisturbed alone | 1.51 %p |
+| mean over the six disturbances | **2.14 %p** |
+| mean over all seven rows | 2.05 %p |
+| worst single condition (offset −0.10 A) | 3.77 %p |
+
+Nothing pinned 2.05 to a table, so `verify.py` never saw the discrepancy.
+`repro/run_soc_headline.py` now writes all four aggregations side by side.
+Quote one and label it.
+
+### 34.3 Ridge beats the SOH CNN
+
+The CNN was reported with no baseline beside it. Under identical nested
+cell-held-out splits, identical 64-bin features and identical target
+(`repro/run_soh_baselines.py`):
+
+| method | pooled RMSE | worst cell |
+|---|---:|---:|
+| **ridge** | **0.0094** | **0.0130** |
+| PLS | 0.0096 | 0.0126 |
+| SVR (RBF) | 0.0099 | 0.0146 |
+| gradient boosting | 0.0101 | 0.0179 |
+| **1D CNN (shipped, 10,945 parameters)** | **0.0135** | **0.0293** |
+| mean baseline | 0.0878 | 0.0988 |
+
+Ridge is 30 % better pooled and 2.3× better on the worst cell, with 65
+coefficients against 10,945 parameters — and it removes the 17.9 ms SOH
+inference from the board entirely. Confirmed with a fixed alpha and no inner
+selection (0.0093–0.0095), so it is not a selection artefact.
+
+Two related corrections. `soh_cnn.py` is a plain two-layer 1D CNN; there is
+no physics or residual term in it, and it must not be called physics-aware.
+And the representation is not load-bearing: dQ/dV, time-per-voltage-bin, and
+both concatenated give 0.0094 / 0.0096 / 0.0095. What *is* load-bearing is
+the full 3.55–4.05 V window — the low-voltage 48 of 64 bins give 0.0132 and
+the high-voltage 48 give 0.0169, against 0.0094 for the whole
+(`repro/run_soh_ablations.py`).
+
+### 34.4 A8 survives nested selection; the aggregation choice does not
+
+§29.7 adopts A8 over A3 by comparing usable current on the leave-one-cell-out
+evaluation — the rows the paper then reports. `--trim-agg max` was picked from
+five options the same way. The evaluation was both the selection set and the
+reported test set.
+
+Redone properly (`repro/run_nested_selection.py`): outer leave-one-cell-out,
+inner leave-one-out again over the five training cells using models trained on
+the remaining four — 120 leave-two-out fits. The grid is scored on the inner
+splits only and the winner applied to the untouched outer cell.
+
+| choice | what the inner splits picked |
+|---|---|
+| rung | **A8 in 16 of 22 folds**, A3 in 6 |
+| aggregation | q75 in 10, **max in 7**, median 3, last 1, q90 1 |
+
+**A8's adoption is corroborated** by selection that never saw the test cell.
+**The aggregation is not**: q75 wins more often than the shipped `max`. Present
+the aggregation as a weakly determined choice, not an established one.
+
+Scored on the untouched outer cell the nested protocol gives 68.42 % discharge
+and 59.83 % charge at tau = 10 s, against the published 69.61 and 59.49 — and
+in two of the four settings the nested protocol scores *higher*. Selecting on
+the evaluation was worth at most about 1.2 %p. That is a good result, and it
+could only be stated after running the nested protocol.
+
+**Tolerance cannot be selected, and that is a finding.** The objective is
+defined relative to it: raising the tolerance loosens both the lambda fit and
+what counts as an exceedance, so usable current rises about 1.6 %p per 0.25 A
+with the exceedance count unmoved. A search returns the largest value offered
+every time. Tolerance is a design constraint — how much overshoot the pack is
+allowed — and stays declared.
+
+### 34.5 The SOP targets are pulse-derived, not measured
+
+A 30 A cycler cannot reach the discharge current this cell can take, so I\* is
+a projection of a fit through four HPPC rates down to the voltage floor.
+Stratifying by `extrap = |I*| / max|I_measured|` (`repro/run_label_quality.py`):
+
+| direction | ≤ 1 interpolated | 1–1.5 | > 1.5 | median extrap |
+|---|---:|---:|---:|---:|
+| discharge | 8.0 % | 14.1 % | **78.0 %** | 2.67 |
+| charge | 34.1 % | 35.1 % | 30.8 % | 1.15 |
+
+Calling these "directly measured SOP labels" overstates them. **Pulse-derived
+current-limit reference** is what they are.
+
+The conclusion survives the labels, which is the point of checking: A8 beats
+A0 at every extrapolation ceiling in both directions, including `extrap ≤ 1`
+where every label is interpolated (discharge 10 s 74.7 vs 70.6 %; charge 10 s
+62.5 vs 54.4 %).
+
+### 34.6 Larger models do not buy anything the trim does not already have
+
+A reviewer will ask whether a sequence model, given the same causal window,
+does better. On the same twelve 600 s drive blocks, the same output head, the
+same loss, optimiser, schedule and seeds, and the same inversion
+(`repro/run_sop_seq_baselines.py`):
+
+| | voltage RMSE, disch / chg | usable current, strict lambda, tau = 10 s |
+|---|---|---|
+| GRU (4,482 par.) | **44.8 / 25.8 mV** | 69.5 [67.1–71.2] / 59.9 [58.0–61.6] % |
+| LSTM (5,954 par.) | 45.4 / 26.6 mV | 69.1 [67.0–70.5] / 60.0 [57.7–62.1] % |
+| A3 (26 coeff.) | 58.8 / 34.1 mV | 70.0 [65.5–72.7] / 58.0 [54.6–61.0] % |
+| **A8 (4 eff. coeff.)** | 62.8 / 36.7 mV | 69.6 [65.5–72.1] / 59.5 [56.3–62.4] % |
+| FFRLS adaptive ECM | 106.1 / 65.0 mV | 43.3 / 49.1 % |
+
+The sequence models are 28–30 % better on voltage and **statistically
+indistinguishable on usable current** — all four intervals overlap in both
+directions — at 1,100–1,500× the parameters. This is §32.6's
+voltage-does-not-predict-current claim, now shown against models three orders
+of magnitude larger rather than only against simpler ones.
+
+A forgetting-factor RLS adaptive ECM plugged straight into the resistance is
+worse than no correction at all (43.3 vs 59.3 % on discharge), reproducing the
+direct-plug-in result of §32.5.
+
+### 34.7 External validation of the frozen A8
+
+RPCWBY Test#2 is the only sheet in either archive carrying a drive cycle
+(US06) and SOP measurements on the **same cell**, which is what a trim indexed
+on preceding drive history needs. 375 rows, 10 and 25 °C, SOH 0.98 → 0.80, all
+six frozen folds, nothing refitted, scored through the constant-power search of
+Chen et al. 2026 under Test#2's own limits (`repro/run_external_a8.py`):
+
+| direction | A0 RMSE | A8 RMSE | A0 bias | A8 bias | A0 optimism | A8 optimism |
+|---|---:|---:|---:|---:|---:|---:|
+| charge | 8.36 W | **7.21 W** | +3.44 | +2.6 | 43.1 % | 44.0 % |
+| discharge | **2.25 W** | 3.65 W | +0.05 | **−2.0** | 51.2 % | **20.7 %** |
+
+The trim transfers, and the two directions transfer differently. On charge it
+improves accuracy and bias. On discharge it costs 1.4 W of RMSE and buys a
+sign flip — the model turns conservative and over-prediction falls from 51 %
+of rows to 21 %. Worse on RMSE, better on the criterion this project adopts
+by. **Report both.** The fold spread is tight (3.44–3.85 discharge).
+
+Limits: 38 % of model calls fall outside the pooled hull; Test#2 is 10 and
+25 °C only; one external cell.
+
+Separately, and **not to be merged with the above**, the physics-only model
+was scored on RPCWBY Test#3 across six temperatures under the same search
+(`repro/run_chen2026_baseline.py`): 1.7–4.2 W RMSE at 0–40 °C but 17.5 W at
+−10 °C and 36.2 W at −20 °C, with a **+29 W optimistic bias against a 30.8 W
+measured mean** — it claims nearly double the power the cell can deliver. The
+temperature factor is borrowed from the Mendeley sweep on a different, un-aged
+cell, and no aged low-temperature data exists anywhere in this project.
+**Do not claim aged low-temperature generalization.**
+
+### 34.8 The causal chain, and SOC is the term that matters
+
+Every SOP number above feeds the inversion the label's own SOC. A deployed BMS
+has an estimate. All four corners, each under strict per-cell held-out lambda,
+with SOC entering as the adopted EKF's terminal error on the drive run nearest
+before each characterisation (`repro/run_end_to_end.py`):
+
+| discharge, tau = 10 s | exceed / n | lambda | usable |
+|---|---:|---:|---:|
+| oracle SOH + oracle SOC | 1 / 491 | 0.683 | 69.61 % |
+| estimated SOH + oracle SOC | 1 / 514 | 0.659 | 68.45 % |
+| **oracle SOH + estimated SOC** | **20 / 455** | 0.589 | 66.91 % |
+| **estimated SOH + estimated SOC** | **26 / 488** | 0.573 | 65.54 % |
+
+On charge, oracle SOH with estimated SOC collapses lambda from 0.586 to 0.404
+and usable current from 59.5 to 41.4 %.
+
+Estimated SOH costs about 1 %p. **Estimated SOC takes discharge exceedance
+from 1 in 491 to 20 in 455**, and those exceedances are *after* lambda is
+refitted per held-out cell on the same estimated-SOC data. It is not a bias
+the safety factor can price out.
+
+The both-estimated corner is the only one a vehicle can execute. Every row
+above it still receives a ground truth the vehicle does not have.
+
+One row is not monotone: on charge the both-estimated corner (56.3 %) beats
+oracle-SOH-with-estimated-SOC (41.4 %). Errors displacing the operating point
+in opposing directions is a plausible reading and was not tested. Nothing
+should be built on that row.
+
+Not modelled, and therefore not claimed: sensor dropout, fallback logic,
+temperature-sensor error, and drift between the pulse and the end of the
+preceding drive.
+
+### 34.9 The board was not running the adopted model
+
+Three defects, all in the export path, all found by trying to rebuild it.
+
+`mcu/fw_sop/Inc/sop_tables.h` was an independent **file**, not a symlink to
+`mcu/sop_tables.h`. It held A3 weights (`trim_w_dis[0] = 0.2283459`) while the
+exporter wrote A8 (`0.2146806`). **The firmware behind §27 and §33's timings
+compiled the superseded model.**
+
+The A8 header did not compile at all. It emitted 27 literals of the form `0f`
+— an integer constant with a float suffix — because `"%.7g"` renders an exact
+zero as `0`, and A8 has exact zeros in its eleven masked feature columns. Both
+gcc and arm-none-eabi-gcc reject it. **The adopted configuration's header had
+never been built.**
+
+And `repro/stages.py` invoked `export_mcu_tables.py --rung A8`, an argument the
+exporter did not have; its own defaults pointed at `runs_trim_v2`, which is A3.
+
+Fixed, rebuilt, flashed and re-measured. The flashed image now contains the
+deployment weights and not the A3 ones, verified by searching the objcopy'd
+binary for the IEEE-754 pattern. Timing is unchanged — full cycle 214.8 µs
+median, 307.1 µs worst case — which the array shapes predict, so §27 and §33's
+numbers stand. `repro/run_parity.py` agrees the C with Python to 9.2 × 10⁻⁶
+over 5,000 random states, automatically, which nothing previously did.
+
+The shipped model is now fitted on **all six cells** by the recipe the LOCO
+folds used, against an all-cell ECM pool that did not previously exist —
+`export_mcu_tables.py --holdout` had been exporting one arbitrary
+leave-one-out fold as the deployment model. That fit carries no held-out score
+by construction; every validated number remains the LOCO folds.
+
+**On the parameter count.** A8 has two non-negligible weights and two biases —
+four effective coefficients, and the masked columns are at most 5.6 × 10⁻⁴¹.
+But the header ships a twelve-input layer: 24 weights, 2 biases, 12 mu, 12 sd,
+50 floats. Write **"four effective deployed coefficients"**, not "four
+parameters".
+
+### 34.10 What the audit could not do
+
+- **Frequency-dependent fractional-order SOP** (Lai et al. 2024) needs EIS.
+  Neither UYPYDJ nor RPCWBY contains any; there is nothing to identify the
+  model from. A time-domain substitute would not be their method.
+- **Pack and HIL.** `sop_pack2.py` resamples single-cell evaluation rows within
+  condition groups. There is no pack hardware. Call it **pack-level simulation
+  sensitivity**, never pack validation, and state what it omits: inter-cell
+  error correlation beyond the condition bin, a shared current trajectory,
+  thermal gradient, and imbalance.
+- **UYPYDJ's licence** is stated nowhere in the dataset readme. Confirm with
+  the depositor before redistributing anything derived from it.

@@ -55,9 +55,37 @@ RETRACTED = [
     (r'exceedances are zero for every N from 1 to 192',
      "28.4's claim of no pack exceedance",
      'reconfirmed conditionally in 31.2 (charge on the 0.5 A tolerance)'),
+    # Some of these are guards against a claim being re-introduced rather
+    # than matches against text that exists today.  A pattern with zero hits
+    # is therefore not automatically a broken regex - but check which it is
+    # before assuming, because a regex that never matches is exactly how the
+    # Korean-era patterns went dead without anyone noticing.
     (r'voltage RMSE\s+(gives|says)\s+nothing\s+about\s+(the\s+)?SOP\s+rank',
      'the claim that voltage gives no rank at all',
      '32.6 — discharge 10 s preserves rank exactly (rho = 1.00)'),
+    # --- withdrawn by the 2026-08-27 external audit -----------------------
+    (r'calibrated leave-one-cell-out to zero exceedance',
+     'the claim that lambda is calibrated to zero exceedance',
+     '34.1 — the pooled median lets the evaluated cell set its own lambda; '
+     'strict per-cell calibration leaves 1-2 exceedances'),
+    (r'number to use in the paper is not 1\.51 %p but \*\*2\.05',
+     'the claim that 2.05 %p is the disturbance average',
+     '34.2 — 2.05 is the mean over seven rows including the undisturbed one; '
+     'the six-disturbance mean is 2.14'),
+    (r'physics[- ]aware CNN|residual[- ]aware CNN',
+     'calling the SOH model physics- or residual-aware',
+     '34.3 — soh_cnn.py is a plain two-layer 1D CNN'),
+    (r'directly measured SOP label',
+     'calling the UYPYDJ targets directly measured',
+     '34.5 — 78 % of discharge labels extrapolate past 1.5x; they are '
+     'pulse-derived'),
+    # The negative lookbehinds matter: the corrected text says "not a pack
+    # validation" and "never pack validation", and a bare match flagged those
+    # as the very claim they retract.  Both prefixes are six characters, so a
+    # fixed-width lookbehind is enough.
+    (r'(?<!not a )(?<!never )pack validation\b',
+     'calling the resampling simulation a pack validation',
+     '34.10 — there is no pack hardware; it is a simulation sensitivity'),
 ]
 
 # Numbers that should come from a table but live only in the docs (invisible
@@ -78,14 +106,25 @@ ORPHAN_HINTS = [
 #   [Retracted / [Updated  an explicit correction marker
 #   wrote / pointed at /   the claim is being quoted in order to refute it
 #   section's logic is
-FILTERS = ('[Retracted', '[Updated', '[Added', 'wrote', 'pointed at',
-           "section's logic is")
+FILTERS = ('[Retracted', '[Updated', '[Added', '[Corrected', '[Audited',
+           'wrote', 'pointed at', "section's logic is", 'never be written',
+           'must not be called', 'overstates them', 'never pack validation')
 
 
 def docs():
+    """Every prose file a reader might take a claim from.
+
+    This used to scan docs/ only, so README.md - the file most people
+    actually read, and where the headline table lives - was never checked.
+    A retracted claim sitting in the README would have passed silently.
+    """
     for f in sorted(os.listdir(DOCS)):
         if f.endswith('.md'):
-            p = os.path.join(DOCS, f)
+            yield f, open(os.path.join(DOCS, f),
+                          encoding='utf-8').read().splitlines()
+    for f in ('README.md', 'REPRODUCE.md', 'DATA.md'):
+        p = os.path.join(ROOT, f)
+        if os.path.exists(p):
             yield f, open(p, encoding='utf-8').read().splitlines()
 
 

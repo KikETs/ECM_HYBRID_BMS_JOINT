@@ -4,6 +4,14 @@ version: 1
 base_commit: fa44137ad7ca39b75a044538d7b4db3cbf3a5ed1
 audit_branch: audit/etransportation-readiness
 audited: "2026-08-27"
+manuscript_updated: "2026-08-28"
+manuscript_note: >
+  Section 34 of docs/sop_hybrid_spec.md now carries the audit
+  findings, and each contradicted claim is marked at the site where
+  it was made rather than deleted - the reasoning that produced it
+  is still worth reading, as sec 26.5 argued. findings.md carries a
+  banner and its adopted-summary table is corrected. repro/qc.py
+  guards all six retractions and now scans README.md too.
 
 claims:
   - id: sop.usable_current
