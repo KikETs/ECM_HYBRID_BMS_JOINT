@@ -76,3 +76,9 @@ analysis/cache_t
 # Audit: 120 leave-two-out fits for the nested selection (rebuilt by
 # repro/run_nested_selection.py --train, ~2.4 h).
 analysis/runs_nested/
+
+# These four were committed before the rules above were written, and
+# .gitignore does not untrack what is already tracked - 24 MB of regenerable
+# predictions went in and had to be removed with `git rm --cached`.
+# runs_trim_{lstm,gru,ffrls}: python3 repro/run_sop_seq_baselines.py  (~4 min)
+# runs_nested:                python3 repro/run_nested_selection.py --train (~2.4 h)
