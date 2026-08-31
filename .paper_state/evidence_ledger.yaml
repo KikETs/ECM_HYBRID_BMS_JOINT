@@ -796,15 +796,25 @@ blocked_work:
   additional_external_cells:
     asked_for: "external multi-cell validation, and charge / low-SOC / low-temperature coverage"
     blocked_by: >
-      There is one external dataset (RPCWBY Test#2) and it contributes one
-      physical cell's data.  The six 'folds' in external_a8*.csv are six
-      UYPYDJ-trained models evaluated on that same external data - they are
-      six models, not six cells.  The paper must never call this
-      "external multi-cell validation".
+      RPCWBY contributes one physical Samsung 30T cell.  The six 'folds' in
+      external_a8*.csv are six UYPYDJ-trained models evaluated on that same
+      external data - six models, not six cells, and their exceedance counts
+      are therefore correlated rather than six independent replicates.  The
+      paper must never call this "external multi-cell validation", and
+      "zero exceedance in all six folds" must not be read as six confirmations.
     what_would_unblock: >
-      A second external dataset with per-cell HPPC or pulse labels below
-      SOC 0.30 and at least one temperature away from 25 C.  Nothing in the
-      three DOIs in DATA.md provides it.
+      A second external dataset with per-cell labels from a DIFFERENT cell.
+    correction_2026_08_31: >
+      [I WAS WRONG] This entry originally said "Nothing in the three DOIs in
+      DATA.md provides" sub-0.30 SOC or off-25 C data.  That is false and I
+      should have checked before writing it.  RPCWBY Test#3 covers -20, -10,
+      0, 10, 25 and 40 C at tau = 2, 10 and 30 s and SOC 0.02 to 0.95, in both
+      directions, and it is already reduced in the repository as
+      analysis/rpcwby_sop_test3.csv (108 rows).  Test#8 adds a C-rate sweep at
+      0 C.  What is genuinely unavailable is a second physical CELL - every
+      RPCWBY test above is the same Samsung 30T cell - so temperature and
+      low-SOC coverage can be extended now, and cell-to-cell external
+      generalisation cannot.
     command_when_data_exists: |
       python3 analysis/rpcwby_ecm.py --raw ../raw/<NEW> --out <new>_ecm.csv
       python3 repro/run_external_a8.py --ecm <new>_ecm.csv

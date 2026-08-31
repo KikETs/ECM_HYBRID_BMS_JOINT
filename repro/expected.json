@@ -905,6 +905,61 @@
       "value": 43.28,
       "tol": 0.01,
       "source": "sec 37.3 — the one baseline whose interval separates from A8"
+    },
+    {
+      "id": "ext.temp.m20.margin",
+      "table": "external_temp_envelope.csv",
+      "where": {
+        "temp_set_C": "-20"
+      },
+      "column": "margin",
+      "value": 0.486,
+      "tol": 0.001,
+      "source": "sec 37.4 — the frozen lambda is not conservative at -20 C"
+    },
+    {
+      "id": "ext.temp.m20.exceed",
+      "table": "external_temp_envelope.csv",
+      "where": {
+        "temp_set_C": "-20"
+      },
+      "column": "exceed",
+      "value": 5,
+      "tol": 0,
+      "source": "sec 37.4 — five of eight in-hull points exceed at -20 C"
+    },
+    {
+      "id": "ext.temp.0.margin",
+      "table": "external_temp_envelope.csv",
+      "where": {
+        "temp_set_C": "0"
+      },
+      "column": "margin",
+      "value": 1.396,
+      "tol": 0.001,
+      "source": "sec 37.4 — 0 C is the coldest temperature the frozen factor covers"
+    },
+    {
+      "id": "ext.temp.40.exceed",
+      "table": "external_temp_envelope.csv",
+      "where": {
+        "temp_set_C": "40"
+      },
+      "column": "exceed",
+      "value": 0,
+      "tol": 0,
+      "source": "sec 37.4 — warm end of the measured validity range"
+    },
+    {
+      "id": "ext.temp.25.soc_min",
+      "table": "external_temp_envelope.csv",
+      "where": {
+        "temp_set_C": "25"
+      },
+      "column": "soc_in_hull_min",
+      "value": 0.4,
+      "tol": 0.001,
+      "source": "sec 37.4 — the hull never reaches low SOC at any temperature"
     }
   ],
   "tables": {
@@ -2745,10 +2800,45 @@
         "usable_worst_pct",
         "rank_in_condition"
       ]
+    },
+    "external_temp_envelope.csv": {
+      "producer": "python3 repro/run_chen2026_baseline.py",
+      "stage": "chen2026",
+      "required": false,
+      "rows": 6,
+      "columns": [
+        "temp_set_C",
+        "temp_cell_C_mean",
+        "n_points",
+        "n_in_hull",
+        "in_hull_pct",
+        "soc_in_hull_min",
+        "soc_in_hull_max",
+        "lambda_shipped",
+        "lambda_needed",
+        "margin",
+        "exceed",
+        "worst_overshoot_W",
+        "worst_raw_overshoot_W"
+      ],
+      "numeric": [
+        "temp_cell_C_mean",
+        "n_points",
+        "n_in_hull",
+        "in_hull_pct",
+        "soc_in_hull_min",
+        "soc_in_hull_max",
+        "lambda_shipped",
+        "lambda_needed",
+        "margin",
+        "exceed",
+        "worst_overshoot_W",
+        "worst_raw_overshoot_W"
+      ]
     }
   },
   "completeness": {
-    "total_checks": 73,
+    "total_checks": 78,
     "checks_per_table": {
       "alpha.csv": 2,
       "cold_ratio.csv": 2,
@@ -2837,7 +2927,12 @@
       "e2e.fixed.disc.oracle.exceed",
       "e2e.fixed.disc.est_est.usable",
       "method.a8.rank.disc10",
-      "method.ffrls.disc10.usable"
+      "method.ffrls.disc10.usable",
+      "ext.temp.m20.margin",
+      "ext.temp.m20.exceed",
+      "ext.temp.0.margin",
+      "ext.temp.40.exceed",
+      "ext.temp.25.soc_min"
     ],
     "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
   }

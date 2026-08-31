@@ -425,9 +425,13 @@ STAGES = [
     dict(id='chen2026', tier=5, minutes=6, measured=True,
          cmd='{py} ../repro/run_chen2026_baseline.py',
          inputs=['cache/pool', 'sop_label_measured.csv'],
-         outputs=['results/tables/chen2026_baseline.csv'],
+         outputs=['results/tables/chen2026_baseline.csv',
+                  'results/tables/external_temp_envelope.csv'],
          why="Chen 2026's constant-power binary search reimplemented on this "
-             'data, to its own published tolerances.'),
+             'data, to its own published tolerances.  The same rows also give '
+             'the external temperature envelope: Test#3 is the only external '
+             'sheet with a temperature axis, and it decides how far the '
+             'frozen safety factor reaches.'),
 
     dict(id='nested_selection', tier=5, minutes=120, measured=True,
          cmd='{py} ../repro/run_nested_selection.py',

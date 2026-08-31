@@ -280,7 +280,81 @@ def main():
     print('\n  Chen rows are QUOTED from the paper under their Table 3 '
           'limits (V_min 3.2 V).\n  They are not a controlled comparison - '
           'see the module docstring.')
+
+    # Same rows, different question: not "how does this compare to Chen" but
+    # "how far does our own frozen model reach in temperature and SOC".
+    written = [dict(temp_set_C=str(x[0]), temp_cell_C=str(x[1]),
+                    SOC=str(x[2]), SOP_meas_W=str(x[3]),
+                    SOP_pred_W=str(x[4]), limit_hit=str(x[6])) for x in out]
+    temperature_envelope(
+        written, os.path.join(ANALYSIS, 'results', 'tables',
+                     'external_temp_envelope.csv'))
     return 0
+
+
+
+def temperature_envelope(rows, out_path):
+    """Where the frozen physics layer still holds, by temperature.
+
+    Test#3 is the only external sheet with a temperature axis, and it has no
+    paired drive cycle, so the A8 trim cannot be computed on it -- only the
+    nominal 2RC layer the trim sits on top of.  That layer is still what
+    decides whether a prediction is safe, so its envelope is worth measuring
+    rather than assuming.
+
+    lambda_needed is the largest factor that would leave zero exceedance at
+    that temperature.  The shipped discharge lambda is 0.6832 (UYPYDJ, 25 C).
+    A lambda_needed below it means the frozen factor is not conservative
+    enough there, and the paper's temperature range has to say so.
+    """
+    import numpy as _np
+    LAM_SHIPPED = 0.6832
+    out = []
+    for T in sorted({r['temp_set_C'] for r in rows}, key=float):
+        g = [r for r in rows if r['temp_set_C'] == T]
+        ih = [r for r in g if r['limit_hit'] != 'out-of-hull'
+              and r['SOP_pred_W'] not in ('', 'nan')]
+        socs = sorted({float(r['SOC']) for r in ih})
+        if ih:
+            m = _np.array([abs(float(r['SOP_meas_W'])) for r in ih])
+            q = _np.array([abs(float(r['SOP_pred_W'])) for r in ih])
+            ok = q > 0
+            need = float(_np.min(m[ok] / q[ok])) if ok.any() else float('nan')
+            over = LAM_SHIPPED * q - m
+            exceed = int((over > 0).sum())
+            worst_raw = float(_np.max(q - m))
+            worst_lam = float(max(over.max(), 0.0))
+            tcell = _np.mean([float(r['temp_cell_C']) for r in ih])
+        else:
+            need = worst_raw = worst_lam = tcell = float('nan')
+            exceed = 0
+        out.append([T, f'{tcell:.1f}', len(g), len(ih),
+                    f'{100 * len(ih) / len(g):.1f}',
+                    f'{min(socs):.2f}' if socs else '',
+                    f'{max(socs):.2f}' if socs else '',
+                    f'{LAM_SHIPPED:.4f}', f'{need:.4f}',
+                    f'{need / LAM_SHIPPED:.3f}', exceed,
+                    f'{worst_lam:.2f}', f'{worst_raw:.2f}'])
+    with open(out_path, 'w', newline='', encoding='utf-8') as f:
+        w = csv.writer(f)
+        w.writerow(['temp_set_C', 'temp_cell_C_mean', 'n_points', 'n_in_hull',
+                    'in_hull_pct', 'soc_in_hull_min', 'soc_in_hull_max',
+                    'lambda_shipped', 'lambda_needed', 'margin', 'exceed',
+                    'worst_overshoot_W', 'worst_raw_overshoot_W'])
+        w.writerows(out)
+    print(f"\n  EXTERNAL TEMPERATURE ENVELOPE (physics layer, not the trim)")
+    print(f"  {'T set':>6}{'T cell':>8}{'n':>5}{'in hull':>9}{'%':>7}"
+          f"{'SOC range':>12}{'lam need':>10}{'margin':>8}{'exceed':>8}"
+          f"{'worst W':>9}")
+    print('  ' + '-' * 84)
+    for r in out:
+        rng = f'{r[5]}-{r[6]}' if r[5] else 'none'
+        print(f'  {r[0]:>6}{r[1]:>8}{r[2]:>5}{r[3]:>9}{r[4]:>7}{rng:>12}'
+              f'{r[8]:>10}{r[9]:>8}{r[10]:>8}{r[11]:>9}')
+    print('  The hull never reaches below SOC 0.30 at any temperature, and '
+          'the frozen lambda stops being conservative below about 0 C.')
+    print(f'  -> {os.path.relpath(out_path, ROOT)}')
+    return out
 
 
 if __name__ == '__main__':

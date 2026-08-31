@@ -86,20 +86,34 @@ failure rate of an onboard admission filter; no such filter was implemented or
 tested. Oracle-state validation nevertheless overstates system safety, because
 it scores a row set the vehicle could not have selected.
 
-**External validation, stated at its actual scope.** Six frozen UYPYDJ
-leave-one-cell-out A8 models were transferred without refitting to the
-in-hull portion of RPCWBY Test#2. On **discharge** the frozen safety factor
-stayed conservative — 1.30–1.43× margin, zero exceedance in all six folds —
-over the 54 % of calls the pooled hull covers, which excludes SOC below 0.30
-and SOC = 1.0. On **charge** it did not transfer: the factor would have to
-fall from 0.586 to 0.397, and as shipped it overshoots on 9–11 of 248 in-hull
-rows per fold (§35.5).
+**External validation, stated at its actual scope.** RPCWBY contributes **one
+physical Samsung 30T cell**. The six "folds" are six UYPYDJ-trained models
+scored on that same external data — six models, not six cells, so their
+exceedance counts are correlated and *not* six independent confirmations. This
+is never "external multi-cell validation".
+
+Six frozen A8 models were transferred without refitting to the in-hull portion
+of Test#2. On **discharge** the frozen safety factor stayed conservative
+(1.30–1.43× margin, zero exceedance) over the 54 % of calls the pooled hull
+covers. On **charge** it did not transfer: the factor would have to fall from
+0.586 to 0.397, and as shipped it overshoots on 9–11 of 248 in-hull rows per
+fold (§35.5).
+
+**Temperature and low-SOC envelope, measured.** Test#3 sweeps −20 to 40 °C on
+the same cell. It carries no paired drive cycle, so only the nominal 2RC layer
+the trim sits on can be scored there — but that layer is what decides whether a
+prediction is safe. The shipped λ = 0.6832 is conservative from **0 °C to
+40 °C** (margin 1.39–1.45×, zero exceedance) and **stops being conservative
+below 0 °C**: at −10 °C it needs 0.600, at −20 °C it needs 0.332 and overshoots
+by 26.9 W on 5 of 8 in-hull points. The pooled hull **never reaches below SOC
+0.30 at any temperature**. So the validity range this work can claim is
+0–40 °C and SOC ≥ 0.30, and it is measured rather than assumed (§37.4).
 
 ## Reproduce
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # recompute the 73 published numbers
+python3 repro/verify.py        # recompute the 78 published numbers
 python3 repro/run.py --list    # stages, status, runtime
 ```
 
