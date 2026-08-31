@@ -158,3 +158,21 @@ def test_deterministic_rerun(tmp_path, sandbox_tables):
     rc2, out2 = verify_against(tmp_path, sandbox_tables)
     assert rc1 == rc2 == 0
     assert out1 == out2
+
+
+def test_the_readme_number_of_checks_matches_expected_json():
+    """README quotes how many values verify.py recomputes; it must be true.
+
+    It said 43 while the file held 51, and 51 while it held 59.  A count in
+    prose drifts every time a check is added, and nothing noticed.
+    """
+    import json
+    import re
+    n = len(json.load(open(os.path.join(ROOT, 'repro', 'expected.json'),
+                           encoding='utf-8'))['checks'])
+    readme = open(os.path.join(ROOT, 'README.md'), encoding='utf-8').read()
+    hits = re.findall(r'(\d+) published numbers', readme)
+    assert hits, 'README no longer says how many published numbers verify.py checks'
+    for h in hits:
+        assert int(h) == n, (
+            f'README says {h} published numbers, expected.json holds {n}')

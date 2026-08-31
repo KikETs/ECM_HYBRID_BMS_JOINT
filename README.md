@@ -79,7 +79,7 @@ rows per fold (§35.5).
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # recompute the 51 published numbers
+python3 repro/verify.py        # recompute the 59 published numbers
 python3 repro/run.py --list    # stages, status, runtime
 ```
 

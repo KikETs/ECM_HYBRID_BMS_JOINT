@@ -35,7 +35,7 @@ jobs:
       - name: Compile every Python file
         run: python -m compileall -q analysis repro mcu env tests
 
-      - name: Stored-table verification (51 published numbers)
+      - name: Stored-table verification
         run: python repro/verify.py
 
       - name: Table producers reproduce their tables
