@@ -3,6 +3,26 @@
 #include <math.h>
 #include <stddef.h>
 
+#if SOH_RIDGE
+/* Ridge on the standardised dQ/dV curve.
+ *
+ *     soh = b + sum_i w_i * (x_i - mu_i) / sd_i
+ *
+ * 64 multiply-accumulates.  The CNN body below is kept so the comparison
+ * build still exists and the saving can be measured rather than asserted;
+ * which one compiles is decided by the header the exporter wrote.        */
+float soh_infer(const float *x64)
+{
+  float acc = SOH_B;
+  for (int i = 0; i < SOH_NIN; i++)
+  {
+    acc += soh_w[i] * ((x64[i] - soh_mu[i]) / soh_sd[i]);
+  }
+  return acc;
+}
+
+#else
+
 /* Conv1d(1->CH, k=5, pad=2) -> ReLU -> MaxPool1d(2)
  * -> Conv1d(CH->2CH, k=5, pad=2) -> ReLU -> AdaptiveAvgPool1d(8)
  * -> Linear(2CH*8 -> HID) -> ReLU -> Linear(HID -> 1)                 */
@@ -145,3 +165,5 @@ float soh_infer(const float *x64)
   for (int s = 0; s < SOH_NSEED; s++) { acc += run_seed(z, s); }
   return acc / (float)SOH_NSEED;
 }
+
+#endif /* SOH_RIDGE */

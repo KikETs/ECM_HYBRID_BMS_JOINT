@@ -1,0 +1,13 @@
+icache,soh_model,stage,median_us,p95_us,max_us,note
+on,ridge,FEAT,13.94,14.17,15.27,deployment setting
+on,ridge,SOLVE,46.60,52.83,74.11,deployment setting
+on,ridge,FULL,53.20,59.56,81.09,deployment setting
+on,CNN,FEAT,13.28,13.49,14.91,deployment setting
+on,CNN,SOLVE,44.05,49.13,65.80,deployment setting
+on,CNN,FULL,50.50,55.60,72.25,deployment setting
+off,ridge,FEAT,24.36,24.48,24.48,cache disabled at build time
+off,ridge,SOLVE,92.84,99.47,142.04,cache disabled at build time
+off,ridge,FULL,106.38,112.93,155.30,cache disabled at build time
+off,CNN,FEAT,24.53,24.66,24.66,cache disabled at build time
+off,CNN,SOLVE,94.38,101.00,144.81,cache disabled at build time
+off,CNN,FULL,107.89,114.41,158.10,cache disabled at build time

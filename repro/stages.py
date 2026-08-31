@@ -190,15 +190,40 @@ STAGES = [
          outputs=[f'runs_trim_chg_v2/pred_A3_{c}.npz' for c in CELLS],
          why='Comparison group (charge).'),
 
-    dict(id='soh', tier=4, minutes=6, measured=True,
-         cmd='{py} soh_cnn.py --save-model runs_soh_cnn '
-             '--save-pred results/soh_pred.npz',
+    dict(id='soh_select', tier=4, minutes=3, measured=True,
+         cmd='{py} ../repro/run_soh_nested.py',
          inputs=['cache/soh_charge.npz'],
-         outputs=['runs_soh_cnn/soh_CC.pt', 'results/soh_pred.npz'],
-         why='The SOH arm.  10,945 parameters, cell-holdout RMSE 0.0135, '
-             'bias +0.0001 (after excluding the 8 temperature-defect curves '
-             '— 30.12).  Every estimated-SOH version uses these '
-             'predictions.'),
+         outputs=['results/tables/soh_nested.csv',
+                  'results/tables/soh_nested_summary.csv'],
+         why='Which SOH model family an honest procedure picks.  Every '
+             'candidate is scored by leave-one-cell-out over the five '
+             'TRAINING cells before the held-out cell is touched.  The CNN '
+             'is scored too, and comes last on every fold — it would never '
+             'have been selected by anything that had not already seen the '
+             'test cells (36.1).'),
+
+    dict(id='soh', tier=4, minutes=1, measured=True,
+         cmd='{py} soh_ridge.py --save-model runs_soh_ridge '
+             '--save-pred results/soh_pred.npz --deployment',
+         inputs=['cache/soh_charge.npz'],
+         outputs=['runs_soh_ridge/soh_CC.npz', 'runs_soh_ridge/soh_ALL.npz',
+                  'results/soh_pred.npz'],
+         why='The SOH arm.  65 coefficients, cell-holdout RMSE 0.0094, worst '
+             'cell 0.0130 (after excluding the 8 temperature-defect curves '
+             '— 30.12).  Replaced the 1D CNN in the second audit round: '
+             'better on every cell, 2,991x faster on the board, and half the '
+             'firmware.  Every estimated-SOH version uses these predictions.  '
+             'The alpha is never chosen on the held-out cell.'),
+
+    dict(id='soh_cnn_reference', tier=4, minutes=6, measured=True,
+         optional=True,
+         cmd='{py} soh_cnn.py --save-model runs_soh_cnn '
+             '--save-pred results/soh_pred_cnn.npz',
+         inputs=['cache/soh_charge.npz'],
+         outputs=['runs_soh_cnn/soh_CC.pt', 'results/soh_pred_cnn.npz'],
+         why='The superseded CNN, kept runnable so the comparison in 36 can '
+             'be reproduced rather than taken on trust.  It writes to a '
+             'separate prediction file and feeds nothing.'),
 
     # ---- tier 5  evaluation ---------------------------------------------
     dict(id='baselines', tier=5, minutes=4, measured=True,
@@ -335,9 +360,9 @@ STAGES = [
          cmd='{py} export_mcu_tables.py --rung A8 --deployment '
              '--trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy '
              '--out ../mcu/sop_tables.h && '
-             '{py} export_soh_mcu.py --out ../mcu/soh_tables.h',
+             '{py} export_soh_ridge.py --out ../mcu/soh_tables.h',
          inputs=['runs_trim_a8_deploy', 'runs_trim_a8_chg_deploy',
-                 'runs_soh_cnn'],
+                 'runs_soh_ridge'],
          outputs=['../mcu/sop_tables.h', '../mcu/soh_tables.h'],
          why='The 32x16 grid and the trim weights as C headers.  A8, so '
              'there are 2 EW states.  --deployment because a header that '

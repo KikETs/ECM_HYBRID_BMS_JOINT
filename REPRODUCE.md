@@ -59,7 +59,9 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `trim_chg` | 8 | `python3 sop_trim.py --rung A8 --data cache/trim_chg --out runs_trim_a8_chg --save-pred` | `runs_trim_a8_chg/pred_A8_BOOST.npz +5` |
 | `trim_a3_dis` | 11 | `python3 sop_trim.py --rung A3 --data cache/trim --out runs_trim_v2 --save-pred` | `runs_trim_v2/pred_A3_BOOST.npz +5` |
 | `trim_a3_chg` | 10~ | `python3 sop_trim.py --rung A3 --data cache/trim_chg --out runs_trim_chg_v2 --save-pred` | `runs_trim_chg_v2/pred_A3_BOOST.npz +5` |
-| `soh` | 6 | `python3 soh_cnn.py --save-model runs_soh_cnn --save-pred results/soh_pred.npz` | `runs_soh_cnn/soh_CC.pt +1` |
+| `soh_select` | 3 | `python3 ../repro/run_soh_nested.py` | `results/tables/soh_nested.csv +1` |
+| `soh` | 1 | `python3 soh_ridge.py --save-model runs_soh_ridge --save-pred results/soh_pred.npz --deployment` | `runs_soh_ridge/soh_CC.npz +2` |
+| `soh_cnn_reference` | 6 | `python3 soh_cnn.py --save-model runs_soh_cnn --save-pred results/soh_pred_cnn.npz` | `runs_soh_cnn/soh_CC.pt +1` |
 
 ### tier 5 — evaluation
 
@@ -81,11 +83,11 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 
 | id | min | command | outputs |
 |---|---:|---|---|
-| `mcu_export` | 2 | `python3 export_mcu_tables.py --rung A8 --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy --out ../mcu/sop_tables.h && python3 export_soh_mcu.py --out ../mcu/soh_tables.h` | `../mcu/sop_tables.h +1` |
+| `mcu_export` | 2 | `python3 export_mcu_tables.py --rung A8 --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy --out ../mcu/sop_tables.h && python3 export_soh_ridge.py --out ../mcu/soh_tables.h` | `../mcu/sop_tables.h +1` |
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: about 830 minutes (14 h). `~` marks an estimate that was never timed.
+Full rebuild: about 834 minutes (14 h). `~` marks an estimate that was never timed.
 
 ## Published numbers
 
@@ -97,11 +99,11 @@ Full rebuild: about 830 minutes (14 h). `~` marks an estimate that was never tim
 | `sop.disc.10s.usable` | 69.1 | `safety.csv` | sec 32.6 |
 | `sop.chg.10s.lambda` | 0.586 | `safety.csv` | sec 32.7 |
 | `sop.chg.10s.usable` | 59.6 | `safety.csv` | sec 32.7 |
-| `sop.disc.10s.usable.est_soh` | 67.2 | `safety.csv` | sec 29 / 30.11 |
-| `sop.chg.10s.usable.est_soh` | 56.6 | `safety.csv` | sec 29 / 30.11 |
+| `sop.disc.10s.usable.est_soh` | 69.0 | `safety.csv` | sec 29 / 30.11 |
+| `sop.chg.10s.usable.est_soh` | 54.1 | `safety.csv` | sec 29 / 30.11 |
 | `ladder.disc.A0` | 59.3 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.direct` | 32.6 | `ladder.csv` | sec 32.5 |
-| `ladder.disc.shrink` | 62.0 | `ladder.csv` | sec 32.5 |
+| `ladder.disc.shrink` | 62.4 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A8` | 69.1 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A3` | 70.3 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.rls_bound` | 71.1 | `ladder.csv` | sec 32.5 |
@@ -125,12 +127,12 @@ Full rebuild: about 830 minutes (14 h). `~` marks an estimate that was never tim
 | `volt.char.A8` | 36.73 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.char.A3` | 34.13 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.char.RLS` | 33.59 | `voltage.csv` | sec 32.2 / 32.6 |
-| `mcu.feat` | 13.25 | `mcu.csv` | sec 33.1 |
-| `mcu.feat_a8` | 5.99 | `mcu.csv` | sec 33.1 |
-| `mcu.ekf` | 7.1 | `mcu.csv` | sec 33.2 |
-| `mcu.full` | 50.43 | `mcu.csv` | sec 33.2 |
-| `soh.rmse` | 0.0135 | `soh.csv` | sec 30.12 |
-| `soh.bias` | 0.0001 | `soh.csv` | sec 30.12 |
+| `mcu.feat` | 13.94 | `mcu.csv` | sec 33.1 |
+| `mcu.feat_a8` | 6.79 | `mcu.csv` | sec 33.1 |
+| `mcu.ekf` | 8.16 | `mcu.csv` | sec 33.2 |
+| `mcu.full` | 53.2 | `mcu.csv` | sec 33.2 |
+| `soh.rmse` | 0.0094 | `soh.csv` | sec 30.12 |
+| `soh.bias` | -0.0005 | `soh.csv` | sec 30.12 |
 | `alpha.disc.CC` | 0.2 | `alpha.csv` | sec 32.3 |
 | `alpha.chg.CC.slow` | 0.02 | `alpha.csv` | sec 32.6 |
 | `corr.disc.10s` | -0.608 | `correlation.csv` | sec 31.4 |
@@ -142,16 +144,25 @@ Full rebuild: about 830 minutes (14 h). `~` marks an estimate that was never tim
 | `soh.abl.dqdv` | 0.0094 | `soh_ablations.csv` | audit |
 | `soh.abl.time_only` | 0.0096 | `soh_ablations.csv` | audit |
 | `e2e.disch.oracle.usable` | 69.61 | `end_to_end.csv` | audit |
-| `e2e.disch.est_est.usable` | 65.54 | `end_to_end.csv` | audit |
-| `e2e.disch.est_est.exceed` | 26 | `end_to_end.csv` | audit |
-| `mcu.build.both` | 143964 | `build_size.csv` | sec 33.6 |
-| `mcu.build.a8_only` | 142060 | `build_size.csv` | sec 33.6 |
-| `e2e.paired.disc.est_est.exceed` | 4 | `end_to_end_paired.csv` | sec 35.1 |
+| `e2e.disch.est_est.usable` | 66.24 | `end_to_end.csv` | audit |
+| `e2e.disch.est_est.exceed` | 20.0 | `end_to_end.csv` | audit |
+| `mcu.build.both` | 72700 | `build_size.csv` | sec 33.6 |
+| `mcu.build.a8_only` | 70796 | `build_size.csv` | sec 33.6 |
+| `e2e.paired.disc.est_est.exceed` | 3.0 | `end_to_end_paired.csv` | sec 35.1 |
 | `e2e.paired.disc.oracle.exceed` | 3 | `end_to_end_paired.csv` | sec 35.1 |
-| `e2e.drift.disc.est_est.rate` | 24.27 | `end_to_end_drift.csv` | sec 35.2 |
+| `e2e.drift.disc.est_est.rate` | 27.84 | `end_to_end_drift.csv` | sec 35.2 |
 | `ext.cov.disc` | 54.2 | `external_a8_coverage.csv` | sec 35.5 |
 | `ext.safety.chg.margin` | 0.677 | `external_a8_safety.csv` | sec 35.5 |
 | `ext.safety.disc.exceed` | 0 | `external_a8_safety.csv` | sec 35.5 |
+| `soh.ridge.rmse` | 0.0094 | `soh_model_cost.csv` | sec 36.1 |
+| `soh.cnn.rmse` | 0.0135 | `soh_model_cost.csv` | sec 36.1 |
+| `soh.ridge.us` | 6.5 | `soh_model_cost.csv` | sec 36.4 |
+| `soh.cnn.us` | 19442.25 | `soh_model_cost.csv` | sec 36.4 |
+| `soh.nested.pooled` | 0.0095 | `soh_nested_summary.csv` | sec 36.1 |
+| `soh.nested.cnn_inner.BOOST` | 0.0141 | `soh_nested.csv` | sec 36.1 |
+| `mcu.icache.on.ridge` | 53.2 | `mcu_icache.csv` | sec 36.4 |
+| `mcu.icache.off.ridge` | 106.38 | `mcu_icache.csv` | sec 36.4 |
+| `mcu.icache.off.cnn` | 107.89 | `mcu_icache.csv` | sec 36.4 |
 
 ## Cells
 

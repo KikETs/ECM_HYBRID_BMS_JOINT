@@ -122,3 +122,40 @@ def _walk_strings(o):
     elif isinstance(o, list):
         for v in o:
             yield from _walk_strings(v)
+
+
+def test_soh_header_matches_the_deployed_ridge_fit():
+    """The board's SOH weights must be the all-cell fit on disk.
+
+    The SOP header had exactly this defect: the manifest, the ledger and the
+    file disagreed for four days.  The SOH header is checked the same way,
+    against the .npz the exporter reads, so a stale header cannot ship.
+    """
+    import re
+    import numpy as np
+    hdr = os.path.join(ROOT, 'mcu', 'soh_tables.h')
+    fit = os.path.join(ROOT, 'analysis', 'runs_soh_ridge', 'soh_ALL.npz')
+    if not os.path.exists(fit):
+        pytest.skip('no all-cell ridge fit in this checkout')
+    src = open(hdr, encoding='utf-8').read()
+    assert '#define SOH_RIDGE 1' in src, 'the SOH header is not a ridge header'
+    z = np.load(fit, allow_pickle=True)
+    b = float(z['b'])
+    m = re.search(r'#define SOH_B \(([-0-9.e+]+)f\)', src)
+    assert m, 'no SOH_B in the header'
+    assert abs(float(m.group(1)) - b) < 1e-6, (
+        f'header intercept {m.group(1)} but soh_ALL.npz holds {b}')
+    w = re.search(r'static const float soh_w\[(\d+)\]', src)
+    assert w and int(w.group(1)) == len(z['w']), (
+        f'header has {w.group(1) if w else "no"} weights, fit has {len(z["w"])}')
+
+
+def test_the_ridge_build_refuses_the_integer_soh_opcode():
+    """SOP_CMD_SOH_Q must NACK rather than answer with the float timing."""
+    src = open(os.path.join(ROOT, 'mcu', 'fw_sop', 'Src', 'main.c'),
+               encoding='utf-8').read()
+    i = src.index('SOP_CMD_SOH_Q)\n    {')
+    block = src[i:i + 700]
+    assert '#if SOH_RIDGE' in block and 'SOP_NACK_UNKNOWN_CMD' in block, (
+        'the ridge build no longer refuses the integer SOH opcode; it would '
+        'report the float timing under the integer command')

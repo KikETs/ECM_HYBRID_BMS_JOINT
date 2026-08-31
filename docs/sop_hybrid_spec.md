@@ -5093,6 +5093,14 @@ cost — it is a dot product — but it would change the shipped artifact, the
 MCU timing evidence and the estimated-SOH end-to-end corners, so it is left as
 stated work rather than done quietly.
 
+> **[Superseded — 36]** It was done. Demoting was the wrong call: nested
+> selection shows the CNN placing **last on all six folds** before any
+> held-out cell is touched, so it is not a worse model that happened to ship,
+> it is a model no honest procedure would have picked. Ridge is deployed,
+> measured on the board at **6.50 µs against 19 442 µs**, and halves the
+> firmware. The SOP inversion got 5.3 % slower and that turned out to be an
+> instruction-cache placement effect, not a cost of ridge — §36.4.
+
 ### 35.8 What the contribution is
 
 Not superiority. On usable current the sequence baselines are within noise of
@@ -5126,3 +5134,147 @@ qualified production estimator.
   factor is fragile. Nothing was substituted, because changing the safety
   definition after seeing the test set is the failure this audit exists to
   prevent.
+
+---
+
+## 36. The SOH arm was replaced
+
+§35.7 left this as a stated decision rather than a done one: ridge beat the
+deployed CNN on the same splits, and the paper demoted the CNN instead of
+replacing it. That was the wrong call, for a reason §35.7 did not notice —
+the CNN is not merely worse, it is a model that **no honest selection procedure
+would have picked**.
+
+### 36.1 The CNN loses before it ever sees a held-out cell
+
+Choosing ridge because it beat the CNN on the leave-one-cell-out table is
+selection on the evaluation set: the comparison in `soh_baselines.csv` already
+saw every held-out cell. So the family was re-chosen the way it would have to
+be chosen in practice. For each outer held-out cell, every candidate — mean,
+ridge, PLS, SVR, gradient boosting and the CNN itself — is scored by
+leave-one-cell-out over the **five training cells only**; the winner is refit
+on those five and only then meets the held-out cell (`repro/run_soh_nested.py`).
+
+| outer holdout | chosen | inner ridge | inner CNN | outer RMSE |
+|---|---|---:|---:|---:|
+| BOOST | gradient boosting | 0.0105 | 0.0141 | 0.0091 |
+| BOOST_NEGPULSE | ridge | 0.0103 | 0.0184 | 0.0112 |
+| BOOST_NEGPULSE_1S | ridge | 0.0101 | 0.0150 | 0.0060 |
+| BOOST_REST | ridge | 0.0088 | 0.0103 | 0.0130 |
+| CC | ridge | 0.0092 | 0.0136 | 0.0106 |
+| CC_CELL2 | gradient boosting | 0.0122 | 0.0145 | 0.0056 |
+
+**The CNN is last on all six folds**, with no fold close. The procedure's own
+pooled error is 0.0095 — indistinguishable from always-ridge at 0.0094 — so the
+cost of selecting rather than assuming is about one part in a hundred.
+
+Ridge is what ships, on four folds out of six and on a criterion decided before
+the comparison: a 65-coefficient linear map fits the part, a gradient-boosted
+ensemble does not. That is a deployability constraint, not a test score.
+
+| | pooled RMSE | worst cell | coefficients |
+|---|---:|---:|---:|
+| ridge (deployed) | **0.0094** | **0.0130** (BOOST_REST) | **65** |
+| 1D CNN (superseded) | 0.0135 | 0.0293 (BOOST_REST) | 32,835 |
+
+The worst cell matters more than the pooled figure: the CNN was 2.2× its own
+pooled error on BOOST_REST, ridge is 1.4×. The arm that used to fail worst on
+the hardest cell no longer does.
+
+### 36.2 What runs on the board
+
+    soh = b + sum_i w_i * (x_i - mu_i) / sd_i
+
+64 multiply-accumulates. `analysis/export_soh_ridge.py` writes the same
+`soh_mu`/`soh_sd` arrays the CNN header defined, so `soh_core.c` standardises
+identically and only the inference body changes; the CNN body is kept under
+`#else` so the comparison build still exists and the saving is measured rather
+than asserted. `SOP_CMD_SOH_Q`, the integer kernel opcode, is **refused** by
+the ridge build rather than answered with the float timing.
+
+Like the SOP header, the exported fit is the all-cell one. `--holdout` anything
+else needs `--allow-fold` and is a benchmark artifact.
+
+### 36.3 Downstream
+
+Every estimated-SOH result was recomputed. The SOP arm is unchanged — SOH
+enters only through `results/soh_pred.npz`:
+
+| | CNN | ridge |
+|---|---:|---:|
+| estimated-SOH usable current, discharge 10 s | 67.2 % | **69.0 %** |
+| end-to-end, both estimated, discharge 10 s | 26 / 488 | **20 / 485** |
+| paired, both estimated (common rows) | 4 / 385 | **3 / 388** |
+
+The §35.2 drift finding is unchanged and slightly stronger: the rows only the
+fully estimated corner admits carry **27.8 %** exceedance (27 of 97) against
+0.97 % for the oracle corner's extra rows. A better SOH model does not repair
+a filter that a wrong SOC has corrupted, which is what §35.2 predicted.
+
+### 36.4 The board: half the firmware, and an honest surprise
+
+| | CNN | ridge | change |
+|---|---:|---:|---:|
+| SOH inference | 19 442.25 µs | **6.50 µs** | **2 991× faster** |
+| flash (text) | 144 012 B | **72 700 B** | **−49.5 %** |
+| RAM (bss) | 28 276 B | **13 172 B** | −53.4 % |
+| deployment build (A8 only) | 142 060 B | **70 796 B** | −50.2 % |
+
+The 19.4 ms is itself new: the SOH arm had never been timed, and the ledger
+carried "17.9 ms, unmeasured" as an estimate. `mcu/bench_soh.py` now sends real
+dQ/dV curves from the cache and checks the board's answer against the same fit
+in NumPy — **282 of 282 within 2 × 10⁻⁴**. SOH runs once per charge, not in the
+control cycle, so this buys headroom rather than cycle budget.
+
+**And the SOP inversion got slower.** FULL median 50.50 → **53.20 µs**, +5.3 %,
+from removing 71 kB of code that the SOP path never calls. Reporting that as a
+cost of ridge would be wrong and hiding it would be dishonest, so it was
+isolated. Same source, same board, minutes apart:
+
+| | CNN image | ridge image | ridge − CNN |
+|---|---:|---:|---:|
+| ICACHE on (deployment) | 50.50 µs | 53.20 µs | **+5.3 %** |
+| ICACHE off (`-DSOP_NO_ICACHE`) | 107.89 µs | 106.38 µs | **−1.4 %** |
+
+With the instruction cache disabled the ordering **reverses** and the smaller
+image is faster, as it should be. All twelve hot functions moved by 0x1C–0x20
+bytes when the CNN left, and eight of them changed their 32-byte alignment.
+The penalty is instruction-cache placement, not work.
+
+Two things follow, and the second is the one worth carrying out of this paper.
+The published SOP timing is now 53.20 µs, because that is what the deployment
+firmware does. And **a microcontroller timing claim at this granularity is a
+property of the image, not of the algorithm**: an unrelated model swap moved an
+untouched hot path by 5 %, in the wrong direction, reproducibly. Anyone
+comparing embedded inference costs across papers is comparing link maps as much
+as arithmetic. `analysis/results/tables/mcu_icache.csv` carries the experiment.
+
+### 36.5 What this does to the paper's claim
+
+It strengthens the part that was already the contribution and removes the part
+that was embarrassing. The SOH arm is no longer a 10,945-parameter network
+reported because it was deployed; it is 65 coefficients that beat the network
+on every cell and cost 6.5 µs. The SOP arm's claim — four effective
+coefficients matching models three orders of magnitude larger — now has a
+matching SOH arm rather than a contradicting one.
+
+What it does **not** change: everything in §35. The estimated-SOC finding, the
+corrupted-filter mechanism, the charge-direction external transfer failure and
+the withdrawn production claim all stand exactly as written, and the numbers
+were recomputed rather than carried over.
+
+### 36.6 What was not done
+
+- **Gradient boosting**, which the inner selection prefers on two of six folds,
+  was not deployed. The reason is size, not accuracy, and it was decided before
+  the outer scores were read — but it does mean the deployed family is not the
+  argmax of the procedure on every fold, and saying otherwise would overstate
+  it.
+- **Recovering the 5.3 %.** `-falign-functions=32` changes nothing (the image
+  is byte-identical). Linker-level placement of the SOP hot path would probably
+  recover it and was not attempted; tuning the layout until the number improves
+  is also exactly the kind of search that needs a pre-registered stopping rule,
+  and there is none.
+- **The CNN's int8 kernel** has no ridge counterpart, so `soh_simd.c` compiles
+  to nothing and the SIMD comparison in §27 stands only for the superseded
+  model.

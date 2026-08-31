@@ -734,3 +734,54 @@ licence:
     reimplemented, from the published equations, in
     repro/run_chen2026_baseline.py; no text or figure is reproduced.  The NC
     clause is noted in LICENSE-DATA.
+
+soh_replacement:
+  status: VERIFIED_MEASURED
+  producer: >
+    python3 repro/run_soh_nested.py; python3 analysis/soh_ridge.py
+    --save-model runs_soh_ridge --save-pred results/soh_pred.npz --deployment;
+    python3 analysis/export_soh_ridge.py; make && flash;
+    python3 mcu/bench_soh.py; python3 repro/run_soh_deploy_tables.py
+  artifacts: >
+    soh_nested.csv, soh_nested_summary.csv, soh_model_cost.csv,
+    mcu_icache.csv, mcu/soh_mcu_bench.csv, mcu/soh_mcu_bench_cnn.csv
+  selection_is_not_on_the_test_set: >
+    The family is re-chosen per outer fold by leave-one-cell-out over the five
+    TRAINING cells only.  The CNN places last on all six folds, inner RMSE
+    0.0141 / 0.0184 / 0.0150 / 0.0103 / 0.0136 / 0.0145 against ridge's
+    0.0105 / 0.0103 / 0.0101 / 0.0088 / 0.0092 / 0.0122.  Ridge wins four
+    folds, gradient boosting two.  The procedure's own pooled error is 0.0095
+    against always-ridge 0.0094, so selecting rather than assuming costs about
+    one part in a hundred.
+  why_ridge_and_not_gradient_boosting: >
+    Size, decided before the outer scores were read: 65 coefficients fit the
+    part and a boosted ensemble does not.  This does mean the deployed family
+    is not the argmax of the procedure on two of six folds.
+  accuracy: >
+    pooled RMSE 0.0094 against the CNN's 0.0135; worst cell 0.0130 against
+    0.0293, both BOOST_REST.  The CNN was 2.2x its own pooled error on the
+    hardest cell, ridge is 1.4x.
+  board: >
+    SOH inference 6.50 us median (p95 6.50, max 7.84) against the CNN's
+    19442.25 us -- 2991x.  282 of 282 board answers within 2e-4 of the same
+    fit in NumPy.  Firmware text 144012 -> 72700 B, bss 28276 -> 13172 B,
+    deployment build 142060 -> 70796 B.
+  the_sop_path_got_slower_and_it_is_not_ridge: >
+    FULL 50.50 -> 53.20 us, +5.3 %, from removing 71 kB the SOP path never
+    calls.  Isolated with a controlled A/B: rebuilt -DSOP_NO_ICACHE, the same
+    two images give 107.89 us (CNN) against 106.38 us (ridge), so with the
+    instruction cache off the ordering reverses and the smaller image is
+    faster.  All twelve hot functions moved 0x1C-0x20 bytes and eight changed
+    32-byte alignment.  An embedded timing claim at this granularity is a
+    property of the image, not the algorithm.
+  downstream: >
+    Every estimated-SOH result recomputed.  Estimated-SOH usable current
+    discharge 10 s 67.2 -> 69.0 %; end-to-end both-estimated 26/488 -> 20/485;
+    paired both-estimated 4/385 -> 3/388.  The section 35.2 drift finding is
+    unchanged and slightly stronger: 27 of 97 rows only that corner admits,
+    27.8 %, against 0.97 % for the oracle corner's extra rows.  A better SOH
+    model does not repair a filter a wrong SOC has corrupted.
+  limits:
+    gradient_boosting_not_deployed: "preferred by the inner selection on 2 of 6 folds; not shipped, on size"
+    slowdown_not_recovered: "-falign-functions=32 is byte-identical; linker placement not attempted, and tuning until the number improves needs a stopping rule there is none of"
+    int8_comparison_stands_only_for_the_cnn: "soh_simd.c compiles to nothing under ridge; section 27's SIMD result is about the superseded model"

@@ -19,22 +19,25 @@ toolchain:
 firmware:
   comparison_build:
     model_id: nmc_dst_cc
-    text_B: 143964
+    text_B: 72700
     data_B: 92
-    bss_B: 28276
-    elf_sha256: "f60b8c137766a6276a54f61ccb826ec5b305c83ec3d99c7d1d9dd74a9945d919"
-    bin_sha256: "8e487250e720e8bcd56a015ff918e5a5ee605d00816b88021b94b1147a9564fd"
+    bss_B: 13172
+    elf_sha256: "9d29e1cff8d91bf588cb660a2d4704397be1b7ad427b7be078e64e8a47014434"
+    bin_sha256: "b5ec7fb3c64c59f5b63c7a7847b8a0b0de0a316856f4ecbfc09fbc2c9bb85528"
     changed_from_audit: >
-      143932 B on 2026-08-27, 143964 B now (+32).  The delta is the all-cell
-      header replacing the leave-one-cell-out one; the constant pool moves.
+      143932 B on 2026-08-27; 143964 B after the all-cell SOP header; 72700 B
+      now.  The 71264 B drop is the 1D CNN leaving: replaced by ridge, the SOH
+      arm is 65 coefficients instead of 3 x 10945 parameters, and the int8
+      kernel in soh_simd.c compiles to nothing.  bss falls with it, 28276 ->
+      13172 B, because the CNN's activation buffers are gone.
       analysis/results/tables/build_size.csv was regenerated to match.
   deployment_build_a8_only:
     model_id: a8_only
-    text_B: 142060
+    text_B: 70796
     data_B: 92
-    bss_B: 28276
-    elf_sha256: "690dd35bd732b22dc02435f50e7c5b1425fb015a15c2f5d662e2fd0db30e0fba"
-    bin_sha256: "67e711063e62cc4bc7d402f7bba92a1a264d76653847a52220f9a61a3129ee71"
+    bss_B: 13172
+    elf_sha256: "d7c9722663ab906ab3408dccca452be7fb40b3ddf028d1eae53c6097adada4ad"
+    bin_sha256: "df1431c8b62267130a8511dd049547cf2d1e290265ba85a7ac19d76d3615b755"
     note: "make EXTRA_CFLAGS=-DSOP_A8_ONLY MODEL_ID=a8_only; 1904 B smaller"
 model_on_board:
   rung: A8
@@ -98,10 +101,54 @@ timing_us:
     published table quotes the stack figure.
   load_at_100Hz_median_pct: 2.148
   load_at_100Hz_wcet_pct: 3.071
-  soh_cnn: "not in the control cycle; runs once per charge (17.9 ms, unmeasured in this audit)"
+  soh_model: >
+    MEASURED 2026-08-31, and no longer a CNN.  mcu/bench_soh.py sends real
+    dQ/dV curves from the cache and checks the board's answer against NumPy.
+    ridge  6.50 us median (p95 6.50, max 7.84), 282/282 answers within 2e-4
+           of the same fit computed in NumPy
+    CNN    19442.25 us median, measured on the superseded image before it was
+           replaced.  The ledger's earlier "17.9 ms, unmeasured" was an
+           estimate; the real figure is 19.4 ms.
+    Speed-up 2991x.  SOH is not in the control cycle either way -- it runs once
+    per charge -- so this buys headroom, not cycle budget.
 parity:
   script: "python3 repro/run_parity.py --n 5000"
   max_rel_diff: 9.233e-06
   quantities: "kf, ks, R_eff, I_star"
   iteration_diffs: "12 / 5000 cases differ by 1 (float32 rounding at the stopping threshold)"
   result: PASS
+
+soh_replacement_2026_08_31:
+  what: >
+    The 1D CNN was replaced by ridge on the same 64-point dQ/dV input.  It is
+    better on every held-out cell (pooled RMSE 0.0094 against 0.0135, worst
+    cell 0.0130 against 0.0293), it is 65 coefficients against 32835
+    parameters, and it halves the firmware.
+  why_not_selection_on_the_test_set: >
+    Because the family was re-chosen by a procedure that never sees the
+    held-out cell: repro/run_soh_nested.py scores every candidate by
+    leave-one-cell-out over the five TRAINING cells, then refits the winner.
+    The CNN placed last on all six folds (inner RMSE 0.0103-0.0184 against
+    ridge's 0.0088-0.0105); it would never have been selected by anything that
+    had not already seen the test cells.  Ridge is chosen on four folds and
+    gradient boosting on two; ridge is deployed because the procedure's own
+    pooled error, 0.0095, is indistinguishable from always-ridge at 0.0094 and
+    a 65-coefficient linear map is what fits on the part.
+  header_sha256: "f1b46e75fd1e0c7f15ae8e0ba51ea40d57defb19532959f4d633a470a4e5d4a3"
+  firmware_evidence: >
+    Same source, same board, minutes apart; only mcu/soh_tables.h differs.
+    SOP_CMD_SOH_Q is refused by the ridge build (NACK 0xFFFFFFFE with the
+    opcode echoed) rather than answered with the float timing under the
+    integer opcode.
+  sop_slowdown_is_placement_not_work: >
+    Removing 71 kB of unrelated code made the SOP inversion 5.3 % SLOWER
+    (FULL 50.50 -> 53.20 us).  It is an instruction-cache placement effect,
+    not a cost of ridge: rebuilt with -DSOP_NO_ICACHE, the same two images give
+    107.89 us (CNN) against 106.38 us (ridge), so with the cache off the
+    ordering reverses and ridge is 1.4 % faster.  All twelve hot functions
+    moved by 0x1C-0x20 bytes and eight changed their 32-byte alignment.
+    Artifact: analysis/results/tables/mcu_icache.csv.
+  published_timings_all_remeasured: >
+    analysis/results/tables/mcu.csv is from the deployment image, n=500:
+    FULL 53.20 us median, p95 59.56, max 81.09.  The 50.52 us in the earlier
+    draft was the CNN image and is superseded.

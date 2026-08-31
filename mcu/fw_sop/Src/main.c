@@ -210,7 +210,12 @@ static void SOH_Handle(int simd)
   primask = __get_PRIMASK();
   __disable_irq(); __DSB(); __ISB();
   DWT->CYCCNT = 0UL;
+#if SOH_RIDGE
+  (void)simd;
+  float soh = soh_infer(x64);
+#else
   float soh = simd ? soh_infer_simd(x64) : soh_infer(x64);
+#endif
   r.cycles = DWT->CYCCNT;
   if (primask == 0U) { __enable_irq(); }
   r.i_star = soh;
@@ -345,9 +350,23 @@ static void CEMA_Protocol_Loop(void)
     {
       SOP_Send_Query();
     }
-    else if (command == SOP_CMD_SOH || command == SOP_CMD_SOH_Q)
+    else if (command == SOP_CMD_SOH)
     {
-      SOH_Handle(command == SOP_CMD_SOH_Q);
+      SOH_Handle(0);
+    }
+    else if (command == SOP_CMD_SOH_Q)
+    {
+#if SOH_RIDGE
+      /* The ridge model has no integer path to compare against.  Say so
+       * rather than returning the float timing under the integer opcode. */
+      SOP_Response r = {0};
+      r.magic  = CEMA_PROTOCOL_MAGIC;
+      r.cycles = (uint32_t)SOP_CMD_SOH_Q;
+      r.iters  = SOP_NACK_UNKNOWN_CMD;
+      UART_Send(&r, (uint16_t)sizeof(r));
+#else
+      SOH_Handle(1);
+#endif
     }
     else if (command == SOP_CMD_REFF || command == SOP_CMD_TRIM
              || command == SOP_CMD_SOLVE || command == SOP_CMD_FULL
@@ -417,7 +436,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART3_UART_Init();
+#ifndef SOP_NO_ICACHE
   MX_ICACHE_Init();
+#endif  /* built with -DSOP_NO_ICACHE to test whether a timing difference
+         * between two images is an instruction-cache placement effect */
   /* USER CODE BEGIN 2 */
   CEMA_DWT_Init();
 

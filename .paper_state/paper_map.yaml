@@ -248,3 +248,44 @@ claims:
       bench result with a measured deployment cost, and a contribution of
       deployment-efficient equivalence under a safety-aware current utility -
       not superiority, and not a qualified production estimator.  See 35.8.
+  - id: soh.model_family
+    text: >
+      The SOH arm is a 1D CNN, 10,945 parameters, leave-one-cell-out RMSE
+      0.0135, worst cell 0.0293.
+    table: soh_model_cost.csv
+    producer: python3 repro/run_soh_nested.py && python3 analysis/soh_ridge.py
+    ledger: soh_arm
+    status: REPLACED
+    replacement: >
+      Ridge on the same input: pooled 0.0094, worst cell 0.0130, 65
+      coefficients.  Not chosen by looking at the held-out cells - nested
+      selection scores every family on the five training cells first, and the
+      CNN places last on all six folds (inner 0.0103-0.0184 against ridge's
+      0.0088-0.0122).  The procedure's own pooled error is 0.0095.  See 36.1.
+  - id: soh.mcu_cost
+    text: >
+      "SOH CNN is not in the control cycle; runs once per charge (17.9 ms,
+      unmeasured in this audit)".
+    table: soh_model_cost.csv
+    producer: python3 mcu/bench_soh.py
+    ledger: mcu_deployment
+    status: CORRECTED
+    replacement: >
+      Measured, both models, on the board.  CNN 19442.25 us - the 17.9 ms was
+      an estimate and it was low.  Ridge 6.50 us, 2991x faster, with the
+      board's answer checked against NumPy on 282 real curves.  Firmware text
+      144012 -> 72700 B, bss 28276 -> 13172 B.  See 36.4.
+  - id: mcu.timing_is_layout_sensitive
+    text: >
+      The board timings were reported as properties of the algorithms.
+    table: mcu_icache.csv
+    producer: python3 repro/run_soh_deploy_tables.py
+    ledger: mcu_deployment
+    status: NEW
+    replacement: >
+      They are properties of the image.  Removing the CNN - 71 kB the SOP path
+      never calls - made the SOP inversion 5.3 % SLOWER (50.50 -> 53.20 us).
+      With -DSOP_NO_ICACHE the same two images give 107.89 (CNN) against 106.38
+      (ridge), so the ordering reverses and the smaller image wins.  All twelve
+      hot functions moved and eight changed 32-byte alignment.  Published SOP
+      timings are now from the deployment image.  See 36.4.

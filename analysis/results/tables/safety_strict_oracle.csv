@@ -1,5 +1,5 @@
 direction,tau_s,method,soh_arm,n_cells,n_rows,exceed,usable_mean_pct,usable_median_pct,usable_worst_pct,worst_cell,lambda_min,lambda_median,lambda_max,lambda_pooled_shipped,exceed_ub95_pct,usable_boot_lo_pct,usable_boot_hi_pct
-discharge,10.0,a8,oracle,6,491,1,69.61,68.25,59.87,BOOST_REST,0.6834,0.6834,0.7081,0.6834,0.962,65.54,72.08
-discharge,2.0,a8,oracle,4,140,2,58.30,55.47,54.25,BOOST,0.4703,0.4703,0.5022,0.4703,4.428,54.54,63.70
-charge,10.0,a8,oracle,6,2461,1,59.50,59.41,53.54,BOOST_REST,0.5862,0.5862,0.5910,0.5862,0.193,56.30,62.35
-charge,2.0,a8,oracle,6,2082,2,57.54,56.94,49.66,BOOST_REST,0.5601,0.5601,0.5687,0.5601,0.302,53.25,61.50
+discharge,10.0,a8,oracle,6,491,1,69.61,68.24,59.85,BOOST_REST,0.6832,0.6832,0.7081,0.6832,0.962,65.52,72.09
+discharge,2.0,a8,oracle,4,140,2,58.30,55.46,54.25,BOOST,0.4701,0.4701,0.5020,0.4701,4.428,54.54,63.70
+charge,10.0,a8,oracle,6,2461,1,59.49,59.40,53.53,BOOST_REST,0.5860,0.5860,0.5909,0.5860,0.193,56.28,62.35
+charge,2.0,a8,oracle,6,2082,2,57.53,56.94,49.65,BOOST_REST,0.5599,0.5599,0.5686,0.5599,0.302,53.24,61.50

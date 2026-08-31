@@ -23,12 +23,14 @@ Timing measured on a NUCLEO-H563ZI (Cortex-M33, 250 MHz).
 | Arm | Model | Size | Protocol | Result | Worst cell |
 |---|---|---|---|---|---|
 | SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | leave-one-cell-out | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
-| SOH | dQ/dV CNN | 10,945 parameters | leave-one-cell-out | RMSE 0.0135, bias +0.0001 | 0.0293 (BOOST_REST) |
+| SOH | dQ/dV ridge | 65 coefficients | leave-one-cell-out | RMSE 0.0094, bias −0.0005 | 0.0130 (BOOST_REST) |
 | SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated**, not held out | 2.14 %p over six sensor disturbances | 3.77 %p (current offset −0.10 A) |
 
-Ridge regression on the same features and the same splits beats the SOH CNN
-(§34.3). The CNN is reported because it is what was deployed and timed, not
-because it won.
+The SOH arm was a 10,945-parameter CNN until the second audit round. Nested
+selection — every candidate scored on the five training cells before the
+held-out cell is touched — places that CNN **last on all six folds**, so it
+was replaced by ridge: better on every cell, **6.50 µs against 19 442 µs** on
+the board, and half the firmware (§36).
 
 Safety factor λ is calibrated **per held-out cell**: cell *i* is scored under
 a λ fitted with cell *i* removed entirely. Per-cell λ spans 0.683–0.708
@@ -37,10 +39,18 @@ a λ fitted with cell *i* removed entirely. Per-cell λ spans 0.683–0.708
 0.19 %. **Zero observed exceedance is not zero risk**; the bound is the
 number to quote. "Usable current" is the median of λ·predicted / measured.
 
-Per-cycle cost on the board: median 214.8 µs, worst case 307.1 µs (SOC EKF
-7.1, A8 feature update 6.0, four SOP inversions 201.7). Deployment build
-text 142 060 B = 138.7 KiB = 142.1 kB (decimal). Measured on a NUCLEO-H563ZI after flashing;
-`repro/run_parity.py` checks the C against Python to 9.2 × 10⁻⁶.
+Per-cycle cost on the board: SOP inversion 53.20 µs median, 81.09 µs worst;
+SOC EKF 8.16; A8 feature update 6.79; SOH 6.50, once per charge rather than
+per cycle. Deployment build text **70 796 B**. Measured on a NUCLEO-H563ZI
+after flashing; `repro/run_parity.py` checks the C against Python to
+9.2 × 10⁻⁶ and `mcu/bench_soh.py` checks the board's SOH against NumPy on 282
+real curves.
+
+Those SOP figures are 5.3 % slower than the same code in the previous
+firmware, which held the CNN. Removing 71 kB the SOP path never calls moved
+every hot function and changed eight alignments; with the instruction cache
+disabled the ordering reverses. An embedded timing claim at this granularity
+is a property of the image, not the algorithm (§36.4).
 
 > Two audit rounds (2026-08-27 and 2026-08-31, branch
 > `audit/etransportation-readiness`) revised several numbers above and
@@ -79,7 +89,7 @@ rows per fold (§35.5).
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # recompute the 59 published numbers
+python3 repro/verify.py        # recompute the 68 published numbers
 python3 repro/run.py --list    # stages, status, runtime
 ```
 

@@ -68,8 +68,9 @@
         "soh": "est"
       },
       "column": "usable_pct",
-      "value": 67.2,
-      "source": "sec 29 / 30.11 — estimated SOH, not oracle"
+      "value": 69.0,
+      "source": "sec 29 / 30.11 — estimated SOH, not oracle",
+      "note": "[2026-08-31 SOH replacement] SOH arm replaced by ridge (36): estimated-SOH usable current 67.2 -> 69.0 %"
     },
     {
       "id": "sop.chg.10s.usable.est_soh",
@@ -80,8 +81,9 @@
         "soh": "est"
       },
       "column": "usable_pct",
-      "value": 56.6,
-      "source": "sec 29 / 30.11 — estimated SOH, not oracle"
+      "value": 54.1,
+      "source": "sec 29 / 30.11 — estimated SOH, not oracle",
+      "note": "[2026-08-31 SOH replacement] SOH arm replaced by ridge (36): estimated-SOH charge usable current 56.6 -> 54.1 %"
     },
     {
       "id": "ladder.disc.A0",
@@ -116,9 +118,9 @@
         "method": "shrinkage coefficient"
       },
       "column": "usable_pct",
-      "value": 62.0,
+      "value": 62.4,
       "source": "sec 32.5 — two-parameter transfer gain",
-      "note": "  [rebuilt 2026-08-31: 62.4 -> 62.0; the shrinkage baseline refits slightly differently on the corrected raw rebuild, lambda 0.692 -> 0.690]"
+      "note": "[2026-08-31 SOH replacement] back to 62.4.  The 62.0 recorded on 2026-08-31 came from tables regenerated against eval CSVs that were themselves stale; re-running run_evals.py restored the original value.  That earlier note was wrong and is retracted"
     },
     {
       "id": "ladder.disc.A8",
@@ -407,9 +409,10 @@
         "stage": "FEAT"
       },
       "column": "median_us",
-      "value": 13.25,
+      "value": 13.94,
       "tol": 0.6,
-      "source": "sec 33.1 — A3 feature update"
+      "source": "sec 33.1 — A3 feature update",
+      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
     },
     {
       "id": "mcu.feat_a8",
@@ -418,9 +421,10 @@
         "stage": "FEAT_A8"
       },
       "column": "median_us",
-      "value": 5.99,
+      "value": 6.79,
       "tol": 0.6,
-      "source": "sec 33.1 — adopted A8, 55% faster"
+      "source": "sec 33.1 — adopted A8, 55% faster",
+      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
     },
     {
       "id": "mcu.ekf",
@@ -429,9 +433,10 @@
         "stage": "EKF"
       },
       "column": "median_us",
-      "value": 7.1,
+      "value": 8.16,
       "tol": 0.6,
-      "source": "sec 33.2 — SOC EKF step"
+      "source": "sec 33.2 — SOC EKF step",
+      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
     },
     {
       "id": "mcu.full",
@@ -440,9 +445,10 @@
         "stage": "FULL"
       },
       "column": "median_us",
-      "value": 50.43,
+      "value": 53.2,
       "tol": 0.6,
-      "source": "sec 33.2 — one SOP inversion"
+      "source": "sec 33.2 — one SOP inversion",
+      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image.  SLOWER than the CNN image (50.50) — an instruction-cache placement effect, not a cost of ridge: with the cache disabled the ordering reverses (36.4)"
     },
     {
       "id": "soh.rmse",
@@ -451,9 +457,10 @@
         "cell": "ALL"
       },
       "column": "rmse",
-      "value": 0.0135,
+      "value": 0.0094,
       "tol": 0.0002,
-      "source": "sec 30.12 — after excluding 8 temperature-fault curves"
+      "source": "sec 30.12 — after excluding 8 temperature-fault curves",
+      "note": "[2026-08-31 SOH replacement] ridge instead of the 1D CNN (36.1)"
     },
     {
       "id": "soh.bias",
@@ -462,9 +469,10 @@
         "cell": "ALL"
       },
       "column": "bias",
-      "value": 0.0001,
+      "value": -0.0005,
       "tol": 0.0002,
-      "source": "sec 30.12 — bias fell 10x once the faults were removed"
+      "source": "sec 30.12 — bias fell 10x once the faults were removed",
+      "note": "[2026-08-31 SOH replacement] ridge instead of the 1D CNN (36.1)"
     },
     {
       "id": "alpha.disc.CC",
@@ -608,9 +616,10 @@
         "tau_s": "10.0"
       },
       "column": "usable_mean_pct",
-      "value": 65.54,
+      "value": 66.24,
       "tol": 0.05,
-      "source": "audit — the only corner a vehicle can execute"
+      "source": "audit — the only corner a vehicle can execute",
+      "note": "[2026-08-31 SOH replacement] estimated-SOH corner now uses ridge (36.3)"
     },
     {
       "id": "e2e.disch.est_est.exceed",
@@ -621,9 +630,10 @@
         "tau_s": "10.0"
       },
       "column": "exceed",
-      "value": 26,
+      "value": 20.0,
       "tol": 0,
-      "source": "audit — exceedance survives per-cell recalibration"
+      "source": "audit — exceedance survives per-cell recalibration",
+      "note": "[2026-08-31 SOH replacement] estimated-SOH corner now uses ridge (36.3)"
     },
     {
       "id": "mcu.build.both",
@@ -632,9 +642,10 @@
         "build": "both"
       },
       "column": "text_B",
-      "value": 143964,
+      "value": 72700,
       "tol": 0,
-      "source": "sec 33.6 — comparison build, text section"
+      "source": "sec 33.6 — comparison build, text section",
+      "note": "[2026-08-31 SOH replacement] the CNN leaving takes 71,264 B of flash with it (36.4)"
     },
     {
       "id": "mcu.build.a8_only",
@@ -643,9 +654,10 @@
         "build": "a8_only"
       },
       "column": "text_B",
-      "value": 142060,
+      "value": 70796,
       "tol": 0,
-      "source": "sec 33.6 — deployment build, text section"
+      "source": "sec 33.6 — deployment build, text section",
+      "note": "[2026-08-31 SOH replacement] the CNN leaving takes 71,264 B of flash with it (36.4)"
     },
     {
       "id": "e2e.paired.disc.est_est.exceed",
@@ -656,9 +668,10 @@
         "tau_s": "10.0"
       },
       "column": "exceed",
-      "value": 4,
+      "value": 3.0,
       "tol": 0,
-      "source": "sec 35.1 — the fully estimated corner on the common 385 rows"
+      "source": "sec 35.1 — the fully estimated corner on the common 388 rows",
+      "note": "[2026-08-31 SOH replacement] on the common 388 rows with ridge SOH (36.3)"
     },
     {
       "id": "e2e.paired.disc.oracle.exceed",
@@ -671,7 +684,7 @@
       "column": "exceed",
       "value": 3,
       "tol": 0,
-      "source": "sec 35.1 — the oracle corner on the same 385 rows"
+      "source": "sec 35.1 — the oracle corner on the same 388 rows"
     },
     {
       "id": "e2e.drift.disc.est_est.rate",
@@ -682,9 +695,10 @@
         "tau_s": "10.0"
       },
       "column": "exceed_rate_pct",
-      "value": 24.27,
+      "value": 27.84,
       "tol": 0.01,
-      "source": "sec 35.2 — exceedance in the rows only the estimated corner admits"
+      "source": "sec 35.2 — exceedance in the rows only the estimated corner admits",
+      "note": "[2026-08-31 SOH replacement] rows only the fully estimated corner admits, with ridge SOH (36.3)"
     },
     {
       "id": "ext.cov.disc",
@@ -721,6 +735,111 @@
       "value": 0,
       "tol": 0,
       "source": "sec 35.5 — zero exceedance on external discharge"
+    },
+    {
+      "id": "soh.ridge.rmse",
+      "table": "soh_model_cost.csv",
+      "where": {
+        "model": "ridge (deployed)"
+      },
+      "column": "rmse_pooled",
+      "value": 0.0094,
+      "tol": 0,
+      "source": "sec 36.1 — ridge, leave-one-cell-out"
+    },
+    {
+      "id": "soh.cnn.rmse",
+      "table": "soh_model_cost.csv",
+      "where": {
+        "model": "1D CNN (superseded)"
+      },
+      "column": "rmse_pooled",
+      "value": 0.0135,
+      "tol": 0,
+      "source": "sec 36.1 — the CNN it replaced, same splits"
+    },
+    {
+      "id": "soh.ridge.us",
+      "table": "soh_model_cost.csv",
+      "where": {
+        "model": "ridge (deployed)"
+      },
+      "column": "soh_median_us",
+      "value": 6.5,
+      "tol": 0.01,
+      "source": "sec 36.4 — SOH inference on the board"
+    },
+    {
+      "id": "soh.cnn.us",
+      "table": "soh_model_cost.csv",
+      "where": {
+        "model": "1D CNN (superseded)"
+      },
+      "column": "soh_median_us",
+      "value": 19442.25,
+      "tol": 0.01,
+      "source": "sec 36.4 — the CNN, measured before it was replaced"
+    },
+    {
+      "id": "soh.nested.pooled",
+      "table": "soh_nested_summary.csv",
+      "where": {
+        "procedure": "nested selection"
+      },
+      "column": "rmse_pooled",
+      "value": 0.0095,
+      "tol": 0,
+      "source": "sec 36.1 — error of the selection procedure itself"
+    },
+    {
+      "id": "soh.nested.cnn_inner.BOOST",
+      "table": "soh_nested.csv",
+      "where": {
+        "holdout": "BOOST"
+      },
+      "column": "inner_1D CNN (shipped)",
+      "value": 0.0141,
+      "tol": 0,
+      "source": "sec 36.1 — the CNN's inner score, never the best on any fold"
+    },
+    {
+      "id": "mcu.icache.on.ridge",
+      "table": "mcu_icache.csv",
+      "where": {
+        "icache": "on",
+        "soh_model": "ridge",
+        "stage": "FULL"
+      },
+      "column": "median_us",
+      "value": 53.2,
+      "tol": 0.01,
+      "source": "sec 36.4 — deployment image, cache enabled"
+    },
+    {
+      "id": "mcu.icache.off.ridge",
+      "table": "mcu_icache.csv",
+      "where": {
+        "icache": "off",
+        "soh_model": "ridge",
+        "stage": "FULL"
+      },
+      "column": "median_us",
+      "value": 106.38,
+      "tol": 0.01,
+      "source": "sec 36.4 — same image, cache disabled: the penalty reverses"
+    },
+    {
+      "id": "mcu.icache.off.cnn",
+      "table": "mcu_icache.csv",
+      "where": {
+        "icache": "off",
+        "soh_model": "CNN",
+        "stage": "FULL"
+      },
+      "column": "median_us",
+      "value": 107.89,
+      "tol": 0.01,
+      "source": "sec 36.4 — CNN image, cache disabled"
     }
   ],
   "tables": {
@@ -2407,10 +2526,108 @@
         "usable_pct",
         "worst_overshoot_W"
       ]
+    },
+    "soh_nested.csv": {
+      "producer": "python3 repro/run_soh_nested.py",
+      "stage": "soh_select",
+      "required": false,
+      "rows": 6,
+      "columns": [
+        "holdout",
+        "n",
+        "chosen_family",
+        "chosen_param",
+        "inner_rmse",
+        "outer_rmse",
+        "inner_mean baseline",
+        "inner_ridge",
+        "inner_PLS",
+        "inner_SVR (RBF)",
+        "inner_gradient boosting",
+        "inner_1D CNN (shipped)"
+      ],
+      "numeric": [
+        "n",
+        "inner_rmse",
+        "outer_rmse",
+        "inner_mean baseline",
+        "inner_ridge",
+        "inner_PLS",
+        "inner_SVR (RBF)",
+        "inner_gradient boosting",
+        "inner_1D CNN (shipped)"
+      ]
+    },
+    "soh_nested_summary.csv": {
+      "producer": "python3 repro/run_soh_nested.py",
+      "stage": "soh_select",
+      "required": false,
+      "rows": 1,
+      "columns": [
+        "procedure",
+        "rmse_pooled",
+        "rmse_mean_of_cells",
+        "rmse_worst_cell",
+        "worst_cell",
+        "families_chosen"
+      ],
+      "numeric": [
+        "rmse_pooled",
+        "rmse_mean_of_cells",
+        "rmse_worst_cell"
+      ]
+    },
+    "soh_model_cost.csv": {
+      "producer": "python3 repro/run_soh_deploy_tables.py",
+      "stage": "mcu_measure",
+      "required": false,
+      "rows": 2,
+      "columns": [
+        "model",
+        "coefficients",
+        "rmse_pooled",
+        "rmse_worst_cell",
+        "worst_cell",
+        "soh_median_us",
+        "soh_p95_us",
+        "soh_max_us",
+        "firmware_text_B",
+        "firmware_bss_B"
+      ],
+      "numeric": [
+        "coefficients",
+        "rmse_pooled",
+        "rmse_worst_cell",
+        "soh_median_us",
+        "soh_p95_us",
+        "soh_max_us",
+        "firmware_text_B",
+        "firmware_bss_B"
+      ]
+    },
+    "mcu_icache.csv": {
+      "producer": "python3 repro/run_soh_deploy_tables.py",
+      "stage": "mcu_measure",
+      "required": false,
+      "rows": 12,
+      "columns": [
+        "icache",
+        "soh_model",
+        "stage",
+        "median_us",
+        "p95_us",
+        "max_us",
+        "note"
+      ],
+      "numeric": [
+        "median_us",
+        "p95_us",
+        "max_us"
+      ]
     }
   },
   "completeness": {
-    "total_checks": 59,
+    "total_checks": 68,
     "checks_per_table": {
       "alpha.csv": 2,
       "cold_ratio.csv": 2,
@@ -2485,7 +2702,16 @@
       "e2e.drift.disc.est_est.rate",
       "ext.cov.disc",
       "ext.safety.chg.margin",
-      "ext.safety.disc.exceed"
+      "ext.safety.disc.exceed",
+      "soh.ridge.rmse",
+      "soh.cnn.rmse",
+      "soh.ridge.us",
+      "soh.cnn.us",
+      "soh.nested.pooled",
+      "soh.nested.cnn_inner.BOOST",
+      "mcu.icache.on.ridge",
+      "mcu.icache.off.ridge",
+      "mcu.icache.off.cnn"
     ],
     "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
   }

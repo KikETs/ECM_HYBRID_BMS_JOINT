@@ -1,0 +1,20 @@
+{
+  "_why": "Only one SOH model can be compiled at a time, so the two firmware sizes cannot both come from a live build. Both were measured on 2026-08-31 with arm-none-eabi-size on images built from the same source, differing only in mcu/soh_tables.h, and both were flashed and benchmarked.",
+  "ridge": {
+    "coefficients": 65,
+    "text_B": 72700,
+    "bss_B": 13172,
+    "elf_note": "Build/nmc_dst_cc from export_soh_ridge.py's header"
+  },
+  "cnn": {
+    "coefficients": 32835,
+    "text_B": 144012,
+    "bss_B": 28276,
+    "elf_note": "same source with the preserved CNN header; 3 seeds x 10,945 parameters",
+    "rmse_pooled": 0.0135,
+    "rmse_per_cell": {
+      "BOOST": 0.0077, "BOOST_NEGPULSE": 0.0095, "BOOST_NEGPULSE_1S": 0.0060,
+      "BOOST_REST": 0.0293, "CC": 0.0130, "CC_CELL2": 0.0067
+    }
+  }
+}

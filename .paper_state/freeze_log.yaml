@@ -52,3 +52,24 @@ second_round_2026_08_31:
     contents: "end_to_end.csv, mcu.csv, sop_mcu_bench.csv, mcu_evidence.yaml, all 44 tables and expected.json as they stood before this round"
     tracked: false
     why_not_tracked: "same policy as the first round's ../preserved/ tarball: kept on the machine that did the work, not in the repository"
+
+soh_replacement_2026_08_31:
+  changed:
+    - "analysis/results/soh_pred.npz: now from soh_ridge.py, not soh_cnn.py.  Same keys, so every consumer is unchanged."
+    - "mcu/soh_tables.h: ridge weights (3.6 kB of text) instead of the quantised CNN (143 kB)."
+    - "mcu/fw_sop/Src/{soh_core,soh_simd,main}.c: ridge body under SOH_RIDGE, CNN kept under #else, SOP_CMD_SOH_Q refused when there is no integer path."
+    - "mcu/sop_mcu_bench.csv + analysis/results/tables/mcu.csv: re-measured on the deployment image.  FULL 50.52 -> 53.20 us, and that is an instruction-cache placement effect, not ridge (mcu_icache.csv)."
+    - "repro/expected.json: 15 values moved, each with the reason recorded on the check; 9 checks added (59 -> 68)."
+  new_artifacts:
+    - "analysis/results/tables/soh_nested.csv, soh_nested_summary.csv — which family an honest procedure picks"
+    - "analysis/results/tables/soh_model_cost.csv — accuracy, size and board time for both models"
+    - "analysis/results/tables/mcu_icache.csv — the controlled cache experiment"
+    - "mcu/soh_mcu_bench.csv, soh_mcu_bench_cnn.csv — SOH timing, both models"
+    - "mcu/sop_mcu_bench_cnn.csv, sop_mcu_bench_noicache_{ridge,cnn}.csv — the four A/B images"
+  not_changed:
+    - "analysis/runs_trim_a8*/ and mcu/sop_tables.h — the SOP arm.  SOH reaches it only through soh_pred.npz."
+    - "Everything in section 35.  Recomputed, not carried over: the estimated-SOC finding, the drift mechanism and the external charge-transfer failure all stand."
+  preserved:
+    path: ".preserved/2026-08-31_soh_cnn/"
+    contents: "the CNN header, runs_soh_cnn, its soh_pred.npz, soh.csv, both bench CSVs and expected.json as they stood before the replacement"
+    tracked: false

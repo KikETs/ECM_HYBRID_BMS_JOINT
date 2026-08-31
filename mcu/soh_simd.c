@@ -19,6 +19,13 @@
 #include <stdint.h>
 #include <string.h>
 
+/* The whole file is the CNN's integer kernel.  Under a ridge header there is
+ * no CNN and none of its symbols exist, so nothing here can compile -- and
+ * nothing here would mean anything either: 64 float MACs have no int8 story.
+ * main.c refuses SOP_CMD_SOH_Q rather than answering it with the float
+ * number under the integer opcode.                                        */
+#if !SOH_RIDGE
+
 #if !defined(__ARM_FEATURE_DSP)
 /* 호스트 빌드용 대체 — 같은 산술, SIMD 만 없다. */
 static inline int32_t smlad16(int32_t a, int32_t b, int32_t acc)
@@ -29,6 +36,7 @@ static inline int32_t smlad16(int32_t a, int32_t b, int32_t acc)
 }
 #else
 #include "cmsis_gcc.h"
+
 static inline int32_t smlad16(int32_t a, int32_t b, int32_t acc)
 {
   return __SMLAD(a, b, acc);
@@ -177,3 +185,5 @@ float soh_infer_simd(const float *x64)
   }
   return total / (float)SOH_NSEED;
 }
+
+#endif /* !SOH_RIDGE */
