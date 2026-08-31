@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install numpy==2.3.4 scipy==1.16.3 pandas==3.0.1 \
                       matplotlib==3.10.6 openpyxl==3.1.5 pyserial==3.5 \
-                      scikit-learn==1.7.2 pytest==9.1.1 ruff
+                      scikit-learn==1.7.2 PyYAML==6.0.3 pytest==9.1.1 ruff
 
       - name: Environment smoke test
         run: python env/verify_env.py
