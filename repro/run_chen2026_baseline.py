@@ -342,7 +342,7 @@ def temperature_envelope(rows, out_path):
                     'lambda_shipped', 'lambda_needed', 'margin', 'exceed',
                     'worst_overshoot_W', 'worst_raw_overshoot_W'])
         w.writerows(out)
-    print(f"\n  EXTERNAL TEMPERATURE ENVELOPE (physics layer, not the trim)")
+    print("\n  EXTERNAL TEMPERATURE ENVELOPE (physics layer, not the trim)")
     print(f"  {'T set':>6}{'T cell':>8}{'n':>5}{'in hull':>9}{'%':>7}"
           f"{'SOC range':>12}{'lam need':>10}{'margin':>8}{'exceed':>8}"
           f"{'worst W':>9}")
