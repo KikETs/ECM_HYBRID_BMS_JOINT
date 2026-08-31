@@ -307,14 +307,36 @@ STAGES = [
 
     dict(id='safety_strict', tier=5, minutes=2, measured=True,
          cmd='{py} ../repro/run_safety_strict.py --arm oracle && '
-             '{py} ../repro/run_safety_strict.py --arm est',
+             '{py} ../repro/run_safety_strict.py --arm est && '
+             '{py} ../repro/run_safety_strict.py --arm oracle --method a3 && '
+             '{py} ../repro/run_safety_strict.py --arm oracle --method lstm && '
+             '{py} ../repro/run_safety_strict.py --arm oracle --method gru && '
+             '{py} ../repro/run_safety_strict.py --arm oracle --method ffrls && '
+             '{py} ../repro/run_safety_strict.py --arm oracle --method shrink',
          inputs=['results/eval/'],
-         outputs=['results/tables/safety_strict_oracle.csv',
-                  'results/tables/safety_strict_percell_oracle.csv',
-                  'results/tables/safety_strict_tolsens_oracle.csv',
+         outputs=[
+'results/tables/safety_strict_a3_oracle.csv',
                   'results/tables/safety_strict_est.csv',
+                  'results/tables/safety_strict_ffrls_oracle.csv',
+                  'results/tables/safety_strict_gru_oracle.csv',
+                  'results/tables/safety_strict_lstm_oracle.csv',
+                  'results/tables/safety_strict_oracle.csv',
+                  'results/tables/safety_strict_percell_a3_oracle.csv',
                   'results/tables/safety_strict_percell_est.csv',
-                  'results/tables/safety_strict_tolsens_est.csv'],
+                  'results/tables/safety_strict_percell_ffrls_oracle.csv',
+                  'results/tables/safety_strict_percell_gru_oracle.csv',
+                  'results/tables/safety_strict_percell_lstm_oracle.csv',
+                  'results/tables/safety_strict_percell_oracle.csv',
+                  'results/tables/safety_strict_percell_shrink_oracle.csv',
+                  'results/tables/safety_strict_shrink_oracle.csv',
+                  'results/tables/safety_strict_tolsens_a3_oracle.csv',
+                  'results/tables/safety_strict_tolsens_est.csv',
+                  'results/tables/safety_strict_tolsens_ffrls_oracle.csv',
+                  'results/tables/safety_strict_tolsens_gru_oracle.csv',
+                  'results/tables/safety_strict_tolsens_lstm_oracle.csv',
+                  'results/tables/safety_strict_tolsens_oracle.csv',
+                  'results/tables/safety_strict_tolsens_shrink_oracle.csv'
+         ],
          why='Safety factor calibrated strictly per held-out cell.  The '
              'shipped safety.csv pools six LOCO lambdas into their median '
              'and applies it to every cell, so the evaluated cell helps set '

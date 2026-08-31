@@ -4893,6 +4893,13 @@ parameters".
 - **UYPYDJ's licence** is stated nowhere in the dataset readme. Confirm with
   the depositor before redistributing anything derived from it.
 
+  > **[Corrected — 37.8]** It is stated, in section 2 METADATA of that
+  > readme: *"Licenses/restrictions: CC BY 4.0"*, alongside the depositors'
+  > certification that the data is free of licensing and intellectual
+  > property issues. The file's SHA-256 matches `raw_data.yaml`, so the text
+  > is in the file as downloaded. All three datasets are CC BY 4.0. This
+  > entry stood for four days because nobody read line 47.
+
 ---
 
 ## 35. Second audit round — what the first round got wrong
@@ -5448,21 +5455,35 @@ Test#3 has no paired drive cycle, so the A8 trim cannot be computed on it —
 only the nominal 2RC layer the trim sits on. That layer is what decides
 whether a prediction is safe, so its envelope is worth measuring:
 
-| T set | in hull | λ needed | margin | exceed | worst overshoot |
-|---:|---:|---:|---:|---:|---:|
-| 40 °C | 57.1 % | 0.9887 | 1.447 | 0 | 0 W |
-| 25 °C | 50.0 % | 0.9672 | 1.416 | 0 | 0 W |
-| 0 °C | 57.1 % | 0.9534 | 1.396 | 0 | 0 W |
-| −10 °C | 57.1 % | 0.6001 | **0.878** | 1 | 6.37 W |
-| −20 °C | 57.1 % | 0.3319 | **0.486** | 5 | 26.90 W |
+| T set | in hull | λ needed | margin | exceed | 95 % upper | worst overshoot |
+|---:|---:|---:|---:|---:|---:|---:|
+| 40 °C | 8 / 14 | 0.9887 | 1.447 | 0 | 31.2 % | 0 W |
+| 25 °C | 7 / 14 | 0.9672 | 1.416 | 0 | 34.8 % | 0 W |
+| 0 °C | 8 / 14 | 0.9534 | 1.396 | 0 | 31.2 % | 0 W |
+| −10 °C | 8 / 14 | 0.6001 | **0.878** | 1 | 47.1 % | 6.37 W |
+| −20 °C | 8 / 14 | 0.3319 | **0.486** | 5 | 88.9 % | 26.90 W |
+| **0–40 pooled** | **31** | | | **0** | **9.2 %** | |
 
-The shipped λ = 0.6832 is conservative from **0 °C to 40 °C** and stops being
-conservative below 0 °C. The pooled hull **never reaches below SOC 0.30 at any
-temperature**, which also explains the 0 % low-SOC coverage in the Test#2
-result rather than leaving it an unexplained hole.
+Below 0 °C the shipped λ = 0.6832 is plainly wrong, and the sample is large
+enough to say so: −20 °C needs 0.332 and overshoots by 26.9 W on five of eight
+points.
 
-So the claimable range is **0–40 °C and SOC ≥ 0.30**, measured rather than
-assumed. On Test#2 the frozen λ holds on discharge (margin 1.30–1.43, zero
+Above it, the honest statement is weaker than "conservative". Each temperature
+contributes **7–8 in-hull points**, so an observed zero carries a one-sided
+95 % upper bound of about **31 %** — pooled across 0–40 °C, 31 points and
+**9.2 %**. Zero observed is not zero risk at this sample size, which is the
+same caution §32.6 applies to the main result and it applies here with far
+less data.
+
+And the scope is narrower than "temperature range" suggests: **Test#3 has no
+paired drive cycle, so the A8 trim cannot be computed on it at all.** What is
+bounded above is the nominal 2RC layer the trim sits on. The hybrid's
+temperature validity is not established by this experiment and must not be
+stated as if it were.
+
+The pooled hull **never reaches below SOC 0.30 at any temperature**, which
+also explains the 0 % low-SOC coverage in the Test#2 result rather than
+leaving it an unexplained hole. On Test#2 the frozen λ holds on discharge (margin 1.30–1.43, zero
 exceedance) and fails on charge (needs 0.3969 against the shipped 0.5860,
 9–11 exceedances of 248 in-hull rows per fold).
 
@@ -5559,3 +5580,57 @@ source at all.
   Determinism removes the input noise so the step is no longer reachable by
   chance, but a 2.5 % move there can still mean a 0.05 % change upstream, and
   the function now says so.
+
+### 37.8 The state files had not been re-canonicalised
+
+A fourth review found that §37's work had been *appended* to the state
+manifests without the superseded entries being marked. Every one of these was
+a document saying something the code had stopped doing:
+
+* `paper_map.yaml` still offered `24.3 %`, `385 rows`, `50.52 µs` and
+  "deployment-efficient equivalence" as **replacements** — the corrections
+  from round two, left standing after round three moved past them. Marked
+  `[SUPERSEDED]` with the current values and three new claims added.
+* `freeze_log.yaml` still froze "SOH CNN predictions, 6 LOCO folds × 3 seeds".
+  The frozen artifact is ridge, and the entry now carries SHA-256 for it, the
+  all-cell fit and the kept CNN reference.
+* `evidence_ledger.yaml` still carried `open_choice: AUTHOR DECISION
+  REQUIRED` for the raw rebuild, which §37.1 had resolved.
+* `generalization_scope.yaml` said the frozen A8 "has not been run" outside
+  UYPYDJ. It has: one external cell, discharge transfers, charge does not,
+  54.2 % coverage.
+
+A stale manifest is worse than a missing one, because it reads as provenance.
+
+Two mechanical defects came with it. `expected.json` named a stage
+`external_a8` that does not exist (the stage is `external`), and a test now
+checks every stage name — which immediately found seventeen more: the
+`safety_strict` stage did not declare or produce the per-method tables that
+named it, and two MCU tables named `mcu_measure` instead of
+`soh_deploy_tables`. The stage now runs all five method scorings and declares
+all 21 outputs, which also closes the ordering trap that produced a stale
+table earlier in this audit.
+
+**And the licence question was never open.** The manifest said UYPYDJ's licence
+was "stated nowhere in the dataset readme". It is stated, in section 2 of that
+readme — *"Licenses/restrictions: CC BY 4.0"* — with the depositors'
+certification that the data is free of licensing and intellectual property
+issues. The file's SHA-256 matches the manifest, so the text was there all
+along. All three datasets are CC BY 4.0. The entry stood for four days because
+nobody read line 47, and it was blocking release.
+
+### 37.9 Zero observed is not zero risk, and the sample here is small
+
+§37.4's temperature table reported zero exceedance from 0 to 40 °C without
+saying how little that rests on. Each temperature contributes **7–8 in-hull
+points**, so an observed zero has a one-sided 95 % upper bound near **31 %**;
+pooled across 0–40 °C, 31 points and **9.2 %**. Those bounds are now columns in
+`external_temp_envelope.csv` rather than something a reader has to compute.
+
+The scope was also stated too broadly. Test#3 has **no paired drive cycle**, so
+the A8 trim cannot be evaluated on it at all — what the sweep bounds is the
+nominal 2RC layer beneath the trim. "The validity range this work can claim is
+0–40 °C" was wrong twice over: wrong about which model, and wrong about what
+7–8 points can support. Both the spec and README now say *the physics layer
+shows no exceedance from 0 to 40 °C above SOC 0.30, bounded at 9.2 %*, and say
+explicitly that the hybrid's temperature range is not established.

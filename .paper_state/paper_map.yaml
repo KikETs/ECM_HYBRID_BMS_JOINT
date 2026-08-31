@@ -179,6 +179,12 @@ claims:
       24.3 % rate against 0.94 % for the oracle corner's own extra rows.  A
       wrong SOC corrupts the admission rule, which is worse than a bias
       because a bias can be priced into lambda.  See 35.2.
+      [SUPERSEDED 2026-08-31, third round]  Two things changed.  The numbers
+      are now 27 of 97 rows, 27.84 %, against 0.97 % - the SOH arm is ridge and
+      the trims were retrained.  And the wording is narrowed: no onboard
+      admission filter was implemented or tested, so what is measured is the
+      OFFLINE EVALUATION INCLUSION RULE being SOC-dependent.  See 37.2, and
+      end_to_end_drift.csv for the current values.
   - id: sop.lambda_stability
     text: >
       One non-monotone row on charge was called an oddity nothing should be
@@ -235,6 +241,11 @@ claims:
       contains 0.2105654 once and neither 0.2146806 nor 0.2283459; FULL median
       50.52 us reproduces the stored table.  Two tests now fail if the manifest
       drifts from the header or from the ledger again.  See 35.4.
+      [SUPERSEDED 2026-08-31, third round]  The CNN was replaced by ridge and
+      the trims were retrained, so both figures moved: the flashed weight is
+      0.2107657 and FULL is 53.21 us on a 72700 B image.  The 5.3 % rise over
+      50.52 is an instruction-cache placement effect, not work - see 36.4.
+      Current values: mcu.csv, mcu_icache.csv, mcu_evidence.yaml.
   - id: claim.production_ready
     text: >
       "Hybrid SOP / SOH / SOC for a production BMS" - the framing of the first
@@ -248,6 +259,11 @@ claims:
       bench result with a measured deployment cost, and a contribution of
       deployment-efficient equivalence under a safety-aware current utility -
       not superiority, and not a qualified production estimator.  See 35.8.
+      [SUPERSEDED 2026-08-31, third round]  "Equivalence" is withdrawn too: no
+      margin was pre-specified and no noninferiority test was run.  A8 places
+      3rd, 3rd, 2nd and 5th of six across the four direction x horizon
+      conditions and only FFRLS separates from it, so the supported word is
+      COMPETITIVE.  See 37.3 and method_comparison.csv.
   - id: soh.model_family
     text: >
       The SOH arm is a 1D CNN, 10,945 parameters, leave-one-cell-out RMSE
@@ -289,3 +305,44 @@ claims:
       (ridge), so the ordering reverses and the smaller image wins.  All twelve
       hot functions moved and eight changed 32-byte alignment.  Published SOP
       timings are now from the deployment image.  See 36.4.
+  - id: reproducibility.raw_to_result
+    text: >
+      raw_rebuild.yaml left 235 moved cells at AUTHOR DECISION REQUIRED.
+    table: voltage.csv
+    producer: python3 repro/run.py
+    ledger: determinism
+    status: RESOLVED
+    replacement: >
+      The defect-excluded rebuild is canonical and eight verified numbers moved
+      with it.  Neither the cache nor the committed models were stale - both
+      were checked and found identical - the difference was intermittent
+      training nondeterminism amplified by fit_alpha's 51-point grid.  See 37.1.
+  - id: reproducibility.determinism
+    text: >
+      Training was seeded but not deterministic.
+    table: null
+    producer: python3 analysis/determinism.py
+    ledger: determinism
+    status: RESOLVED
+    replacement: >
+      analysis/determinism.py pins cuDNN, disables TF32, sets
+      CUBLAS_WORKSPACE_CONFIG before the handle exists and raises rather than
+      warning.  Proof is end-to-end: the whole chain re-run from scratch moved
+      0 of 54 tables and 0 numeric cells.  It also exposed a model that could
+      never be reproduced - AdaptiveAvgPool1d has no deterministic CUDA
+      backward - now replaced by its exact equivalent.  See 37.5.
+  - id: external.temperature_envelope
+    text: >
+      The ledger said no dataset provides sub-0.30 SOC or off-25 C data.
+    table: external_temp_envelope.csv
+    producer: python3 repro/run_chen2026_baseline.py
+    ledger: blocked_work
+    status: CORRECTED
+    replacement: >
+      False, and it should have been checked before it was written.  RPCWBY
+      Test#3 sweeps -20 to 40 C and was already reduced in the repository.
+      What it bounds is the NOMINAL 2RC LAYER, not the hybrid: Test#3 has no
+      paired drive cycle so the A8 trim cannot be computed on it.  Below 0 C
+      the frozen lambda fails outright; from 0 to 40 C no exceedance was
+      observed, but on 7-8 points per temperature that is a 31 % one-sided
+      upper bound, 9.2 % pooled.  See 37.4.

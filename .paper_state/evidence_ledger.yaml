@@ -41,6 +41,13 @@ data_provenance:
       2026-08-27, so the earlier SOURCE REQUIRED is withdrawn for it.
       UYPYDJ remains SOURCE REQUIRED: its readme states no licence and the
       Borealis landing page was not reachable from this host.
+      [CORRECTED 2026-08-31]  Wrong, and it should have been read before it
+      was written.  The UYPYDJ readme DOES state the licence, under section
+      2 METADATA: "Licenses/restrictions: CC BY 4.0", together with the
+      depositors' certification that the data is free of licensing and
+      intellectual property issues.  The file's SHA-256 matches the one in
+      manifests/raw_data.yaml, so that text is in the file as downloaded.
+      All three datasets are CC BY 4.0 and no licence question is open.
 
 safety_calibration:
   claim: "lambda calibrated leave-one-cell-out to zero exceedance"
@@ -679,12 +686,20 @@ reproduction_pipeline:
       decision to keep the pre-fix cache.  The rebuilt set is preserved at
       ../preserved/rawrebuild_output/rebuilt_artifacts.tar.gz and compared
       cell by cell in manifests/raw_rebuild.yaml.
-    open_choice: AUTHOR DECISION REQUIRED
+    open_choice: RESOLVED 2026-08-31 - the rebuilt set was adopted
     open_choice_detail: >
-      Adopting the rebuilt set is arguably more correct - the defect
-      exclusion is the right processing - but it changes seven published
-      voltage RMSE values and the spec tables in 32.2 and 32.6 that quote
-      them.  The audit did not make that switch silently.
+      [SUPERSEDED]  This read AUTHOR DECISION REQUIRED.  The choice was made
+      in the third round: leaving committed artifacts that a clean clone
+      cannot reproduce is not a defensible position for a reproduction
+      package.  The defect-excluded rebuild is canonical and eight verified
+      numbers moved with it.
+      Two things the earlier wording got wrong, both measured since: the
+      cache was NOT stale (rebuilt byte-identical) and the committed models
+      were NOT fitted on different data (training labels identical).  The
+      difference was intermittent training nondeterminism amplified by
+      fit_alpha's 51-point grid, and it is gone now - see the determinism
+      block in this file and 37.1.
+    resolved_record: "see key `determinism` in this file, manifests/raw_rebuild.yaml, and spec 37.1"
     byte_level_reproduction:
       cache: >
         All 12 cache_t files rebuilt from the raw archives are BIT-IDENTICAL

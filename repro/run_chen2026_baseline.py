@@ -306,8 +306,16 @@ def temperature_envelope(rows, out_path):
     that temperature.  The shipped discharge lambda is 0.6832 (UYPYDJ, 25 C).
     A lambda_needed below it means the frozen factor is not conservative
     enough there, and the paper's temperature range has to say so.
+
+    Each temperature contributes 7-8 in-hull points, so a zero here is weak
+    evidence: the one-sided 95 % upper bound on the exceedance rate is about
+    31 %.  The bound is in the table so nobody can read "0" as "safe", and
+    the pooled row across 0-40 C is what a claim should rest on.
     """
     import numpy as _np
+    import sys as _sys
+    _sys.path.insert(0, HERE)
+    from run_safety_strict import clopper_pearson_upper as _cp
     LAM_SHIPPED = 0.6832
     out = []
     for T in sorted({r['temp_set_C'] for r in rows}, key=float):
@@ -328,31 +336,48 @@ def temperature_envelope(rows, out_path):
         else:
             need = worst_raw = worst_lam = tcell = float('nan')
             exceed = 0
+        ub = _cp(exceed, len(ih)) * 100 if ih else float('nan')
         out.append([T, f'{tcell:.1f}', len(g), len(ih),
                     f'{100 * len(ih) / len(g):.1f}',
                     f'{min(socs):.2f}' if socs else '',
                     f'{max(socs):.2f}' if socs else '',
                     f'{LAM_SHIPPED:.4f}', f'{need:.4f}',
                     f'{need / LAM_SHIPPED:.3f}', exceed,
-                    f'{worst_lam:.2f}', f'{worst_raw:.2f}'])
+                    f'{ub:.1f}', f'{worst_lam:.2f}', f'{worst_raw:.2f}'])
     with open(out_path, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(['temp_set_C', 'temp_cell_C_mean', 'n_points', 'n_in_hull',
                     'in_hull_pct', 'soc_in_hull_min', 'soc_in_hull_max',
                     'lambda_shipped', 'lambda_needed', 'margin', 'exceed',
-                    'worst_overshoot_W', 'worst_raw_overshoot_W'])
+                    'exceed_ub95_pct', 'worst_overshoot_W',
+                    'worst_raw_overshoot_W'])
         w.writerows(out)
+        # Pooled across the temperatures where the frozen factor holds, which
+        # is the only row with enough points to support a claim.
+        warm = [r for r in out if float(r[0]) >= 0]
+        n = sum(int(r[3]) for r in warm)
+        k = sum(int(r[10]) for r in warm)
+        w.writerow(['0..40 pooled', '', sum(int(r[2]) for r in warm), n,
+                    '', '0.30', '0.95', f'{LAM_SHIPPED:.4f}', '', '', k,
+                    f'{_cp(k, n) * 100:.1f}', '', ''])
     print("\n  EXTERNAL TEMPERATURE ENVELOPE (physics layer, not the trim)")
     print(f"  {'T set':>6}{'T cell':>8}{'n':>5}{'in hull':>9}{'%':>7}"
           f"{'SOC range':>12}{'lam need':>10}{'margin':>8}{'exceed':>8}"
-          f"{'worst W':>9}")
+          f"{'ub95 %':>9}{'worst W':>9}")
     print('  ' + '-' * 84)
     for r in out:
         rng = f'{r[5]}-{r[6]}' if r[5] else 'none'
         print(f'  {r[0]:>6}{r[1]:>8}{r[2]:>5}{r[3]:>9}{r[4]:>7}{rng:>12}'
-              f'{r[8]:>10}{r[9]:>8}{r[10]:>8}{r[11]:>9}')
+              f'{r[8]:>10}{r[9]:>8}{r[10]:>8}{r[11]:>9}{r[12]:>9}')
+    warm = [r for r in out if float(r[0]) >= 0]
+    n = sum(int(r[3]) for r in warm)
+    k = sum(int(r[10]) for r in warm)
+    print(f'  pooled 0-40 C: {k} exceedances in {n} in-hull points, '
+          f'one-sided 95 % upper bound {_cp(k, n) * 100:.1f} %')
     print('  The hull never reaches below SOC 0.30 at any temperature, and '
           'the frozen lambda stops being conservative below about 0 C.')
+    print('  Per temperature there are only 7-8 in-hull points, so a zero is '
+          'bounded at about 31 %, not demonstrated.')
     print(f'  -> {os.path.relpath(out_path, ROOT)}')
     return out
 

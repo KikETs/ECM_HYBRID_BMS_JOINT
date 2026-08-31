@@ -2474,7 +2474,7 @@
       ],
       "required": false,
       "producer": "python3 repro/run_external_a8.py",
-      "stage": "external_a8",
+      "stage": "external",
       "units": {
         "cycle": "[EVIDENCE REQUIRED]",
         "SOH": "[EVIDENCE REQUIRED]",
@@ -2706,7 +2706,7 @@
     },
     "soh_model_cost.csv": {
       "producer": "python3 repro/run_soh_deploy_tables.py",
-      "stage": "mcu_measure",
+      "stage": "soh_deploy_tables",
       "required": false,
       "rows": 2,
       "columns": [
@@ -2734,7 +2734,7 @@
     },
     "mcu_icache.csv": {
       "producer": "python3 repro/run_soh_deploy_tables.py",
-      "stage": "mcu_measure",
+      "stage": "soh_deploy_tables",
       "required": false,
       "rows": 12,
       "columns": [
@@ -2812,7 +2812,7 @@
       "producer": "python3 repro/run_chen2026_baseline.py",
       "stage": "chen2026",
       "required": false,
-      "rows": 6,
+      "rows": 7,
       "columns": [
         "temp_set_C",
         "temp_cell_C_mean",
@@ -2825,23 +2825,18 @@
         "lambda_needed",
         "margin",
         "exceed",
+        "exceed_ub95_pct",
         "worst_overshoot_W",
         "worst_raw_overshoot_W"
       ],
       "numeric": [
-        "temp_cell_C_mean",
         "n_points",
         "n_in_hull",
-        "in_hull_pct",
-        "soc_in_hull_min",
-        "soc_in_hull_max",
-        "lambda_shipped",
-        "lambda_needed",
-        "margin",
         "exceed",
-        "worst_overshoot_W",
-        "worst_raw_overshoot_W"
-      ]
+        "exceed_ub95_pct",
+        "lambda_shipped"
+      ],
+      "note": "The last row pools 0-40 C.  It leaves the per-temperature columns blank on purpose, so only the columns every row fills are declared numeric."
     }
   },
   "completeness": {

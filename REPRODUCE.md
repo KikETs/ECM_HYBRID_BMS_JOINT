@@ -74,7 +74,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `voltage` | 1 | `python3 ../repro/run_voltage.py` | `results/tables/voltage.csv` |
 | `safety` | 3 | `python3 ../repro/run_safety.py` | `results/tables/safety.csv +2` |
 | `soh_table` | 1 | `python3 ../repro/run_soh_table.py` | `results/tables/soh.csv` |
-| `safety_strict` | 2 | `python3 ../repro/run_safety_strict.py --arm oracle && python3 ../repro/run_safety_strict.py --arm est` | `results/tables/safety_strict_oracle.csv +5` |
+| `safety_strict` | 2 | `python3 ../repro/run_safety_strict.py --arm oracle && python3 ../repro/run_safety_strict.py --arm est && python3 ../repro/run_safety_strict.py --arm oracle --method a3 && python3 ../repro/run_safety_strict.py --arm oracle --method lstm && python3 ../repro/run_safety_strict.py --arm oracle --method gru && python3 ../repro/run_safety_strict.py --arm oracle --method ffrls && python3 ../repro/run_safety_strict.py --arm oracle --method shrink` | `results/tables/safety_strict_a3_oracle.csv +20` |
 | `pack` | 5 | `python3 sop_pack2.py` | `results/tables/pack.csv` |
 | `soc_runs` | 4 | `python3 ../repro/build_soc_runs.py` | `results/soc_runs.pkl` |
 | `soc` | 55 | `python3 soc_perturb_bench.py && python3 soc_est_soh.py` | `results/tables/soc_perturb.csv` |

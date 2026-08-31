@@ -8,10 +8,24 @@ frozen:
     frozen_because: "every SOP number in the paper descends from these"
     reproduces: "results/eval/ regenerated from them gives safety.csv, ladder.csv and soh_cost.csv byte-identically (checked 2026-08-27)"
   - artifact: analysis/results/soh_pred.npz
-    what: "SOH CNN predictions, 6 LOCO folds x 3 seeds"
+    what: "SOH RIDGE predictions, 6 leave-one-cell-out folds, 65 coefficients"
+    superseded_entry: >
+      This said "SOH CNN predictions, 6 LOCO folds x 3 seeds" until 2026-08-31.
+      The CNN was replaced (36) and this file has been written by
+      analysis/soh_ridge.py since.  It also carries model metadata now, so a
+      figure cannot caption itself with a model that did not make it.
     reproduces: "soh.csv byte-identically via repro/run_soh_table.py"
+    sha256: "2ca956d02da480b478112ecb5ef1396914576bc01c6cf8309f2bf80fbc7a2432"
+  - artifact: analysis/runs_soh_ridge/soh_ALL.npz
+    what: "the all-cell ridge fit that mcu/soh_tables.h is exported from"
+    sha256: "907b111da998d11e28e44eab7121893518f5421fdebdae5a11a12c602673f2d7"
+  - artifact: analysis/results/soh_pred_cnn.npz
+    what: "the superseded CNN, kept so 36's comparison is reproducible"
+    sha256: "98d1a21d94f5fd58c9e6dcb97e653952be7124b9a81dec1a59e6817c8a887c39"
   - artifact: mcu/sop_tables.h
     sha256_after_fix: "regenerated during the audit; the pre-audit file did not compile"
+    sha256: "586af0456e5dd1a5d97f6573448fa1b6b10a1e59dec1bee5a7ba418e2d57d499"
+    note_2026_08_31: "all-cell deployment fit, trim_w_dis[0] = 0.2107657; re-exported after the deterministic retrain"
     what: "A8 ECM grid + OCV + trim weights"
   - artifact: mcu/sop_mcu_bench.csv
     what: "board timing, n=500 per stage, A8 firmware"
@@ -73,3 +87,19 @@ soh_replacement_2026_08_31:
     path: ".preserved/2026-08-31_soh_cnn/"
     contents: "the CNN header, runs_soh_cnn, its soh_pred.npz, soh.csv, both bench CSVs and expected.json as they stood before the replacement"
     tracked: false
+
+third_round_2026_08_31:
+  determinism: >
+    Training is bit-reproducible from analysis/determinism.py.  The whole chain
+    was re-run from scratch and 0 of 54 tables changed, 0 numeric cells moved.
+    manifests/model_provenance.yaml records the SHA-256 of both the training
+    data and every checkpoint, so a model that differs from a fresh fit fails
+    immediately.
+  canonical_now:
+    - "the defect-excluded rebuild - eight verified numbers moved (37.1)"
+    - "ridge for SOH, not the CNN (36)"
+    - "mcu/sop_tables.h from the deterministic all-cell fits, FULL 53.21 us"
+  frozen_hashes:
+    sop_tables_h: "586af0456e5dd1a5d97f6573448fa1b6b10a1e59dec1bee5a7ba418e2d57d499"
+    soh_tables_h: "f1b46e75fd1e0c7f15ae8e0ba51ea40d57defb19532959f4d633a470a4e5d4a3"
+    soh_pred_npz: "2ca956d02da480b478112ecb5ef1396914576bc01c6cf8309f2bf80fbc7a2432"

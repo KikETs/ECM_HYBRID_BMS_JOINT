@@ -99,15 +99,24 @@ covers. On **charge** it did not transfer: the factor would have to fall from
 0.586 to 0.397, and as shipped it overshoots on 9–11 of 248 in-hull rows per
 fold (§35.5).
 
-**Temperature and low-SOC envelope, measured.** Test#3 sweeps −20 to 40 °C on
-the same cell. It carries no paired drive cycle, so only the nominal 2RC layer
-the trim sits on can be scored there — but that layer is what decides whether a
-prediction is safe. The shipped λ = 0.6832 is conservative from **0 °C to
-40 °C** (margin 1.39–1.45×, zero exceedance) and **stops being conservative
-below 0 °C**: at −10 °C it needs 0.600, at −20 °C it needs 0.332 and overshoots
-by 26.9 W on 5 of 8 in-hull points. The pooled hull **never reaches below SOC
-0.30 at any temperature**. So the validity range this work can claim is
-0–40 °C and SOC ≥ 0.30, and it is measured rather than assumed (§37.4).
+**Temperature envelope of the nominal 2RC layer.** Test#3 sweeps −20 to 40 °C
+on the same cell. It carries **no paired drive cycle, so the A8 trim cannot be
+computed on it at all** — what is scored there is the nominal 2RC layer the
+trim sits on, not the hybrid. Read it as the physics layer's observed
+envelope, never as a validity range for the deployed model.
+
+At −20 °C the shipped λ = 0.6832 is clearly wrong: it needs 0.332 and
+overshoots by 26.9 W on 5 of 8 in-hull points. At −10 °C it needs 0.600. From
+0 °C to 40 °C no exceedance was observed — but each temperature contributes
+only 7–8 in-hull points, so a zero there is bounded at about **31 %** by a
+one-sided 95 % interval, and pooled across 0–40 °C (31 points) at **9.2 %**.
+Zero observed is not zero risk at this sample size.
+
+The pooled hull **never reaches below SOC 0.30 at any temperature**, which is
+also why Test#2's low-SOC coverage is 0 %. So: the physics layer shows no
+exceedance from 0 to 40 °C above SOC 0.30 with a 9.2 % upper bound, and fails
+below 0 °C. The hybrid's temperature range is **not** established by this
+(§37.4).
 
 ## Reproduce
 
@@ -127,7 +136,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # recompute the 78 published numbers
+python3 repro/verify.py        # check the 78 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 ```
 
@@ -171,7 +180,7 @@ redistributed.
   at the same horizon as the current. They agree only at discharge
   τ = 10 s (Spearman +1.00).
 - All three arms are also evaluated with estimated rather than oracle SOH:
-  discharge 69.1 → 67.2 %, charge 59.6 → 56.6 %, SOC 2.05 → 2.17 %p.
+  discharge 69.61 → 68.89 %, charge 59.50 → 55.54 %, SOC 2.05 → 2.17 %p.
 - Cell-level λ does not transfer to a pack without recalibration. Keeping
   the oracle-SOH λ under estimated SOH gives 42 % pack exceedance at
   N = 192 for discharge τ = 2 s (worst overshoot 0.18 A). This is a

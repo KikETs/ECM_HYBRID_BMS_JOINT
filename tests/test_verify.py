@@ -170,8 +170,13 @@ def test_the_readme_number_of_checks_matches_expected_json():
     n = len(json.load(open(os.path.join(ROOT, 'repro', 'expected.json'),
                            encoding='utf-8'))['checks'])
     readme = open(os.path.join(ROOT, 'README.md'), encoding='utf-8').read()
-    hits = re.findall(r'(\d+) published numbers', readme)
-    assert hits, 'README no longer says how many published numbers verify.py checks'
+    # "recompute" was wrong -- verify.py checks stored values against
+    # expected.json, it does not recompute them -- so the wording changed and
+    # the pattern has to accept either phrasing rather than pinning the claim.
+    hits = re.findall(r'(\d+) (?:published numbers|stored published values)',
+                      readme)
+    assert hits, ('README no longer says how many published values verify.py '
+                  'checks')
     for h in hits:
         assert int(h) == n, (
             f'README says {h} published numbers, expected.json holds {n}')

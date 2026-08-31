@@ -506,3 +506,38 @@ def test_committed_models_match_the_data_they_were_fitted_on():
                     'repro/stamp_model_provenance.py --write')
     rc, out, err = run(['repro/stamp_model_provenance.py', '--check'])
     assert rc == 0, f'model provenance check failed:\n{out}\n{err}'
+
+
+def test_expected_json_stage_ids_exist():
+    """Every table's `stage` must name a real stage.
+
+    external_a8.csv claimed stage `external_a8`; the stage is `external`.
+    Nothing read the field, so the mismatch sat there looking like provenance.
+    """
+    import json
+    from stages import STAGES
+    ids = {s['id'] for s in STAGES}
+    d = json.load(open(os.path.join(ROOT, 'repro', 'expected.json'),
+                       encoding='utf-8'))
+    bad = [(t, v['stage']) for t, v in d['tables'].items()
+           if v.get('stage') and v['stage'] not in ids]
+    assert not bad, f'tables naming a stage that does not exist: {bad}'
+
+
+def test_every_table_names_a_stage_that_produces_it():
+    """The named stage must actually list the table among its outputs."""
+    import json
+    from stages import STAGES
+    by_id = {s['id']: s for s in STAGES}
+    d = json.load(open(os.path.join(ROOT, 'repro', 'expected.json'),
+                       encoding='utf-8'))
+    bad = []
+    for t, v in d['tables'].items():
+        st = v.get('stage')
+        if not st or st not in by_id:
+            continue
+        outs = {os.path.basename(o) for o in by_id[st]['outputs']}
+        if t not in outs:
+            bad.append((t, st))
+    assert not bad, (
+        f'tables whose named stage does not produce them: {bad}')

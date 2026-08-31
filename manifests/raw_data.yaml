@@ -12,7 +12,16 @@ UYPYDJ:
   version: "readme dated 2025-02-17 (six-cell revision); no numbered version exposed by the landing page"
   cell: "Samsung INR21700-30T, 3.0 Ah"
   authors: "Josimar da Silva Duque; Phillip J. Kollmeyer"
-  license: "[SOURCE REQUIRED] not stated in the local readme; confirm on the Borealis landing page before redistribution"
+  license: "CC BY 4.0 (stated in the local readme, section 2 METADATA line 47: 'Licenses/restrictions: CC BY 4.0'; confirmed 2026-08-31)"
+  license_correction: >
+    This field read "[SOURCE REQUIRED] not stated in the local readme"
+    until 2026-08-31.  That was wrong: the readme does state it, under
+    section 2 METADATA, and the same file also carries the depositors'
+    certification that the data is free of licensing and intellectual
+    property issues.  The readme's SHA-256 matches the one recorded in
+    this manifest, so the statement is in the file as downloaded.
+    All three datasets are therefore CC BY 4.0 and the release blocker
+    is cleared.
   role: "train + calibration + selection + internal test (leave-one-cell-out over the six cells)"
   code_path: "raw/UYPYDJ/"
   verified: "2026-08-27"

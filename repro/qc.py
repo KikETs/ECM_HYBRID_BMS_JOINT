@@ -176,7 +176,9 @@ def scan():
                 if '~~' in ln or any(x in ctx for x in FILTERS):
                     continue
                 prev = lines[i - 2] if i >= 2 else ''
-                if _is_a_quotation(ln, m, prev) or 'qc.py' in ln:
+                prev2 = lines[i - 3] if i >= 3 else ''
+                if (_is_a_quotation(ln, m, prev, prev2)
+                        or 'qc.py' in ln):
                     # A correction has to be able to name the wording it
                     # retracts, and this file has to be able to describe its
                     # own guards.  Quoting is not asserting -- but only when
@@ -193,11 +195,12 @@ def scan():
 QUOTE_MARKERS = (
     'claimed', 'claim ', 'called', 'said', 'withdrawn', 'retracted',
     'superseded', 'fails if', 'no longer', 'not available', 'never',
+    'still offered', 'left standing', 'stale', 'marked',
     'was wrong', 'corrected', 'narrowed', 'forbidden', 'must not', 'is false',
 )
 
 
-def _is_a_quotation(line, match, prev=''):
+def _is_a_quotation(line, match, prev='', prev2=''):
     """True when the retracted wording is quoted inside a retraction sentence.
 
     Two conditions, both required.  The phrase has to sit between double
@@ -208,9 +211,10 @@ def _is_a_quotation(line, match, prev=''):
     """
     before, after = line[:match.start()], line[match.end():]
     quoted = before.count('"') % 2 == 1 and '"' in after
-    # The marker can sit in the previous line: markdown wraps, and
-    # 'section 35.2 called\nit "..."' is one sentence across two lines.
-    sentence = (prev + ' ' + line).lower()
+    # The marker can sit in an earlier line: markdown wraps, and a bullet
+    # like 'still offered ... and\n"deployment-efficient equivalence" as
+    # replacements' spreads one sentence over three.
+    sentence = (prev2 + ' ' + prev + ' ' + line).lower()
     return quoted and any(k in sentence for k in QUOTE_MARKERS)
 
 

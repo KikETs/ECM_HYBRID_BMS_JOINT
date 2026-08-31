@@ -43,16 +43,33 @@ axes:
       The physics-only model is now scored on RPCWBY Test#3 across six
       temperatures under Chen 2026's search framework (see
       chen2026_baseline.csv), which is a real cross-laboratory result for
-      the ECM.  The frozen A8 trim is still NOT scored outside UYPYDJ:
-      Test#3 carries no paired drive cycle, so no drive features exist to
-      feed the trim.  Test#2 (US06 plus SOP in one cell) is the only sheet
-      that could support it, via analysis/rpcwby_us06_trim.py, which has
-      not been run for the adopted model.
+      the ECM.
+      [UPDATED 2026-08-31]  The frozen A8 trim HAS since been scored outside
+      UYPYDJ.  repro/run_external_a8.py carries all six leave-one-cell-out A8
+      folds to RPCWBY Test#2 without refitting anything, including lambda.
+      Result, and the scope matters more than the headline:
+        - RPCWBY contributes ONE physical Samsung 30T cell.  The six "folds"
+          are six UYPYDJ models on that same data - six models, not six cells
+          - so their exceedance counts are correlated.  "External multi-cell
+          validation" is forbidden.
+        - discharge: the frozen lambda stays conservative, margin 1.30-1.43,
+          zero exceedance across all six folds.
+        - charge: it does NOT transfer.  It would need 0.3969 against the
+          shipped 0.5860 and overshoots on 9-11 of 248 in-hull rows per fold.
+        - coverage: 54.2 % of discharge calls and 70.3 % of charge calls are
+          in hull.  The pooled surface hull never reaches below SOC 0.30 at
+          any temperature, so nothing below that is shown.
+      Artifacts: external_a8.csv, external_a8_coverage.csv,
+      external_a8_safety.csv.  Test#3 still carries no paired drive cycle, so
+      the temperature sweep bounds the nominal 2RC layer only, not the trim
+      (external_temp_envelope.csv, spec 37.4).
   drive_profile:
     status: PARTIAL
     detail: >
-      UYPYDJ drive cycles only.  RPCWBY US06 feature extraction exists
-      (rpcwby_us06_trim.py) but was not run for the adopted model.
+      [UPDATED 2026-08-31]  UYPYDJ drive cycles plus RPCWBY Test#2 US06, on
+      one external cell, through repro/run_external_a8.py with nothing
+      refitted.  Discharge transfers, charge does not.  Still one drive
+      profile family per dataset, so no claim of drive-profile generality.
   chemistry:
     status: NOT COVERED
     detail: "One chemistry, one cell model (Samsung INR21700-30T)."
