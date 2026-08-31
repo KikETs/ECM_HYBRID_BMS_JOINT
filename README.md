@@ -1,7 +1,7 @@
 # Hybrid SOP / SOH / SOC for a production BMS
 
 Samsung INR21700-30T. SOP from a nominal 2RC table plus a learned trim,
-SOH from a partial-charge CNN, SOC from a 2RC EKF. Six cells.
+SOH from a partial-charge dQ/dV ridge, SOC from a 2RC EKF. Six cells.
 
 Evaluation protocol is **not** uniform across the three arms, and saying so
 matters more than the headline numbers:
@@ -57,14 +57,15 @@ is a property of the image, not the algorithm (§36.4).
 > contradicted others. `.paper_state/paper_map.yaml` lists every claim with
 > its status; `.paper_state/evidence_ledger.yaml` carries the measurements;
 > §34 and §35 of [docs/sop_hybrid_spec.md](docs/sop_hybrid_spec.md) record
-> both rounds. In particular: ridge regression beats the SOH CNN on the same
-> splits; 78 % of the discharge SOP labels are extrapolated rather than
-> measured; and the numbers above are computed on the label's own SOC.
+> both rounds. In particular: the SOH arm was a CNN and is now ridge, because
+> nested selection places that CNN last on all six folds; 78 % of the
+> discharge SOP labels are extrapolated rather than measured; and the numbers
+> above are computed on the label's own SOC.
 
 **What this work claims, and what it does not.** Not superiority — sequence
-baselines match the trim on usable current at 1 100× the parameters, and
-ridge beats the SOH CNN. The claim is *deployment-efficient equivalence under
-a safety-aware current utility*: four effective coefficients and two
+baselines match the trim on usable current at 1 100× the parameters, and the
+SOH arm's own CNN was beaten by ridge and replaced by it. The claim is
+*deployment-efficient equivalence under a safety-aware current utility*: four effective coefficients and two
 exponentially-weighted states reach the same usable current as far larger
 models, at 50.52 µs and 142 kB on a Cortex-M33.
 

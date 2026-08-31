@@ -69,7 +69,11 @@ def status(s):
     """
     out = oldest_output(s)
     if out is None:
-        return 'missing'
+        # A stage marked optional produces a comparison artifact nothing else
+        # consumes.  Reporting it as 'absent' next to genuinely broken stages
+        # says the pipeline is incomplete when it is not -- and the whole
+        # point of this listing is that a missing output is a failure.
+        return 'optional' if s.get('optional') else 'missing'
     inp = newest(s['inputs'])
     if inp is not None and inp > out + 1.0:
         return 'stale'
@@ -98,7 +102,8 @@ def upstream(target):
 
 
 def show(ss):
-    mark = {'ok': 'OK  ', 'stale': 'mtime', 'missing': 'absent'}
+    mark = {'ok': 'OK  ', 'stale': 'mtime', 'missing': 'absent',
+            'optional': 'opt '}
     print(f"  {'stage':<14}{'tier':>5}{'state':>8}{'min':>7}   what it does",
           flush=True)
     print('  ' + '-' * 92, flush=True)

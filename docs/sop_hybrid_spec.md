@@ -599,6 +599,17 @@ point about **the accuracy of the claim**, not about feasibility.
 | `analysis/eval_sop_trim.py` | drives the ablation ladder |
 | `analysis/mcu_budget.py` | **generates** the budget table (does not assert it) |
 
+> **[Note — 37]** That table is the *plan*, not the repository. Four of the
+> eight landed under those names: `ecm_pool.py`, `sop_trim_features.py`,
+> `sop_trim_dataset.py`, `sop_trim.py`. Four never existed —
+> `sop_guard.py` (the excitation gate lives in `sop_trim_features.py` and
+> `sop_trim_dataset.py`), `sop_hybrid.py` (the inversion is
+> `analysis/eval_sop_amps.py` and `mcu/fw_sop/Src/sop_core.c`),
+> `eval_sop_trim.py` (the ladder is `repro/run_safety.py` → `ladder.csv`) and
+> `mcu_budget.py` (the budget is `repro/run_mcu_table.py` → `mcu.csv`).
+> `SETUP.md`, cited at §27 for its stale baud rate, is the design review's
+> document and is not in this repository either.
+
 Existing files to change: `ecm_surface.py` (merged fast branch, export the
 in-hull bitmask) and `windows.py` (interpret ctx_len in seconds — it
 currently mixes HPPC's 200 samples and the drive cycle's 200 seconds as if
@@ -3013,6 +3024,8 @@ n = 200, medians. Interrupts off, call region only.
 | SOC EKF one step (predict + update) | 7.46 us | 7.76 | 7.83 | — |
 | SOC EKF (predict only) | 4.86 us | 4.96 | 5.00 | — |
 | **SOH CNN (3 seeds)** | **17,919 us** | 17,919 | 17,919 | — |
+
+[Superseded — 36.4] Re-measured on the board with real dQ/dV curves: **19,442.25 us** median. And the CNN is no longer what runs — ridge does the same job in **6.50 us**.
 
 The 17 iterations match the Python prediction exactly (median 17, 95 % 18).
 

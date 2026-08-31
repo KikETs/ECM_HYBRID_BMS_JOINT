@@ -287,3 +287,80 @@ def test_every_qc_retraction_pattern_is_a_valid_regex():
     assert rc == 0, f'{out}\n{err}'
     section = (out + err).split('(2) retracted')[1].split('(3)')[0]
     assert 'still standing  0 places' in section, section[:400]
+
+
+def test_optional_stages_are_not_reported_as_missing():
+    """`optional` has to be honoured, or it is a comment pretending to be code.
+
+    It was added to soh_cnn_reference and read by nothing, so the stage
+    listing showed the superseded CNN as 'absent' beside genuinely broken
+    stages -- which is exactly the "a missing output is a failure" signal the
+    listing exists to give.
+    """
+    import run as runner
+    from stages import STAGES
+    assert [s for s in STAGES if s.get('optional')], \
+        'no stage is marked optional; drop the key or use it'
+    # Synthetic, so the assertion holds whether or not the real optional
+    # stage happens to have been run in this checkout.
+    absent = 'results/__does_not_exist__.npz'
+    plain = dict(id='x', tier=9, minutes=1, cmd='true',
+                 inputs=[], outputs=[absent], why='')
+    assert runner.status(plain) == 'missing'
+    assert runner.status(dict(plain, optional=True)) == 'optional', (
+        'status() ignores optional; the listing would call a comparison '
+        'artifact absent beside genuinely broken stages')
+
+
+def test_no_stage_declares_a_key_nothing_reads():
+    """A typo in a stage dict must not become a silently ignored flag.
+
+    `optional` was exactly that for one commit.  The allowed set is read out
+    of the code rather than written down here, so adding a key to stages.py
+    without teaching anything to use it fails, and using it makes it pass --
+    no list to forget to update.
+    """
+    import re
+    from stages import STAGES
+    used = set()
+    for fn in ('run.py', 'report.py', 'verify.py', 'stages.py'):
+        p = os.path.join(ROOT, 'repro', fn)
+        if not os.path.exists(p):
+            continue
+        src = open(p, encoding='utf-8').read()
+        used |= set(re.findall(r"s(?:tage)?\.get\('([a-z_]+)'", src))
+        used |= set(re.findall(r"s(?:tage)?\['([a-z_]+)'\]", src))
+        used |= set(re.findall(r"\bdict\(id=", src)) and set()
+    # keys the graph declares positionally in every stage
+    used |= {'id', 'tier', 'minutes', 'cmd', 'inputs', 'outputs', 'why'}
+    for s in STAGES:
+        extra = set(s) - used
+        assert not extra, (
+            f"{s['id']} declares {sorted(extra)}, which no code in repro/ "
+            f"reads -- either use it or remove it")
+
+
+def test_the_recorded_cnn_numbers_match_the_artifact_when_it_exists():
+    """mcu_sizes.json carries the superseded CNN's error as a fallback.
+
+    Only one SOH model can be built at a time, so the comparison table needs
+    the CNN's numbers even when its prediction file has not been regenerated.
+    A fallback nothing checks is a place for a stale number to live, so when
+    the artifact IS present the two must agree.
+    """
+    import json
+    import numpy as np
+    pred = os.path.join(ROOT, 'analysis', 'results', 'soh_pred_cnn.npz')
+    if not os.path.exists(pred):
+        pytest.skip('CNN reference predictions not built in this checkout')
+    j = json.load(open(os.path.join(ROOT, 'repro', 'mcu_sizes.json'),
+                       encoding='utf-8'))['cnn']
+    z = np.load(pred, allow_pickle=True)
+    cells = sorted({k.rsplit('_', 1)[0] for k in z.files if k.endswith('_pred')})
+    e = np.concatenate([z[f'{c}_pred'] - z[f'{c}_y'] for c in cells])
+    assert abs(float(np.sqrt(np.mean(e ** 2))) - j['rmse_pooled']) < 5e-5, (
+        'mcu_sizes.json pooled RMSE has drifted from soh_pred_cnn.npz')
+    for c in cells:
+        r = float(np.sqrt(np.mean((z[f'{c}_pred'] - z[f'{c}_y']) ** 2)))
+        assert abs(r - j['rmse_per_cell'][c]) < 5e-5, (
+            f'mcu_sizes.json {c} has drifted from the artifact')
