@@ -397,3 +397,40 @@ def test_the_soh_figure_takes_its_caption_from_the_artifact():
             f'must come from soh_pred.npz')
     assert "z['model']" in body and "z['detail']" in body, (
         'fig_soh_traj.py no longer reads the model name from the artifact')
+
+
+def test_compare_tables_finds_a_planted_change():
+    """The rebuild comparison tool must not silently collapse rows.
+
+    Its first version keyed rows on the text columns alone.  In safety.csv
+    those are direction and soh, which repeat across the two horizons, so
+    both sides collapsed to one row per pair and every value change inside a
+    collapsed group was invisible -- in the one tool whose job is to find
+    exactly those changes.
+    """
+    import csv
+    import shutil
+    import subprocess
+    import tempfile
+    src = os.path.join(ROOT, 'analysis', 'results', 'tables')
+    with tempfile.TemporaryDirectory() as d:
+        before = os.path.join(d, 'before')
+        os.makedirs(before)
+        for n in ('safety.csv',):
+            shutil.copy(os.path.join(src, n), before)
+        p = os.path.join(before, 'safety.csv')
+        rows = list(csv.DictReader(open(p, encoding='utf-8')))
+        assert len(rows) > 2, 'safety.csv is too small for this test'
+        rows[0]['usable_pct'] = str(float(rows[0]['usable_pct']) * 1.03)
+        with open(p, 'w', newline='', encoding='utf-8') as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0]))
+            w.writeheader()
+            w.writerows(rows)
+        r = subprocess.run(
+            [sys.executable, os.path.join(ROOT, 'repro', 'compare_tables.py'),
+             '--before', before, '--after', src],
+            capture_output=True, text=True)
+        assert r.returncode == 0, r.stderr
+        assert '1 numeric cells moved' in r.stdout or \
+               '1 numeric cell moved' in r.stdout, r.stdout
+        assert 'usable_pct' in r.stdout, r.stdout
