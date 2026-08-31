@@ -166,7 +166,7 @@ def make_ukf():
 
 def run_filter(kind, r, pkw):
     """One drive run under one perturbation.  Returns RMSE in %p."""
-    from ekf_soc import EKF, run as ekf_run
+    from ekf_soc import run as ekf_run
     If = r['I'] * (1.0 + pkw.get('igain', 0.0)) + pkw.get('ibias', 0.0)
     s0 = float(np.clip(float(r['soc'][0]) + pkw.get('dsoc', 0.0), 0.02, 0.98))
     rv = rvolt(r['soh'])

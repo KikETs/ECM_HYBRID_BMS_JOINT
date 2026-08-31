@@ -193,7 +193,7 @@ def main():
         print(f"    R = {R*1000:.0f} mΩ 가정 시  C_th = {R/a:6.1f} J/K, "
               f"R_th = {1/(b*R/a):5.2f} K/W")
 
-    print(f"\n개루프 온도 시뮬레이션 (평균 계수, 측정 T는 초기값만 사용)")
+    print("\n개루프 온도 시뮬레이션 (평균 계수, 측정 T는 초기값만 사용)")
     print(f"  {'파일':<44} {'RMSE':>8} {'최대':>8}")
     for n, d, _ in fits:
         T, Tm = simulate(d, a, b)

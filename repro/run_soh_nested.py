@@ -138,8 +138,8 @@ def main():
     X, y, cell = z['X'], z['y'], z['cell']
     cells = sorted(set(cell))
     print(f'  {len(y)} curves, {X.shape[1]} inputs, {len(cells)} cells')
-    print(f'  outer: leave one cell out.  inner: leave one of the remaining '
-          f'five out.  The held-out cell is never seen by the selection.\n')
+    print('  outer: leave one cell out.  inner: leave one of the remaining '
+          'five out.  The held-out cell is never seen by the selection.\n')
 
     fams = sk_families()
     cand = [(n, m, g, False) for n, m, g in fams]

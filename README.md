@@ -1,4 +1,4 @@
-# Hybrid SOP / SOH / SOC for a production BMS
+# A compact residual SOP correction, with SOH and SOC, on a Cortex-M33
 
 Samsung INR21700-30T. SOP from a nominal 2RC table plus a learned trim,
 SOH from a partial-charge dQ/dV ridge, SOC from a 2RC EKF. Six cells.
@@ -62,20 +62,29 @@ is a property of the image, not the algorithm (§36.4).
 > discharge SOP labels are extrapolated rather than measured; and the numbers
 > above are computed on the label's own SOC.
 
-**What this work claims, and what it does not.** Not superiority — sequence
-baselines match the trim on usable current at 1 100× the parameters, and the
-SOH arm's own CNN was beaten by ridge and replaced by it. The claim is
-*deployment-efficient equivalence under a safety-aware current utility*: four effective coefficients and two
-exponentially-weighted states reach the same usable current as far larger
-models, at 50.52 µs and 142 kB on a Cortex-M33.
+**What this work claims, and what it does not.** Not superiority, and not
+equivalence — no equivalence margin was pre-specified and no noninferiority
+test was run, so neither word is available. What the measurements support is
+that **the A8 trim reaches competitive safety-adjusted usable current against
+the A3, LSTM, GRU and FFRLS baselines tested here, using four effective
+deployed coefficients**, with bootstrap intervals that overlap and a ranking
+that changes with direction and horizon. The header ships 50 floats; "four
+effective deployed coefficients" is the accurate phrase, not "a four-parameter
+model".
 
-The production-readiness claim of the first draft is **withdrawn**. Every SOP
-number above is computed on the label's own SOC, which a vehicle does not
-have. Scored on identical pulses, estimated state costs about 4 %p of usable
-current and moves discharge exceedance from 3 to 4 in 385 — but a wrong SOC
-also corrupts the filter that decides which labels are trustworthy, and the
-rows it wrongly admits carry a 24.3 % exceedance rate (§35.2). Oracle-state
-validation overstates system safety.
+The production-readiness claim of the first draft is **withdrawn**, and the
+title no longer says "production". Every SOP number above is computed on the
+label's own SOC, which a vehicle does not have.
+
+Scored on identical pulses, estimated state costs about 4 %p of usable current
+and leaves discharge exceedance unchanged (3 of 388 either way). The larger
+effect is elsewhere and needs stating carefully: **estimated SOC changes which
+pulse-derived labels satisfy the evaluation inclusion rule**, and the subset
+that only the estimated corner admits shows elevated exceedance — 27 of 97
+rows. That is a property of the offline evaluation protocol, not a measured
+failure rate of an onboard admission filter; no such filter was implemented or
+tested. Oracle-state validation nevertheless overstates system safety, because
+it scores a row set the vehicle could not have selected.
 
 **External validation, stated at its actual scope.** Six frozen UYPYDJ
 leave-one-cell-out A8 models were transferred without refitting to the
@@ -90,7 +99,7 @@ rows per fold (§35.5).
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # recompute the 68 published numbers
+python3 repro/verify.py        # recompute the 73 published numbers
 python3 repro/run.py --list    # stages, status, runtime
 ```
 
@@ -151,15 +160,17 @@ redistributed.
   nested protocol gives 68.4 % discharge and 59.8 % charge at τ = 10 s,
   within 1.2 %p of the published figures — selecting on the evaluation was
   worth little (`analysis/results/tables/nested_selection.csv`).
-- **Feeding the chain its own estimates changes the answer, and SOC is the
-  term that matters.** Swapping oracle SOH for the SOH arm's own estimate
-  costs about 1 %p of usable current. Swapping oracle SOC for the EKF's
-  estimate takes discharge exceedance from 1 of 491 rows to 20 of 455 and,
-  on charge, collapses λ from 0.586 to 0.404 and usable current from 59.5 %
-  to 41.4 %. Those exceedances survive refitting λ per held-out cell on the
-  same data, so they are not a bias the safety factor can price out. The
-  both-estimated corner — the only one a vehicle can execute — gives 65.5 %
-  discharge and 56.3 % charge at τ = 10 s
+- **Feeding the chain its own estimates changes the answer, and the change is
+  mostly in which rows get scored.** Swapping oracle SOH for the SOH arm's own
+  estimate costs about 1 %p of usable current. Swapping oracle SOC for the
+  EKF's estimate moves the *unpaired* discharge count from 1 of 491 to 20 of
+  485 — but the four corners are not scored on the same pulses, because the
+  trustworthy-label test is computed from whichever SOC is in force. On the
+  388 pulses all four corners keep, oracle-oracle and both-estimated give the
+  same 3 exceedances. What differs is the 97 rows only the estimated corner
+  admits, which carry 27. Read that as *the evaluation inclusion rule is
+  SOC-dependent and unstable*, not as an onboard filter failure rate. The
+  both-estimated corner gives 66.2 % discharge usable current at τ = 10 s
   (`analysis/results/tables/end_to_end.csv`).
 - External validation of the **frozen** A8 on RPCWBY Test#2 (US06 drive plus
   SOP on the same cell, 375 rows, 10 and 25 °C, nothing refitted): on charge

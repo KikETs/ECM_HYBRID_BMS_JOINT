@@ -15,7 +15,7 @@ WHY
     (7.1) 비율과 함께 최소·중앙·저전압구간 중앙을 같이 적는다.
 """
 from __future__ import annotations
-import argparse, csv, io, os, re, sys, zipfile
+import argparse, csv, io, os, re, zipfile
 import numpy as np
 import scipy.io as sio
 

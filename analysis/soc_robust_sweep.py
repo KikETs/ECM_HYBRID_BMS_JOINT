@@ -9,7 +9,7 @@
 
 사용:  python3 soc_robust_sweep.py [--jobs 14]
 """
-import argparse, os, sys, pickle
+import argparse, os, pickle
 import numpy as np
 
 CELLS = ['CC', 'BOOST', 'BOOST_NEGPULSE', 'BOOST_REST', 'CC_CELL2',

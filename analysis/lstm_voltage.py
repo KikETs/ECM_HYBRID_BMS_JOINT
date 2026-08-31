@@ -47,7 +47,7 @@ import torch.nn as nn
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data30t import (DRIVE_CYCLES, load_meas_mat, mendeley_files,  # noqa: E402
-                     parse_name, resample_1hz, test3_windows_source)
+                     resample_1hz, test3_windows_source)
 
 SEED = 5
 WINDOW = 200

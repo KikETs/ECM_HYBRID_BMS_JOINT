@@ -13,7 +13,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
-from stages import STAGES, EXPLORATORY, RAW_DOI, CELLS   # noqa: E402
+from stages import STAGES, RAW_DOI, CELLS   # noqa: E402
 
 TIER_NAME = {1: 'raw to cache', 2: 'characterisation tables',
              3: 'labels and training data', 4: 'training',

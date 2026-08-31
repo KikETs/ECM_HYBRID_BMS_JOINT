@@ -36,7 +36,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from data30t import Q_RATED_AH, load_meas_mat, parse_name  # noqa: E402
+from data30t import Q_RATED_AH, load_meas_mat  # noqa: E402
 from uypydj_ecm import MAX_RMSE_MV, MIN_POINTS, MIN_REST_S, fit_rc  # noqa: E402
 from uypydj_hppc_resistance import find_pulses, rank_pulses  # noqa: E402
 

@@ -27,8 +27,8 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
-from run_safety import load, keep, TOL          # noqa: E402
-from run_safety_strict import strict, fit_lambda   # noqa: E402
+from run_safety import load, TOL          # noqa: E402
+from run_safety_strict import fit_lambda   # noqa: E402
 
 ANALYSIS = os.path.join(ROOT, 'analysis')
 EVAL = os.path.join(ANALYSIS, 'results', 'eval')
@@ -55,7 +55,10 @@ def band_stats(direction):
                          for x in r])
     ex, sp, r2 = col('extrap'), col('spread_A'), col('fit_r2')
     i4, i2 = col('I_star_lin4_A'), col('I_star_lin2hi_A')
-    tau = col('tau_s')
+    # The bands pool both horizons deliberately: extrapolation distance is a
+    # property of the label's fit, not of the horizon it is evaluated at.  A
+    # tau column was read here and never used, which read as an unfinished
+    # per-horizon split; it was not one.
     out = []
     for name, lo, hi in BANDS:
         m = np.isfinite(ex) & (ex > lo) & (ex <= hi)

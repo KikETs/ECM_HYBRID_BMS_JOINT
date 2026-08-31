@@ -129,7 +129,7 @@ def main():
     cells = sorted(set(cell.tolist()))
     print(f"  창 {len(y):,}개, 계열 {X.shape[1]}x{X.shape[2]}, "
           f"고유 SOH {len(set(np.round(y,5)))}개, {dev}")
-    print(f"  넘어야 할 기준선(창 단위): 손특징 0.0399, 저항 0.0442, 평균 0.0862\n")
+    print("  넘어야 할 기준선(창 단위): 손특징 0.0399, 저항 0.0442, 평균 0.0862\n")
     print(f"  {'홀드아웃':<20} {'n창':>7} {'n파일':>6} {'창 RMSE':>9} "
           f"{'파일 RMSE':>10} {'파일 MAE':>9} {'편향':>9}")
 
@@ -170,7 +170,7 @@ def main():
     print(f"\n  파라미터 {npar:,}개, 시드 {args.seeds}개 평균, "
           f"손특징 결합 {'예' if args.with_feat else '아니오'}")
 
-    print(f"\n  === 시간축 지름길 감사 ===")
+    print("\n  === 시간축 지름길 감사 ===")
     print(f"  {'홀드아웃':<20} {'오차 vs 파일내위치':>18} {'오차 vs 사이클':>15}")
     for c in cells:
         p, yy, cc, pp = preds[c]

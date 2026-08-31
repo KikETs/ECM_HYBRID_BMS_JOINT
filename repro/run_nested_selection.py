@@ -45,7 +45,6 @@ Cost
 import argparse
 import collections
 import csv
-import glob
 import itertools
 import os
 import sys

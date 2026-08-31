@@ -4,7 +4,7 @@
 고른 뒤, 고를 때 안 본 셀에서 성능을 잰다. 36 run 전부로 고른 값을
 같은 36 run 에서 재는 것과 얼마나 차이 나는지가 핵심이다.
 """
-import numpy as np, pickle, multiprocessing as mp, itertools, sys
+import numpy as np, pickle, multiprocessing as mp, itertools
 
 CACHE = '/tmp/soc_runs.pkl'
 KS = [3, 4, 5, 6, 8, 10, 12, 16, 20]

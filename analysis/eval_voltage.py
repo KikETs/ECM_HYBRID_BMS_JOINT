@@ -20,7 +20,7 @@ import numpy as np
 import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from data30t import (DRIVE_CYCLES, load_meas_mat, mendeley_files,  # noqa: E402
+from data30t import (load_meas_mat, mendeley_files,  # noqa: E402
                      resample_1hz)
 from lstm_voltage import VoltageLSTM, WINDOW  # noqa: E402
 

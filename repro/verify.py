@@ -28,7 +28,6 @@ the other way round.
 """
 import argparse
 import csv
-import io
 import json
 import os
 import sys
@@ -65,7 +64,7 @@ def check_schema(name, rows, decl):
         bad.append(f'{name}: column set differs'
                    + (f'; missing {miss}' if miss else '')
                    + (f'; unexpected {extra}' if extra else '')
-                   + (f'; order changed' if not miss and not extra else ''))
+                   + ('; order changed' if not miss and not extra else ''))
     if len(rows) != decl['rows']:
         bad.append(f'{name}: {len(rows)} rows, schema says {decl["rows"]} '
                    f'— a partial run is not a pass')

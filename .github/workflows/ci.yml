@@ -29,8 +29,15 @@ jobs:
       - name: Environment smoke test
         run: python env/verify_env.py
 
-      - name: Lint
-        run: ruff check repro tests env || true   # advisory until clean
+      # Two gates, because one that never fails is not a gate.  E9 and F are
+      # real defects -- syntax errors, undefined names, unused imports and
+      # variables -- and those block.  The stylistic rules stay advisory
+      # rather than forcing 200-odd cosmetic edits into an audit branch.
+      - name: Lint (real defects — blocking)
+        run: ruff check repro tests env --select E9,F
+
+      - name: Lint (style — advisory)
+        run: ruff check repro tests env || true
 
       - name: Compile every Python file
         run: python -m compileall -q analysis repro mcu env tests

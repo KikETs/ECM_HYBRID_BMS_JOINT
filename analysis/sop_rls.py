@@ -105,8 +105,8 @@ def main():
 
     best = min(FFS, key=lambda f: np.mean(np.concatenate(tot[f]) ** 2))
     print(f"\n  최적 망각계수 {best}", flush=True)
-    print(f"  참고 — 트림(같은 데이터, 셀 홀드아웃): A0 85.36m -> A3 58.76m, "
-          f"A8 62.81m", flush=True)
+    print("  참고 — 트림(같은 데이터, 셀 홀드아웃): A0 85.36m -> A3 58.76m, "
+          "A8 62.81m", flush=True)
 
     np.savez('/tmp/rls_k.npz',
              **{f'{c}': KEEP[(c, best)] for c in sorted(cells)},

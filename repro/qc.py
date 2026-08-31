@@ -21,7 +21,6 @@ in deliberately as a comparison group.
 import csv
 import os
 import re
-import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -86,6 +85,34 @@ RETRACTED = [
     (r'(?<!not a )(?<!never )pack validation\b',
      'calling the resampling simulation a pack validation',
      '34.10 — there is no pack hardware; it is a simulation sensitivity'),
+
+    # --- third review round, 2026-08-31 ---------------------------------
+    # These four phrasings were each removed for a stated reason, and each is
+    # the kind that creeps back when a sentence gets rewritten.  The negative
+    # lookbehinds let the correction blocks quote the retracted wording,
+    # which is how this repository records what fell.
+    (r'(?<!not )(?<!never )deployment-efficient equivalence',
+     'claiming equivalence between the trim and the baselines',
+     '37.3 — no margin was pre-specified and no noninferiority test was run; '
+     'A8 places 3rd, 3rd, 2nd and 5th of six'),
+    (r'\bA8 (?:outperform|beats|is superior)|outperformed all baselines',
+     'claiming the trim outperforms the baselines',
+     '37.3 — method_comparison.csv: 3 of 20 intervals separate, and all '
+     'three are FFRLS'),
+    (r'(?<!not a )(?<!never a )(?<!ever "a )four-parameter model',
+     'calling the deployed trim a four-parameter model',
+     '37.3 — the header ships 50 floats; say "four effective deployed '
+     'coefficients"'),
+    (r'corrupts the (?:onboard )?(?:safety |admission )?filter\b'
+     r'|onboard admission filter fail',
+     'describing the SOC-dependent evaluation inclusion rule as an onboard '
+     'filter failure',
+     '37.2 — no onboard filter was implemented or tested; the measured thing '
+     'is the offline inclusion rule'),
+    (r'for a production BMS|production-ready',
+     'the production framing',
+     '35.8 / 37.1 — withdrawn; oracle-state validation scores a row set the '
+     'vehicle could not have selected'),
 ]
 
 # Numbers that should come from a table but live only in the docs (invisible

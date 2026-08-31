@@ -78,16 +78,28 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `soc` | 55 | `python3 soc_perturb_bench.py && python3 soc_est_soh.py` | `results/tables/soc_perturb.csv` |
 | `figures` | 3 | `python3 ../repro/fig_ladder.py && python3 ../repro/fig_soc_traj.py && python3 ../repro/fig_soh_traj.py && python3 ../repro/fig_sop_traj.py --direction discharge && python3 ../repro/fig_sop_traj.py --direction charge && python3 ../repro/fig_usable_ci.py` | `../results_fig_ladder.png +5` |
 | `extras` | 2 | `python3 ../repro/run_extras.py` | `results/tables/alpha.csv +3` |
+| `soh_baselines` | 2 | `python3 ../repro/run_soh_baselines.py` | `results/tables/soh_baselines.csv` |
+| `soh_ablations` | 3 | `python3 ../repro/run_soh_ablations.py` | `results/tables/soh_ablations.csv` |
+| `soc_baselines` | 4 | `python3 ../repro/run_soc_baselines.py` | `results/tables/soc_baselines.csv` |
+| `soc_headline` | 3 | `python3 ../repro/run_soc_headline.py` | `results/tables/soc_headline.csv` |
+| `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
+| `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `results/tables/safety_strict_lstm_oracle.csv +2` |
+| `chen2026` | 6 | `python3 ../repro/run_chen2026_baseline.py` | `results/tables/chen2026_baseline.csv` |
+| `nested_selection` | 120 | `python3 ../repro/run_nested_selection.py` | `results/tables/nested_selection.csv` |
+| `end_to_end` | 12 | `python3 ../repro/run_end_to_end.py` | `results/tables/end_to_end.csv +3` |
+| `external` | 15 | `python3 ../repro/run_external_a8.py` | `results/tables/external_a8.csv +2` |
+| `method_comparison` | 1 | `python3 ../repro/run_method_comparison.py` | `results/tables/method_comparison.csv` |
 
 ### tier 6 — board
 
 | id | min | command | outputs |
 |---|---:|---|---|
 | `mcu_export` | 2 | `python3 export_mcu_tables.py --rung A8 --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy --out ../mcu/sop_tables.h && python3 export_soh_ridge.py --out ../mcu/soh_tables.h` | `../mcu/sop_tables.h +1` |
+| `soh_deploy_tables` | 1 | `python3 ../repro/run_soh_deploy_tables.py` | `results/tables/soh_model_cost.csv +1` |
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: about 834 minutes (14 h). `~` marks an estimate that was never timed.
+Full rebuild: about 1048 minutes (17 h). `~` marks an estimate that was never timed.
 
 ## Published numbers
 
@@ -163,6 +175,11 @@ Full rebuild: about 834 minutes (14 h). `~` marks an estimate that was never tim
 | `mcu.icache.on.ridge` | 53.2 | `mcu_icache.csv` | sec 36.4 |
 | `mcu.icache.off.ridge` | 106.38 | `mcu_icache.csv` | sec 36.4 |
 | `mcu.icache.off.cnn` | 107.89 | `mcu_icache.csv` | sec 36.4 |
+| `e2e.fixed.disc.est_est.exceed` | 1 | `end_to_end_fixed_lambda.csv` | sec 37.2 |
+| `e2e.fixed.disc.oracle.exceed` | 3 | `end_to_end_fixed_lambda.csv` | sec 37.2 |
+| `e2e.fixed.disc.est_est.usable` | 72.02 | `end_to_end_fixed_lambda.csv` | sec 37.2 |
+| `method.a8.rank.disc10` | 2 | `method_comparison.csv` | sec 37.3 |
+| `method.ffrls.disc10.usable` | 43.28 | `method_comparison.csv` | sec 37.3 |
 
 ## Cells
 

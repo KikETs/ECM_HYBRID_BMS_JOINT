@@ -84,7 +84,7 @@ def main():
     print(f"  {'전체':<20}{'':>8}"
           + ''.join(f"{float(np.sqrt(np.mean(np.concatenate(acc[c])**2))*1000):>17.2f}m"
                     for c in cols), flush=True)
-    print(f"\n  트림 (같은 홀드아웃):  A3 12 특징 58.76m   A8 dR_fast 하나 62.81m",
+    print("\n  트림 (같은 홀드아웃):  A3 12 특징 58.76m   A8 dR_fast 하나 62.81m",
           flush=True)
 
     print("\n  == 직접 대입의 k 분포 (트림 한계 "

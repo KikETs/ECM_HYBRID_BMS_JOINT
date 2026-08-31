@@ -18,7 +18,6 @@ import argparse
 import csv
 import os
 import struct
-import sys
 import time
 
 import numpy as np

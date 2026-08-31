@@ -52,7 +52,6 @@ OUT = os.path.join(HERE, "sop_end_to_end.csv")
 
 def soc_at_pulses(cell, sd, sc, cold, cache=CACHE):
     """EKF SOC at every pulse start of every HPPC run. Keyed (cycle, soc_group)."""
-    import re
     z = np.load(os.path.join(cache, f"uypydj_{cell}_HPPC.npz"), allow_pickle=True)
     lens, files = z["lens"], z["files"]
     off = np.concatenate([[0], np.cumsum(lens)])

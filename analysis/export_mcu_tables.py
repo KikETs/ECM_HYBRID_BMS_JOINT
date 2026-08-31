@@ -234,7 +234,7 @@ def main():
 
     if a.int8:
         Qd, Sd = quant_grid(Gd); Qc, Sc = quant_grid(Gc)
-        grid_block = (f"#define SOP_GRID_INT8 1\n\n"
+        grid_block = ("#define SOP_GRID_INT8 1\n\n"
                       + carr_i8('sop_grid_dis_q', Qd) + "\n\n"
                       + carr('sop_grid_dis_s', Sd) + "\n\n"
                       + carr_i8('sop_grid_chg_q', Qc) + "\n\n"

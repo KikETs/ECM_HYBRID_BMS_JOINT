@@ -127,7 +127,7 @@ def main():
     print(f"\n{args.out}: {len(y)}개, 입력 {X.shape[1]}차원, "
           f"SOH {y.min():.3f}~{y.max():.3f}")
 
-    print(f"\n기준선: 3.6~3.7 V 소요시간 하나로 선형회귀, leave-one-cell-out")
+    print("\n기준선: 3.6~3.7 V 소요시간 하나로 선형회귀, leave-one-cell-out")
     print(f"  {'홀드아웃 셀':<20} {'n':>4} {'RMSE':>9} {'MAE':>9}")
     errs = []
     for c in sorted(set(cell)):

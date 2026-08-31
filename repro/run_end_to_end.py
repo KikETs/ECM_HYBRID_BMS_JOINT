@@ -155,6 +155,73 @@ def drift(corner_data, direction, tol, out_rows):
                   f'{(100 * k / n if n else float("nan")):>9.2f}')
 
 
+def paired_fixed_lambda(corner_data, direction, tol, out_rows,
+                        base='oracle SOH + oracle SOC'):
+    """Paired, but with lambda frozen at what the oracle corner calibrates.
+
+    The paired table refits lambda inside every corner, which answers "how
+    well could this corner be calibrated" and therefore confounds the state
+    error with the recalibration that hides it.  A deployed system does not
+    get to recalibrate: lambda is fitted offline on the best labels available
+    and then the vehicle runs with whatever state its filters produce.  So the
+    per-cell lambda from the oracle corner is carried across unchanged and
+    every corner is scored under it, on the same rows.
+
+    This is the comparison the safety claim actually needs.  The refitting
+    version stays, because the gap between the two is itself the measurement:
+    it says how much of the apparent robustness came from re-tuning.
+    """
+    from run_safety import keep
+    from run_safety_strict import strict, clopper_pearson_upper
+
+    for tau in TAUS:
+        masks = {lab: keep(d, tau) for lab, d in corner_data.items()}
+        common = None
+        for lab, d in corner_data.items():
+            ks = set(d['key'][masks[lab]])
+            common = ks if common is None else (common & ks)
+        if not common or base not in corner_data:
+            continue
+        sel0 = masks[base] & np.isin(corner_data[base]['key'], list(common))
+        lam_by_cell = {r['cell']: r['lam']
+                       for r in strict(subset(corner_data[base], sel0), tau, tol)}
+        if not lam_by_cell:
+            continue
+        for lab, d in corner_data.items():
+            sel = masks[lab] & np.isin(d['key'], list(common))
+            sub = subset(d, sel)
+            n = k = 0
+            worst = 0.0
+            us, wts, per = [], [], []
+            for c, lam in sorted(lam_by_cell.items()):
+                m = sub['cell'] == c
+                if not m.any():
+                    continue
+                pred, meas = sub['hyb'][m], sub['meas'][m]
+                over = lam * pred - meas
+                ni, ki = int(m.sum()), int((over > tol).sum())
+                n += ni
+                k += ki
+                worst = max(worst, float(over.max()))
+                us.append(float(np.median(lam * pred / meas) * 100))
+                wts.append(float(ni))
+                per.append(f'{c}:{ki}/{ni}')
+            if not n:
+                continue
+            out_rows.append([
+                lab, direction, f'{tau:.1f}', n, k,
+                f'{clopper_pearson_upper(k, n) * 100:.2f}',
+                f'{max(worst, 0.0):.3f}',
+                f'{np.average(us, weights=wts):.2f}',
+                f'{min(us):.2f}',
+                f'{np.median(list(lam_by_cell.values())):.4f}',
+                ' '.join(per)])
+            print(f'  {lab:<32}{direction:<10}{tau:>5.0f}{n:>6}{k:>5}'
+                  f'{clopper_pearson_upper(k, n) * 100:>9.2f}'
+                  f'{max(worst, 0.0):>9.3f}'
+                  f'{np.average(us, weights=wts):>10.2f}   {" ".join(per)}')
+
+
 def paired(corner_data, direction, tol, out_rows):
     """Score every corner on the rows all four corners keep.
 
@@ -231,7 +298,7 @@ def main():
     ap.add_argument('--paired-out', default=os.path.join(
         TABLES, 'end_to_end_paired.csv'))
     a = ap.parse_args()
-    from run_safety import load, keep, TOL
+    from run_safety import TOL
     from run_safety_strict import strict
 
     if not os.path.exists(RUNSPKL):
@@ -293,6 +360,16 @@ def main():
                   f'corners available, paired comparison skipped',
                   file=sys.stderr)
 
+    frows = []
+    print('\n  PAIRED, LAMBDA FIXED AT THE ORACLE CORNER\'S CALIBRATION\n')
+    print(f"  {'condition':<32}{'dir':<10}{'tau':>5}{'n':>6}{'exc':>5}"
+          f"{'CP95 %':>9}{'worst A':>9}{'usable %':>10}   per-cell exceed/n")
+    print('  ' + '-' * 110)
+    for direction in ('discharge', 'charge'):
+        if len(held[direction]) == len(CORNERS):
+            paired_fixed_lambda(held[direction], direction, TOL[direction],
+                                frows)
+
     drows = []
     print('\n  DRIFT — rows a corner keeps that the intersection does not\n')
     print(f"  {'condition':<32}{'dir':<10}{'tau':>5}{'kept':>7}{'outside':>9}"
@@ -303,6 +380,15 @@ def main():
             drift(held[direction], direction, TOL[direction], drows)
 
     os.makedirs(TABLES, exist_ok=True)
+    with open(os.path.join(TABLES, 'end_to_end_fixed_lambda.csv'), 'w',
+              newline='', encoding='utf-8') as f:
+        w = csv.writer(f)
+        w.writerow(['condition', 'direction', 'tau_s', 'n_rows', 'exceed',
+                    'exceed_rate_upper95_pct', 'worst_overshoot_A',
+                    'usable_mean_pct', 'usable_worst_pct',
+                    'lambda_median_from_oracle', 'per_cell_exceed'])
+        w.writerows(frows)
+
     with open(os.path.join(TABLES, 'end_to_end_drift.csv'), 'w', newline='',
               encoding='utf-8') as f:
         w = csv.writer(f)

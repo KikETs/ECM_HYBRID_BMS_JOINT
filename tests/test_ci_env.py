@@ -118,3 +118,20 @@ def test_the_workflow_pins_what_it_installs():
             if '==' not in tok:
                 unpinned.append(tok)
     assert not unpinned, f'unpinned in the CI install: {unpinned}'
+
+
+def test_at_least_one_lint_gate_actually_blocks():
+    """A workflow step that ends in `|| true` cannot fail, so it is not a gate.
+
+    The lint step was advisory from the day it was added, which meant CI
+    reported a clean lint on every commit regardless of the code.  At least
+    one lint invocation must be able to fail the job.
+    """
+    src = open(WORKFLOW, encoding='utf-8').read()
+    lint = [ln.strip() for ln in src.splitlines()
+            if 'ruff check' in ln]
+    assert lint, 'no lint step in the workflow'
+    blocking = [ln for ln in lint if '|| true' not in ln]
+    assert blocking, (
+        'every ruff invocation ends in `|| true`; the lint step can never '
+        'fail and is not a gate')

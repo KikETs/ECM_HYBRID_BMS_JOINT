@@ -109,7 +109,6 @@ def test_every_external_input_is_reachable_in_a_clean_clone():
     24 GB raw tree.  Anything else is a path that only exists on the author's
     machine, which is the defect this test exists to catch.
     """
-    import subprocess
     import yaml
     m = yaml.safe_load(
         open(os.path.join(ROOT, 'manifests', 'raw_data.yaml'),
@@ -364,3 +363,37 @@ def test_the_recorded_cnn_numbers_match_the_artifact_when_it_exists():
         r = float(np.sqrt(np.mean((z[f'{c}_pred'] - z[f'{c}_y']) ** 2)))
         assert abs(r - j['rmse_per_cell'][c]) < 5e-5, (
             f'mcu_sizes.json {c} has drifted from the artifact')
+
+
+def test_prediction_files_say_which_model_made_them():
+    """A figure or table must never name a model the artifact does not.
+
+    results_fig_soh_traj.png shipped for one commit titled "partial-charge
+    CNN, 10,945 parameters, mean over 3 seeds" while plotting ridge, because
+    the caption was a literal in the plotting script.  The metadata is now in
+    the .npz and the figure reads it.
+    """
+    import numpy as np
+    for rel, want in (('analysis/results/soh_pred.npz', 'ridge'),
+                      ('analysis/results/soh_pred_cnn.npz', 'CNN')):
+        p = os.path.join(ROOT, rel)
+        if not os.path.exists(p):
+            continue
+        z = np.load(p, allow_pickle=True)
+        for k in ('model', 'model_short', 'detail', 'n_coefficients'):
+            assert k in z.files, f'{rel} has no "{k}"'
+        assert want.lower() in str(z['model_short']).lower(), (
+            f'{rel} says model_short={str(z["model_short"])!r}')
+
+
+def test_the_soh_figure_takes_its_caption_from_the_artifact():
+    """No model name or parameter count may be hard-coded in the figure."""
+    src = open(os.path.join(ROOT, 'repro', 'fig_soh_traj.py'),
+               encoding='utf-8').read()
+    body = src.split('"""', 2)[-1]          # skip the module docstring
+    for bad in ('10,945', '10945', 'partial-charge CNN', '3 seeds'):
+        assert bad not in body, (
+            f'fig_soh_traj.py hard-codes {bad!r} outside its docstring; it '
+            f'must come from soh_pred.npz')
+    assert "z['model']" in body and "z['detail']" in body, (
+        'fig_soh_traj.py no longer reads the model name from the artifact')

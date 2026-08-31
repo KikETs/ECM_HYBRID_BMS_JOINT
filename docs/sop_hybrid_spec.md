@@ -4943,7 +4943,13 @@ usable current**. It is not the 26-against-1 collapse §34.8 reported. That
 figure was an artifact of the comparison, and it is withdrawn.
 Artifact: `analysis/results/tables/end_to_end_paired.csv`.
 
-### 35.2 What replaces it: a wrong SOC corrupts the filter, not the prediction
+### 35.2 What replaces it: a wrong SOC moves which rows are scored
+
+> **[Narrowed — 37.2]** This section was headed "a wrong SOC corrupts the
+> filter, not the prediction", which reads as a measured failure rate of an
+> onboard admission filter. No such filter was implemented or tested. What
+> was measured is the *offline evaluation inclusion rule*. The numbers below
+> stand; the interpretation is narrowed in §37.2.
 
 The paired view answers only half the question, because in a vehicle there is
 no oracle SOC to compute the label-trustworthiness test with. So the rows each
@@ -5118,18 +5124,32 @@ stated work rather than done quietly.
 
 Not superiority. On usable current the sequence baselines are within noise of
 the trim at 1 100× the parameters (§34.6), and ridge beats the CNN on SOH.
-What the work shows is **deployment-efficient equivalence under a
-safety-aware current utility**: four effective coefficients and two
-exponentially-weighted states reach the same usable current as models three
-orders of magnitude larger, at 50.52 µs and 142 kB on a Cortex-M33, with a
-safety factor that is calibrated per held-out cell and that transfers to an
-external dataset on discharge.
+
+> **[Corrected — 37.3]** This section then claimed **deployment-efficient
+> equivalence**. That word is not available. An equivalence or noninferiority
+> claim needs a margin fixed before the data is seen and a formal test, and
+> neither exists here — choosing a margin now would be the same defect as
+> choosing a model on the test set. §37.3 replaces it with what the
+> measurements support, and `method_comparison.csv` makes it checkable: A8
+> places 3rd, 3rd, 2nd and 5th of six across the four direction × horizon
+> conditions, and only FFRLS separates from it by bootstrap interval. The
+> defensible sentence is *competitive safety-adjusted usable current against
+> the A3, LSTM, GRU, FFRLS and shrinkage baselines tested here, using four
+> effective deployed coefficients* — and "four effective deployed
+> coefficients", never "a four-parameter model", because the header ships 50
+> floats.
 
 The production claim in the first draft is withdrawn. Oracle-state validation
-overstates system safety: it evaluates a filter the vehicle cannot run, and
-§35.2 shows the gap is in the admission rule rather than in the prediction.
-What is supported is a **bench result with a measured deployment cost**, not a
-qualified production estimator.
+overstates system safety: it scores a row set the vehicle could not have
+selected.
+
+> **[Narrowed — 37.2]** The original wording here said the gap is "in the
+> admission rule rather than in the prediction", which reads as a measured
+> failure rate of an onboard filter. No onboard filter was implemented or
+> tested. What was measured is that the *offline evaluation inclusion rule*
+> is SOC-dependent: estimated SOC changes which pulse-derived labels satisfy
+> it, and the subset only the estimated corner admits shows elevated
+> exceedance. §37.2 states it at that scope.
 
 ### 35.9 What still cannot be done
 

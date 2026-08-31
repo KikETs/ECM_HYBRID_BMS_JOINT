@@ -116,7 +116,7 @@ def main():
         w.writeheader(); w.writerows(out)
     print(f"{args.out}: {len(out)}행")
 
-    print(f"\n  g = R(T)/R(25 °C)   (SOC 0.45~0.60)")
+    print("\n  g = R(T)/R(25 °C)   (SOC 0.45~0.60)")
     print(f"  {'T[C]':>6} " + "".join(f"{f'{lo:.0f}~{hi:.0f}A':>10}"
                                       for lo, hi in zip(I_EDGES[:-1], I_EDGES[1:])))
     for T in (-20, -10, 0, 10, 25, 40):

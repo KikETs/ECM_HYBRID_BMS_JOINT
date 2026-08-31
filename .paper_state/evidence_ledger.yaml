@@ -785,3 +785,60 @@ soh_replacement:
     gradient_boosting_not_deployed: "preferred by the inner selection on 2 of 6 folds; not shipped, on size"
     slowdown_not_recovered: "-falign-functions=32 is byte-identical; linker placement not attempted, and tuning until the number improves needs a stopping rule there is none of"
     int8_comparison_stands_only_for_the_cnn: "soh_simd.c compiles to nothing under ridge; section 27's SIMD result is about the superseded model"
+
+blocked_work:
+  status: NOT_DONE_AND_NOT_FABRICATED
+  note: >
+    The third review asked for four things this machine cannot produce.  Each
+    is recorded with the exact condition that blocks it and the command that
+    would run it, so nobody has to rediscover why the number is missing.
+
+  additional_external_cells:
+    asked_for: "external multi-cell validation, and charge / low-SOC / low-temperature coverage"
+    blocked_by: >
+      There is one external dataset (RPCWBY Test#2) and it contributes one
+      physical cell's data.  The six 'folds' in external_a8*.csv are six
+      UYPYDJ-trained models evaluated on that same external data - they are
+      six models, not six cells.  The paper must never call this
+      "external multi-cell validation".
+    what_would_unblock: >
+      A second external dataset with per-cell HPPC or pulse labels below
+      SOC 0.30 and at least one temperature away from 25 C.  Nothing in the
+      three DOIs in DATA.md provides it.
+    command_when_data_exists: |
+      python3 analysis/rpcwby_ecm.py --raw ../raw/<NEW> --out <new>_ecm.csv
+      python3 repro/run_external_a8.py --ecm <new>_ecm.csv
+
+  charge_direction_external_safety:
+    asked_for: "fix or explain the charge transfer failure"
+    blocked_by: >
+      The frozen charge lambda needs 0.3969 on RPCWBY and ships at 0.5860.
+      Refitting it on data that includes RPCWBY would stop it being a
+      transfer result, which is the only thing that measurement is for.
+    what_would_unblock: "a third dataset, so one can be held out entirely"
+    interim: "reported as a failure in 35.5; the charge transfer claim is withdrawn"
+
+  pack_and_hil:
+    asked_for: "HIL or real pack validation before any pack-level or production claim"
+    blocked_by: "there is no pack hardware and no HIL rig attached to this machine"
+    what_exists_instead: >
+      sop_pack2.py resamples single-cell evaluation rows within condition
+      groups.  It is a Monte Carlo sensitivity study and the documents call
+      it that; qc.py fails if the phrase "pack validation" reappears without
+      a negation in front of it.
+    omitted_by_construction: >
+      inter-cell error correlation beyond the condition bin, a shared current
+      trajectory, thermal gradient, imbalance, contactor and fuse limits.
+    command_when_hardware_exists: |
+      # not written, because writing an untested harness invites reporting
+      # its output as a measurement
+
+  formal_equivalence_test:
+    asked_for: "delete the equivalence claim or run a formal test with a pre-specified margin"
+    action_taken: "deleted"
+    why_not_tested: >
+      A margin chosen now would be chosen after seeing the comparison, which
+      is the defect the nested-selection work exists to avoid.  A
+      noninferiority test needs the margin fixed in advance, so the honest
+      move is to drop the word and report the descriptive comparison.
+    replacement_artifact: "analysis/results/tables/method_comparison.csv"

@@ -256,7 +256,7 @@ def main():
 
     temps = sorted(per_T)
     allerr = np.concatenate([per_T[t] for t in temps]) if temps else np.array([])
-    print(f"\n  RMSE of SOP, in watts - the same metric as Chen Table 7")
+    print("\n  RMSE of SOP, in watts - the same metric as Chen Table 7")
     print(f"  {'method':<30}" + ''.join(f'{t:>8}' for t in temps)
           + f"{'overall':>10}{'n':>6}")
     print('  ' + '-' * (30 + 8 * len(temps) + 16))

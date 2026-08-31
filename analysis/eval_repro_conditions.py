@@ -23,7 +23,6 @@ WHAT IS AND IS NOT COMPARABLE
 from __future__ import annotations
 
 import argparse
-import collections
 import os
 import sys
 
@@ -32,7 +31,7 @@ import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data30t import load_meas_mat, mendeley_files, resample_1hz  # noqa: E402
-from lstm_voltage import WINDOW, MinMax, VoltageLSTM  # noqa: E402
+from lstm_voltage import VoltageLSTM  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CKPT = os.path.join(HERE, "runs", "lstm_ratio05_e1000.pt")

@@ -209,8 +209,8 @@ def main():
                   f"{np.median(d/echo):>+7.2f}")
     with open(args.out, "w") as f:
         json.dump({"scales": list(SCALES), "cells": rep}, f, indent=2)
-    print(f"\n  물리 기대 = 측정된 dV (음수). 비율 +1.0 이면 셀처럼 굽고, "
-          f"에코비 +1.0 이면 P를 되읽는 것.")
+    print("\n  물리 기대 = 측정된 dV (음수). 비율 +1.0 이면 셀처럼 굽고, "
+          "에코비 +1.0 이면 P를 되읽는 것.")
     print(f"  -> {args.out}")
 
 

@@ -6,7 +6,6 @@ A8, and an exported header that was not valid C.  These pin both shut.
 import os
 import re
 import subprocess
-import sys
 
 import pytest
 

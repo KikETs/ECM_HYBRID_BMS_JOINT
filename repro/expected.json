@@ -840,6 +840,71 @@
       "value": 107.89,
       "tol": 0.01,
       "source": "sec 36.4 — CNN image, cache disabled"
+    },
+    {
+      "id": "e2e.fixed.disc.est_est.exceed",
+      "table": "end_to_end_fixed_lambda.csv",
+      "where": {
+        "condition": "estimated SOH + estimated SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "exceed",
+      "value": 1,
+      "tol": 0,
+      "source": "sec 37.2 — both estimated, same rows, lambda frozen at the oracle corner"
+    },
+    {
+      "id": "e2e.fixed.disc.oracle.exceed",
+      "table": "end_to_end_fixed_lambda.csv",
+      "where": {
+        "condition": "oracle SOH + oracle SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "exceed",
+      "value": 3,
+      "tol": 0,
+      "source": "sec 37.2 — the oracle corner under its own lambda, same rows"
+    },
+    {
+      "id": "e2e.fixed.disc.est_est.usable",
+      "table": "end_to_end_fixed_lambda.csv",
+      "where": {
+        "condition": "estimated SOH + estimated SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "usable_mean_pct",
+      "value": 72.02,
+      "tol": 0.01,
+      "source": "sec 37.2 — what estimated state costs when lambda is not refitted"
+    },
+    {
+      "id": "method.a8.rank.disc10",
+      "table": "method_comparison.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "a8"
+      },
+      "column": "rank_in_condition",
+      "value": 2,
+      "tol": 0,
+      "source": "sec 37.3 — A8 is not first; the ranking moves by condition"
+    },
+    {
+      "id": "method.ffrls.disc10.usable",
+      "table": "method_comparison.csv",
+      "where": {
+        "direction": "discharge",
+        "tau_s": "10.0",
+        "method": "ffrls"
+      },
+      "column": "usable_mean_pct",
+      "value": 43.28,
+      "tol": 0.01,
+      "source": "sec 37.3 — the one baseline whose interval separates from A8"
     }
   ],
   "tables": {
@@ -2624,10 +2689,66 @@
         "p95_us",
         "max_us"
       ]
+    },
+    "end_to_end_fixed_lambda.csv": {
+      "producer": "python3 repro/run_end_to_end.py",
+      "stage": "end_to_end",
+      "required": false,
+      "rows": 16,
+      "columns": [
+        "condition",
+        "direction",
+        "tau_s",
+        "n_rows",
+        "exceed",
+        "exceed_rate_upper95_pct",
+        "worst_overshoot_A",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "lambda_median_from_oracle",
+        "per_cell_exceed"
+      ],
+      "numeric": [
+        "n_rows",
+        "exceed",
+        "exceed_rate_upper95_pct",
+        "worst_overshoot_A",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "lambda_median_from_oracle"
+      ]
+    },
+    "method_comparison.csv": {
+      "producer": "python3 repro/run_method_comparison.py",
+      "stage": "method_comparison",
+      "required": false,
+      "rows": 24,
+      "columns": [
+        "direction",
+        "tau_s",
+        "method",
+        "usable_mean_pct",
+        "boot_lo_pct",
+        "boot_hi_pct",
+        "n_rows",
+        "exceed",
+        "usable_worst_pct",
+        "rank_in_condition",
+        "interval_vs_a8"
+      ],
+      "numeric": [
+        "usable_mean_pct",
+        "boot_lo_pct",
+        "boot_hi_pct",
+        "n_rows",
+        "exceed",
+        "usable_worst_pct",
+        "rank_in_condition"
+      ]
     }
   },
   "completeness": {
-    "total_checks": 68,
+    "total_checks": 73,
     "checks_per_table": {
       "alpha.csv": 2,
       "cold_ratio.csv": 2,
@@ -2711,7 +2832,12 @@
       "soh.nested.cnn_inner.BOOST",
       "mcu.icache.on.ridge",
       "mcu.icache.off.ridge",
-      "mcu.icache.off.cnn"
+      "mcu.icache.off.cnn",
+      "e2e.fixed.disc.est_est.exceed",
+      "e2e.fixed.disc.oracle.exceed",
+      "e2e.fixed.disc.est_est.usable",
+      "method.a8.rank.disc10",
+      "method.ffrls.disc10.usable"
     ],
     "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
   }

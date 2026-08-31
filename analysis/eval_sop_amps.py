@@ -406,7 +406,7 @@ def main():
     im = np.abs([r["I_meas_A"] for r in out])
     rm = lambda e, m: float(np.sqrt(np.mean(e[m] ** 2)))
 
-    print(f"\n  === 외삽 밴드별 (전류는 음수: 편향 음수 = 크기 과대 = 낙관/위험) ===")
+    print("\n  === 외삽 밴드별 (전류는 음수: 편향 음수 = 크기 과대 = 낙관/위험) ===")
     print(f"  {'배수':<12} {'n':>6} {'|I*| 중앙':>9} "
           f"{'ECM RMSE':>10} {'편향':>8} | {'하이브리드':>10} {'편향':>8}")
     for lo, hi, nm in ((0, 1.0, "<=1.0 내삽"), (1.0, 1.5, "1.0~1.5"),
@@ -422,7 +422,7 @@ def main():
           f"{rm(e0,m):>9.2f}A {np.median(e0):>+7.2f}A | "
           f"{rm(e3,m):>9.2f}A {np.median(e3):>+7.2f}A")
 
-    print(f"\n  === 셀별 (전체 행) ===")
+    print("\n  === 셀별 (전체 행) ===")
     print(f"  {'셀':<20} {'n':>6} {'ECM RMSE':>10} {'하이브리드':>11} {'개선':>8}")
     cc = np.array([r["cell"] for r in out])
     for c in cells:
@@ -438,8 +438,8 @@ def main():
           f"ECM {rm(e0,~bt):.2f}A  하이브리드 {rm(e3,~bt):.2f}A")
     print(f"  그 아래 {int(bt.sum()):,}행: "
           f"ECM {rm(e0,bt):.2f}A  하이브리드 {rm(e3,bt):.2f}A")
-    print(f"\n  라벨 자체의 외삽 편향: 1.44배에서 1.17 A, 2.87배에서 2.51 A "
-          f"(I* 를 작게 보는 방향)")
+    print("\n  라벨 자체의 외삽 편향: 1.44배에서 1.17 A, 2.87배에서 2.51 A "
+          "(I* 를 작게 보는 방향)")
 
 
 if __name__ == "__main__":

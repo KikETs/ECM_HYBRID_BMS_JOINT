@@ -370,6 +370,123 @@ STAGES = [
              'fold would put a model trained without one of the six cells on '
              'the board and still call it the product.'),
 
+    # ---- tier 5b  analyses that were reachable only by hand ------------
+    # These produce 21 of the 68 verified numbers and had no stage, so a clean
+    # clone could not rebuild them and `run.py --list` said the pipeline was
+    # complete when it was not.  Adding them is what makes "raw to every
+    # published number" a claim the graph can actually support.
+
+    dict(id='soh_baselines', tier=5, minutes=2, measured=True,
+         cmd='{py} ../repro/run_soh_baselines.py',
+         inputs=['cache/soh_charge.npz'],
+         outputs=['results/tables/soh_baselines.csv'],
+         why='Five SOH comparison groups on the adopted splits, each with its '
+             'hyperparameter chosen on the training cells only.'),
+
+    dict(id='soh_ablations', tier=5, minutes=3, measured=True,
+         cmd='{py} ../repro/run_soh_ablations.py',
+         inputs=['cache/soh_charge.npz'],
+         outputs=['results/tables/soh_ablations.csv'],
+         why='What the SOH input representation is actually worth: dQ/dV '
+             'against time-per-bin, and the voltage window swept down.'),
+
+    dict(id='soc_baselines', tier=5, minutes=4, measured=True,
+         cmd='{py} ../repro/run_soc_baselines.py',
+         inputs=['results/soc_runs.pkl'],
+         outputs=['results/tables/soc_baselines.csv'],
+         why='Coulomb counting, 1RC-EKF, adaptive-R, dual EKF and a UKF on the '
+             'same six disturbances.  Per-cell calibrated, not held out.'),
+
+    dict(id='soc_headline', tier=5, minutes=3, measured=True,
+         cmd='{py} ../repro/run_soc_headline.py',
+         inputs=['results/soc_runs.pkl'],
+         outputs=['results/tables/soc_headline.csv'],
+         why='The SOC headline recomputed from the runs, after the original '
+             'averaged seven rows while describing six.'),
+
+    dict(id='label_quality', tier=5, minutes=2, measured=True,
+         cmd='{py} ../repro/run_label_quality.py',
+         inputs=['sop_label_measured.csv', 'sop_label_charge.csv'],
+         outputs=['results/tables/label_quality.csv',
+                  'results/tables/label_sensitivity.csv'],
+         why='How many SOP labels are measured rather than extrapolated, and '
+             'how the headline moves as the trust threshold tightens.'),
+
+    dict(id='seq_baselines', tier=5, minutes=45, measured=True,
+         cmd='{py} ../repro/run_sop_seq_baselines.py',
+         inputs=['cache/trim', 'cache/trim_chg'],
+         outputs=['results/tables/safety_strict_lstm_oracle.csv',
+                  'results/tables/safety_strict_gru_oracle.csv',
+                  'results/tables/safety_strict_ffrls_oracle.csv'],
+         why='LSTM, GRU and forgetting-factor RLS scored the same way as the '
+             'trim.  This is the comparison the "competitive, not superior" '
+             'claim rests on.'),
+
+    dict(id='chen2026', tier=5, minutes=6, measured=True,
+         cmd='{py} ../repro/run_chen2026_baseline.py',
+         inputs=['cache/pool', 'sop_label_measured.csv'],
+         outputs=['results/tables/chen2026_baseline.csv'],
+         why="Chen 2026's constant-power binary search reimplemented on this "
+             'data, to its own published tolerances.'),
+
+    dict(id='nested_selection', tier=5, minutes=120, measured=True,
+         cmd='{py} ../repro/run_nested_selection.py',
+         inputs=['cache/trim', 'cache/trim_chg'],
+         outputs=['results/tables/nested_selection.csv'],
+         why='Outer leave-one-cell-out x inner leave-one-out on the five '
+             'training cells, so the rung and the aggregation are chosen '
+             'without seeing the cell they are scored on.'),
+
+    dict(id='end_to_end', tier=5, minutes=12, measured=True,
+         cmd='{py} ../repro/run_end_to_end.py',
+         inputs=['results/soc_runs.pkl', 'results/soh_pred.npz',
+                 'runs_trim_a8', 'runs_trim_a8_chg'],
+         outputs=['results/tables/end_to_end.csv',
+                  'results/tables/end_to_end_paired.csv',
+                  'results/tables/end_to_end_fixed_lambda.csv',
+                  'results/tables/end_to_end_drift.csv'],
+         why='The four oracle/estimated corners: unpaired, paired on the rows '
+             'all four keep, paired under a lambda frozen at the oracle '
+             "corner's calibration, and the rows the intersection drops."),
+
+    dict(id='external', tier=5, minutes=15, measured=True,
+         cmd='{py} ../repro/run_external_a8.py',
+         inputs=['rpcwby_ecm.csv', 'runs_trim_a8'],
+         outputs=['results/tables/external_a8.csv',
+                  'results/tables/external_a8_coverage.csv',
+                  'results/tables/external_a8_safety.csv'],
+         why='The six frozen A8 folds carried to RPCWBY Test#2 without '
+             'refitting: error, in-hull coverage by operating point, and '
+             'whether the frozen lambda stays conservative.'),
+
+    dict(id='method_comparison', tier=5, minutes=1, measured=True,
+         cmd='{py} ../repro/run_method_comparison.py',
+         inputs=['results/tables/safety_strict_oracle.csv',
+                 'results/tables/safety_strict_a3_oracle.csv',
+                 'results/tables/safety_strict_lstm_oracle.csv',
+                 'results/tables/safety_strict_gru_oracle.csv',
+                 'results/tables/safety_strict_ffrls_oracle.csv',
+                 'results/tables/safety_strict_shrink_oracle.csv'],
+         outputs=['results/tables/method_comparison.csv'],
+         why='Every method side by side with its bootstrap interval and its '
+             'rank.  A8 places 3rd, 3rd, 2nd and 5th across the four '
+             'conditions and only FFRLS separates from it, which is what '
+             '"competitive" means and why "outperformed" and "equivalent" '
+             'are both unavailable.'),
+
+    dict(id='soh_deploy_tables', tier=6, minutes=1, measured=True,
+         cmd='{py} ../repro/run_soh_deploy_tables.py',
+         inputs=['results/soh_pred.npz', '../mcu/soh_mcu_bench.csv',
+                 '../mcu/soh_mcu_bench_cnn.csv', '../mcu/sop_mcu_bench.csv',
+                 '../mcu/sop_mcu_bench_cnn.csv',
+                 '../mcu/sop_mcu_bench_noicache_ridge.csv',
+                 '../mcu/sop_mcu_bench_noicache_cnn.csv'],
+         outputs=['results/tables/soh_model_cost.csv',
+                  'results/tables/mcu_icache.csv'],
+         why='What replacing the CNN cost and bought, and the controlled '
+             'instruction-cache experiment that explains why the SOP path got '
+             'slower when it should not have.'),
+
     dict(id='mcu_table', tier=6, minutes=1, measured=True,
          cmd='{py} ../repro/run_mcu_table.py',
          inputs=['../mcu/sop_mcu_bench.csv'],

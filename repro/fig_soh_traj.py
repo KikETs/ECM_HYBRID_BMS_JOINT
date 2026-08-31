@@ -1,7 +1,13 @@
-"""SOH trajectories — what the partial-charge CNN predicts leaving one cell out.
+"""SOH trajectories — what the SOH model predicts leaving one cell out.
 
 Each cell is predicted by a model that never saw it (trained on the other
-five).  10,945 parameters, mean over 3 seeds.
+five).
+
+The model's name and size are read from results/soh_pred.npz, never written
+here.  This figure spent one commit captioned "partial-charge CNN, 10,945
+parameters, mean over 3 seeds" while plotting ridge, because the caption was
+a string in this file.  If the metadata is missing the figure refuses to
+render rather than guessing.
 
     python3 repro/fig_soh_traj.py
 """
@@ -29,6 +35,17 @@ C_BAD = '#c0392b'
 
 def main():
     z = np.load(PRED)
+    miss = [k for k in ('model', 'detail') if k not in z.files]
+    if miss:
+        print(f'  {os.path.relpath(PRED, ROOT)} carries no {miss} — it was '
+              f'written by a producer that does not record which model made '
+              f'it, so this figure cannot label itself.  Re-run the soh '
+              f'stage:\n    python3 analysis/soh_ridge.py --save-model '
+              f'runs_soh_ridge --save-pred results/soh_pred.npz --deployment',
+              file=sys.stderr)
+        return 1
+    model_name = str(z['model'])
+    model_detail = str(z['detail'])
     fig = plt.figure(figsize=(13.6, 8.8))
     gs = fig.add_gridspec(3, 3, height_ratios=[1, 1, 0.92],
                           hspace=0.52, wspace=0.28)
@@ -99,13 +116,13 @@ def main():
     for sp in ('top', 'right'):
         axr.spines[sp].set_visible(False)
 
-    fig.suptitle('SOH — partial-charge CNN, leave one cell out',
+    fig.suptitle(f'SOH — {model_name}, leave one cell out',
                  fontsize=15, weight='bold', y=0.988)
     # The bias is read off the predictions, not hard-coded: an earlier caption
     # said "+0.10 %p, the dangerous side", which came from the run that still
     # contained the 8 temperature-fault curves.  Sec 30.12 retracted that.
     fig.text(0.5, 0.947,
-             '10,945 parameters, mean over 3 seeds.  Each cell is predicted '
+             f'{model_detail}.  Each cell is predicted '
              'by a model that never saw it.\n'
              f'Bias {e.mean():+.2f} %p — reading SOH high makes SOP '
              'optimistic (29.1), so the sign matters; here it is effectively '

@@ -131,7 +131,7 @@ def main():
 
     if len(keep) >= 3:
         a = np.array([[s] + list(m) for s, m in keep])
-        print(f"\n  배율의 SOH 의존성 (기울기, SOH 1.00 -> 0.70)")
+        print("\n  배율의 SOH 의존성 (기울기, SOH 1.00 -> 0.70)")
         for j, lab in ((1, "m0"), (2, "m1"), (3, "m2")):
             sl_ = np.polyfit(a[:, 0], a[:, j], 1)[0]
             print(f"    {lab}: {np.interp(1.0, a[::-1,0], a[::-1,j]):.3f} -> "

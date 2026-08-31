@@ -10,9 +10,8 @@ import shutil
 import subprocess
 import sys
 
-import pytest
 
-from conftest import ROOT, run
+from conftest import ROOT
 
 VERIFY = os.path.join('repro', 'verify.py')
 

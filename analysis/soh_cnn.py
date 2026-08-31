@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 
 import numpy as np
 import torch
@@ -105,7 +104,7 @@ def main():
     dev = "cuda" if torch.cuda.is_available() else "cpu"
 
     print(f"{len(y)}개, 입력 {X.shape[1]}차원, 셀 {len(set(cell))}개, {dev}")
-    print(f"기준선: 단일 특징 선형회귀 0.0254,  평균 예측 0.0876\n")
+    print("기준선: 단일 특징 선형회귀 0.0254,  평균 예측 0.0876\n")
     print(f"  {'홀드아웃 셀':<20} {'n':>4} {'RMSE':>9} {'MAE':>9} {'편향':>9}")
     allerr = []
     nparam = 0
@@ -139,8 +138,16 @@ def main():
           f"{np.mean(np.abs(e)):>9.4f} {np.mean(e):>+9.4f}")
     print(f"\n  파라미터 {nparam:,}개, 시드 {args.seeds}개 평균")
     if args.save_pred:
-        np.savez(args.save_pred, **{f"{c}_{k}": v for c, t in keep.items()
-                                    for k, v in zip(("pred", "y", "cycle"), t)})
+        meta = dict(model="partial-charge dQ/dV CNN",
+                    model_short="1D CNN",
+                    n_coefficients=nparam * args.seeds,
+                    n_inputs=X.shape[1],
+                    detail=f"{nparam:,} parameters per seed, mean over "
+                           f"{args.seeds} seeds")
+        np.savez(args.save_pred,
+                 **{f"{c}_{k}": v for c, t in keep.items()
+                    for k, v in zip(("pred", "y", "cycle"), t)},
+                 **{k: np.array(v) for k, v in meta.items()})
         print(f"  -> {args.save_pred}")
 
 

@@ -74,7 +74,7 @@ def main():
     print(f"  기준(오라클 상태): RMSE {rmse(base):.2f} A, "
           f"5A 이상 낙관 {opt(base):.1f} %")
 
-    print(f"\n  === 단독 민감도 (계통 오차, 전 행에 상수) ===")
+    print("\n  === 단독 민감도 (계통 오차, 전 행에 상수) ===")
     print(f"  {'섭동':<22} {'RMSE':>8} {'변화':>8} {'5A+ 낙관':>10} "
           f"{'dI*/d 중앙':>12}")
     for name, ds, dh in (("SOC +0.02", 0.02, 0), ("SOC -0.02", -0.02, 0),
@@ -113,7 +113,7 @@ def main():
         print(f"  {name:<34} {np.mean(rs):>7.2f}A {np.mean(rs)-rmse(base):>+7.2f}A "
               f"{np.mean(os_):>9.1f}%")
 
-    print(f"\n  === SOC 오차의 영향이 SOC 구간에 따라 다른가 (계통 +0.04) ===")
+    print("\n  === SOC 오차의 영향이 SOC 구간에 따라 다른가 (계통 +0.04) ===")
     p = run(z + 0.04, z)
     d = np.abs(p) - np.abs(base)
     print(f"  {'SOC 구간':<14} {'n':>6} {'|I*| 중앙':>9} {'I* 변화 중앙':>13}")

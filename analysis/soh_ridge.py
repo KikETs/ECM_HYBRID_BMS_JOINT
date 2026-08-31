@@ -125,8 +125,21 @@ def main():
               "score.  The all-cell fit has no held-out cell by construction.")
 
     if a.save_pred:
-        np.savez(a.save_pred, **{f"{c}_{k}": v for c, t in keep.items()
-                                 for k, v in zip(("pred", "y", "cycle"), t)})
+        # The figure and the tables must be able to say what produced these
+        # numbers.  results_fig_soh_traj.png spent one commit captioned
+        # "partial-charge CNN, 10,945 parameters" while plotting ridge,
+        # because the caption was written in the script instead of read from
+        # the artifact.
+        meta = dict(model="dQ/dV ridge",
+                    model_short="ridge",
+                    n_coefficients=X.shape[1] + 1,
+                    n_inputs=X.shape[1],
+                    detail=f"{X.shape[1] + 1} coefficients "
+                           f"({X.shape[1]} weights + 1 intercept)")
+        np.savez(a.save_pred,
+                 **{f"{c}_{k}": v for c, t in keep.items()
+                    for k, v in zip(("pred", "y", "cycle"), t)},
+                 **{k: np.array(v) for k, v in meta.items()})
         print(f"  -> {a.save_pred}")
     return 0
 

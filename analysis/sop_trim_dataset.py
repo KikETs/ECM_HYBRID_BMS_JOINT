@@ -43,7 +43,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ecm_pool import surfaces  # noqa: E402
-from sop_trim_features import (N_FEATURES, NAMES_EXTRA,  # noqa: E402
+from sop_trim_features import (NAMES_EXTRA,  # noqa: E402
                                TrimFeatures)
 
 HERE = os.path.dirname(os.path.abspath(__file__))

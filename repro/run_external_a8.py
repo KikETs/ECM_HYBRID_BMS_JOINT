@@ -46,7 +46,7 @@ ANALYSIS = os.path.join(ROOT, 'analysis')
 sys.path.insert(0, ANALYSIS)
 sys.path.insert(0, HERE)
 from run_chen2026_baseline import (OutOfHull, simulate_power,  # noqa: E402
-                                   tcell_map, DT, Q_NOM)
+                                   tcell_map)
 
 FEATS = os.path.join(ANALYSIS, 'cache', 'us06', 't2_feats_CC.npz')
 SOP = os.path.join(ANALYSIS, 'rpcwby_sop_summary.csv')
@@ -216,7 +216,7 @@ def main():
         w.writerows(out)
     print(f'  -> {os.path.relpath(a.out, ROOT)}  ({len(out)} rows)')
 
-    print(f"\n  Frozen A8 vs physics-only, RMSE and bias in watts")
+    print("\n  Frozen A8 vs physics-only, RMSE and bias in watts")
     print(f"  {'fold':<20}{'dir':<10}{'n':>5}{'A0 RMSE':>9}{'A8 RMSE':>9}"
           f"{'A0 bias':>9}{'A8 bias':>9}{'A0 opt%':>9}{'A8 opt%':>9}")
     print('  ' + '-' * 89)
@@ -308,7 +308,7 @@ def safety_transfer(out, base):
             continue
         per[(r[0], r[1])].append((float(r[6]), float(r[8])))
     rows = []
-    print(f'\n  SAFETY TRANSFER OF THE FROZEN LAMBDA')
+    print('\n  SAFETY TRANSFER OF THE FROZEN LAMBDA')
     print(f"  {'fold':<20}{'dir':<10}{'n':>5}{'lambda':>9}{'needed':>9}"
           f"{'margin':>8}{'exceed':>8}{'usable %':>10}{'worst W':>9}")
     print('  ' + '-' * 88)

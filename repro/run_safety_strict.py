@@ -34,7 +34,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
-from run_safety import load, keep, TOL, EXTRAP_MAX   # noqa: E402
+from run_safety import load, keep, TOL   # noqa: E402
 
 EVAL = os.path.join(ROOT, 'analysis', 'results', 'eval')
 TABLES = os.path.join(ROOT, 'analysis', 'results', 'tables')

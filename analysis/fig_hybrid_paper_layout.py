@@ -17,7 +17,6 @@ THE AXES TRANSLATE, THE PANELS DO NOT CHANGE
 from __future__ import annotations
 
 import argparse
-import collections
 import os
 import sys
 
