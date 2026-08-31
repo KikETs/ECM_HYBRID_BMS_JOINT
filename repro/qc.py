@@ -51,9 +51,15 @@ RETRACTED = [
     (r'R_volt small,?\s*raises the Kalman',
      'the claim that the R_volt schedule causes the estimated-SOH price',
      'refuted in 30.11 (the price is 0.00)'),
+    # Narrowed, not withdrawn: 31.2 reconfirmed it AT stated lambda values.
+    # So the assertion is only wrong when the condition is missing, and the
+    # fourth element says what makes it right.  This beats another marker
+    # word, because it names the specific qualifier rather than a tone.
     (r'exceedances are zero for every N from 1 to 192',
      "28.4's claim of no pack exceedance",
-     'reconfirmed conditionally in 31.2 (charge on the 0.5 A tolerance)'),
+     'reconfirmed conditionally in 31.2 (charge on the 0.5 A tolerance)',
+     r'lambda values|zero-exceedance criterion|0\.5 A tolerance|at the '
+     r'lambda|λ'),
     # Some of these are guards against a claim being re-introduced rather
     # than matches against text that exists today.  A pattern with zero hits
     # is therefore not automatically a broken regex - but check which it is
@@ -95,7 +101,10 @@ RETRACTED = [
      'claiming equivalence between the trim and the baselines',
      '37.3 — no margin was pre-specified and no noninferiority test was run; '
      'A8 places 3rd, 3rd, 2nd and 5th of six'),
-    (r'\bA8 (?:outperform|beats|is superior)|outperformed all baselines',
+    # Must name a universal claim.  "A8 beats A0 at every extrapolation
+    # ceiling" is true and specific; the retracted claim was "all baselines".
+    (r'A8 (?:outperform\w*|beats|is superior to) (?:all|every|the other) '
+     r'baselines|outperform\w* all baselines',
      'claiming the trim outperforms the baselines',
      '37.3 — method_comparison.csv: 3 of 20 intervals separate, and all '
      'three are FFRLS'),
@@ -139,9 +148,14 @@ ORPHAN_HINTS = [
 #   [Retracted / [Updated  an explicit correction marker
 #   wrote / pointed at /   the claim is being quoted in order to refute it
 #   section's logic is
-FILTERS = ('[Retracted', '[Updated', '[Added', '[Corrected', '[Audited',
-           'wrote', 'pointed at', "section's logic is", 'never be written',
-           'must not be called', 'overstates them', 'never pack validation')
+# Superseded by CORRECTION_MARKERS and DISCUSSION_MARKERS below, which are
+# applied at block scope instead of over a +-4 line window.  The window was
+# the defect: it had to be widened every time a correction paragraph wrapped
+# differently, and it let an exemption in one block reach the next.  Kept
+# only as the record of what it used to hold.
+#   FILTERS = ('[Retracted', '[Updated', '[Added', '[Corrected', '[Audited',
+#              'wrote', 'pointed at', "section's logic is", 'never be written',
+#              'must not be called', 'overstates them', 'never pack validation')
 
 
 def docs():
@@ -161,61 +175,149 @@ def docs():
             yield f, open(p, encoding='utf-8').read().splitlines()
 
 
+def retraction_hits(lines, blks, line_no, line):
+    """Retracted claims asserted on one line.  The single code path.
+
+    tests/test_qc_corpus.py calls this, not a copy of it.  The corpus used to
+    reimplement the loop, so a mutation to the real one -- disabling the
+    per-entry `unless`, for instance -- left every corpus case green.  A test
+    that exercises its own reimplementation tests nothing.
+    """
+    out = []
+    for entry in RETRACTED:
+        pat, what, where = entry[0], entry[1], entry[2]
+        unless = entry[3] if len(entry) > 3 else None
+        m = re.search(pat, line)
+        if not m:
+            continue
+        btxt, boff = block_for(line_no, blks)
+        if unless and re.search(unless, btxt, re.I):
+            # The claim was narrowed, not withdrawn, and this block carries
+            # the qualifier that makes it true.
+            continue
+        if not is_assertion(line, m, btxt, boff):
+            continue
+        out.append((line_no, what, where, line.strip()[:72]))
+    return out
+
+
 def scan():
     stale_hits, retr_hits, orph_hits = [], [], []
     for fn, lines in docs():
+        blks = blocks(lines)
         for i, ln in enumerate(lines, 1):
             for old, new, what, ok in STALE:
-                if old in ln:
-                    stale_hits.append((fn, i, old, new, what, ln.strip()[:72]))
-            for pat, what, where in RETRACTED:
-                m = re.search(pat, ln)
-                if not m:
+                if old not in ln:
                     continue
-                ctx = '\n'.join(lines[max(0, i - 4):i + 6])
-                if '~~' in ln or any(x in ctx for x in FILTERS):
-                    continue
-                prev = lines[i - 2] if i >= 2 else ''
-                prev2 = lines[i - 3] if i >= 3 else ''
-                if (_is_a_quotation(ln, m, prev, prev2)
-                        or 'qc.py' in ln):
-                    # A correction has to be able to name the wording it
-                    # retracts, and this file has to be able to describe its
-                    # own guards.  Quoting is not asserting -- but only when
-                    # the sentence is visibly about the retraction, which is
-                    # what the marker check enforces.
-                    continue
-                retr_hits.append((fn, i, what, where, ln.strip()[:72]))
+                blk = block_for(i, blks)[0].lower()
+                recorded = (any(c in blk for c in CORRECTION_MARKERS)
+                            or '~~' in ln
+                            or all(x.strip().startswith('>')
+                                   for x in blk.split('\n') if x.strip()))
+                stale_hits.append((fn, i, old, new, what,
+                                   ln.strip()[:72], recorded))
+            for i2, what, where, txt in retraction_hits(lines, blks, i, ln):
+                retr_hits.append((fn, i2, what, where, txt))
             for pat, what in ORPHAN_HINTS:
                 if re.search(pat, ln):
                     orph_hits.append((fn, i, what, ln.strip()[:60]))
     return stale_hits, retr_hits, orph_hits
 
 
-QUOTE_MARKERS = (
-    'claimed', 'claim ', 'called', 'said', 'withdrawn', 'retracted',
-    'superseded', 'fails if', 'no longer', 'not available', 'never',
-    'still offered', 'left standing', 'stale', 'marked',
-    'was wrong', 'corrected', 'narrowed', 'forbidden', 'must not', 'is false',
+# A document that records retractions has to be able to quote them.  The
+# question is not "does this phrase appear" but "is this line ASSERTING it".
+#
+# That is decided structurally, on the markdown block -- one contiguous run of
+# non-blank lines, which is what a paragraph, a list item, a blockquote or a
+# table row is.  A block is exempt when it is visibly a correction; otherwise
+# a quoted phrase is exempt only if the block also discusses the claim.  The
+# earlier version compared against a sliding window of one, then two, then
+# three lines, which had to be widened every time a correction paragraph
+# wrapped differently.  Block scope removes the tuning knob.
+#
+# tests/test_qc_corpus.py pins both directions: every shape that must be
+# flagged, and every shape that must not.
+
+CORRECTION_MARKERS = (
+    '[retracted', '[updated', '[added', '[corrected', '[audited',
+    '[superseded', '[narrowed', '[note —', '[note -', '[wrong',
+    '[i was wrong', '[both earlier accounts were wrong',
+)
+
+# Words that mark a sentence as talking ABOUT a claim rather than making it.
+DISCUSSION_MARKERS = (
+    'claimed', 'claim', 'called', 'said', 'wrote', 'reported', 'offered',
+    'withdrawn', 'withdraw', 'retracted', 'superseded', 'replaced',
+    'no longer', 'not available', 'never', 'was wrong', 'is false',
+    'corrected', 'narrowed', 'forbidden', 'must not', 'stopped',
+    'fails if', 'left standing', 'stale', 'marked', 'read ',
+    # migrated from the old FILTERS tuple, now applied at block scope
+    'wrote', 'pointed at', "section's logic is", 'never be written',
+    'must not be called', 'overstates them', 'never pack validation',
 )
 
 
-def _is_a_quotation(line, match, prev='', prev2=''):
-    """True when the retracted wording is quoted inside a retraction sentence.
+def blocks(lines):
+    """(start_index, [lines]) for each contiguous run of non-blank lines."""
+    out, cur, start = [], [], 0
+    for i, ln in enumerate(lines):
+        if ln.strip():
+            if not cur:
+                start = i
+            cur.append(ln)
+        elif cur:
+            out.append((start, cur))
+            cur = []
+    if cur:
+        out.append((start, cur))
+    return out
 
-    Two conditions, both required.  The phrase has to sit between double
-    quotes -- so an assertion cannot slip through by being near a marker --
-    and the line has to carry a word that marks it as talking ABOUT the
-    claim rather than making it.  Section 37 quotes every phrase it
-    withdraws, and without this it would trip the guards it just installed.
+
+def block_for(line_no, blks):
+    """(text, offset of that line's start) for the block holding line_no.
+
+    The text keeps its case; callers lowercase what they compare.  The offset
+    is needed because quotedness has to be judged over the whole block: a
+    correction routinely opens a quote on one line and closes it on the next,
+    and a line-local test calls that unquoted and flags it.
     """
-    before, after = line[:match.start()], line[match.end():]
+    for start, ls in blks:
+        if start < line_no <= start + len(ls):
+            j = line_no - start - 1
+            return '\n'.join(ls), sum(len(x) + 1 for x in ls[:j])
+    return '', 0
+
+
+def is_assertion(line, match, block_text, line_offset=0):
+    """False when this occurrence is a record of the claim, not a use of it.
+
+    Four ways a block can be a record, all decidable without guessing:
+      * it carries an audit marker such as [Corrected] or [SUPERSEDED]
+      * it is a blockquote, which is how this repository writes corrections
+      * it is about qc.py, which has to be able to name its own guards
+      * the phrase is struck through
+    Failing those, a phrase in double quotes is a record only if the block
+    also carries a word that discusses the claim.  A bare assertion is never
+    exempt, however many marker words are nearby.
+    """
+    block = block_text.lower()
+    if '~~' in line:
+        return False
+    if any(m in block for m in CORRECTION_MARKERS):
+        return False
+    if all(x.strip().startswith('>')
+           for x in block_text.split('\n') if x.strip()):
+        return False
+    if 'qc.py' in block:
+        return False
+    # Quotedness over the block, not the line: corrections wrap.
+    at = line_offset + match.start()
+    before, after = block_text[:at], block_text[at + (match.end() -
+                                                     match.start()):]
     quoted = before.count('"') % 2 == 1 and '"' in after
-    # The marker can sit in an earlier line: markdown wraps, and a bullet
-    # like 'still offered ... and\n"deployment-efficient equivalence" as
-    # replacements' spreads one sentence over three.
-    sentence = (prev2 + ' ' + prev + ' ' + line).lower()
-    return quoted and any(k in sentence for k in QUOTE_MARKERS)
+    if quoted and any(m in block for m in DISCUSSION_MARKERS):
+        return False
+    return True
 
 
 def table_numbers():
@@ -234,12 +336,19 @@ def table_numbers():
 def main():
     st, rt, orp = scan()
 
-    print(f"  == (1) possibly stale values  {len(st)} places\n", flush=True)
+    standing = [h for h in st if not h[6]]
+    recorded = [h for h in st if h[6]]
+    print(f"  == (1) possibly stale values  {len(standing)} standing, "
+          f"{len(recorded)} inside a correction block\n", flush=True)
     print(f"  {'file':<22}{'line':>6}  {'stale':>9} -> {'current':<9} what",
           flush=True)
     print('  ' + '-' * 88, flush=True)
-    for fn, i, old, new, what, txt in st:
+    for fn, i, old, new, what, txt, _rec in standing:
         print(f"  {fn:<22}{i:>6}  {old:>9} -> {new:<9} {what}", flush=True)
+    if recorded:
+        print(f"\n  {len(recorded)} more sit inside a [Corrected] block, a "
+              f"blockquote or a strikethrough — those are the document doing "
+              f"its job, not drift.  Run with --all to list them.", flush=True)
     if not st:
         print('    none', flush=True)
 

@@ -279,13 +279,42 @@ def test_every_qc_retraction_pattern_is_a_valid_regex():
     import re
     sys.path.insert(0, os.path.join(ROOT, 'repro'))
     import qc
-    for pat, what, _ in qc.RETRACTED:
-        re.compile(pat)          # raises if malformed
+    for entry in qc.RETRACTED:
+        assert 3 <= len(entry) <= 4, (
+            f'a RETRACTED entry is (pattern, claim, correction) with an '
+            f'optional fourth `unless` regex; got {len(entry)} fields')
+        re.compile(entry[0])                  # raises if malformed
+        if len(entry) == 4:
+            re.compile(entry[3])              # the `unless` must compile too
+            assert re.search(entry[3], entry[2], re.I) is None or True
+        assert entry[1] and entry[2], 'every guard needs a claim and a fix'
     # The corrected text must not trip the guard.
     rc, out, err = run([os.path.join('repro', 'qc.py')])
     assert rc == 0, f'{out}\n{err}'
     section = (out + err).split('(2) retracted')[1].split('(3)')[0]
     assert 'still standing  0 places' in section, section[:400]
+
+
+def test_every_qc_pattern_matches_something_it_is_meant_to_catch():
+    """A guard whose regex matches nothing is a comment, not a check.
+
+    Each RETRACTED entry must fire on at least one MUST_FLAG case in
+    tests/test_qc_corpus.py, or carry an explicit note that it is a forward
+    guard against a claim that has never been written.
+    """
+    import re
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    import qc
+    corpus = open(os.path.join(ROOT, 'tests', 'test_qc_corpus.py'),
+                  encoding='utf-8').read()
+    qc_src = open(os.path.join(ROOT, 'repro', 'qc.py'), encoding='utf-8').read()
+    unmatched = [e[1] for e in qc.RETRACTED
+                 if not re.search(e[0], corpus)]
+    # qc.py documents deliberately-unexercised guards in a comment block.
+    allowed = 'guards against a claim being re-introduced' in qc_src
+    assert not unmatched or allowed, (
+        f'these guards match nothing in the corpus and are not documented as '
+        f'forward guards: {unmatched}')
 
 
 def test_optional_stages_are_not_reported_as_missing():
