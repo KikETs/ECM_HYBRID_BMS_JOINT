@@ -56,12 +56,34 @@ def test_stage_outputs_exist_on_disk_or_are_declared_absent():
                 f'stage {s["id"]} declares {o} but it is absent'
 
 
+def _declared_raw_roots():
+    """Raw dataset roots the manifest declares, as analysis-relative paths."""
+    import yaml
+    m = yaml.safe_load(
+        open(os.path.join(ROOT, 'manifests', 'raw_data.yaml'),
+             encoding='utf-8'))
+    roots = set()
+    for v in m.values():
+        if isinstance(v, dict) and 'code_path' in v:
+            roots.add(os.path.normpath(os.path.join('..', v['code_path'])))
+    return roots
+
+
 def test_stage_graph_inputs_resolve():
-    """Every stage input is produced by another stage or exists as raw."""
+    """Every stage input is produced by another stage or is a declared raw root.
+
+    A clean clone has no raw/ -- the datasets are third-party downloads.  So
+    an input that is not produced upstream resolves against the raw manifest,
+    not against the filesystem: that keeps the test meaningful off-line while
+    still failing if someone adds a stage that reads an undeclared external
+    path.
+    """
     from stages import STAGES
     outs = set()
     for s in STAGES:
         outs.update(os.path.normpath(o) for o in s['outputs'])
+    raw = _declared_raw_roots()
+    assert raw, 'raw_data.yaml declares no code_path'
     unresolved = []
     for s in STAGES:
         for i in s['inputs']:
@@ -69,10 +91,57 @@ def test_stage_graph_inputs_resolve():
             if any(n == o or n.startswith(o + os.sep) or o.startswith(n + os.sep)
                    for o in outs):
                 continue
+            if any(n == r or n.startswith(r + os.sep) for r in raw):
+                continue
             if os.path.exists(os.path.join(ROOT, 'analysis', i)):
                 continue
             unresolved.append((s['id'], i))
-    assert not unresolved, f'inputs with no producer and no file: {unresolved}'
+    assert not unresolved, (
+        f'inputs with no producer, no manifest entry and no file: {unresolved}')
+
+
+def test_every_external_input_is_reachable_in_a_clean_clone():
+    """An input no stage produces must be a declared raw root or be committed.
+
+    Those are the only two ways a fresh clone can obtain it.  results/cold_check
+    is the committed case: it is uypydj_hppc_resistance.py run with the
+    temperature filter disabled, checked in because rebuilding it needs the
+    24 GB raw tree.  Anything else is a path that only exists on the author's
+    machine, which is the defect this test exists to catch.
+    """
+    import subprocess
+    import yaml
+    m = yaml.safe_load(
+        open(os.path.join(ROOT, 'manifests', 'raw_data.yaml'),
+             encoding='utf-8'))
+    from stages import STAGES
+    outs = set()
+    for s in STAGES:
+        outs.update(os.path.normpath(o) for o in s['outputs'])
+    used = set()
+    for s in STAGES:
+        for i in s['inputs']:
+            n = os.path.normpath(i)
+            if not any(n == o or n.startswith(o + os.sep)
+                       or o.startswith(n + os.sep) for o in outs):
+                used.add(n)
+    assert used, 'the graph declares no external inputs at all'
+    for n in sorted(used):
+        hit = [v for v in m.values()
+               if isinstance(v, dict) and 'code_path' in v
+               and n == os.path.normpath(os.path.join('..', v['code_path']))]
+        if hit:
+            assert hit[0].get('files'), \
+                f'{n} is a declared raw root but carries no file hashes'
+            continue
+        rel = os.path.relpath(os.path.join(ROOT, 'analysis', n), ROOT)
+        tracked = subprocess.run(
+            ['git', 'ls-files', '--', rel], cwd=ROOT,
+            capture_output=True, text=True).stdout.strip()
+        assert tracked, (
+            f'{n} is read by a stage, is produced by no stage, is not a '
+            f'declared raw root, and is not committed -- a clean clone '
+            f'cannot obtain it')
 
 
 @pytest.mark.parametrize('script,table', [

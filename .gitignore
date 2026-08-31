@@ -82,3 +82,6 @@ analysis/runs_nested/
 # predictions went in and had to be removed with `git rm --cached`.
 # runs_trim_{lstm,gru,ffrls}: python3 repro/run_sop_seq_baselines.py  (~4 min)
 # runs_nested:                python3 repro/run_nested_selection.py --train (~2.4 h)
+
+# audit working copies, kept locally (see .paper_state/freeze_log.yaml)
+.preserved/

@@ -245,7 +245,97 @@ def main():
           f'surface hull and are excluded.')
     print('  Nothing here was refitted: A8 weights and lambda are the UYPYDJ '
           'values, carried across unchanged.')
+
+    coverage(out, a.out)
+    safety_transfer(out, a.out)
     return 0
+
+
+def coverage(out, base):
+    """Which operating points the pooled hull actually covers.
+
+    A transfer result computed only where the model agrees to answer is not a
+    transfer result for the dataset -- it is one for the subset the source
+    surfaces happen to span.  So the excluded fraction has to be reported with
+    the axis it falls on, not as a single count.
+    """
+    import collections as _c
+    rows = []
+    for axis, col, fmt in (('SOC', 5, lambda v: f'{float(v):.2f}'),
+                           ('temp_C', 4, lambda v: str(v)),
+                           ('SOH', 3, lambda v: f'{float(v):.2f}'),
+                           ('direction', 1, str)):
+        tot, out_ = _c.Counter(), _c.Counter()
+        for r in out:
+            k = fmt(r[col])
+            tot[k] += 1
+            if r[11] == 'out-of-hull':
+                out_[k] += 1
+        for k in sorted(tot):
+            rows.append([axis, k, tot[k], tot[k] - out_[k],
+                         f'{100 * (tot[k] - out_[k]) / tot[k]:.1f}'])
+    path = base.replace('.csv', '_coverage.csv')
+    with open(path, 'w', newline='', encoding='utf-8') as f:
+        w = csv.writer(f)
+        w.writerow(['axis', 'value', 'n_calls', 'n_in_hull', 'in_hull_pct'])
+        w.writerows(rows)
+    print(f'\n  IN-HULL COVERAGE  -> {os.path.relpath(path, ROOT)}')
+    print(f"  {'axis':<12}{'value':<12}{'calls':>7}{'in hull':>9}{'%':>8}")
+    print('  ' + '-' * 48)
+    for r in rows:
+        print(f'  {r[0]:<12}{r[1]:<12}{r[2]:>7}{r[3]:>9}{r[4]:>8}')
+
+
+LAM_UYPYDJ = {'discharge': 0.6832, 'charge': 0.5860}
+
+
+def safety_transfer(out, base):
+    """Does the frozen safety factor stay safe off the training dataset?
+
+    lambda is a ratio, so it carries from current to power without a unit
+    argument: the question is whether scaling the prediction by the UYPYDJ
+    lambda still lands under the measurement on cells and a chemistry the
+    factor was never fitted on.  lambda_needed is the largest factor that
+    would leave zero exceedance here; margin is how much room the frozen
+    value has.  A margin below 1 means the frozen factor is not conservative
+    enough on this data and the transfer claim fails on safety, whatever the
+    RMSE says.
+    """
+    import collections as _c
+    per = _c.defaultdict(list)
+    for r in out:
+        if r[11] == 'out-of-hull' or r[8] == '':
+            continue
+        per[(r[0], r[1])].append((float(r[6]), float(r[8])))
+    rows = []
+    print(f'\n  SAFETY TRANSFER OF THE FROZEN LAMBDA')
+    print(f"  {'fold':<20}{'dir':<10}{'n':>5}{'lambda':>9}{'needed':>9}"
+          f"{'margin':>8}{'exceed':>8}{'usable %':>10}{'worst W':>9}")
+    print('  ' + '-' * 88)
+    for (fold, direction), v in sorted(per.items()):
+        m = np.array([x[0] for x in v])
+        p = np.array([x[1] for x in v])
+        lam = LAM_UYPYDJ[direction]
+        ok = p > 0
+        needed = float(np.min(m[ok] / p[ok])) if ok.any() else float('nan')
+        over = lam * p - m
+        ex = int((over > 0).sum())
+        rows.append([fold, direction, len(v), f'{lam:.4f}',
+                     f'{needed:.4f}', f'{needed / lam:.3f}', ex,
+                     f'{np.median(lam * p / m) * 100:.2f}',
+                     f'{max(over.max(), 0.0):.3f}'])
+        print(f'  {fold:<20}{direction:<10}{len(v):>5}{lam:>9.4f}'
+              f'{needed:>9.4f}{needed / lam:>8.3f}{ex:>8}'
+              f'{np.median(lam * p / m) * 100:>10.2f}'
+              f'{max(over.max(), 0.0):>9.3f}')
+    path = base.replace('.csv', '_safety.csv')
+    with open(path, 'w', newline='', encoding='utf-8') as f:
+        w = csv.writer(f)
+        w.writerow(['fold', 'direction', 'n_in_hull', 'lambda_uypydj',
+                    'lambda_needed', 'margin', 'exceed', 'usable_pct',
+                    'worst_overshoot_W'])
+        w.writerows(rows)
+    print(f'  -> {os.path.relpath(path, ROOT)}')
 
 
 if __name__ == '__main__':

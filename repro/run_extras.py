@@ -104,18 +104,18 @@ def cold_ratio():
     return (['cell', 'cycle', 'R_mOhm', 'neighbour_mOhm', 'ratio'], rows)
 
 
-def build_size():
-    """33.6 — size of the comparison build vs the deployment (A8-only) build."""
-    p = os.path.join(ROOT, 'mcu', 'fw_sop', 'Build', 'nmc_dst_cc', 'size.txt')
+def _one_build(d):
+    """(kind, text_B, bss_B) for one Build/<id> directory, or None."""
+    p = os.path.join(d, 'size.txt')
     if not os.path.exists(p):
-        return (['build', 'text_B', 'bss_B'], [])
+        return None
     ln = open(p, encoding='utf-8').read().splitlines()
     if len(ln) < 2:
-        return (['build', 'text_B', 'bss_B'], [])
+        return None
     f = ln[1].split()
-    # Decide which version the current build is from its symbols (the file
+    # Decide which version this build is from its symbols (the directory
     # name alone does not say)
-    elf = os.path.join(os.path.dirname(p), 'sop_bench.elf')
+    elf = os.path.join(d, 'sop_bench.elf')
     kind = 'unknown'
     if os.path.exists(elf):
         import subprocess
@@ -126,7 +126,23 @@ def build_size():
             out = subprocess.run([nmbin, elf], capture_output=True,
                                  text=True).stdout
             kind = ('both' if ' T sop_feat_update\n' in out else 'a8_only')
-    return (['build', 'text_B', 'bss_B'], [[kind, f[0], f[2]]])
+    return [kind, f[0], f[2]]
+
+
+def build_size():
+    """33.6 — size of the comparison build vs the deployment (A8-only) build.
+
+    Both are reported.  The deployment figure is quoted in the text and in
+    README, so leaving it out of the tables put a published number beyond the
+    verifier's reach -- which is what qc.py flagged.
+    """
+    base = os.path.join(ROOT, 'mcu', 'fw_sop', 'Build')
+    rows = []
+    for sub in ('nmc_dst_cc', 'a8_only'):
+        r = _one_build(os.path.join(base, sub))
+        if r:
+            rows.append(r)
+    return (['build', 'text_B', 'bss_B'], rows)
 
 
 def main():

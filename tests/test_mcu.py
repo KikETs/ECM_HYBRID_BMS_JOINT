@@ -62,3 +62,63 @@ def test_exporter_refuses_to_ship_a_leave_one_out_fold():
                         '--out', '/tmp/should_not_appear.h'])
     assert rc != 0
     assert 'all-cell' in (out + err)
+
+
+def test_manifest_header_hash_matches_the_committed_header():
+    """The recorded hash must be the hash of the header actually in the tree.
+
+    This file drifted once: the manifest went on describing the
+    leave-one-cell-out fold for four days after the all-cell header replaced
+    it, while the evidence ledger described the new one.  Two documents
+    disagreeing about what is on the board is worse than either being wrong,
+    because nothing in the repository objected.
+    """
+    import hashlib
+    import yaml
+    m = yaml.safe_load(open(os.path.join(ROOT, 'manifests', 'mcu_evidence.yaml'),
+                            encoding='utf-8'))
+    h = hashlib.sha256(
+        open(os.path.join(ROOT, 'mcu', 'sop_tables.h'), 'rb').read()).hexdigest()
+    assert m['model_on_board']['header_sha256'] == h, (
+        f"manifests/mcu_evidence.yaml records "
+        f"{m['model_on_board']['header_sha256'][:16]}... but mcu/sop_tables.h "
+        f"hashes to {h[:16]}...")
+
+
+def test_manifest_and_ledger_agree_on_the_deployed_weight():
+    """The weight the manifest claims is flashed must be in the header."""
+    import re
+    import yaml
+    m = yaml.safe_load(open(os.path.join(ROOT, 'manifests', 'mcu_evidence.yaml'),
+                            encoding='utf-8'))
+    led = yaml.safe_load(open(os.path.join(ROOT, '.paper_state',
+                                           'evidence_ledger.yaml'),
+                              encoding='utf-8'))
+    hdr = open(os.path.join(ROOT, 'mcu', 'sop_tables.h'), encoding='utf-8').read()
+    w0 = re.search(r'trim_w_dis\[\d+\] = \{\s*([-0-9.e+]+)f', hdr)
+    assert w0, 'could not read trim_w_dis[0] out of the header'
+    val = w0.group(1)
+    ev = m['model_on_board']['binary_evidence']
+    assert val in ev, (
+        f'header ships trim_w_dis[0] = {val} but the manifest\'s binary '
+        f'evidence does not mention it')
+    # Only the blocks describing the CURRENT image, not the ones recording
+    # the A3/A8 symlink defect the audit found -- those legitimately name the
+    # old weights and must keep naming them.
+    cur = [b for b in _walk_strings(led) if 'flashed image contains' in b]
+    assert cur, 'the ledger no longer states what the flashed image contains'
+    for block in cur:
+        assert val in block, (
+            f'the ledger says what the flashed image contains but does not '
+            f'name {val}, which is the weight the header holds')
+
+
+def _walk_strings(o):
+    if isinstance(o, str):
+        yield o
+    elif isinstance(o, dict):
+        for v in o.values():
+            yield from _walk_strings(v)
+    elif isinstance(o, list):
+        for v in o:
+            yield from _walk_strings(v)

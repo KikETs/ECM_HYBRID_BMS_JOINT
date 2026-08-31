@@ -31,3 +31,24 @@ changed_during_audit:
 preserved:
   path: "../preserved/results_original_fa44137.tar.gz"
   contents: "analysis/results, mcu/sop_mcu_bench*.csv and the five figures as of the base commit"
+
+second_round_2026_08_31:
+  changed:
+    - "mcu/sop_tables.h: unchanged in content, but repro/stages.py mcu_export now regenerates it with --deployment and the all-cell run directories.  Before this the stage would have replaced the shipped header with a leave-one-cell-out fold on any rerun."
+    - "manifests/mcu_evidence.yaml: rewritten from a rebuild + reflash + rebench on hardware.  It had been recording the CC fold and a header hash matching no file in the tree."
+    - "analysis/results/tables/{alpha,correlation,ladder,safety,safety_strict_*,soh_cost}.csv: regenerated from the corrected raw rebuild.  Every difference is in the last printed digit except ladder.disc.shrink, 62.4 -> 62.0."
+    - "analysis/results/tables/build_size.csv: gained the a8_only row; text 143932 -> 143964 for the comparison build (all-cell constant pool)."
+    - "repro/expected.json: ladder.disc.shrink updated to the rebuilt value; mcu.build.both, mcu.build.a8_only and six second-round checks added (51 -> 59)."
+  new_artifacts:
+    - "analysis/results/tables/end_to_end_paired.csv — the four corners on the rows all four keep"
+    - "analysis/results/tables/end_to_end_drift.csv — the rows each corner keeps that the intersection does not"
+    - "analysis/results/tables/external_a8_coverage.csv — in-hull share by SOC, temperature, SOH and direction"
+    - "analysis/results/tables/external_a8_safety.csv — does the frozen lambda transfer"
+  not_changed:
+    - "mcu/sop_mcu_bench.csv — kept as the record of the run that produced the published mcu.csv.  An independent n=500 sweep on the freshly flashed image reproduced it (FULL median 50.52 us), so there was nothing to correct."
+    - "analysis/runs_trim_a8*/ — the frozen fits.  Nothing was refitted in this round."
+  preserved:
+    path: ".preserved/2026-08-31_{paired,mcu_allcell,tables}/"
+    contents: "end_to_end.csv, mcu.csv, sop_mcu_bench.csv, mcu_evidence.yaml, all 44 tables and expected.json as they stood before this round"
+    tracked: false
+    why_not_tracked: "same policy as the first round's ../preserved/ tarball: kept on the machine that did the work, not in the repository"

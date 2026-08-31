@@ -1,4 +1,10 @@
-# MCU deployment evidence, measured during the audit on 2026-08-27.
+# MCU deployment evidence.
+#
+# First measured during the audit on 2026-08-27.  Re-measured on 2026-08-31
+# after a review found this file still describing the leave-one-cell-out
+# header while the ledger described the all-cell one: the firmware was
+# rebuilt from current sources, re-flashed, and re-benchmarked, and every
+# number below is from that run.
 board:
   part: "STM32H563ZIT6 (NUCLEO-H563ZI)"
   core: "Cortex-M33, 250 MHz, FPv5-SP hard FPU, ICACHE on"
@@ -13,40 +19,70 @@ toolchain:
 firmware:
   comparison_build:
     model_id: nmc_dst_cc
-    text_B: 143932
+    text_B: 143964
     data_B: 92
     bss_B: 28276
-    elf_sha256: "10a3b1722d3bbb8fd1c6d13740b383b565906f238277edeacb7d753f37a80974"
-    bin_sha256: "51f018d99a4649ef2a78c63ce51b3a11a222d11b85d359c06c2dc3a2dc8fb9df"
+    elf_sha256: "f60b8c137766a6276a54f61ccb826ec5b305c83ec3d99c7d1d9dd74a9945d919"
+    bin_sha256: "8e487250e720e8bcd56a015ff918e5a5ee605d00816b88021b94b1147a9564fd"
+    changed_from_audit: >
+      143932 B on 2026-08-27, 143964 B now (+32).  The delta is the all-cell
+      header replacing the leave-one-cell-out one; the constant pool moves.
+      analysis/results/tables/build_size.csv was regenerated to match.
   deployment_build_a8_only:
     model_id: a8_only
     text_B: 142060
     data_B: 92
     bss_B: 28276
-    elf_sha256: "836ae6f91d1b00e87a0fc1a3c486c3197de2e3a94e86c6549daa0cb8f743759d"
-    note: "make EXTRA_CFLAGS=-DSOP_A8_ONLY MODEL_ID=a8_only; 1872 B smaller"
+    elf_sha256: "690dd35bd732b22dc02435f50e7c5b1425fb015a15c2f5d662e2fd0db30e0fba"
+    bin_sha256: "67e711063e62cc4bc7d402f7bba92a1a264d76653847a52220f9a61a3129ee71"
+    note: "make EXTRA_CFLAGS=-DSOP_A8_ONLY MODEL_ID=a8_only; 1904 B smaller"
 model_on_board:
   rung: A8
   header: "mcu/sop_tables.h (fw_sop/Inc/sop_tables.h is now a symlink to it)"
-  header_sha256: "39f74ebc871857c80f2bb15b17a04fed2a9a1ccea5f8ee5197b0e5c1617a786f"
+  fit: "all-cell (--deployment, model_A8_ALL.pt), NOT a leave-one-cell-out fold"
+  header_sha256: "2a4378de3ae2b073b2f36ddcfe3e31bb73982c27f29583a324da59f3883eb1e2"
+  header_reproduces_from_the_stage_graph: >
+    repro/stages.py mcu_export now runs export_mcu_tables.py --rung A8
+    --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy,
+    and that command regenerates the committed header byte for byte.  Before
+    this fix the stage still carried the default leave-one-cell-out
+    directories, so re-running the graph would have silently replaced the
+    shipped header with a fold.
   binary_evidence: >
-    trim_w_dis[0] = 0.2146806 (A8) is present in the flashed binary and the
-    A3 value 0.2283459 is absent, confirmed by searching the objcopy'd
-    image for the IEEE-754 little-endian pattern.
+    Searching the objcopy'd image for IEEE-754 little-endian patterns:
+    trim_w_dis[0] = 0.2105654 (all-cell, 759e573e) occurs once; the
+    leave-one-cell-out CC fold 0.2146806 (3bd55b3e) and the A3 rung value
+    0.2283459 (82d3693e) do not occur at all.
   effective_coefficients: 4
   shipped_coefficients: >
     50 floats (24 weights + 2 biases + 12 mu + 12 sd).  The layer is a
     12-input linear map with 11 input columns trained to ~1e-41.  Report
     "four effective deployed coefficients", not "four parameters".
-  provenance_caveat: >
-    [AUTHOR DECISION REQUIRED] The exported weights are still the
-    leave-one-cell-out fold that excluded CC (--holdout CC), not a model
-    fitted on all six cells.  export_mcu_tables.py --deployment now refuses
-    to export until an all-cell fit exists.  Training one is not done.
+  provenance_resolved: >
+    Resolved 2026-08-31.  This file previously recorded the CC fold, which
+    contradicted .paper_state/evidence_ledger.yaml.  The ledger was right and
+    this manifest was stale.  The all-cell fits exist
+    (analysis/runs_trim_a8_deploy/model_A8_ALL.pt and the charge twin), the
+    header is exported from them, and the image on the board was rebuilt and
+    re-flashed from current sources to confirm it.
+  what_leave_one_cell_out_still_governs: >
+    Every accuracy and safety number in the paper.  The all-cell fit is the
+    artifact; it is not separately validated, and it cannot be -- there is no
+    seventh cell to hold out.  The leave-one-cell-out numbers are the honest
+    estimate of what it will do on a cell it has not seen.
 size_units:
   note: "text/data/bss are bytes. 142060 B = 138.7 KiB = 142.1 kB (decimal)."
 timing_us:
   n: 500
+  remeasured_2026_08_31: >
+    An independent 500-sample sweep on the freshly flashed all-cell image
+    reproduced analysis/results/tables/mcu.csv: FULL median 50.52 us, p95
+    56.42, max 73.32 -- identical to the stored table, which was therefore
+    already measured on the deployment model.  FEAT differs in the last digit
+    (13.26 vs 13.27 us median) as expected for a re-run.
+    repro/run_mcu_table.py --check confirms mcu.csv still reproduces from the
+    committed mcu/sop_mcu_bench.csv, which is kept as the record of the run
+    that produced the published table.
   method: "DWT CYCCNT, interrupts disabled, call region only"
   per_sample_median: 13.09
   per_sample_wcet: 13.85
@@ -54,7 +90,12 @@ timing_us:
   per_decision_wcet: 293.26
   full_cycle_median: 214.83
   full_cycle_wcet: 307.12
-  stack_high_water_B: 624
+  stack_high_water_B: 560
+  stack_high_water_changed: >
+    624 B on 2026-08-27, 560 B now.  Same measurement (the maximum the
+    firmware reports across the sweep), different firmware: the unknown-command
+    NACK path added during the audit changed the worst-case call chain.  No
+    published table quotes the stack figure.
   load_at_100Hz_median_pct: 2.148
   load_at_100Hz_wcet_pct: 3.071
   soh_cnn: "not in the control cycle; runs once per charge (17.9 ms, unmeasured in this audit)"

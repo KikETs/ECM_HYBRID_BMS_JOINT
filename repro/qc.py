@@ -94,8 +94,14 @@ ORPHAN_HINTS = [
     (r'0\.19\b|0\.16\s*[-–~]\s*0\.24', 'transfer ratio alpha — not in a table (32.3)'),
     (r'-0\.385|-0\.411|-0\.400|-0\.587|−0\.385|−0\.411|−0\.400|−0\.587',
      "28.3's correlation — not in a table"),
-    (r'1,?872\s*B|142,?060|143,?932',
-     'deployment build size — not in a table (33.6)'),
+    # RESOLVED 2026-08-31: build_size.csv now carries both builds and
+    # verify.py checks both (mcu.build.both, mcu.build.a8_only), so 142,060 is
+    # table-backed.  143,932 and -1,872 B remain in the text only as the
+    # superseded pre-rebuild values, explicitly marked as such in 35.4, and
+    # flagging those is noise.  Kept as a comment so the check is not
+    # silently dropped:
+    #   (r'1,?872\s*B|142,?060|143,?932',
+    #    'deployment build size — not in a table (33.6)'),
     (r'0\.98[-–]?1\.00×|0\.98\s*[-–~]\s*1\.00\s*×|0\.98×|1\.00×',
      "33.5's resistance ratio — not in a table"),
 ]

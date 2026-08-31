@@ -116,8 +116,9 @@
         "method": "shrinkage coefficient"
       },
       "column": "usable_pct",
-      "value": 62.4,
-      "source": "sec 32.5 — two-parameter transfer gain"
+      "value": 62.0,
+      "source": "sec 32.5 — two-parameter transfer gain",
+      "note": "  [rebuilt 2026-08-31: 62.4 -> 62.0; the shrinkage baseline refits slightly differently on the corrected raw rebuild, lambda 0.692 -> 0.690]"
     },
     {
       "id": "ladder.disc.A8",
@@ -623,6 +624,103 @@
       "value": 26,
       "tol": 0,
       "source": "audit — exceedance survives per-cell recalibration"
+    },
+    {
+      "id": "mcu.build.both",
+      "table": "build_size.csv",
+      "where": {
+        "build": "both"
+      },
+      "column": "text_B",
+      "value": 143964,
+      "tol": 0,
+      "source": "sec 33.6 — comparison build, text section"
+    },
+    {
+      "id": "mcu.build.a8_only",
+      "table": "build_size.csv",
+      "where": {
+        "build": "a8_only"
+      },
+      "column": "text_B",
+      "value": 142060,
+      "tol": 0,
+      "source": "sec 33.6 — deployment build, text section"
+    },
+    {
+      "id": "e2e.paired.disc.est_est.exceed",
+      "table": "end_to_end_paired.csv",
+      "where": {
+        "condition": "estimated SOH + estimated SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "exceed",
+      "value": 4,
+      "tol": 0,
+      "source": "sec 35.1 — the fully estimated corner on the common 385 rows"
+    },
+    {
+      "id": "e2e.paired.disc.oracle.exceed",
+      "table": "end_to_end_paired.csv",
+      "where": {
+        "condition": "oracle SOH + oracle SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "exceed",
+      "value": 3,
+      "tol": 0,
+      "source": "sec 35.1 — the oracle corner on the same 385 rows"
+    },
+    {
+      "id": "e2e.drift.disc.est_est.rate",
+      "table": "end_to_end_drift.csv",
+      "where": {
+        "condition": "estimated SOH + estimated SOC",
+        "direction": "discharge",
+        "tau_s": "10.0"
+      },
+      "column": "exceed_rate_pct",
+      "value": 24.27,
+      "tol": 0.01,
+      "source": "sec 35.2 — exceedance in the rows only the estimated corner admits"
+    },
+    {
+      "id": "ext.cov.disc",
+      "table": "external_a8_coverage.csv",
+      "where": {
+        "axis": "direction",
+        "value": "discharge"
+      },
+      "column": "in_hull_pct",
+      "value": 54.2,
+      "tol": 0.05,
+      "source": "sec 35.5 — in-hull share of discharge calls"
+    },
+    {
+      "id": "ext.safety.chg.margin",
+      "table": "external_a8_safety.csv",
+      "where": {
+        "fold": "CC",
+        "direction": "charge"
+      },
+      "column": "margin",
+      "value": 0.677,
+      "tol": 0.001,
+      "source": "sec 35.5 — the frozen charge lambda is not conservative enough"
+    },
+    {
+      "id": "ext.safety.disc.exceed",
+      "table": "external_a8_safety.csv",
+      "where": {
+        "fold": "CC",
+        "direction": "discharge"
+      },
+      "column": "exceed",
+      "value": 0,
+      "tol": 0,
+      "source": "sec 35.5 — zero exceedance on external discharge"
     }
   ],
   "tables": {
@@ -650,7 +748,7 @@
       "producer": "python3 repro/run_extras.py",
       "stage": "extras",
       "required": false,
-      "rows": 1,
+      "rows": 2,
       "columns": [
         "build",
         "text_B",
@@ -2213,10 +2311,106 @@
         "inner_usable_pct"
       ],
       "units": {}
+    },
+    "end_to_end_paired.csv": {
+      "producer": "python3 repro/run_end_to_end.py",
+      "stage": "end_to_end",
+      "required": false,
+      "rows": 16,
+      "columns": [
+        "condition",
+        "direction",
+        "tau_s",
+        "n_rows",
+        "exceed",
+        "exceed_rate_upper95_pct",
+        "worst_overshoot_A",
+        "usable_mean_pct",
+        "usable_worst_pct",
+        "lambda_median",
+        "per_cell_exceed"
+      ],
+      "numeric": [
+        "exceed",
+        "n_rows",
+        "usable_mean_pct",
+        "worst_overshoot_A",
+        "exceed_rate_upper95_pct",
+        "lambda_median",
+        "usable_worst_pct"
+      ]
+    },
+    "end_to_end_drift.csv": {
+      "producer": "python3 repro/run_end_to_end.py",
+      "stage": "end_to_end",
+      "required": false,
+      "rows": 16,
+      "columns": [
+        "condition",
+        "direction",
+        "tau_s",
+        "n_kept",
+        "n_common",
+        "n_outside",
+        "n_scored",
+        "exceed",
+        "exceed_rate_pct"
+      ],
+      "numeric": [
+        "n_kept",
+        "n_common",
+        "n_outside",
+        "n_scored",
+        "exceed"
+      ]
+    },
+    "external_a8_coverage.csv": {
+      "producer": "python3 repro/run_external_a8.py",
+      "stage": "external",
+      "required": false,
+      "rows": 30,
+      "columns": [
+        "axis",
+        "value",
+        "n_calls",
+        "n_in_hull",
+        "in_hull_pct"
+      ],
+      "numeric": [
+        "n_calls",
+        "n_in_hull",
+        "in_hull_pct"
+      ]
+    },
+    "external_a8_safety.csv": {
+      "producer": "python3 repro/run_external_a8.py",
+      "stage": "external",
+      "required": false,
+      "rows": 12,
+      "columns": [
+        "fold",
+        "direction",
+        "n_in_hull",
+        "lambda_uypydj",
+        "lambda_needed",
+        "margin",
+        "exceed",
+        "usable_pct",
+        "worst_overshoot_W"
+      ],
+      "numeric": [
+        "n_in_hull",
+        "lambda_uypydj",
+        "lambda_needed",
+        "margin",
+        "exceed",
+        "usable_pct",
+        "worst_overshoot_W"
+      ]
     }
   },
   "completeness": {
-    "total_checks": 51,
+    "total_checks": 59,
     "checks_per_table": {
       "alpha.csv": 2,
       "cold_ratio.csv": 2,
@@ -2233,57 +2427,65 @@
       "voltage.csv": 10
     },
     "check_ids": [
-      "alpha.chg.CC.slow",
-      "alpha.disc.CC",
-      "cold.BOOST.ratio",
-      "cold.CC.ratio",
-      "corr.disc.10s",
-      "e2e.disch.est_est.exceed",
-      "e2e.disch.est_est.usable",
-      "e2e.disch.oracle.usable",
-      "ladder.chg.A3",
-      "ladder.chg.A8_beats_A3",
-      "ladder.chg.rls_bound_loses",
+      "sop.disc.10s.lambda",
+      "sop.disc.10s.usable",
+      "sop.chg.10s.lambda",
+      "sop.chg.10s.usable",
+      "sop.disc.10s.usable.est_soh",
+      "sop.chg.10s.usable.est_soh",
       "ladder.disc.A0",
-      "ladder.disc.A3",
-      "ladder.disc.A8",
       "ladder.disc.direct",
-      "ladder.disc.rls_bound",
       "ladder.disc.shrink",
-      "mcu.ekf",
-      "mcu.feat",
-      "mcu.feat_a8",
-      "mcu.full",
-      "pack.chg.10s.worst.N192",
+      "ladder.disc.A8",
+      "ladder.disc.A3",
+      "ladder.disc.rls_bound",
+      "ladder.chg.A8_beats_A3",
+      "ladder.chg.A3",
+      "ladder.chg.rls_bound_loses",
       "pack.disc.10s.exceed.N192",
       "pack.disc.10s.exceed.est.N192",
-      "soc.adopted.ibias",
+      "pack.chg.10s.worst.N192",
       "soc.adopted.no_perturb",
+      "soc.open_loop.no_perturb",
+      "soc.open_loop.ibias",
+      "soc.adopted.ibias",
+      "volt.disc.A0",
+      "volt.disc.direct",
+      "volt.disc.shrink",
+      "volt.disc.A8",
+      "volt.disc.A3",
+      "volt.disc.RLS",
+      "volt.char.A0",
+      "volt.char.A8",
+      "volt.char.A3",
+      "volt.char.RLS",
+      "mcu.feat",
+      "mcu.feat_a8",
+      "mcu.ekf",
+      "mcu.full",
+      "soh.rmse",
+      "soh.bias",
+      "alpha.disc.CC",
+      "alpha.chg.CC.slow",
+      "corr.disc.10s",
+      "cold.BOOST.ratio",
+      "cold.CC.ratio",
       "soc.base.adopted.ibias",
       "soc.base.dual.mean_ibias",
       "soc.base.ukf.undist",
-      "soc.open_loop.ibias",
-      "soc.open_loop.no_perturb",
       "soh.abl.dqdv",
       "soh.abl.time_only",
-      "soh.bias",
-      "soh.rmse",
-      "sop.chg.10s.lambda",
-      "sop.chg.10s.usable",
-      "sop.chg.10s.usable.est_soh",
-      "sop.disc.10s.lambda",
-      "sop.disc.10s.usable",
-      "sop.disc.10s.usable.est_soh",
-      "volt.char.A0",
-      "volt.char.A3",
-      "volt.char.A8",
-      "volt.char.RLS",
-      "volt.disc.A0",
-      "volt.disc.A3",
-      "volt.disc.A8",
-      "volt.disc.RLS",
-      "volt.disc.direct",
-      "volt.disc.shrink"
+      "e2e.disch.oracle.usable",
+      "e2e.disch.est_est.usable",
+      "e2e.disch.est_est.exceed",
+      "mcu.build.both",
+      "mcu.build.a8_only",
+      "e2e.paired.disc.est_est.exceed",
+      "e2e.paired.disc.oracle.exceed",
+      "e2e.drift.disc.est_est.rate",
+      "ext.cov.disc",
+      "ext.safety.chg.margin",
+      "ext.safety.disc.exceed"
     ],
     "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
   }

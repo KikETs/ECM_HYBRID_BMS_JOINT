@@ -28,11 +28,48 @@ import os
 import sys
 
 import numpy as np
-import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ecm_pool import surfaces                      # noqa: E402
-from sop_trim import TrimLinear, TrimMLP, decode, KF_SPAN, KS_SPAN  # noqa: E402
+
+
+def _heavy():
+    """Import torch and the trim model classes on first use.
+
+    Everything this module validates about its arguments -- the rung the
+    directory actually holds, whether an all-cell fit exists -- is decidable
+    from file names alone.  Keeping torch out of module scope lets those
+    guards fire (and be tested) on a machine that has no torch and no raw
+    data, which is what CI is.
+    """
+    global torch, surfaces, TrimLinear, TrimMLP, decode, KF_SPAN, KS_SPAN
+    import torch                                          # noqa: F401
+    from ecm_pool import surfaces                          # noqa: F401
+    from sop_trim import (TrimLinear, TrimMLP, decode,     # noqa: F401
+                          KF_SPAN, KS_SPAN)
+
+
+def resolve_rung(runs, holdout, want=None):
+    """Return (checkpoint path, rung) for a run directory, by file name only.
+
+    Raises if the directory holds no such fit, holds several rungs, or holds
+    a rung other than the one the caller asked for -- exporting a mismatch
+    would put one rung's weights on the board while the stage graph claims
+    another.
+    """
+    import glob as _g
+    hit = sorted(_g.glob(os.path.join(HERE, runs, f"model_A*_{holdout}.pt")))
+    if not hit:
+        raise FileNotFoundError(
+            f"{runs} holds no model_A*_{holdout}.pt")
+    if len(hit) > 1:
+        raise RuntimeError(f"{runs} holds more than one rung: {hit}")
+    found = os.path.basename(hit[0]).split("_")[1]
+    if want is not None and found != want:
+        raise SystemExit(
+            f"  --rung {want} was requested but {runs} holds {found}. "
+            f"Exporting it would put {found} weights on the board while "
+            f"the stage graph claims {want}.")
+    return hit[0], found
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TAU_A, TAU_B, TAU2_REF = 2.0, 10.0, 8.0
@@ -163,37 +200,30 @@ def main():
                     f"the deployment model is not defensible.")
         a.holdout = "ALL"
 
+    # Resolve the rung from file names before anything heavy loads: a wrong
+    # --rung must not cost a grid build to discover.
+    for d in (a.trim, a.trim_chg):
+        resolve_rung(d, a.holdout, a.rung)
+
+    _heavy()
     sd, sc = surfaces(a.holdout)
     Gd, Gc = grid(sd, a.ns, a.nh), grid(sc, a.ns, a.nh)
     Od = ocv_grid(sd, a.ns, a.nh)
 
     # 트림 가중치: 시드 평균을 하나로 접는다 (선형이므로 정확히 접힌다)
     def fold(runs):
-        # rung 은 디렉터리에서 찾는다 — A3 를 하드코딩하면 채택 구성(A8)을
-        # 내보내려고 파일 이름을 바꾸게 된다 (eval_sop_amps 와 같은 문제).
-        import glob as _g
-        _hit = [x for x in sorted(_g.glob(os.path.join(
-            HERE, runs, f"model_A*_{a.holdout}.pt")))]
-        if not _hit:
-            raise FileNotFoundError(
-                f"{runs} 에 model_A*_{a.holdout}.pt 가 없다")
-        if len(_hit) > 1:
-            raise RuntimeError(f"{runs} 에 rung 이 여럿이다: {_hit}")
-        _found = os.path.basename(_hit[0]).split("_")[1]
-        if a.rung is not None and _found != a.rung:
-            raise SystemExit(
-                f"  --rung {a.rung} was requested but {runs} holds {_found}. "
-                f"Exporting it would put {_found} weights on the board while "
-                f"the stage graph claims {a.rung}.")
-        ck = torch.load(_hit[0],
-                        map_location="cpu", weights_only=False)
+        # The rung comes from the directory.  Hard-coding A3 would mean
+        # renaming files to export the adopted configuration (A8) -- the same
+        # failure eval_sop_amps had.
+        _path, _ = resolve_rung(runs, a.holdout, a.rung)
+        ck = torch.load(_path, map_location="cpu", weights_only=False)
         W, B, MU, SD = [], [], [], []
         for st in ck["seeds"]:
             cls = TrimLinear if st["cls"] == "TrimLinear" else TrimMLP
             m = cls(st["n_in"]); m.load_state_dict(st["model"])
             lin = [x for x in m.modules() if isinstance(x, torch.nn.Linear)]
             if len(lin) != 1:
-                raise SystemExit("  선형 트림만 접을 수 있다 (rung A3)")
+                raise SystemExit("  only a linear trim can be folded (rung A3)")
             W.append(lin[0].weight.detach().numpy())
             B.append(lin[0].bias.detach().numpy())
             MU.append(st["mu"]); SD.append(st["sd"])

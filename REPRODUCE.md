@@ -81,7 +81,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 
 | id | min | command | outputs |
 |---|---:|---|---|
-| `mcu_export` | 2 | `python3 export_mcu_tables.py --rung A8 --out ../mcu/sop_tables.h && python3 export_soh_mcu.py --out ../mcu/soh_tables.h` | `../mcu/sop_tables.h +1` |
+| `mcu_export` | 2 | `python3 export_mcu_tables.py --rung A8 --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy --out ../mcu/sop_tables.h && python3 export_soh_mcu.py --out ../mcu/soh_tables.h` | `../mcu/sop_tables.h +1` |
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
@@ -101,7 +101,7 @@ Full rebuild: about 830 minutes (14 h). `~` marks an estimate that was never tim
 | `sop.chg.10s.usable.est_soh` | 56.6 | `safety.csv` | sec 29 / 30.11 |
 | `ladder.disc.A0` | 59.3 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.direct` | 32.6 | `ladder.csv` | sec 32.5 |
-| `ladder.disc.shrink` | 62.4 | `ladder.csv` | sec 32.5 |
+| `ladder.disc.shrink` | 62.0 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A8` | 69.1 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A3` | 70.3 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.rls_bound` | 71.1 | `ladder.csv` | sec 32.5 |
@@ -144,6 +144,14 @@ Full rebuild: about 830 minutes (14 h). `~` marks an estimate that was never tim
 | `e2e.disch.oracle.usable` | 69.61 | `end_to_end.csv` | audit |
 | `e2e.disch.est_est.usable` | 65.54 | `end_to_end.csv` | audit |
 | `e2e.disch.est_est.exceed` | 26 | `end_to_end.csv` | audit |
+| `mcu.build.both` | 143964 | `build_size.csv` | sec 33.6 |
+| `mcu.build.a8_only` | 142060 | `build_size.csv` | sec 33.6 |
+| `e2e.paired.disc.est_est.exceed` | 4 | `end_to_end_paired.csv` | sec 35.1 |
+| `e2e.paired.disc.oracle.exceed` | 3 | `end_to_end_paired.csv` | sec 35.1 |
+| `e2e.drift.disc.est_est.rate` | 24.27 | `end_to_end_drift.csv` | sec 35.2 |
+| `ext.cov.disc` | 54.2 | `external_a8_coverage.csv` | sec 35.5 |
+| `ext.safety.chg.margin` | 0.677 | `external_a8_safety.csv` | sec 35.5 |
+| `ext.safety.disc.exceed` | 0 | `external_a8_safety.csv` | sec 35.5 |
 
 ## Cells
 

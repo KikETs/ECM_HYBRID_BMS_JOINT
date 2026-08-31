@@ -332,12 +332,18 @@ STAGES = [
 
     # ---- tier 6  board --------------------------------------------------
     dict(id='mcu_export', tier=6, minutes=2, measured=True,
-         cmd='{py} export_mcu_tables.py --rung A8 --out ../mcu/sop_tables.h && '
+         cmd='{py} export_mcu_tables.py --rung A8 --deployment '
+             '--trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy '
+             '--out ../mcu/sop_tables.h && '
              '{py} export_soh_mcu.py --out ../mcu/soh_tables.h',
-         inputs=['runs_trim_a8', 'runs_soh_cnn'],
+         inputs=['runs_trim_a8_deploy', 'runs_trim_a8_chg_deploy',
+                 'runs_soh_cnn'],
          outputs=['../mcu/sop_tables.h', '../mcu/soh_tables.h'],
          why='The 32x16 grid and the trim weights as C headers.  A8, so '
-             'there are 2 EW states.'),
+             'there are 2 EW states.  --deployment because a header that '
+             'ships must hold the all-cell fit: exporting a leave-one-cell-out '
+             'fold would put a model trained without one of the six cells on '
+             'the board and still call it the product.'),
 
     dict(id='mcu_table', tier=6, minutes=1, measured=True,
          cmd='{py} ../repro/run_mcu_table.py',

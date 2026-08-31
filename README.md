@@ -1,17 +1,34 @@
 # Hybrid SOP / SOH / SOC for a production BMS
 
 Samsung INR21700-30T. SOP from a nominal 2RC table plus a learned trim,
-SOH from a partial-charge CNN, SOC from a 2RC EKF. Six cells,
-leave-one-cell-out throughout. Timing measured on a NUCLEO-H563ZI
-(Cortex-M33, 250 MHz).
+SOH from a partial-charge CNN, SOC from a 2RC EKF. Six cells.
+
+Evaluation protocol is **not** uniform across the three arms, and saying so
+matters more than the headline numbers:
+
+* **SOP and SOH** are leave-one-cell-out: the model scoring cell *i* never
+  saw cell *i*, and the safety factor λ is fitted with cell *i* removed too.
+* **SOC** is *not*. Every filter reads its own cell's characterisation
+  surface, so the EKF numbers describe a per-cell-calibrated deployment, not
+  a transfer to an unseen cell.
+* **What ships** is neither: the header on the board holds an all-cell fit
+  (`--deployment`), because a product must not be a model trained without one
+  of its own six cells. Leave-one-cell-out is how the cost of generalising is
+  measured; it is not the artifact.
+
+Timing measured on a NUCLEO-H563ZI (Cortex-M33, 250 MHz).
 
 ## Results
 
-| Arm | Model | Size | Leave-one-cell-out | Worst cell |
-|---|---|---|---|---|
-| SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
-| SOH | dQ/dV CNN | 10,945 parameters | RMSE 0.0135, bias +0.0001 | 0.0293 (BOOST_REST) |
-| SOC | 2RC EKF, low-current gate | 3 states | 2.14 %p over six sensor disturbances | 3.77 %p (current offset −0.10 A) |
+| Arm | Model | Size | Protocol | Result | Worst cell |
+|---|---|---|---|---|---|
+| SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | leave-one-cell-out | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
+| SOH | dQ/dV CNN | 10,945 parameters | leave-one-cell-out | RMSE 0.0135, bias +0.0001 | 0.0293 (BOOST_REST) |
+| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated**, not held out | 2.14 %p over six sensor disturbances | 3.77 %p (current offset −0.10 A) |
+
+Ridge regression on the same features and the same splits beats the SOH CNN
+(§34.3). The CNN is reported because it is what was deployed and timed, not
+because it won.
 
 Safety factor λ is calibrated **per held-out cell**: cell *i* is scored under
 a λ fitted with cell *i* removed entirely. Per-cell λ spans 0.683–0.708
@@ -25,20 +42,44 @@ Per-cycle cost on the board: median 214.8 µs, worst case 307.1 µs (SOC EKF
 text 142 060 B = 138.7 KiB = 142.1 kB (decimal). Measured on a NUCLEO-H563ZI after flashing;
 `repro/run_parity.py` checks the C against Python to 9.2 × 10⁻⁶.
 
-> An audit on 2026-08-27 (branch `audit/etransportation-readiness`) revised
-> several numbers above and contradicted others. `.paper_state/paper_map.yaml`
-> lists every claim with its status; `.paper_state/evidence_ledger.yaml`
-> carries the measurements. In particular: ridge regression beats the SOH
-> CNN on the same splits; 78 % of the discharge SOP labels are extrapolated
-> rather than measured; and the numbers above are computed on the label's
-> own SOC, which turns out to be the assumption carrying the most weight —
-> see below.
+> Two audit rounds (2026-08-27 and 2026-08-31, branch
+> `audit/etransportation-readiness`) revised several numbers above and
+> contradicted others. `.paper_state/paper_map.yaml` lists every claim with
+> its status; `.paper_state/evidence_ledger.yaml` carries the measurements;
+> §34 and §35 of [docs/sop_hybrid_spec.md](docs/sop_hybrid_spec.md) record
+> both rounds. In particular: ridge regression beats the SOH CNN on the same
+> splits; 78 % of the discharge SOP labels are extrapolated rather than
+> measured; and the numbers above are computed on the label's own SOC.
+
+**What this work claims, and what it does not.** Not superiority — sequence
+baselines match the trim on usable current at 1 100× the parameters, and
+ridge beats the SOH CNN. The claim is *deployment-efficient equivalence under
+a safety-aware current utility*: four effective coefficients and two
+exponentially-weighted states reach the same usable current as far larger
+models, at 50.52 µs and 142 kB on a Cortex-M33.
+
+The production-readiness claim of the first draft is **withdrawn**. Every SOP
+number above is computed on the label's own SOC, which a vehicle does not
+have. Scored on identical pulses, estimated state costs about 4 %p of usable
+current and moves discharge exceedance from 3 to 4 in 385 — but a wrong SOC
+also corrupts the filter that decides which labels are trustworthy, and the
+rows it wrongly admits carry a 24.3 % exceedance rate (§35.2). Oracle-state
+validation overstates system safety.
+
+**External validation, stated at its actual scope.** Six frozen UYPYDJ
+leave-one-cell-out A8 models were transferred without refitting to the
+in-hull portion of RPCWBY Test#2. On **discharge** the frozen safety factor
+stayed conservative — 1.30–1.43× margin, zero exceedance in all six folds —
+over the 54 % of calls the pooled hull covers, which excludes SOC below 0.30
+and SOC = 1.0. On **charge** it did not transfer: the factor would have to
+fall from 0.586 to 0.397, and as shipped it overshoots on 9–11 of 248 in-hull
+rows per fold (§35.5).
 
 ## Reproduce
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # recompute the 43 published numbers
+python3 repro/verify.py        # recompute the 51 published numbers
 python3 repro/run.py --list    # stages, status, runtime
 ```
 

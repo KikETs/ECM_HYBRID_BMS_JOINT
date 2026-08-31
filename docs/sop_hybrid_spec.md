@@ -3501,7 +3501,7 @@ departs from the nominal model.**
 dR_fast alone the EW states drop to two (e_ir, e_ii) and the feature-update cost
 falls.
 
-**[Measured — 33.1]** On the board, **13.25 -> 5.99 us (−55 %).** The
+**[Measured — 33.1]** On the board, **13.25 -> 5.99 us (−55 %).** [Updated 2026-08-31: the stored table now reads 13.27 us for the A3 feature update, measured on the all-cell deployment header rather than a leave-one-cell-out fold. The A8 figure and the −55 % are unchanged.] The
 safety-factor price was measured in 29.7 / 32.7 and there is **none** — on
 charge A8 actually beats A3.
 
@@ -4345,7 +4345,7 @@ disabled, DWT cycle counter.
 
 | Stage | A3 (12 features) | A8 (dR_fast alone) | Change |
 |---|---:|---:|---:|
-| Trim feature update | 13.25 us | **5.99 us** | **−55 %** |
+| Trim feature update | 13.25 us (13.27 remeasured) | **5.99 us** | **−55 %** |
 | p95 | 13.46 | 6.17 | |
 | Max | 14.92 | 6.42 | |
 
@@ -4541,8 +4541,14 @@ deployment build keeps A8 only. `make EXTRA_CFLAGS=-DSOP_A8_ONLY` removes the
 
 | | comparison (both) | deployment (A8 only) | Difference |
 |---|---:|---:|---:|
-| Flash (text) | 143,932 B | 142,060 B | **−1,872 B** |
+| Flash (text) | 143,964 B | 142,060 B | **−1,904 B** |
 | RAM (bss) | 28,276 B | 28,276 B | 0 |
+
+[Updated 2026-08-31 — 35.4] The comparison build was 143,932 B when this was
+written, giving −1,872 B. Rebuilding it against the all-cell deployment header
+moved it to 143,964 B; the deployment build is unchanged at 142,060 B. Both
+rows are now in `build_size.csv` and checked by `verify.py`, which they were
+not before.
 
 What was removed was confirmed by ELF symbols — `sop_feat_update` is absent from
 the deployment build (only `sop_feat_update_a8` remains).
@@ -4804,6 +4810,14 @@ from 1 in 491 to 20 in 455**, and those exceedances are *after* lambda is
 refitted per held-out cell on the same estimated-SOC data. It is not a bias
 the safety factor can price out.
 
+> **[Corrected — 35.1]** The four rows above are not scored on the same
+> pulses; *n* moves because the label-trustworthiness filter is computed from
+> whichever SOC is in force. On the 385 pulses all four corners keep, the
+> fully estimated corner shows **4 exceedances against 3** for the oracle
+> corner, not 26 against 1. The direction survives and the magnitude does
+> not. What replaces it is a sharper mechanism: the rows only the estimated
+> corner admits carry a 24.3 % exceedance rate. See §35.1 and §35.2.
+
 The both-estimated corner is the only one a vehicle can execute. Every row
 above it still receives a ground truth the vehicle does not have.
 
@@ -4865,3 +4879,250 @@ parameters".
   thermal gradient, and imbalance.
 - **UYPYDJ's licence** is stated nowhere in the dataset readme. Confirm with
   the depositor before redistributing anything derived from it.
+
+---
+
+## 35. Second audit round — what the first round got wrong
+
+The first audit (§34) was reviewed and returned NO-GO. Six of its findings
+were confirmed, two were wrong in a way that mattered, and two defects it
+introduced went undetected until the review: continuous integration was red
+on every commit, and the MCU evidence contradicted itself. This section
+records what changed. Nothing in §34 was deleted; the claims that fell are
+marked in place, as §26.5 requires.
+
+### 35.1 The four end-to-end corners were not scored on the same rows
+
+§34.8 compared 1/491, 1/514, 20/455 and 26/488. The denominators move because
+the filters that decide which pulses are evaluated — the trustworthy-label
+test (`extrap ≤ 1.5`) and the surface hull — are computed against **whichever
+SOC is in force**. Shifting SOC therefore moves rows into and out of the
+evaluated set, and the four corners were compared across four different sets.
+
+`repro/run_end_to_end.py` now also scores every corner on the intersection.
+The row key is cell, cycle, horizon, pre-pulse voltage and measured current —
+SOC-free by construction, so it names the same physical pulse under every
+corner. The script asserts the key is unique per corner and that the four
+intersected sets have identical *n*; a paired comparison that silently
+compares different counts is the defect being fixed, so it fails loudly.
+
+**discharge, τ = 10 s, n = 385 in every row**
+
+| | exceed | 95 % upper | worst overshoot | usable |
+|---|---:|---:|---:|---:|
+| oracle SOH + oracle SOC | 3 | 2.00 % | 1.043 A | 73.05 % |
+| estimated SOH + oracle SOC | 1 | 1.23 % | 0.157 A | 73.82 % |
+| oracle SOH + estimated SOC | 1 | 1.23 % | 0.918 A | 69.31 % |
+| estimated SOH + estimated SOC | 4 | 2.36 % | 1.171 A | 69.15 % |
+
+**charge, τ = 10 s, n = 2 421 in every row**
+
+| | exceed | 95 % upper | worst overshoot | usable |
+|---|---:|---:|---:|---:|
+| oracle SOH + oracle SOC | 1 | 0.20 % | 0.518 A | 59.49 % |
+| estimated SOH + oracle SOC | 3 | 0.32 % | 1.442 A | 57.62 % |
+| oracle SOH + estimated SOC | 1 | 0.20 % | 1.537 A | 41.37 % |
+| estimated SOH + estimated SOC | 6 | 0.49 % | 3.135 A | 56.27 % |
+
+On identical pulses the fully estimated corner shows **4 exceedances against
+3** on discharge and **6 against 1** on charge, and costs about **4 %p of
+usable current**. It is not the 26-against-1 collapse §34.8 reported. That
+figure was an artifact of the comparison, and it is withdrawn.
+Artifact: `analysis/results/tables/end_to_end_paired.csv`.
+
+### 35.2 What replaces it: a wrong SOC corrupts the filter, not the prediction
+
+The paired view answers only half the question, because in a vehicle there is
+no oracle SOC to compute the label-trustworthiness test with. So the rows each
+corner keeps *outside* the intersection have to be scored too, not averaged
+away (`end_to_end_drift.csv`):
+
+| discharge, τ = 10 s | kept | outside | scored | exceed | rate |
+|---|---:|---:|---:|---:|---:|
+| oracle SOH + oracle SOC | 491 | 106 | 106 | 1 | 0.94 % |
+| estimated SOH + oracle SOC | 514 | 129 | 129 | 1 | 0.78 % |
+| oracle SOH + estimated SOC | 455 | 70 | 20 | 0 | 0.00 % |
+| **estimated SOH + estimated SOC** | 488 | 103 | **103** | **25** | **24.27 %** |
+
+Twenty-five of the fully estimated corner's twenty-six exceedances are in the
+103 rows the oracle corner never evaluates — a **24.3 % exceedance rate**
+against 0.94 % for the oracle corner's own extra rows. On charge the effect is
+small (2 421 of 2 461 rows are common) and the discharge case is where it
+lives.
+
+So the mechanism is not that a wrong SOC makes the prediction worse on a given
+pulse; it is that **a wrong SOC corrupts the test that decides whether the
+label can be trusted at all**, and admits pulses that should have been
+rejected. The safety consequence in §34.8 survives; its explanation does not.
+This is worse than a per-pulse bias, not better: a bias can be priced into λ,
+and a corrupted admission rule cannot.
+
+### 35.3 λ fitted to bound the worst row is fragile
+
+In the paired charge table the oracle-SOH + estimated-SOC corner holds
+exceedance at 1 — but only by dropping λ from 0.5860 to **0.4035**, costing
+18 %p of usable current, while the *fully* estimated corner recovers to
+0.5259. Utility is non-monotonic in how much state error is present.
+
+The cause is structural: λ is fitted to bound the worst single training row,
+so one row moves the factor and therefore the whole utility number. §34
+reported this row as an oddity. It is not an oddity; it is a property of
+max-based calibration, and any deployment using this λ inherits it. A
+quantile-based or distributionally-robust λ would not have it, and was not
+tested.
+
+### 35.4 The board, the header and the manifest now agree
+
+`.paper_state/evidence_ledger.yaml` said the flashed image held the all-cell
+weight 0.2105654. `manifests/mcu_evidence.yaml` said it held the
+leave-one-cell-out CC fold 0.2146806, and recorded a header hash that no file
+in the tree matched. The ledger was right; the manifest had not been updated
+when the header was replaced. Two documents disagreeing about what is on the
+board is worse than either being wrong, because nothing in the repository
+objected.
+
+What was done, in order, all of it on hardware:
+
+1. `repro/stages.py` `mcu_export` was still exporting with the **default
+   leave-one-cell-out directories**. Re-running the graph would have silently
+   replaced the shipped header with a fold. It now passes `--deployment` and
+   the all-cell run directories.
+2. That corrected command regenerates the committed header **byte for byte**
+   (SHA-256 `2a4378de…`).
+3. The firmware was rebuilt from current sources and the image searched for
+   IEEE-754 patterns: `0.2105654` (all-cell) occurs once; `0.2146806` (CC
+   fold) and `0.2283459` (A3) do not occur.
+4. The board was re-flashed and re-benchmarked at n = 500. FULL median
+   **50.52 µs**, p95 56.42, max 73.32 — identical to the stored `mcu.csv`,
+   which was therefore already measured on the deployment model.
+5. `manifests/mcu_evidence.yaml` was rewritten to the measured values, and two
+   tests now fail if it drifts again: one checks the recorded hash against the
+   header on disk, one checks that the manifest and the ledger name the same
+   flashed weight.
+
+Comparison build text moved 143 932 → **143 964 B** (the all-cell constant
+pool); the deployment build is unchanged at 142 060 B. Both rows are now in
+`build_size.csv` and checked by `verify.py`, which they were not before.
+Stack high-water is 560 B, not the 624 B recorded in August — the
+unknown-command NACK path added during the first audit changed the worst-case
+call chain. No published table quotes it.
+
+### 35.5 External validation: where the hull reaches, and where λ fails
+
+§34.7 reported RMSE for the frozen A8 folds on RPCWBY Test#2 and called it a
+transfer result. Two things were missing: which operating points the pooled
+hull actually covers, and whether the *safety factor* transfers, which is the
+only property the paper claims.
+
+**Coverage** (`external_a8_coverage.csv`). The hull is a band, not the
+envelope:
+
+| SOC | ≤ 0.05 | 0.10 | 0.15 | 0.20 | 0.30 | 0.40–0.95 | 1.00 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| in hull | 0 % | 7.7 % | 26.9 % | 42.3 % | 88.5 % | 100 % | 0 % |
+
+Overall 54.2 % of discharge calls and 70.3 % of charge calls are in hull. The
+model declines to answer at both ends of the SOC range — including the low-SOC
+region where discharge power limits actually bind. **Nothing about the transfer
+of this model below SOC 0.30 has been shown.**
+
+**Safety** (`external_a8_safety.csv`). λ is a ratio, so it carries from
+current to power without a unit argument. `lambda_needed` is the largest
+factor that would leave zero exceedance on the external data; `margin` is
+`needed / frozen`.
+
+| | frozen λ | needed | margin | exceed | worst overshoot |
+|---|---:|---:|---:|---:|---:|
+| discharge (6 folds) | 0.6832 | 0.886–0.975 | **1.30–1.43** | **0** | 0 W |
+| charge (6 folds) | 0.5860 | 0.3969 | **0.677** | 9–11 | 2.1–3.0 W |
+
+On discharge the frozen factor is genuinely conservative on a dataset it was
+never fitted to, with 30–43 % of margin left over and zero exceedance in all
+six folds. **On charge it is not conservative enough**: it would need to fall
+to 0.397, and as shipped it overshoots by up to 3.0 W on 9–11 of 248 in-hull
+rows in every fold.
+
+The claim that survives is therefore narrow, and this is how it should be
+stated: *six frozen UYPYDJ leave-one-cell-out A8 models were transferred
+without refitting to the in-hull portion of RPCWBY Test#2; on **discharge**
+the frozen safety factor remained conservative with 1.30–1.43× margin and zero
+exceedance, over the 54 % of calls the pooled hull covers, which excludes
+SOC below 0.30 and SOC = 1.0. On **charge** the frozen factor did not
+transfer.* Anything broader than that sentence is not supported.
+
+### 35.6 Continuous integration was red on every commit
+
+The `check` job had been failing since the workflow was added, at the unit and
+integration test step, and this was not noticed before pushing. Three
+failures, none of them flaky, all of them the same mistake — tests that
+assumed the author's machine:
+
+* Two MCU tests asserted on guard messages from `export_mcu_tables.py`, which
+  died at `import torch` before reaching argparse. The guards decide things
+  knowable from file names alone, so torch and the model classes are now
+  imported lazily and the `--rung` check is hoisted out of the export path
+  into argument validation. Both guards now fire, and are tested, on a machine
+  with no torch and no raw data.
+* `test_stage_graph_inputs_resolve` treated a missing `raw/` as failure. A
+  clean clone has no `raw/` — the datasets are third-party downloads. External
+  inputs now resolve against `manifests/raw_data.yaml`, and a second test
+  requires every input no stage produces to be either a declared raw root with
+  file hashes or committed to the repository. That test immediately found
+  `results/cold_check`, which is the committed case and is now documented as
+  such.
+
+The full CI sequence — environment smoke test, compile, 53-value verification,
+both table producers, 40 tests, C/Python parity, three figures — was then run
+locally against a Python with `torch` masked, which is what the runner has.
+All steps pass.
+
+### 35.7 The SOH arm
+
+Ridge regression on the shipped input, with its penalty chosen by grouped
+inner selection on the five training cells only, beats the deployed CNN on
+the same leave-one-cell-out splits: pooled RMSE **0.0094 against 0.0135**, and
+worst cell **0.0130 against 0.0293** — a factor of 2.25 on the cell that
+matters. The CNN's seeds are fixed, not tuned, so the comparison does not
+favour ridge by search budget.
+
+The CNN is therefore **not** presented as a result. It is what was deployed
+and timed, and it is reported for that reason only. The SOH arm is a secondary
+result of this paper; the primary claim is the SOP path. Replacing the
+deployed model with ridge would be an improvement in accuracy *and* in MCU
+cost — it is a dot product — but it would change the shipped artifact, the
+MCU timing evidence and the estimated-SOH end-to-end corners, so it is left as
+stated work rather than done quietly.
+
+### 35.8 What the contribution is
+
+Not superiority. On usable current the sequence baselines are within noise of
+the trim at 1 100× the parameters (§34.6), and ridge beats the CNN on SOH.
+What the work shows is **deployment-efficient equivalence under a
+safety-aware current utility**: four effective coefficients and two
+exponentially-weighted states reach the same usable current as models three
+orders of magnitude larger, at 50.52 µs and 142 kB on a Cortex-M33, with a
+safety factor that is calibrated per held-out cell and that transfers to an
+external dataset on discharge.
+
+The production claim in the first draft is withdrawn. Oracle-state validation
+overstates system safety: it evaluates a filter the vehicle cannot run, and
+§35.2 shows the gap is in the admission rule rather than in the prediction.
+What is supported is a **bench result with a measured deployment cost**, not a
+qualified production estimator.
+
+### 35.9 What still cannot be done
+
+- **A seventh cell.** The all-cell fit that ships is not separately validated
+  and cannot be; the leave-one-cell-out numbers are the honest estimate of
+  what it does on a cell it has not seen.
+- **Charge-direction external safety.** The frozen λ fails there. Fixing it
+  means refitting λ on data that includes RPCWBY, which stops it being a
+  transfer result. Reporting the failure is the only honest option available
+  without a third dataset.
+- **Low-SOC external transfer.** Would need pooled surfaces built from cells
+  characterised below SOC 0.30 on the external chemistry. The data exists in
+  RPCWBY; the surfaces do not.
+- **A quantile or distributionally-robust λ.** §35.3 shows the max-based
+  factor is fragile. Nothing was substituted, because changing the safety
+  definition after seeing the test set is the failure this audit exists to
+  prevent.

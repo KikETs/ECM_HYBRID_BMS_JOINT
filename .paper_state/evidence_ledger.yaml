@@ -537,6 +537,49 @@ end_to_end:
     est_soh_oracle_soc: "3 / 2443, lambda 0.553, usable 57.7 %"
     oracle_soh_est_soc: "1 / 2449, lambda 0.404, usable 41.4 %"
     est_est: "6 / 2430, lambda 0.526, usable 56.3 %"
+  paired_correction_2026_08_31: >
+    [CORRECTION] The four corners above are NOT scored on the same rows, and
+    the difference between them is mostly that, not the estimator.  n moves
+    (491 / 514 / 455 / 488 on discharge) because the trustworthy-label and
+    hull filters are computed from the SOC in force, so shifting SOC moves
+    rows in and out of the evaluated set.  run_end_to_end.py now also scores
+    every corner on the intersection - the pulses all four corners keep,
+    identified by cell, cycle, horizon, pre-pulse voltage and measured
+    current, which is SOC-free by construction.
+  result_paired_discharge_tau10:
+    n_rows_all_four: 385
+    oracle_oracle: "3 exceedances, CP95 upper 2.00 %, worst overshoot 1.043 A, usable 73.05 %"
+    est_soh_oracle_soc: "1, 1.23 %, 0.157 A, 73.82 %"
+    oracle_soh_est_soc: "1, 1.23 %, 0.918 A, 69.31 %"
+    est_est: "4, 2.36 %, 1.171 A, 69.15 %"
+  result_paired_charge_tau10:
+    n_rows_all_four: 2421
+    oracle_oracle: "1 exceedance, CP95 upper 0.20 %, worst 0.518 A, usable 59.49 %"
+    est_soh_oracle_soc: "3, 0.32 %, 1.442 A, 57.62 %"
+    oracle_soh_est_soc: "1, 0.20 %, 1.537 A, 41.37 %"
+    est_est: "6, 0.49 %, 3.135 A, 56.27 %"
+  finding_paired: >
+    On identical pulses the fully estimated corner is not the collapse the
+    unpaired table showed: 4 exceedances against 3 for the oracle corner on
+    discharge, 6 against 1 on charge, and about 4 %p of usable current.  The
+    "20 of 455" figure was an artifact of comparing different row sets.
+  finding_drift: >
+    The other half of the story, and it does not go away.  The rows the
+    fully estimated corner keeps but the oracle corner does not - 103 of its
+    488 on discharge tau=10 - carry 25 of its 26 exceedances, a 24.3 % rate
+    against 0.9 % for the oracle corner's own extra rows.  A wrong SOC does
+    not mainly make the prediction worse on a given pulse; it corrupts the
+    test that decides which pulses have a trustworthy label at all, and
+    admits ones that should have been rejected.  In deployment there is no
+    oracle SOC to filter with, so this is the operative failure mode.
+    Artifact: analysis/results/tables/end_to_end_drift.csv.
+  finding_lambda_is_fragile: >
+    In the paired charge table the oracle-SOH + estimated-SOC corner holds
+    exceedance at 1 but only by dropping lambda to 0.4035, costing 18 %p of
+    usable current, while the fully estimated corner recovers to 0.5259.
+    Utility is non-monotonic in how much state error is present because
+    lambda is fitted to bound the worst single training row.  One row moves
+    the factor and therefore the whole utility number.
   finding_soc_dominates: >
     Estimated SOC costs far more than estimated SOH.  Swapping SOH for its
     estimate costs about 1 %p of usable current and leaves exceedance where
@@ -545,10 +588,19 @@ end_to_end:
     lambda from 0.586 to 0.404 and usable current from 59.5 % to 41.4 %.
     The paper's SOP numbers are all computed on the label's own SOC, and
     that is the assumption carrying the most weight.
+    [SUPERSEDED 2026-08-31] The "20 of 455" comparison is between different
+    row sets.  See paired_correction_2026_08_31: the direction of the
+    finding survives - estimated SOC still costs more than estimated SOH -
+    but the magnitude quoted here does not, and the mechanism is
+    filter corruption rather than per-pulse prediction error.
   finding_exceedance_survives_recalibration: >
     Those 20 and 26 exceedances are AFTER lambda is refitted per held-out
     cell on the same estimated-SOC data.  Recalibration does not absorb the
     SOC error; it is not a bias the safety factor can price out.
+    [NARROWED 2026-08-31] Still true of the rows involved, but those rows
+    are largely the ones only the estimated-SOC corner evaluates.  On the
+    common rows recalibration leaves 4 of 385.  What recalibration cannot
+    absorb is the admission of untrustworthy labels, not a per-pulse bias.
   unexplained: >
     On charge the both-estimated corner (56.3 % usable, lambda 0.526) is
     BETTER than oracle-SOH-plus-estimated-SOC (41.4 %, lambda 0.404).  The

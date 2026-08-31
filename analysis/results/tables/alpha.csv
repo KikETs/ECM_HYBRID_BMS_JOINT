@@ -3,7 +3,7 @@ discharge,BOOST,0.160,0.400
 discharge,BOOST_NEGPULSE,0.180,0.300
 discharge,BOOST_NEGPULSE_1S,0.180,0.280
 discharge,BOOST_REST,0.200,0.160
-discharge,CC,0.200,0.320
+discharge,CC,0.200,0.340
 discharge,CC_CELL2,0.240,0.220
 charge,BOOST,0.300,0.020
 charge,BOOST_NEGPULSE,0.320,0.000

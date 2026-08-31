@@ -151,3 +151,100 @@ claims:
     table: pack.csv
     status: PARTIAL
     note: "Resampling simulation of single-cell rows, not a pack measurement.  Say 'pack-level simulation sensitivity'."
+
+  - id: e2e.soc_penalty_magnitude
+    text: >
+      Estimated SOC takes discharge exceedance from 1 of 491 rows to 20 of 455
+      (34.8).
+    table: end_to_end_paired.csv
+    producer: python3 repro/run_end_to_end.py
+    ledger: end_to_end
+    status: CONTRADICTED
+    replacement: >
+      The four corners were scored on four different row sets, because the
+      trustworthy-label filter is computed from whichever SOC is in force.  On
+      the 385 pulses all four keep, the fully estimated corner shows 4
+      exceedances against 3 for the oracle corner.  The magnitude is withdrawn;
+      see 35.1.
+  - id: e2e.soc_mechanism
+    text: >
+      A wrong SOC is a bias the safety factor cannot price out (34.8).
+    table: end_to_end_drift.csv
+    producer: python3 repro/run_end_to_end.py
+    ledger: end_to_end
+    status: REPLACED
+    replacement: >
+      It is not a per-pulse bias at all.  25 of the fully estimated corner's 26
+      discharge exceedances are in the 103 rows only that corner admits - a
+      24.3 % rate against 0.94 % for the oracle corner's own extra rows.  A
+      wrong SOC corrupts the admission rule, which is worse than a bias
+      because a bias can be priced into lambda.  See 35.2.
+  - id: sop.lambda_stability
+    text: >
+      One non-monotone row on charge was called an oddity nothing should be
+      built on (34.8).
+    table: end_to_end_paired.csv
+    producer: python3 repro/run_end_to_end.py
+    ledger: end_to_end
+    status: REPLACED
+    replacement: >
+      It is a property, not an oddity.  lambda is fitted to bound the worst
+      single training row, so one row moves the factor and the whole utility
+      number: the oracle-SOH + estimated-SOC charge corner holds exceedance at
+      1 only by dropping lambda to 0.4035 and 18 %p of usable current.  Any
+      deployment on this lambda inherits it.  See 35.3.
+  - id: external.safety_transfer
+    text: >
+      The frozen A8 transfers to RPCWBY Test#2 (34.7, reported as RMSE only).
+    table: external_a8_safety.csv
+    producer: python3 repro/run_external_a8.py
+    ledger: external_validation
+    status: PARTIAL
+    replacement: >
+      Split by direction.  On discharge the frozen lambda stays conservative -
+      1.30-1.43x margin, zero exceedance in all six folds.  On charge it does
+      NOT transfer: it would have to fall from 0.5860 to 0.3969, and as shipped
+      it overshoots by up to 3.0 W on 9-11 of 248 in-hull rows per fold.  RMSE
+      alone concealed this because RMSE is not the property the paper claims.
+      See 35.5.
+  - id: external.coverage
+    text: >
+      Out-of-hull calls were reported only as a total count (34.7).
+    table: external_a8_coverage.csv
+    producer: python3 repro/run_external_a8.py
+    ledger: external_validation
+    status: PARTIAL
+    replacement: >
+      The hull is a band in SOC, not an envelope: 0 % in hull at SOC <= 0.05
+      and at SOC = 1.00, 7.7 % at 0.10, 42.3 % at 0.20, 100 % from 0.40 to
+      0.95.  54.2 % of discharge calls are in hull.  Nothing about transfer
+      below SOC 0.30 has been shown, and that is where discharge power limits
+      bind.  See 35.5.
+  - id: mcu.evidence_consistency
+    text: >
+      manifests/mcu_evidence.yaml recorded the leave-one-cell-out CC fold
+      0.2146806 and a header hash matching no file in the tree.
+    table: null
+    producer: make && STM32_Programmer_CLI -w ... && python3 mcu/bench_sop.py
+    ledger: mcu_deployment
+    status: CORRECTED
+    replacement: >
+      The ledger was right and the manifest was stale.  The stage graph was
+      also still exporting with the default leave-one-cell-out directories.
+      Fixed, rebuilt, re-flashed and re-benchmarked on hardware: the image
+      contains 0.2105654 once and neither 0.2146806 nor 0.2283459; FULL median
+      50.52 us reproduces the stored table.  Two tests now fail if the manifest
+      drifts from the header or from the ledger again.  See 35.4.
+  - id: claim.production_ready
+    text: >
+      "Hybrid SOP / SOH / SOC for a production BMS" - the framing of the first
+      draft.
+    table: end_to_end_drift.csv
+    producer: python3 repro/run_end_to_end.py
+    ledger: end_to_end
+    status: WITHDRAWN
+    replacement: >
+      Oracle-state validation overstates system safety.  What is supported is a
+      bench result with a measured deployment cost, and a contribution of
+      deployment-efficient equivalence under a safety-aware current utility -
+      not superiority, and not a qualified production estimator.  See 35.8.
