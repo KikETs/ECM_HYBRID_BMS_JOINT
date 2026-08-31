@@ -48,6 +48,34 @@ def rows(bench_path=BENCH, order=ORDER):
     return out
 
 
+def cycle_rows(stage):
+    """The per-cycle composite, derived rather than written down.
+
+    manifests/mcu_evidence.yaml carried these as hand-entered fields and they
+    went stale twice: 13.09 / 214.83 / 307.12 were still the pre-ridge
+    firmware after the board had been reflashed and re-measured.  A number a
+    human retypes after every measurement is a number that will be wrong.
+
+    One control cycle at 100 Hz is one SOC EKF step, one A8 feature update
+    and four SOP inversions -- the four are the discharge and charge limits
+    at both horizons.
+    """
+    g = {r['stage']: r for r in stage}
+    need = ('EKF', 'FEAT_A8', 'FULL')
+    if any(k not in g for k in need):
+        return []
+    out = []
+    for label, col in (('median', 'median_us'), ('wcet', 'max_us')):
+        ekf = float(g['EKF'][col])
+        feat = float(g['FEAT_A8'][col])
+        sop = float(g['FULL'][col])
+        total = ekf + feat + 4 * sop
+        out.append([label, f'{ekf:.2f}', f'{feat:.2f}', f'{sop:.2f}',
+                    f'{4 * sop:.2f}', f'{total:.2f}',
+                    f'{total / 10000 * 100:.3f}'])
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--bench', default=BENCH)
@@ -86,6 +114,21 @@ def main():
         w.writerow(HEADER)
         w.writerows(r)
     print(f'  -> {os.path.relpath(a.out, ROOT)}  ({len(r)} stages)')
+
+    stage = [dict(zip(HEADER, [str(x) for x in row])) for row in r]
+    cyc = cycle_rows(stage)
+    if cyc:
+        cp = os.path.join(os.path.dirname(a.out), 'mcu_cycle.csv')
+        CH = ['case', 'soc_ekf_us', 'feat_a8_us', 'one_sop_us',
+              'four_sop_us', 'cycle_total_us', 'load_at_100Hz_pct']
+        with open(cp, 'w', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(CH)
+            w.writerows(cyc)
+        print(f'  -> {os.path.relpath(cp, ROOT)}  ({len(cyc)} rows)')
+        for row in cyc:
+            print(f'     {row[0]:<8} EKF {row[1]} + FEAT_A8 {row[2]} + '
+                  f'4x SOP {row[3]} = {row[5]} us  ({row[6]} % at 100 Hz)')
     return 0
 
 

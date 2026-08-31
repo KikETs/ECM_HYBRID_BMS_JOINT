@@ -547,7 +547,8 @@ STAGES = [
     dict(id='mcu_table', tier=6, minutes=1, measured=True,
          cmd='{py} ../repro/run_mcu_table.py',
          inputs=['../mcu/sop_mcu_bench.csv'],
-         outputs=['results/tables/mcu.csv'],
+         outputs=['results/tables/mcu.csv',
+                  'results/tables/mcu_cycle.csv'],
          why='Reduce the board benchmark to the published timing table.  '
              'bench_sop.py wrote only its own per-sample CSV; nothing wrote '
              'results/tables/mcu.csv, so four published board numbers had '

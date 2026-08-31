@@ -967,6 +967,28 @@
       "value": 0.4,
       "tol": 0.001,
       "source": "sec 37.4 — the hull never reaches low SOC at any temperature"
+    },
+    {
+      "id": "mcu.cycle.median",
+      "table": "mcu_cycle.csv",
+      "where": {
+        "case": "median"
+      },
+      "column": "cycle_total_us",
+      "value": 227.79,
+      "tol": 0.01,
+      "source": "sec 33.2 — one control cycle: EKF + A8 feature update + four SOP inversions"
+    },
+    {
+      "id": "mcu.cycle.wcet",
+      "table": "mcu_cycle.csv",
+      "where": {
+        "case": "wcet"
+      },
+      "column": "cycle_total_us",
+      "value": 339.84,
+      "tol": 0.01,
+      "source": "sec 33.2 — worst case of the same composite"
     }
   ],
   "tables": {
@@ -2837,10 +2859,33 @@
         "lambda_shipped"
       ],
       "note": "The last row pools 0-40 C.  It leaves the per-temperature columns blank on purpose, so only the columns every row fills are declared numeric."
+    },
+    "mcu_cycle.csv": {
+      "producer": "python3 repro/run_mcu_table.py",
+      "stage": "mcu_table",
+      "required": false,
+      "rows": 2,
+      "columns": [
+        "case",
+        "soc_ekf_us",
+        "feat_a8_us",
+        "one_sop_us",
+        "four_sop_us",
+        "cycle_total_us",
+        "load_at_100Hz_pct"
+      ],
+      "numeric": [
+        "soc_ekf_us",
+        "feat_a8_us",
+        "one_sop_us",
+        "four_sop_us",
+        "cycle_total_us",
+        "load_at_100Hz_pct"
+      ]
     }
   },
   "completeness": {
-    "total_checks": 78,
+    "total_checks": 80,
     "checks_per_table": {
       "alpha.csv": 2,
       "cold_ratio.csv": 2,
@@ -2934,7 +2979,9 @@
       "ext.temp.m20.exceed",
       "ext.temp.0.margin",
       "ext.temp.40.exceed",
-      "ext.temp.25.soc_min"
+      "ext.temp.25.soc_min",
+      "mcu.cycle.median",
+      "mcu.cycle.wcet"
     ],
     "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
   }

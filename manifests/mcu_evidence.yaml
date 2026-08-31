@@ -87,20 +87,28 @@ timing_us:
     committed mcu/sop_mcu_bench.csv, which is kept as the record of the run
     that produced the published table.
   method: "DWT CYCCNT, interrupts disabled, call region only"
-  per_sample_median: 13.09
-  per_sample_wcet: 13.85
-  per_decision_median: 201.74
-  per_decision_wcet: 293.26
-  full_cycle_median: 214.83
-  full_cycle_wcet: 307.12
+  derived_from: "analysis/results/tables/mcu_cycle.csv"
+  superseded_hand_entered_fields: >
+    per_sample_median 13.09, per_sample_wcet 13.85, per_decision_median
+    201.74, per_decision_wcet 293.26, full_cycle_median 214.83,
+    full_cycle_wcet 307.12.  These were typed in by hand and went stale twice
+    - they were still the pre-ridge firmware after the board had been
+    reflashed and re-measured.  A number a human retypes after every
+    measurement is a number that will be wrong, so run_mcu_table.py now
+    derives the composite into mcu_cycle.csv and verify.py checks it.
+  full_cycle_median: 227.79
+  full_cycle_wcet: 339.84
+  composition: "one SOC EKF step + one A8 feature update + four SOP inversions"
+  per_sample_median: 6.79
+  per_decision_median: 212.84
   stack_high_water_B: 560
   stack_high_water_changed: >
     624 B on 2026-08-27, 560 B now.  Same measurement (the maximum the
     firmware reports across the sweep), different firmware: the unknown-command
     NACK path added during the audit changed the worst-case call chain.  No
     published table quotes the stack figure.
-  load_at_100Hz_median_pct: 2.148
-  load_at_100Hz_wcet_pct: 3.071
+  load_at_100Hz_median_pct: 2.278
+  load_at_100Hz_wcet_pct: 3.398
   soh_model: >
     MEASURED 2026-08-31, and no longer a CNN.  mcu/bench_soh.py sends real
     dQ/dV curves from the cache and checks the board's answer against NumPy.

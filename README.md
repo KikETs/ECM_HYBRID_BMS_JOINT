@@ -39,9 +39,12 @@ a λ fitted with cell *i* removed entirely. Per-cell λ spans 0.683–0.708
 0.19 %. **Zero observed exceedance is not zero risk**; the bound is the
 number to quote. "Usable current" is the median of λ·predicted / measured.
 
-Per-cycle cost on the board: SOP inversion 53.20 µs median, 81.09 µs worst;
-SOC EKF 8.16; A8 feature update 6.79; SOH 6.50, once per charge rather than
-per cycle. Deployment build text **70 796 B**. Measured on a NUCLEO-H563ZI
+Per-cycle cost on the board: one SOC EKF step, one A8 feature update and four
+SOP inversions — **227.79 µs median, 339.84 µs worst case**, which is
+2.278 % and 3.398 % of a 100 Hz budget. Individually: SOP
+inversion 53.21 µs median and 81.09 worst, SOC EKF 8.16, A8 feature
+update 6.79, SOH 6.50 once per charge rather than per cycle. Deployment
+build text **70 796 B**. Measured on a NUCLEO-H563ZI
 after flashing; `repro/run_parity.py` checks the C against Python to
 9.2 × 10⁻⁶ and `mcu/bench_soh.py` checks the board's SOH against NumPy on 282
 real curves.
@@ -136,7 +139,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 78 stored published values
+python3 repro/verify.py        # check the 80 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 ```
 

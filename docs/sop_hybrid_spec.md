@@ -594,10 +594,10 @@ point about **the accuracy of the claim**, not about feasibility.
 | `analysis/sop_trim_features.py` | the 12 EW scalars, O(1), explicit dt. `.update/.vector/.excitation/.serialize` |
 | `analysis/sop_trim_dataset.py` | pairs labels (HPPC ΔV, rank 2/3, rest ≥ 5τ2) with features (the **preceding** drive cycle) |
 | `analysis/sop_trim.py` | `TrimMLP` (514) / `TrimLinear` (26), closed-form decoder, LOCO |
-| `analysis/sop_guard.py` | excitation gate, slew, table-based envelope, rejection rule |
-| `analysis/sop_hybrid.py` | 11-step bisection SOP solve (replacing the fixed point), e1/e2 precomputed |
-| `analysis/eval_sop_trim.py` | drives the ablation ladder |
-| `analysis/mcu_budget.py` | **generates** the budget table (does not assert it) |
+| `analysis/sop_guard.py` | **[never existed — the excitation gate is in `sop_trim_features.py`]** excitation gate, slew, table-based envelope, rejection rule |
+| `analysis/sop_hybrid.py` | **[never existed — the inversion is `eval_sop_amps.py` / `sop_core.c`]** 11-step bisection SOP solve (replacing the fixed point), e1/e2 precomputed |
+| `analysis/eval_sop_trim.py` | **[never existed — the ladder is `run_safety.py`]** drives the ablation ladder |
+| `analysis/mcu_budget.py` | **[never existed — the budget is `run_mcu_table.py`]** **generates** the budget table (does not assert it) |
 
 > **[Note — 37]** That table is the *plan*, not the repository. Four of the
 > eight landed under those names: `ecm_pool.py`, `sop_trim_features.py`,
@@ -2395,7 +2395,8 @@ approximation breaks is now known.
   data.
 
 `analysis/rpcwby_sop_test8.py`, `analysis/rpcwby_t8_trim.py`,
-`analysis/rpcwby_sop_test8.csv`, `analysis/cache/t8/`.
+`analysis/rpcwby_sop_test8.csv`. (`analysis/cache/t8/` was a local working
+cache; it is gitignored and no longer present, and the scripts rebuild it.)
 
 ---
 
@@ -4480,10 +4481,18 @@ this comparison to go the long way round by reproducing the pairing. It is now
 stored as `m_feat_cycle` — the next time the same question comes up it can be
 answered without a rebuild.
 
-**Deferred-state record**: `analysis/cache/trim_backup/` holds two versions
-(`_predrivefix` = the same as the current canonical version, `_drivefixed` = the
-defect-excluded version). `sop_trim_dataset.py` already has the exclusion code,
-so rebuilding produces the excluded version automatically.
+**Deferred-state record**: `analysis/cache/trim_backup/` held two versions
+(`_predrivefix` = the same as the then-canonical version, `_drivefixed` = the
+defect-excluded version). It was gitignored and **no longer exists** — see the
+resolution below. `sop_trim_dataset.py` already has the exclusion code, so
+rebuilding produces the excluded version automatically.
+
+> **[Resolved — 37.1]** The deferral ended: the defect-excluded set is the
+> canonical one, and `analysis/cache/trim_backup/` no longer exists — it was
+> never in git, and rebuilding the cache now produces the adopted version
+> directly. Eight verified numbers moved when it was adopted; the rebuild
+> itself came back byte-identical, which is how we learned the cache had
+> never been the stale link.
 
 ### 33.5 What the 64 defects really are — a logging fault, not a cold test
 
@@ -5634,3 +5643,42 @@ nominal 2RC layer beneath the trim. "The validity range this work can claim is
 7–8 points can support. Both the spec and README now say *the physics layer
 shows no exceedance from 0 to 40 °C above SOC 0.30, bounded at 9.2 %*, and say
 explicitly that the hybrid's temperature range is not established.
+
+### 37.10 A sweep, instead of waiting for the next reviewer
+
+Four review rounds each found defects of the same few shapes, which is a
+signal about the process rather than the code: everything so far had been
+fixed reactively, one report at a time. So the classes were swept
+systematically instead, and each sweep that found something was turned into a
+test so it stays swept.
+
+| class | swept by | found |
+|---|---|---|
+| gates that cannot fail | AST: does `main()` ever return non-zero? | clean (the one `\|\| true` is the advisory lint, deliberately) |
+| tests with no assertion | AST over every `test_*` | none |
+| manifest hashes vs files | recompute all 116 | all match |
+| stage outputs that do not exist | walk the graph | none |
+| tables no stage produces | set difference | none |
+| `expected.json` referencing absent tables | direct | none |
+| **hand-maintained numbers** | **manifest values against the tables** | **`timing_us` was two firmwares stale** |
+| **document paths that do not resolve** | **regex over backticked repo paths** | **six** |
+
+The two finds are worth stating plainly.
+
+`manifests/mcu_evidence.yaml` carried the per-cycle cost as six typed-in
+fields — 13.09, 201.74, 214.83, 293.26, 307.12 µs — and they were still the
+**pre-ridge firmware** after the board had been reflashed and re-measured
+twice. Nobody retyped them because nobody had to. A number a human copies
+after every measurement is a number that will eventually be wrong, so
+`run_mcu_table.py` now derives the composite into `mcu_cycle.csv` and
+`verify.py` checks it. The real figures are **227.79 µs median and 339.84 µs
+worst case** — 2.278 % and 3.398 % of a 100 Hz budget — against the 214.83 and
+307.12 the manifest and `paper_map` had been asserting.
+
+Six backticked paths in this document pointed at nothing: four are the design
+review's proposed files that never landed, two were local caches that are
+gitignored and gone. Mentioning them is fine; mentioning them without saying
+so is not, and a reader following the reference had no way to tell. Each now
+carries the explanation in its own block, and a test requires that — reusing
+`qc.py`'s block rule, so "this text is a record, not a claim" has one
+mechanism in this repository rather than two.

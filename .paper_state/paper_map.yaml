@@ -81,6 +81,11 @@ claims:
       Re-measured on hardware with the corrected A8 firmware: median
       214.83 us, WCET 307.12 us.  Flash: deployment build text 142060 B
       = 138.7 KiB = 142.1 kB decimal — state the unit.
+      [SUPERSEDED 2026-08-31]  All three moved and none of them was noticed
+      until a systematic sweep: the ridge SOH arm and the deterministic
+      retrain changed the image.  Per-cycle median 227.79 us, WCET 339.84 us,
+      deployment build text 70796 B.  The composite is derived into
+      mcu_cycle.csv now instead of being typed into a manifest.
 
   - id: mcu.model_identity
     text: "the board runs the adopted A8 model"

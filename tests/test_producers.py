@@ -570,3 +570,62 @@ def test_every_table_names_a_stage_that_produces_it():
             bad.append((t, st))
     assert not bad, (
         f'tables whose named stage does not produce them: {bad}')
+
+
+def test_every_repo_path_a_document_cites_exists_or_is_annotated():
+    """A backticked repo path must resolve, or its block must say why not.
+
+    Found by a systematic sweep rather than by a reviewer, which is the point:
+    six paths in the spec pointed at nothing.  Four were the design review's
+    proposed files that never landed and two were local caches that are
+    gitignored and gone.  Both kinds are fine to mention -- but only with the
+    explanation attached, so a reader following the reference is not left
+    guessing.
+
+    The annotation test is the same block rule qc.py uses, so there is one
+    mechanism for "this text is a record, not a claim" rather than two.
+    """
+    import re
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    import qc
+    PREFIXES = ('repro/', 'analysis/', 'manifests/', 'mcu/', 'tests/',
+                'env/', '.paper_state/', 'docs/')
+    EXPLAINS = ('never existed', 'no longer', 'gitignored', 'is the plan',
+                'not in this repository', 'was a local', 'design review')
+    # A path the pipeline builds counts as resolvable even in a fresh clone,
+    # where it has not been built yet.  Without this the test passes on the
+    # author's machine and fails on a runner, which is the exact asymmetry
+    # that kept CI red earlier in this audit.
+    from stages import STAGES
+    built = set()
+    for st in STAGES:
+        for o in list(st['outputs']) + list(st['inputs']):
+            q = os.path.normpath(os.path.join('analysis', o))
+            built.add(q)
+            built.add(q.rstrip('/'))
+    bad = []
+    for doc in ('README.md', 'REPRODUCE.md', 'DATA.md',
+                'docs/sop_hybrid_spec.md'):
+        p = os.path.join(ROOT, doc)
+        if not os.path.exists(p):
+            continue
+        lines = open(p, encoding='utf-8').read().split('\n')
+        blks = qc.blocks(lines)
+        for i, ln in enumerate(lines, 1):
+            for m in re.finditer(r'`([A-Za-z0-9_./-]+)`', ln):
+                ref = m.group(1)
+                if not ref.startswith(PREFIXES):
+                    continue
+                if os.path.exists(os.path.join(ROOT, ref)):
+                    continue
+                norm = os.path.normpath(ref).rstrip('/')
+                if norm in built or any(b.startswith(norm + os.sep)
+                                        for b in built):
+                    continue
+                blk = qc.block_for(i, blks)[0].lower()
+                if any(e in blk for e in EXPLAINS):
+                    continue
+                bad.append(f'{doc}:{i} {ref}')
+    assert not bad, (
+        'documents cite repository paths that do not exist, with no '
+        'explanation in the same block:\n  ' + '\n  '.join(bad))

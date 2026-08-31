@@ -98,7 +98,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 |---|---:|---|---|
 | `mcu_export` | 2 | `python3 export_mcu_tables.py --rung A8 --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy --out ../mcu/sop_tables.h && python3 export_soh_ridge.py --out ../mcu/soh_tables.h` | `../mcu/sop_tables.h +1` |
 | `soh_deploy_tables` | 1 | `python3 ../repro/run_soh_deploy_tables.py` | `results/tables/soh_model_cost.csv +1` |
-| `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv` |
+| `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv +1` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
 Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never timed.
@@ -187,6 +187,8 @@ Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never ti
 | `ext.temp.0.margin` | 1.396 | `external_temp_envelope.csv` | sec 37.4 |
 | `ext.temp.40.exceed` | 0 | `external_temp_envelope.csv` | sec 37.4 |
 | `ext.temp.25.soc_min` | 0.4 | `external_temp_envelope.csv` | sec 37.4 |
+| `mcu.cycle.median` | 227.79 | `mcu_cycle.csv` | sec 33.2 |
+| `mcu.cycle.wcet` | 339.84 | `mcu_cycle.csv` | sec 33.2 |
 
 ## Cells
 
