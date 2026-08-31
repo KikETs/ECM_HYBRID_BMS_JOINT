@@ -434,3 +434,40 @@ def test_compare_tables_finds_a_planted_change():
         assert '1 numeric cells moved' in r.stdout or \
                '1 numeric cell moved' in r.stdout, r.stdout
         assert 'usable_pct' in r.stdout, r.stdout
+
+
+@pytest.mark.parametrize('script,table', [
+    ('run_method_comparison.py', 'method_comparison.csv'),
+    ('run_soh_deploy_tables.py', 'mcu_icache.csv'),
+])
+def test_check_mode_fails_on_a_corrupted_table(script, table, tmp_path):
+    """--check has to be able to fail, or it is not a check.
+
+    run_soh_deploy_tables.py computed the comparison, printed MISMATCH and
+    then returned 0 anyway, which is the same defect as a CI lint step ending
+    in `|| true`.
+    """
+    import shutil
+    p = os.path.join(ROOT, 'analysis', 'results', 'tables', table)
+    if not os.path.exists(p):
+        pytest.skip(f'{table} not built in this checkout')
+    backup = tmp_path / table
+    shutil.copy(p, backup)
+    try:
+        lines = open(p, encoding='utf-8').read().splitlines()
+        assert len(lines) > 1
+        parts = lines[1].split(',')
+        for i, v in enumerate(parts):
+            try:
+                float(v)
+            except ValueError:
+                continue
+            parts[i] = '99999.0'
+            break
+        lines[1] = ','.join(parts)
+        open(p, 'w', encoding='utf-8').write('\n'.join(lines) + '\n')
+        rc, out, err = run([os.path.join('repro', script), '--check'])
+        assert rc != 0, f'{script} --check returned 0 on a corrupted {table}'
+        assert 'MISMATCH' in (out + err)
+    finally:
+        shutil.copy(backup, p)

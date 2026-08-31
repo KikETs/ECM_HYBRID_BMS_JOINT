@@ -49,6 +49,8 @@ jobs:
         run: |
           python repro/run_soh_table.py --check
           python repro/run_mcu_table.py --check
+          python repro/run_method_comparison.py --check
+          python repro/run_soh_deploy_tables.py --check
 
       - name: Unit and integration tests
         run: python -m pytest tests -q

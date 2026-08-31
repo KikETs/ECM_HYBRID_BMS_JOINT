@@ -49,6 +49,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=os.path.join(TABLES,
                                                   'method_comparison.csv'))
+    ap.add_argument('--check', action='store_true',
+                    help='compare the stored table with a fresh computation '
+                         'instead of overwriting it')
     a = ap.parse_args()
 
     found = []
@@ -89,12 +92,15 @@ def main():
                   f"{r['usable']:>10.2f}{ci:>18}"
                   f"{r['exceed']:>8}{rank:>6}   {rel}")
 
+    HEADER = ['direction', 'tau_s', 'method', 'usable_mean_pct',
+              'boot_lo_pct', 'boot_hi_pct', 'n_rows', 'exceed',
+              'usable_worst_pct', 'rank_in_condition', 'interval_vs_a8']
+    if a.check:
+        from tablecheck import compare_or_fail
+        return compare_or_fail(a.out, HEADER, rows)
     with open(a.out, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
-        w.writerow(['direction', 'tau_s', 'method', 'usable_mean_pct',
-                    'boot_lo_pct', 'boot_hi_pct', 'n_rows', 'exceed',
-                    'usable_worst_pct', 'rank_in_condition',
-                    'interval_vs_a8'])
+        w.writerow(HEADER)
         w.writerows(rows)
     print(f'\n  -> {os.path.relpath(a.out, ROOT)}  ({len(rows)} rows)')
 

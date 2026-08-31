@@ -69,6 +69,9 @@ def size_of(build):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--check', action='store_true',
+                    help='compare the stored tables with a fresh computation '
+                         'instead of overwriting them')
     ap.add_argument('--sizes', default=os.path.join(HERE, 'mcu_sizes.json'),
                     help='recorded text/bss for both models, since only one '
                          'can be built at a time')
@@ -97,13 +100,19 @@ def main():
                      f'{us[0]:.2f}', f'{us[1]:.2f}', f'{us[2]:.2f}',
                      sz['text_B'], sz['bss_B']])
     out = os.path.join(TABLES, 'soh_model_cost.csv')
-    with open(out, 'w', newline='', encoding='utf-8') as f:
-        w = csv.writer(f)
-        w.writerow(['model', 'coefficients', 'rmse_pooled', 'rmse_worst_cell',
-                    'worst_cell', 'soh_median_us', 'soh_p95_us', 'soh_max_us',
-                    'firmware_text_B', 'firmware_bss_B'])
-        w.writerows(rows)
-    print(f'  -> {os.path.relpath(out, ROOT)}')
+    H1 = ['model', 'coefficients', 'rmse_pooled', 'rmse_worst_cell',
+          'worst_cell', 'soh_median_us', 'soh_p95_us', 'soh_max_us',
+          'firmware_text_B', 'firmware_bss_B']
+    if a.check:
+        from tablecheck import compare_or_fail
+        rc = compare_or_fail(out, H1, rows)
+    else:
+        with open(out, 'w', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(H1)
+            w.writerows(rows)
+        print(f'  -> {os.path.relpath(out, ROOT)}')
+        rc = 0
     print(f"  {'model':<22}{'coef':>6}{'RMSE':>8}{'worst':>8}"
           f"{'SOH us':>10}{'text B':>9}{'bss B':>8}")
     for r in rows:
@@ -125,12 +134,17 @@ def main():
                 irows.append([icache, model, stage, f'{v[0]:.2f}',
                               f'{v[1]:.2f}', f'{v[2]:.2f}', tag])
     out = os.path.join(TABLES, 'mcu_icache.csv')
-    with open(out, 'w', newline='', encoding='utf-8') as f:
-        w = csv.writer(f)
-        w.writerow(['icache', 'soh_model', 'stage', 'median_us', 'p95_us',
-                    'max_us', 'note'])
-        w.writerows(irows)
-    print(f'\n  -> {os.path.relpath(out, ROOT)}')
+    H2 = ['icache', 'soh_model', 'stage', 'median_us', 'p95_us', 'max_us',
+          'note']
+    if a.check:
+        from tablecheck import compare_or_fail
+        rc = compare_or_fail(out, H2, irows) or rc
+    else:
+        with open(out, 'w', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(H2)
+            w.writerows(irows)
+        print(f'\n  -> {os.path.relpath(out, ROOT)}')
     d = {(r[0], r[1]): float(r[3]) for r in irows if r[2] == 'FULL'}
     if len(d) == 4:
         on = d[('on', 'ridge')] / d[('on', 'CNN')] - 1
@@ -139,7 +153,7 @@ def main():
               f"cache off {off * 100:+.1f} %")
         print('  The penalty exists only with the cache enabled, and reverses '
               'without it.  It is placement, not work.')
-    return 0
+    return rc
 
 
 if __name__ == '__main__':
