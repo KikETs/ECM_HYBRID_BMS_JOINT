@@ -1,5 +1,5 @@
 direction,tau_s,method,soh_arm,n_cells,n_rows,exceed,usable_mean_pct,usable_median_pct,usable_worst_pct,worst_cell,lambda_min,lambda_median,lambda_max,lambda_pooled_shipped,exceed_ub95_pct,usable_boot_lo_pct,usable_boot_hi_pct
-discharge,10.0,a8,est,6,496,1,68.88,68.56,58.93,BOOST_REST,0.6830,0.6830,0.6929,0.6830,0.953,66.11,70.42
-discharge,2.0,a8,est,4,138,1,59.99,60.45,57.78,BOOST,0.5020,0.5020,0.5090,0.5020,3.391,58.39,61.71
-charge,10.0,a8,est,6,2459,2,55.53,54.32,48.13,BOOST_REST,0.5271,0.5271,0.5988,0.5271,0.256,51.43,60.18
-charge,2.0,a8,est,6,2080,3,57.74,57.03,49.95,BOOST_REST,0.5477,0.5477,0.5786,0.5477,0.372,53.46,61.72
+discharge,10.0,a8,est,6,496,1,68.89,68.57,58.94,BOOST_REST,0.6831,0.6831,0.6930,0.6831,0.953,66.12,70.42
+discharge,2.0,a8,est,4,138,1,59.99,60.45,57.78,BOOST,0.5021,0.5021,0.5091,0.5021,3.391,58.39,61.71
+charge,10.0,a8,est,6,2459,2,55.54,54.33,48.13,BOOST_REST,0.5272,0.5272,0.5992,0.5272,0.256,51.44,60.19
+charge,2.0,a8,est,6,2080,3,57.75,57.04,49.96,BOOST_REST,0.5479,0.5479,0.5788,0.5479,0.372,53.50,61.72

@@ -45,6 +45,11 @@ import sys
 import time
 
 import numpy as np
+import os as _os_early, sys as _sys_early
+_sys_early.path.insert(0, _os_early.path.join(
+    _os_early.path.dirname(_os_early.path.dirname(
+        _os_early.path.abspath(__file__))), 'analysis'))
+import determinism            # sets CUBLAS_WORKSPACE_CONFIG; must precede torch
 import torch
 import torch.nn as nn
 
@@ -132,7 +137,7 @@ def dv_hat(kf, ks, nom, i):
 
 
 def train_seq(cls, tr, te, epochs, lr, seed, dev, lam=1e-2, delta=0.02):
-    torch.manual_seed(seed)
+    determinism.enable(seed)
     Xtr, Xte = tr['Xs'], te['Xs']
     mu = Xtr.reshape(-1, Xtr.shape[-1]).mean(0)
     sd = Xtr.reshape(-1, Xtr.shape[-1]).std(0) + 1e-8

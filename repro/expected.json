@@ -81,9 +81,9 @@
         "soh": "est"
       },
       "column": "usable_pct",
-      "value": 54.1,
+      "value": 54.2,
       "source": "sec 29 / 30.11 — estimated SOH, not oracle",
-      "note": "[2026-08-31 SOH replacement] SOH arm replaced by ridge (36): estimated-SOH charge usable current 56.6 -> 54.1 %"
+      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted.  A 55.54 seen mid-audit was a stale table, not a measurement: safety_strict had not been re-run after run_evals (37.1)"
     },
     {
       "id": "ladder.disc.A0",
@@ -118,9 +118,9 @@
         "method": "shrinkage coefficient"
       },
       "column": "usable_pct",
-      "value": 62.4,
+      "value": 62.0,
       "source": "sec 32.5 — two-parameter transfer gain",
-      "note": "[2026-08-31 SOH replacement] back to 62.4.  The 62.0 recorded on 2026-08-31 came from tables regenerated against eval CSVs that were themselves stale; re-running run_evals.py restored the original value.  That earlier note was wrong and is retracted"
+      "note": "[2026-08-31 rebuild adopted] settles at 62.0 on the rebuilt models.  It read 62.4 twice and 62.0 twice during the audit as the grid step flipped; determinism.py removes the flipping (37.1, 37.5)"
     },
     {
       "id": "ladder.disc.A8",
@@ -303,8 +303,9 @@
         "method": "direct"
       },
       "column": "rmse_mV",
-      "value": 134.71,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+      "value": 134.57,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
     },
     {
       "id": "volt.disc.shrink",
@@ -315,8 +316,9 @@
         "method": "shrink"
       },
       "column": "rmse_mV",
-      "value": 69.1,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+      "value": 69.23,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted.  The shrink baseline moves most because fit_alpha is an argmin over a 51-point grid (37.1)"
     },
     {
       "id": "volt.disc.A8",
@@ -327,8 +329,9 @@
         "method": "A8"
       },
       "column": "rmse_mV",
-      "value": 62.81,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+      "value": 62.78,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted: the trims were retrained on the current cache (37.1)"
     },
     {
       "id": "volt.disc.A3",
@@ -339,8 +342,9 @@
         "method": "A3"
       },
       "column": "rmse_mV",
-      "value": 58.76,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+      "value": 58.71,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
     },
     {
       "id": "volt.disc.RLS",
@@ -375,8 +379,9 @@
         "method": "A8"
       },
       "column": "rmse_mV",
-      "value": 36.73,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+      "value": 36.7,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1); matches the 36.70 predicted in 33.4"
     },
     {
       "id": "volt.char.A3",
@@ -387,8 +392,9 @@
         "method": "A3"
       },
       "column": "rmse_mV",
-      "value": 34.13,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+      "value": 34.09,
+      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
     },
     {
       "id": "volt.char.RLS",
@@ -798,9 +804,10 @@
         "holdout": "BOOST"
       },
       "column": "inner_1D CNN (shipped)",
-      "value": 0.0141,
+      "value": 0.0142,
       "tol": 0,
-      "source": "sec 36.1 — the CNN's inner score, never the best on any fold"
+      "source": "sec 36.1 — the CNN's inner score, never the best on any fold",
+      "note": "[2026-08-31 determinism] the CNN is now trained through a deterministic pool; its inner score moved 0.0141 -> 0.0142 and it is still last on all six folds"
     },
     {
       "id": "mcu.icache.on.ridge",

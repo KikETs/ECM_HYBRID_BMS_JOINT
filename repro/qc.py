@@ -169,16 +169,49 @@ def scan():
                 if old in ln:
                     stale_hits.append((fn, i, old, new, what, ln.strip()[:72]))
             for pat, what, where in RETRACTED:
-                if not re.search(pat, ln):
+                m = re.search(pat, ln)
+                if not m:
                     continue
                 ctx = '\n'.join(lines[max(0, i - 4):i + 6])
-                if '~~' in ln or any(m in ctx for m in FILTERS):
+                if '~~' in ln or any(x in ctx for x in FILTERS):
+                    continue
+                prev = lines[i - 2] if i >= 2 else ''
+                if _is_a_quotation(ln, m, prev) or 'qc.py' in ln:
+                    # A correction has to be able to name the wording it
+                    # retracts, and this file has to be able to describe its
+                    # own guards.  Quoting is not asserting -- but only when
+                    # the sentence is visibly about the retraction, which is
+                    # what the marker check enforces.
                     continue
                 retr_hits.append((fn, i, what, where, ln.strip()[:72]))
             for pat, what in ORPHAN_HINTS:
                 if re.search(pat, ln):
                     orph_hits.append((fn, i, what, ln.strip()[:60]))
     return stale_hits, retr_hits, orph_hits
+
+
+QUOTE_MARKERS = (
+    'claimed', 'claim ', 'called', 'said', 'withdrawn', 'retracted',
+    'superseded', 'fails if', 'no longer', 'not available', 'never',
+    'was wrong', 'corrected', 'narrowed', 'forbidden', 'must not', 'is false',
+)
+
+
+def _is_a_quotation(line, match, prev=''):
+    """True when the retracted wording is quoted inside a retraction sentence.
+
+    Two conditions, both required.  The phrase has to sit between double
+    quotes -- so an assertion cannot slip through by being near a marker --
+    and the line has to carry a word that marks it as talking ABOUT the
+    claim rather than making it.  Section 37 quotes every phrase it
+    withdraws, and without this it would trip the guards it just installed.
+    """
+    before, after = line[:match.start()], line[match.end():]
+    quoted = before.count('"') % 2 == 1 and '"' in after
+    # The marker can sit in the previous line: markdown wraps, and
+    # 'section 35.2 called\nit "..."' is one sentence across two lines.
+    sentence = (prev + ' ' + line).lower()
+    return quoted and any(k in sentence for k in QUOTE_MARKERS)
 
 
 def table_numbers():

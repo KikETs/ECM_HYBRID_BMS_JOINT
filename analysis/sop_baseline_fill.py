@@ -33,6 +33,22 @@ def pred_dv(kf, ks, d):
 
 
 def fit_alpha(ds, grid=np.linspace(0.0, 1.0, 51)):
+    """Pick the transfer ratio on a 51-point grid, step 0.02.
+
+    NOISE AMPLIFIER — read before changing anything upstream.  This is an
+    argmin over a discrete grid, so its output is a step function of its
+    input.  While sop_trim.py was only seeded and not deterministic, two
+    training runs differed by about 0.05 % in prediction, which was enough to
+    move this argmin one step (alpha_slow 0.32 -> 0.34) and land as a 2.5 %
+    change in a published voltage RMSE.  Eight verified numbers moved on a
+    rebuild for that reason and no other.
+
+    analysis/determinism.py removes the input noise, so the step is no longer
+    reachable by chance.  The amplifier remains: anything that perturbs the
+    trim predictions can still flip this by a full grid step, and a reader
+    comparing two versions of the paper should know that a 2.5 % move here can
+    mean a 0.05 % change upstream rather than a real one.
+    """
     best, ba, bb = np.inf, 0.0, 0.0
     for af in grid:
         for asl in grid:

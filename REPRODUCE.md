@@ -85,7 +85,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `soc_baselines` | 4 | `python3 ../repro/run_soc_baselines.py` | `results/tables/soc_baselines.csv` |
 | `soc_headline` | 3 | `python3 ../repro/run_soc_headline.py` | `results/tables/soc_headline.csv` |
 | `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
-| `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `results/tables/safety_strict_lstm_oracle.csv +2` |
+| `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `runs_trim_lstm +2` |
 | `chen2026` | 6 | `python3 ../repro/run_chen2026_baseline.py` | `results/tables/chen2026_baseline.csv +1` |
 | `nested_selection` | 120 | `python3 ../repro/run_nested_selection.py` | `results/tables/nested_selection.csv` |
 | `end_to_end` | 12 | `python3 ../repro/run_end_to_end.py` | `results/tables/end_to_end.csv +3` |
@@ -114,10 +114,10 @@ Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never ti
 | `sop.chg.10s.lambda` | 0.586 | `safety.csv` | sec 32.7 |
 | `sop.chg.10s.usable` | 59.6 | `safety.csv` | sec 32.7 |
 | `sop.disc.10s.usable.est_soh` | 69.0 | `safety.csv` | sec 29 / 30.11 |
-| `sop.chg.10s.usable.est_soh` | 54.1 | `safety.csv` | sec 29 / 30.11 |
+| `sop.chg.10s.usable.est_soh` | 54.2 | `safety.csv` | sec 29 / 30.11 |
 | `ladder.disc.A0` | 59.3 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.direct` | 32.6 | `ladder.csv` | sec 32.5 |
-| `ladder.disc.shrink` | 62.4 | `ladder.csv` | sec 32.5 |
+| `ladder.disc.shrink` | 62.0 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A8` | 69.1 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A3` | 70.3 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.rls_bound` | 71.1 | `ladder.csv` | sec 32.5 |
@@ -132,14 +132,14 @@ Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never ti
 | `soc.open_loop.ibias` | 10.32 | `soc_perturb.csv` | sec 30.4 |
 | `soc.adopted.ibias` | 2.86 | `soc_perturb.csv` | sec 30.4 |
 | `volt.disc.A0` | 85.36 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.disc.direct` | 134.71 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.disc.shrink` | 69.1 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.disc.A8` | 62.81 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.disc.A3` | 58.76 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.disc.direct` | 134.57 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.disc.shrink` | 69.23 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.disc.A8` | 62.78 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.disc.A3` | 58.71 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.disc.RLS` | 49.89 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.char.A0` | 49.9 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.char.A8` | 36.73 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.char.A3` | 34.13 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.char.A8` | 36.7 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.char.A3` | 34.09 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.char.RLS` | 33.59 | `voltage.csv` | sec 32.2 / 32.6 |
 | `mcu.feat` | 13.94 | `mcu.csv` | sec 33.1 |
 | `mcu.feat_a8` | 6.79 | `mcu.csv` | sec 33.1 |
@@ -173,7 +173,7 @@ Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never ti
 | `soh.ridge.us` | 6.5 | `soh_model_cost.csv` | sec 36.4 |
 | `soh.cnn.us` | 19442.25 | `soh_model_cost.csv` | sec 36.4 |
 | `soh.nested.pooled` | 0.0095 | `soh_nested_summary.csv` | sec 36.1 |
-| `soh.nested.cnn_inner.BOOST` | 0.0141 | `soh_nested.csv` | sec 36.1 |
+| `soh.nested.cnn_inner.BOOST` | 0.0142 | `soh_nested.csv` | sec 36.1 |
 | `mcu.icache.on.ridge` | 53.2 | `mcu_icache.csv` | sec 36.4 |
 | `mcu.icache.off.ridge` | 106.38 | `mcu_icache.csv` | sec 36.4 |
 | `mcu.icache.off.cnn` | 107.89 | `mcu_icache.csv` | sec 36.4 |

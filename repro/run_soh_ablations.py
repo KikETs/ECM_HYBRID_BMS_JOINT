@@ -29,6 +29,12 @@ import csv
 import os
 import sys
 
+import os as _os_early, sys as _sys_early
+_sys_early.path.insert(0, _os_early.path.join(
+    _os_early.path.dirname(_os_early.path.dirname(
+        _os_early.path.abspath(__file__))), 'analysis'))
+import determinism            # sets CUBLAS_WORKSPACE_CONFIG before
+                              # the lazy `import torch` below
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +82,7 @@ def cnn_loco(X, y, cell, cells, seeds=3, epochs=300, lr=3e-3):
     """The shipped architecture on an arbitrary input width."""
     import torch
     import torch.nn as nn
+    from soh_cnn import pool_to_8 as _pool_to_8
 
     class Net(nn.Module):
         def __init__(self, n_in, ch=16, drop=0.1):
@@ -83,7 +90,7 @@ def cnn_loco(X, y, cell, cells, seeds=3, epochs=300, lr=3e-3):
             self.conv = nn.Sequential(
                 nn.Conv1d(1, ch, 5, padding=2), nn.ReLU(), nn.MaxPool1d(2),
                 nn.Conv1d(ch, ch * 2, 5, padding=2), nn.ReLU(),
-                nn.AdaptiveAvgPool1d(8))
+                _pool_to_8(n_in // 2))
             self.head = nn.Sequential(
                 nn.Flatten(), nn.Dropout(drop),
                 nn.Linear(ch * 2 * 8, 32), nn.ReLU(), nn.Linear(32, 1))
@@ -101,7 +108,7 @@ def cnn_loco(X, y, cell, cells, seeds=3, epochs=300, lr=3e-3):
         yt = torch.tensor(y[tr], dtype=torch.float32, device=dev)
         preds = []
         for s in range(seeds):
-            torch.manual_seed(s)
+            determinism.enable(s)
             m = Net(xt.shape[1]).to(dev)
             opt = torch.optim.Adam(m.parameters(), lr=lr, weight_decay=1e-4)
             # Mirror soh_cnn.train_fold exactly: mini-batch 32 and a

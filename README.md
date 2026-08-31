@@ -111,6 +111,20 @@ by 26.9 W on 5 of 8 in-hull points. The pooled hull **never reaches below SOC
 
 ## Reproduce
 
+Training is **bit-reproducible**: the same command on the same cache produces
+byte-identical checkpoints. `analysis/determinism.py` seeds every generator,
+pins cuDNN to deterministic kernels, disables TF32, and sets
+`CUBLAS_WORKSPACE_CONFIG` before the cuBLAS handle exists; it raises rather
+than warning if that variable is missing, because a run that cannot be
+reproduced should say so.
+
+This was not true until 2026-08-31. The trainers were seeded but not
+deterministic, so two runs differed by ~0.05 % in prediction — and
+`sop_baseline_fill.py`'s `fit_alpha`, an argmin over a 51-point grid, turns
+0.05 % into a 2.5 % move in a published voltage RMSE. Eight verified numbers
+moved on a rebuild for exactly that reason. The failure was *intermittent*,
+which is why running it twice and getting the same answer had not caught it.
+
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
 python3 repro/verify.py        # recompute the 78 published numbers

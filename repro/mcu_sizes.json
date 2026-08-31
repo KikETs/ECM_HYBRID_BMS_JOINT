@@ -13,8 +13,13 @@
     "elf_note": "same source with the preserved CNN header; 3 seeds x 10,945 parameters",
     "rmse_pooled": 0.0135,
     "rmse_per_cell": {
-      "BOOST": 0.0077, "BOOST_NEGPULSE": 0.0095, "BOOST_NEGPULSE_1S": 0.0060,
-      "BOOST_REST": 0.0293, "CC": 0.0130, "CC_CELL2": 0.0067
-    }
+      "BOOST": 0.0078,
+      "BOOST_NEGPULSE": 0.0094,
+      "BOOST_NEGPULSE_1S": 0.006,
+      "BOOST_REST": 0.0291,
+      "CC": 0.013,
+      "CC_CELL2": 0.0066
+    },
+    "note_2026_08_31": "Retrained through the deterministic pool (soh_cnn.pool_to_8): pooled 0.0135 -> 0.0135.  AdaptiveAvgPool1d had no deterministic CUDA backward, so every earlier CNN fit was irreproducible; the replacement is the same function on this input (AvgPool1d(4), verified max|delta| 0)."
   }
 }

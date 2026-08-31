@@ -446,12 +446,12 @@ STAGES = [
     dict(id='seq_baselines', tier=5, minutes=45, measured=True,
          cmd='{py} ../repro/run_sop_seq_baselines.py',
          inputs=['cache/trim', 'cache/trim_chg'],
-         outputs=['results/tables/safety_strict_lstm_oracle.csv',
-                  'results/tables/safety_strict_gru_oracle.csv',
-                  'results/tables/safety_strict_ffrls_oracle.csv'],
-         why='LSTM, GRU and forgetting-factor RLS scored the same way as the '
-             'trim.  This is the comparison the "competitive, not superior" '
-             'claim rests on.'),
+         outputs=['runs_trim_lstm', 'runs_trim_gru', 'runs_trim_ffrls'],
+         why='LSTM, GRU and forgetting-factor RLS, trained only.  It does NOT '
+             'write the safety tables: eval and safety_strict do that, and '
+             'they have to run AFTER this stage.  Declaring the tables here '
+             'was wrong and it hid an ordering trap - run_evals scored the '
+             'previous sequence models when this ran second.'),
 
     dict(id='chen2026', tier=5, minutes=6, measured=True,
          cmd='{py} ../repro/run_chen2026_baseline.py',

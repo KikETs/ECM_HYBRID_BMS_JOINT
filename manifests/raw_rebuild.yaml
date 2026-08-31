@@ -30,59 +30,45 @@ cause: >
   states this explicitly - "rebuilding the dataset next time picks it up
   automatically" - and predicts the exact numbers a rebuild would give.
 
-prediction_confirmed:
-  source: "docs/sop_hybrid_spec.md sec 33.4, the defects-excluded (v3) column"
-  predicted_discharge_mV: 62.78
-  observed_discharge_mV: 62.78
-  predicted_charge_mV: 36.70
-  observed_charge_mV: 36.70
+cause_corrected_2026_08_31: >
+  [BOTH EARLIER ACCOUNTS WERE WRONG — this is the measured one.]
 
-concentration:
-  boost_negpulse_column_cells: 24
-  note: >
-    The movement concentrates in the BOOST_NEGPULSE column, the one cell
-    sec 33.4 identified as carrying the defective drive files.  The other
-    five cells move too because leave-one-cell-out puts BOOST_NEGPULSE's
-    corrected data into their training sets - which sec 33.4 also predicted.
+  "The shipped cache predates it" is not what was stale.  cache/trim and
+  cache/trim_chg were rebuilt from scratch on 2026-08-31 and came back
+  BYTE-IDENTICAL: same row counts for all six cells in both directions, X and
+  Y allclose.  Seventy minutes of wall clock to establish that.
 
-largest_movers:
-  - table: alpha.csv
-    column: alpha_slow
-    committed: 0.32
-    rebuilt: 0.34
-    rel_pct: 6.250
-  - table: voltage.csv
-    column: CC
-    committed: 67.61
-    rebuilt: 69.3
-    rel_pct: 2.500
-  - table: voltage.csv
-    column: CC
-    committed: 58.26
-    rebuilt: 59.23
-    rel_pct: 1.665
-  - table: ladder.csv
-    column: rmse_A
-    committed: 4.72
-    rebuilt: 4.77
-    rel_pct: 1.059
-  - table: safety_strict_percell_oracle.csv
-    column: worst_A
-    committed: 0.386
-    rebuilt: 0.383
-    rel_pct: 0.777
-  - table: safety_strict_percell_oracle.csv
-    column: worst_A
-    committed: 0.13
-    rebuilt: 0.131
-    rel_pct: 0.769
+  A second guess - that the committed MODELS predated the fix - was also
+  wrong.  Their training labels Y are identical to the retrained ones in all
+  six cells, so they were fitted on the same data.  Only the weights differed,
+  by 0.02-0.06 % in prediction.
 
-alpha_slow_note: >
-  The single largest relative move, alpha_slow 0.32 -> 0.34 (6.25 %), is one
-  step of the np.linspace(0, 1, 51) grid that fit_alpha searches.  It is a
-  grid quantum, not a measurement drift.
+  What it actually is: sop_baseline_fill.py's fit_alpha is an argmin over
+  np.linspace(0, 1, 51), step 0.02 - a step function of its input.  Training
+  was seeded but not deterministic (cuDNN kernel choice, unordered CUDA
+  reductions, no fixed cuBLAS workspace), so two fits differed by ~0.05 %, and
+  that was enough to move the argmin one step and land as a 2.5 % change in a
+  published voltage RMSE.  This file had already called alpha_slow
+  0.32 -> 0.34 "a grid quantum, not a measurement drift" without connecting it
+  to the reproducibility claim.
 
-decision: AUTHOR DECISION REQUIRED
+  The nondeterminism was INTERMITTENT, which is why running the pipeline twice
+  and getting the same answer had not caught it: committed models against a
+  retrain differed by 0.05 %, and that retrain against a
+  determinism-enabled run was bit-identical.
+
+  Both wrong diagnoses were reached by inference where a measurement was
+  available - the cache was never compared against the defect list, and the
+  labels were never compared at all.
+
+determinism_2026_08_31:
+  cache: "cache/trim and cache/trim_chg rebuilt from scratch, both directions, six cells each - byte-identical, so sop_trim_dataset.py is deterministic and the cache was never the stale link (70 min wall clock)"
+  training_before: "seeded only; two fits differed by 0.02-0.06 % in prediction, intermittently"
+  training_after: "analysis/determinism.py - same command twice gives bit-identical predictions and checkpoints that hash the same"
+  a_model_that_could_never_be_reproduced: "torch.use_deterministic_algorithms(True) refused to train the SOH CNN because adaptive_avg_pool2d_backward_cuda has no deterministic implementation.  Replaced with the exactly equivalent AvgPool1d on this input (max |delta| 0); the CNN now reproduces bit for bit and its worst cell moved 0.0293 -> 0.0291"
+  rest_of_the_chain: "checked, not assumed - eval_sop_amps.py works in NumPy on stored predictions, and every table producer that uses randomness seeds it"
+
+decision: RESOLVED 2026-08-31 - retrain deterministically, adopt the result
 decision_detail: >
   Section 33.4 decided to keep the pre-fix cache because the deployment
   metrics do not move and 38 verified numbers stood on it.  This rebuild
@@ -92,4 +78,10 @@ decision_detail: >
   arguably more correct - the defect exclusion is the right processing -
   but it would change seven published voltage RMSE values and the spec
   tables in sec 32.2 and 32.6 that quote them.  That is the author's call.
+  [SUPERSEDED 2026-08-31] Taken.  Leaving committed models that were fitted
+  on data the repository no longer produces is not a defensible position for
+  a reproduction package: a clean clone cannot arrive at the published
+  numbers, which is the whole claim.  The trims were retrained on the current
+  cache and every downstream table regenerated.  Section 37 records what
+  moved.
 rebuilt_artifacts: "../preserved/rawrebuild_output/rebuilt_artifacts.tar.gz"

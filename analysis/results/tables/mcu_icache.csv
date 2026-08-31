@@ -1,7 +1,7 @@
 icache,soh_model,stage,median_us,p95_us,max_us,note
 on,ridge,FEAT,13.94,14.17,15.27,deployment setting
 on,ridge,SOLVE,46.60,52.83,74.11,deployment setting
-on,ridge,FULL,53.20,59.56,81.09,deployment setting
+on,ridge,FULL,53.21,59.56,81.09,deployment setting
 on,CNN,FEAT,13.28,13.49,14.91,deployment setting
 on,CNN,SOLVE,44.05,49.13,65.80,deployment setting
 on,CNN,FULL,50.50,55.60,72.25,deployment setting

@@ -50,6 +50,7 @@ import os
 import sys
 
 import numpy as np
+import determinism            # sets CUBLAS_WORKSPACE_CONFIG; must precede torch
 import torch
 import torch.nn as nn
 
@@ -143,7 +144,7 @@ def load_cells(data_dir=DATA_DIR):
 
 def train_fold(model_cls, tr, te, epochs, lr, seed, dev, lam=1e-2, delta=0.02,
                ablate=None, q=0.0):
-    torch.manual_seed(seed)
+    determinism.enable(seed)
     Xtr = tr["X"].copy(); Xte = te["X"].copy()
     if ablate:
         Xtr[:, ablate] = 0.0; Xte[:, ablate] = 0.0

@@ -32,11 +32,34 @@ import argparse
 import os
 
 import numpy as np
+import determinism            # sets CUBLAS_WORKSPACE_CONFIG; must precede torch
 import torch
 import torch.nn as nn
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "cache", "soh_charge.npz")
+
+
+def pool_to_8(length):
+    """AdaptiveAvgPool1d(8), but deterministic where it can be.
+
+    adaptive_avg_pool2d_backward_cuda has no deterministic implementation, so
+    torch.use_deterministic_algorithms(True) refuses to train through it.
+    When the input length is a multiple of 8 the adaptive pool is exactly an
+    average pool of a fixed kernel -- checked numerically, max |delta| 0.0 --
+    and AvgPool1d does have a deterministic backward.  The shipped input is
+    64 points, which is 32 after MaxPool1d(2) and therefore kernel 4, so the
+    model that produced every published CNN number takes the deterministic
+    branch.
+
+    A window ablation can leave a length that is not a multiple of 8; that
+    case keeps the adaptive layer and is not bit-reproducible, which is worth
+    knowing before quoting it.
+    """
+    import torch.nn as nn
+    if length >= 8 and length % 8 == 0:
+        return nn.AvgPool1d(length // 8)
+    return nn.AdaptiveAvgPool1d(8)
 
 
 class SOHNet(nn.Module):
@@ -46,7 +69,7 @@ class SOHNet(nn.Module):
             nn.Conv1d(1, ch, 5, padding=2), nn.ReLU(),
             nn.MaxPool1d(2),
             nn.Conv1d(ch, ch * 2, 5, padding=2), nn.ReLU(),
-            nn.AdaptiveAvgPool1d(8),
+            pool_to_8(n_in // 2),
         )
         self.head = nn.Sequential(
             nn.Flatten(), nn.Dropout(drop),
@@ -59,7 +82,7 @@ class SOHNet(nn.Module):
 
 
 def train_fold(Xtr, ytr, Xte, yte, epochs, lr, seed, dev):
-    torch.manual_seed(seed)
+    determinism.enable(seed)
     m = SOHNet(Xtr.shape[1]).to(dev)
     opt = torch.optim.Adam(m.parameters(), lr=lr, weight_decay=1e-4)
     sch = torch.optim.lr_scheduler.MultiStepLR(

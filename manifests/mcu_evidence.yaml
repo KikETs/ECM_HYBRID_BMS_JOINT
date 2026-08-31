@@ -22,8 +22,8 @@ firmware:
     text_B: 72700
     data_B: 92
     bss_B: 13172
-    elf_sha256: "9d29e1cff8d91bf588cb660a2d4704397be1b7ad427b7be078e64e8a47014434"
-    bin_sha256: "b5ec7fb3c64c59f5b63c7a7847b8a0b0de0a316856f4ecbfc09fbc2c9bb85528"
+    elf_sha256: "7d3996f8ce0ef9d473fa0cd2fb36d9a1f6a0ddacaf37828d0ff930faf6879964"
+    bin_sha256: "188520672b1075e4534bf3c7816c728dc3832018c1774531b0172fa1d53555fd"
     changed_from_audit: >
       143932 B on 2026-08-27; 143964 B after the all-cell SOP header; 72700 B
       now.  The 71264 B drop is the 1D CNN leaving: replaced by ridge, the SOH
@@ -43,7 +43,7 @@ model_on_board:
   rung: A8
   header: "mcu/sop_tables.h (fw_sop/Inc/sop_tables.h is now a symlink to it)"
   fit: "all-cell (--deployment, model_A8_ALL.pt), NOT a leave-one-cell-out fold"
-  header_sha256: "2a4378de3ae2b073b2f36ddcfe3e31bb73982c27f29583a324da59f3883eb1e2"
+  header_sha256: "586af0456e5dd1a5d97f6573448fa1b6b10a1e59dec1bee5a7ba418e2d57d499"
   header_reproduces_from_the_stage_graph: >
     repro/stages.py mcu_export now runs export_mcu_tables.py --rung A8
     --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy,
@@ -53,7 +53,7 @@ model_on_board:
     shipped header with a fold.
   binary_evidence: >
     Searching the objcopy'd image for IEEE-754 little-endian patterns:
-    trim_w_dis[0] = 0.2105654 (all-cell, 759e573e) occurs once; the
+    trim_w_dis[0] = 0.2107657 (all-cell, f7d2573e) occurs once; the
     leave-one-cell-out CC fold 0.2146806 (3bd55b3e) and the A3 rung value
     0.2283459 (82d3693e) do not occur at all.
   effective_coefficients: 4
@@ -122,7 +122,7 @@ soh_replacement_2026_08_31:
   what: >
     The 1D CNN was replaced by ridge on the same 64-point dQ/dV input.  It is
     better on every held-out cell (pooled RMSE 0.0094 against 0.0135, worst
-    cell 0.0130 against 0.0293), it is 65 coefficients against 32835
+    cell 0.0130 against 0.0291), it is 65 coefficients against 32835
     parameters, and it halves the firmware.
   why_not_selection_on_the_test_set: >
     Because the family was re-chosen by a procedure that never sees the
@@ -152,3 +152,19 @@ soh_replacement_2026_08_31:
     analysis/results/tables/mcu.csv is from the deployment image, n=500:
     FULL 53.20 us median, p95 59.56, max 81.09.  The 50.52 us in the earlier
     draft was the CNN image and is superseded.
+
+retrain_2026_08_31:
+  what: >
+    The trims were retrained on the current cache (see raw_rebuild.yaml) and
+    the deployment header re-exported from the new all-cell fits.
+  header_weight: "trim_w_dis[0] 0.2105654 -> 0.2107657 (+0.095 %)"
+  binary_evidence: >
+    The flashed image contains 0.2107657 (f7d2573e) once; 0.2105654, the
+    leave-one-cell-out CC fold 0.2146806 and the A3 value 0.2283459 do not
+    occur.
+  timing_unchanged: >
+    Re-measured n=500 after reflashing: FULL 53.21 us median against 53.20
+    before, a one-cycle difference (13302 against 13301).  Every other stage
+    is identical to the cycle except TRIM, 1674 against 1673.  Retrained
+    weights do not change the cost.
+  firmware_size_unchanged: "text 72700 B, bss 13172 B - identical"

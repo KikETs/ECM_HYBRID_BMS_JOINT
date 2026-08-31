@@ -143,7 +143,7 @@ soh_arm:
     detail: >
       Under identical nested cell-held-out splits, identical 64-bin features
       and identical target, ridge regression beats the 10,945-parameter CNN:
-      pooled RMSE 0.0094 vs 0.0135, worst cell 0.0130 vs 0.0293.  PLS, SVR
+      pooled RMSE 0.0094 vs 0.0135, worst cell 0.0130 vs 0.0291.  PLS, SVR
       and gradient boosting also beat it.  Confirmed with a fixed alpha and
       no inner selection (0.0093-0.0095), so it is not a selection artifact.
     implication: "The CNN is not justified on this dataset, and ridge would remove the 17.9 ms SOH inference entirely."
@@ -455,8 +455,11 @@ mcu_deployment:
       stays the LOCO folds.  Nothing is scored on the ALL pool - the guard in
       ecm_pool.build says so in the source.
     binary_evidence: >
-      The flashed image contains the all-cell weight 0.2105654 and NOT the
+      The flashed image contains the all-cell weight 0.2107657 and NOT the
       LOCO-CC fold value 0.2146806 nor the A3 value 0.2283459.
+      [2026-08-31] Was 0.2105654 until the trims were retrained on the current
+      cache; the header was re-exported, rebuilt, reflashed and re-measured,
+      and FULL moved by one cycle (53.20 -> 53.21 us).
     timing_unchanged: >
       Re-measured after flashing: FULL 50.52 us median against 50.44 for the
       LOCO header, SOLVE 44.00 against 43.98.  Changing which weights ship
@@ -759,7 +762,7 @@ soh_replacement:
     is not the argmax of the procedure on two of six folds.
   accuracy: >
     pooled RMSE 0.0094 against the CNN's 0.0135; worst cell 0.0130 against
-    0.0293, both BOOST_REST.  The CNN was 2.2x its own pooled error on the
+    0.0291, both BOOST_REST.  The CNN was 2.2x its own pooled error on the
     hardest cell, ridge is 1.4x.
   board: >
     SOH inference 6.50 us median (p95 6.50, max 7.84) against the CNN's
@@ -852,3 +855,80 @@ blocked_work:
       noninferiority test needs the margin fixed in advance, so the honest
       move is to drop the word and report the descriptive comparison.
     replacement_artifact: "analysis/results/tables/method_comparison.csv"
+
+determinism:
+  status: VERIFIED_MEASURED
+  producer: >
+    analysis/determinism.py; enabled from sop_trim.py, soh_cnn.py and
+    repro/run_sop_seq_baselines.py
+  what_was_wrong: >
+    The trainers called torch.manual_seed and nothing else.  cuDNN still chose
+    kernels by benchmarking, several CUDA reductions still accumulated in
+    nondeterministic order, and cuBLAS had no fixed workspace, so two runs on
+    identical data gave weights about 0.05 % apart.
+  why_0_05_percent_mattered: >
+    sop_baseline_fill.py's fit_alpha is an argmin over np.linspace(0, 1, 51),
+    step 0.02 - a step function of its input.  A 0.05 % shift in the trim
+    predictions moves that argmin one step (alpha_slow 0.32 -> 0.34), and that
+    lands as a 2.5 % change in a published voltage RMSE.  Eight verified
+    numbers moved on a rebuild for this reason and no other.
+  the_dangerous_part: >
+    It is intermittent, not per-run.  Committed models against a retrain
+    differed by 0.05 %; that retrain against a determinism-enabled run was
+    bit-identical.  Two or three runs agreeing is therefore not evidence of
+    reproducibility - the next one can still cross a grid boundary.
+  what_is_now_fixed:
+    - "torch.manual_seed + cuda.manual_seed_all + numpy + random"
+    - "cudnn.deterministic = True, cudnn.benchmark = False"
+    - "torch.use_deterministic_algorithms(True), strict - it raises rather than warning"
+    - "CUBLAS_WORKSPACE_CONFIG=:4096:8, set at import so it precedes the cuBLAS handle"
+    - "TF32 disabled for matmul and cudnn"
+  verification: >
+    The same command run twice, sequentially, on the same cache: predictions
+    bit-identical for all six cells (max |delta| 0.000e+00), and the
+    checkpoint files hash the same (model_A8_BOOST 913bbfc0..., model_A8_
+    CC_CELL2 1d99ccd4...).  Summary mean 62.778570 both times.
+  adopting_it_changed_nothing: >
+    The deterministic run was also bit-identical to the immediately preceding
+    nondeterministic one, so switching the pipeline over did not move a single
+    published number.  That is luck about which side of the grid the previous
+    run landed on, not a reason the fix was unnecessary.
+  end_to_end_proof: >
+    The claim is not "training is deterministic" but "the pipeline gives the
+    same numbers", so it was tested that way.  The whole chain was re-run from
+    scratch - four trims retrained, baselines refitted, every evaluation
+    rescored, every safety table and the method comparison rebuilt - and the
+    54 result tables were diffed cell by cell against the previous run:
+    0 of 54 tables changed, 0 numeric cells moved.
+    manifests/model_provenance.yaml now also records the SHA-256 of every
+    checkpoint, so a committed model that differs from a fresh fit fails
+    immediately instead of surfacing later as a table diff.
+  the_amplifier_remains: >
+    fit_alpha is still an argmin over a discrete grid.  Determinism removes
+    the input noise so the step is no longer reachable by chance, but anything
+    that perturbs the trim predictions can still flip it a whole step.  The
+    function now carries a NOISE AMPLIFIER warning and a test requires it to
+    stay there.
+  the_rest_of_the_chain_was_already_deterministic: >
+    Checked rather than assumed.  eval_sop_amps.py loads predictions from the
+    pred_*.npz written at training time and works in NumPy - it does no GPU
+    inference, so there is no second place for cuDNN to choose a kernel.  The
+    table producers that use randomness all seed it: sop_pack2.py takes
+    default_rng(a.seed), run_safety_strict.py fixes BOOT_SEED = 12345 for the
+    cell-cluster bootstrap, run_parity.py takes default_rng(a.seed).  Training
+    was the only unseeded link.
+  a_model_that_could_not_be_reproduced_at_all: >
+    torch.use_deterministic_algorithms(True) refused to train the SOH CNN:
+    adaptive_avg_pool2d_backward_cuda has no deterministic implementation, so
+    every CNN fit ever made through that layer was irreproducible no matter
+    what seed was set, and nobody knew.  The layer is AdaptiveAvgPool1d(8) on
+    a length-32 activation, which is exactly AvgPool1d(4) - verified
+    numerically, max |delta| 0.0 - and AvgPool1d does have a deterministic
+    backward.  soh_cnn.pool_to_8() picks the equivalent fixed-kernel pool
+    whenever the length is a multiple of 8 and keeps the adaptive layer
+    otherwise, with the non-reproducible case named in its docstring.  This is
+    the same function computed differently, not a different model.
+    It was found because enable() raises instead of warning.
+  enforced_by:
+    - "tests/test_determinism.py - 9 tests: enable() is called, torch.manual_seed is not called directly, determinism is imported before torch (checked by AST), enable() raises without the cuBLAS variable, the flags are actually set, and the amplifier stays documented"
+    - "manifests/model_provenance.yaml - SHA-256 of the training data behind each committed model, so a model cannot outlive its data again"

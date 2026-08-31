@@ -488,3 +488,21 @@ def test_everything_that_ships_has_a_producer_stage():
         w = os.path.normpath(want)
         assert any(o == w or o.startswith(w + os.sep) for o in outs), (
             f'{want} ends up on the board but no stage produces it')
+
+
+def test_committed_models_match_the_data_they_were_fitted_on():
+    """A committed model must not outlive the data that produced it.
+
+    analysis/runs_trim_a8/ is committed and analysis/cache/trim is gitignored.
+    The cache was corrected on 2026-08-27 and the models were never retrained,
+    so a clean clone rebuilt the cache correctly, met models fitted on the old
+    one, and landed 235 numeric cells away from the published tables -- with
+    nothing in the repository objecting.  Mtimes cannot catch this: a fresh
+    clone has none.  The fingerprint has to travel in the repository.
+    """
+    manifest = os.path.join(ROOT, 'manifests', 'model_provenance.yaml')
+    if not os.path.exists(manifest):
+        pytest.fail('manifests/model_provenance.yaml is missing; run '
+                    'repro/stamp_model_provenance.py --write')
+    rc, out, err = run(['repro/stamp_model_provenance.py', '--check'])
+    assert rc == 0, f'model provenance check failed:\n{out}\n{err}'

@@ -5101,7 +5101,9 @@ Ridge regression on the shipped input, with its penalty chosen by grouped
 inner selection on the five training cells only, beats the deployed CNN on
 the same leave-one-cell-out splits: pooled RMSE **0.0094 against 0.0135**, and
 worst cell **0.0130 against 0.0293** — a factor of 2.25 on the cell that
-matters. The CNN's seeds are fixed, not tuned, so the comparison does not
+matters. [Updated — 37.5: the CNN was retrained through a deterministic pool
+and its worst cell is now 0.0291, a factor of 2.24. The earlier figure came
+from a fit that could not be reproduced at all; see §37.5.] The CNN's seeds are fixed, not tuned, so the comparison does not
 favour ridge by search budget.
 
 The CNN is therefore **not** presented as a result. It is what was deployed
@@ -5190,12 +5192,12 @@ on those five and only then meets the held-out cell (`repro/run_soh_nested.py`).
 
 | outer holdout | chosen | inner ridge | inner CNN | outer RMSE |
 |---|---|---:|---:|---:|
-| BOOST | gradient boosting | 0.0105 | 0.0141 | 0.0091 |
+| BOOST | gradient boosting | 0.0105 | 0.0142 | 0.0091 |
 | BOOST_NEGPULSE | ridge | 0.0103 | 0.0184 | 0.0112 |
-| BOOST_NEGPULSE_1S | ridge | 0.0101 | 0.0150 | 0.0060 |
-| BOOST_REST | ridge | 0.0088 | 0.0103 | 0.0130 |
-| CC | ridge | 0.0092 | 0.0136 | 0.0106 |
-| CC_CELL2 | gradient boosting | 0.0122 | 0.0145 | 0.0056 |
+| BOOST_NEGPULSE_1S | ridge | 0.0101 | 0.0149 | 0.0060 |
+| BOOST_REST | ridge | 0.0088 | 0.0102 | 0.0130 |
+| CC | ridge | 0.0092 | 0.0135 | 0.0106 |
+| CC_CELL2 | gradient boosting | 0.0122 | 0.0144 | 0.0056 |
 
 **The CNN is last on all six folds**, with no fold close. The procedure's own
 pooled error is 0.0095 — indistinguishable from always-ridge at 0.0094 — so the
@@ -5208,7 +5210,7 @@ ensemble does not. That is a deployability constraint, not a test score.
 | | pooled RMSE | worst cell | coefficients |
 |---|---:|---:|---:|
 | ridge (deployed) | **0.0094** | **0.0130** (BOOST_REST) | **65** |
-| 1D CNN (superseded) | 0.0135 | 0.0293 (BOOST_REST) | 32,835 |
+| 1D CNN (superseded) | 0.0135 | 0.0291 (BOOST_REST) | 32,835 |
 
 The worst cell matters more than the pooled figure: the CNN was 2.2× its own
 pooled error on BOOST_REST, ridge is 1.4×. The arm that used to fail worst on
@@ -5311,3 +5313,249 @@ were recomputed rather than carried over.
 - **The CNN's int8 kernel** has no ridge counterpart, so `soh_simd.c` compiles
   to nothing and the SIMD comparison in §27 stands only for the superseded
   model.
+
+---
+
+## 37. Third review round — reproducibility, and the words the results support
+
+The second round (§35–36) was reviewed and returned a conditional go: the
+science was salvageable, the package was not submittable. Six findings, and
+the first one is the one that mattered.
+
+### 37.1 Raw-to-result reproducibility, resolved
+
+`manifests/raw_rebuild.yaml` had recorded that a full rebuild moved 235
+numeric cells across ten tables, and left the decision open with
+`AUTHOR DECISION REQUIRED`. It has been taken: **the defect-excluded rebuild
+is now the canonical result.**
+
+Getting there cost two wrong diagnoses, and both are worth recording because
+each was reached by inference where a measurement was available.
+
+*First wrong diagnosis.* `voltage.csv` still read 67.61 where the manifest
+said a rebuild gives 69.3, so the cache was assumed stale. It was not. Rebuilt
+from scratch in both directions, all six cells, `cache/trim` came back
+**byte-identical** — same row counts, `X` and `Y` allclose. Seventy minutes of
+wall clock to learn that the thing I should have compared first was the cache
+against the defect list.
+
+*Second wrong diagnosis.* The committed models were then assumed to predate
+the fix. Their training labels `Y` are identical to the retrained ones in all
+six cells, so they were fitted on the same data; only the weights differed, by
+0.02–0.06 % in prediction.
+
+*What it actually was.* `sop_baseline_fill.py`'s `fit_alpha` is an argmin over
+`np.linspace(0, 1, 51)`, step 0.02 — a **step function of its input**. A
+0.05 % shift in the trim predictions moves that argmin one step, and that
+lands as a 2.5 % change in a published voltage RMSE. The manifest had already
+named this ("a grid quantum, not a measurement drift") without connecting it
+to the reproducibility claim.
+
+Retraining reproduced the documented rebuilt values exactly — `voltage.csv`
+shrink CC 67.61 → 69.3 and `ladder.csv` rmse_A 4.72 → 4.77, both as recorded —
+and moved **eight verified numbers**:
+
+| check | was | now |
+|---|---:|---:|
+| `volt.disc.A8` | 62.81 | **62.78** |
+| `volt.char.A8` | 36.73 | **36.70** |
+| `volt.disc.A3` | 58.76 | **58.71** |
+| `volt.char.A3` | 34.13 | **34.09** |
+| `volt.disc.direct` | 134.71 | **134.57** |
+| `volt.disc.shrink` | 69.10 | **69.23** |
+| `ladder.disc.shrink` | 62.4 | **62.0** |
+| `sop.chg.10s.usable.est_soh` | 54.1 | **54.2** |
+
+The A8 charge figure, 36.70 mV, is exactly what §33.4 predicted the
+defect-excluded data would give. `ladder.disc.shrink` read 62.4 twice and 62.0
+twice during this audit as the grid step flipped under it; that is the
+amplifier, not a measurement.
+
+One number that moved mid-audit was not a measurement at all: a 55.54 for the
+estimated-SOH charge figure came from a `safety_strict` table that had not
+been re-run after `run_evals`. Three ordering mistakes of that shape happened
+in this round, all from hand-assembling partial re-runs, which is why the
+regeneration is now one script in dependency order.
+
+### 37.2 Estimated state, under a lambda the vehicle actually has
+
+§35.1 scored each corner under a lambda refitted inside that corner, which
+answers "how well could this be calibrated" and hides the state error in the
+recalibration. A deployed system does not recalibrate. `run_end_to_end.py` now
+also carries the oracle corner's per-cell lambda across unchanged:
+
+**discharge, τ = 10 s, 388 rows, λ frozen at the oracle corner's calibration**
+
+| | exceed | usable | worst overshoot |
+|---|---:|---:|---:|
+| oracle SOH + oracle SOC | 3 | 73.02 % | 1.050 A |
+| estimated SOH + oracle SOC | 2 | 72.20 % | 0.233 A |
+| oracle SOH + estimated SOC | 3 | 72.59 % | 0.676 A |
+| **estimated SOH + estimated SOC** | **1** | **72.01 %** | 0.641 A |
+
+Under the shipped safety factor, on identical pulses, **estimated state does
+not increase exceedance** — one against the oracle corner's three — and costs
+about 1 %p of usable current. The apparent penalty in §35 was row-set drift
+plus per-corner recalibration.
+
+**And the drift finding has to be stated at its actual scope.** §35.2 called
+it "a wrong SOC corrupts the filter". No onboard filter was implemented or
+tested. What was measured is that the **offline evaluation inclusion rule** —
+the trustworthy-label test, an extrapolation distance computed against SOC —
+is SOC-dependent: the 97 rows only the fully estimated corner admits carry 27
+exceedances, 27.8 %, against 0.97 % for the oracle corner's own extra rows.
+That is a property of the evaluation protocol. It still means oracle-state
+validation overstates system safety, because it scores a row set the vehicle
+could not have selected, and it is still the reason the production claim is
+withdrawn. It is not a measured failure rate of an admission filter.
+
+### 37.3 Not equivalence — competitive, and not first
+
+§35.8 claimed "deployment-efficient equivalence". That word needs a margin
+fixed before the data is seen and a formal noninferiority test; choosing one
+now would be the same defect as choosing a model on the test set. It is
+withdrawn, and `method_comparison.csv` replaces it with what the data
+supports — every method with its cell-cluster bootstrap interval and its rank
+in each of the four direction × horizon conditions:
+
+| method | ranks across the four conditions |
+|---|---|
+| lstm | 1, 1, 4, 4 |
+| gru | 2, 2, 3, 2 |
+| a3 | 4, 4, 1, 3 |
+| **a8 (adopted)** | **3, 3, 2, 5** |
+| shrink | 5, 5, 5, 1 |
+| ffrls | 6, 6, 6, 6 |
+
+**A8 is never first.** Three of twenty intervals separate from it, and all
+three are FFRLS. So "outperformed" is false and "equivalent" is unavailable.
+The defensible sentence is *competitive safety-adjusted usable current against
+the A3, LSTM, GRU, FFRLS and shrinkage baselines tested here, using four
+effective deployed coefficients* — and "four effective deployed coefficients",
+never "a four-parameter model", because the header ships 50 floats.
+
+`qc.py` now fails if "equivalence", "outperformed", "four-parameter model",
+the onboard-filter framing or "production" reappear.
+
+### 37.4 The validity envelope, measured
+
+I recorded in the ledger that nothing in the three DOIs provides sub-0.30 SOC
+or off-25 °C data. **That was false and I should have checked before writing
+it.** RPCWBY Test#3 sweeps −20 to 40 °C on the same cell at SOC 0.02–0.95, and
+it was already reduced in the repository.
+
+Test#3 has no paired drive cycle, so the A8 trim cannot be computed on it —
+only the nominal 2RC layer the trim sits on. That layer is what decides
+whether a prediction is safe, so its envelope is worth measuring:
+
+| T set | in hull | λ needed | margin | exceed | worst overshoot |
+|---:|---:|---:|---:|---:|---:|
+| 40 °C | 57.1 % | 0.9887 | 1.447 | 0 | 0 W |
+| 25 °C | 50.0 % | 0.9672 | 1.416 | 0 | 0 W |
+| 0 °C | 57.1 % | 0.9534 | 1.396 | 0 | 0 W |
+| −10 °C | 57.1 % | 0.6001 | **0.878** | 1 | 6.37 W |
+| −20 °C | 57.1 % | 0.3319 | **0.486** | 5 | 26.90 W |
+
+The shipped λ = 0.6832 is conservative from **0 °C to 40 °C** and stops being
+conservative below 0 °C. The pooled hull **never reaches below SOC 0.30 at any
+temperature**, which also explains the 0 % low-SOC coverage in the Test#2
+result rather than leaving it an unexplained hole.
+
+So the claimable range is **0–40 °C and SOC ≥ 0.30**, measured rather than
+assumed. On Test#2 the frozen λ holds on discharge (margin 1.30–1.43, zero
+exceedance) and fails on charge (needs 0.3969 against the shipped 0.5860,
+9–11 exceedances of 248 in-hull rows per fold).
+
+**RPCWBY is one physical cell.** The six "folds" are six UYPYDJ-trained models
+on that same data — six models, not six cells — so their exceedance counts are
+correlated and "zero exceedance in all six folds" is not six independent
+confirmations. "External multi-cell validation" is forbidden in the ledger.
+
+### 37.5 The pipeline is now bit-reproducible
+
+The trainers called `torch.manual_seed` and nothing else. cuDNN still chose
+kernels by benchmarking, CUDA reductions still accumulated in nondeterministic
+order, and cuBLAS had no fixed workspace. `analysis/determinism.py` sets all
+of it, and **raises rather than warning** when it cannot: a run that cannot be
+reproduced should say so.
+
+Verified by running the same command twice: predictions bit-identical for all
+six cells, and the checkpoints hash the same.
+
+The strictness earned its keep immediately. `use_deterministic_algorithms(True)`
+refused to train the SOH CNN —
+
+    RuntimeError: adaptive_avg_pool2d_backward_cuda does not have a
+    deterministic implementation
+
+— which means **every CNN fit ever made through that layer was irreproducible
+regardless of seed, and nobody knew**. On a length-32 activation
+`AdaptiveAvgPool1d(8)` is exactly `AvgPool1d(4)` (checked numerically, max
+|Δ| = 0) and `AvgPool1d` has a deterministic backward. `soh_cnn.pool_to_8()`
+takes the equivalent fixed-kernel pool whenever the length divides, and names
+the non-reproducible case in its docstring. Same function, computed
+differently. The CNN then reproduced bit-for-bit across two runs, and its
+worst cell moved 0.0293 → 0.0291 — the old figure came from a fit that could
+not be reproduced at all.
+
+The rest of the chain was checked rather than assumed: `eval_sop_amps.py`
+reads the stored `pred_*.npz` in NumPy and does no GPU inference, and every
+table producer that uses randomness seeds it. Training was the only unseeded
+link.
+
+The claim is not "training is deterministic" but "the pipeline gives the same
+numbers", so it was tested that way. The whole chain was re-run from scratch —
+four trims retrained, baselines refitted, every evaluation rescored, every
+safety table and the method comparison rebuilt — and the 54 result tables
+diffed cell by cell against the previous run:
+
+> **0 of 54 tables changed, 0 numeric cells moved.**
+
+`manifests/model_provenance.yaml` now records the SHA-256 of the training data
+behind each committed model, because mtimes cannot catch a model outliving its
+data in a fresh clone.
+
+### 37.6 The gates that were not gates
+
+Three things reported success without being able to fail, and all three were
+found by using them rather than reading them:
+
+* The **lint step** had ended in `|| true` since the day it was added. `E9,F`
+  now blocks — 72 real defects fixed on the way — and a test fails if every
+  ruff invocation becomes non-blocking again.
+* **`run_soh_deploy_tables.py --check`** computed the comparison, printed
+  MISMATCH and returned 0. It returns the result now, and a test corrupts each
+  table and requires `--check` to fail.
+* **`optional`** was a stage key nothing read, so the superseded CNN showed as
+  `absent` beside genuinely broken stages. A second test now fails on any
+  stage key no code in `repro/` reads, with the allowlist derived from the
+  source rather than written down.
+
+Twenty-one verified numbers had no producer stage; eleven stages were added
+and the count is zero. The two all-cell fits that become the header on the
+board had **no stage at all** — the command existed only in a shell history —
+and a test now walks everything that reaches the board and requires each to be
+some stage's output.
+
+The figure was the worst of it: `results_fig_soh_traj.png` plotted ridge while
+its title said "partial-charge CNN, 10,945 parameters". Producers now record
+what made a prediction file, the figure reads it and refuses to render without
+it, and a test forbids a model name or parameter count appearing in the figure
+source at all.
+
+### 37.7 What is still not done
+
+- **A second external cell.** RPCWBY is one. Temperature and low-SOC coverage
+  could be extended and were; cell-to-cell external generalisation cannot be,
+  and no wording may imply it.
+- **Charge-direction external safety.** The frozen λ fails there. Refitting on
+  data that includes RPCWBY would stop it being a transfer result, so it is
+  reported as a failure.
+- **Pack and HIL.** No hardware. `sop_pack2.py` is a Monte Carlo sensitivity
+  study and `qc.py` fails if it is ever called a pack validation again.
+- **A formal equivalence test.** Deleted rather than faked; a margin chosen
+  after seeing the comparison is not a margin.
+- **The grid amplifier.** `fit_alpha` is still an argmin over a discrete grid.
+  Determinism removes the input noise so the step is no longer reachable by
+  chance, but a 2.5 % move there can still mean a 0.05 % change upstream, and
+  the function now says so.

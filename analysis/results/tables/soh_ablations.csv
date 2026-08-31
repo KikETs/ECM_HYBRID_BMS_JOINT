@@ -3,7 +3,7 @@ axis,variant,rmse_pooled,rmse_worst_cell,worst_cell,note
 "input, ridge",time-per-bin only,0.0096,0.0131,BOOST_REST,
 "input, ridge",dQ/dV + time-per-bin,0.0095,0.0134,BOOST_REST,
 "input, ridge",single 3.6-3.7 V band time,0.0261,0.0438,BOOST_REST,
-"input, CNN",dQ/dV only (shipped),0.0134,0.0291,BOOST_REST,
+"input, CNN",dQ/dV only (shipped),0.0134,0.0290,BOOST_REST,
 "input, CNN",time-per-bin only,0.0132,0.0284,BOOST_REST,
 "input, CNN",dQ/dV + time-per-bin,0.0141,0.0310,BOOST_REST,
 window (low end),"8/64 bins, 3.55-3.61 V",0.0226,0.0296,BOOST_REST,12% coverage

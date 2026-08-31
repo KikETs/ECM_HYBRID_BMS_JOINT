@@ -1,0 +1,140 @@
+note: SHA-256 of the training data behind each committed model directory.  Written
+  by repro/stamp_model_provenance.py --write after retraining; checked by --check
+  and by the test suite.  The cache itself is gitignored, so this is the only link
+  between a committed model and the data it was fitted on.
+models:
+  runs_trim_a8:
+    trained_on: cache/trim
+    files:
+      trim_BOOST.npz: b884f1bfa6aae93afb9801426cd17af0cd54af311877cf5055723c1caf43f9a4
+      trim_BOOST_NEGPULSE.npz: d3344ec7a77bc753821c87dedf113cda8f9c0ef2c77b16d1972aca09a75b00af
+      trim_BOOST_NEGPULSE_1S.npz: a0c2d7308ba08f5d9c22b1c4d24864727144c0d83a6b0a848a668c4da5764c87
+      trim_BOOST_REST.npz: 1e312b832f66c84de3fa960dc9fb144411424b36c35fbfd308d63bcd5ecdb326
+      trim_CC.npz: a93a73df2781b076a45c3f4212377849c4e94241a9396170bbb1a5163bfcf32b
+      trim_CC_CELL2.npz: 535dd10f9a94d726763b0cda35eefb89881e9531353d6d6a1f12e207753d42a7
+    model_files:
+      model_A8_BOOST.pt: 913bbfc0e626bc0b6b7c8e072767a2b738eb6b5264926dcbea3c317dc49869e5
+      model_A8_BOOST_NEGPULSE.pt: 432824ed439f00a782e049a780d2c255b3a45dfd616cdbfea6411249febbcb11
+      model_A8_BOOST_NEGPULSE_1S.pt: 3719f80eb82f86c172046a44c1d94dcb848a41f0a884457e2c221e69e15d40c4
+      model_A8_BOOST_REST.pt: 6ebb4d51227c3c1351547ea8acba01f9fa6ab109a2d45a7738566c1448b4ae5c
+      model_A8_CC.pt: effc62c74d801cbe2919204a6d26b106cc7d601ca79dd3598714a5c900ed8af3
+      model_A8_CC_CELL2.pt: 1d99ccd474b1d8ee32db4991a08290ef7f67faf5fc7ecf64c2d43c8d513794f7
+      pred_A8_BOOST.npz: c495ca6221a056a0f26a183aed950759fbdd10b08bd01d07da4d6a557b78cee9
+      pred_A8_BOOST_NEGPULSE.npz: 622dc44edfd2e708c41f6216cace42448f741d3c34771051931ded68059091e5
+      pred_A8_BOOST_NEGPULSE_1S.npz: 54ad8c5654a820af117f2ff249fc2e339fcf5c8681262ded243821585a9a6d31
+      pred_A8_BOOST_REST.npz: 1c6294db76c000b90f9c8d65ea13753640f06868b5764599d789c5c36801c31a
+      pred_A8_CC.npz: de78a78469381a62a2b19dcd8babef96e3c19bbd23435d02d9a9e384dc4824c9
+      pred_A8_CC_CELL2.npz: 13c79cc4784ac1758ac5889dbb2637ae339c4e6caa4fa6173c54853675ed73f2
+  runs_trim_a8_chg:
+    trained_on: cache/trim_chg
+    files:
+      trim_BOOST.npz: 8bae16981e1b523a41e03f74a0a30b1cc3af4a8121f716b00d3b391e0d8037a5
+      trim_BOOST_NEGPULSE.npz: 5188a2501fdd664d9ee3a53ea7152341d97c650226e5140488b8892bc4c54624
+      trim_BOOST_NEGPULSE_1S.npz: 968c3f12a8f998f53bd7132e9be699cf283392b0c058fc688de02e861b24efbb
+      trim_BOOST_REST.npz: 45c2c9b342c709ad1ce9d1bead3935dd5996d69950961c4896efbfa930d14a98
+      trim_CC.npz: bf237e0e2c1f08d7b3329b8b453f26a7de5c6a15088fbb5a160324e3f350b202
+      trim_CC_CELL2.npz: 0b97a6a1ab7a8cf4157bdeaf2ec276e7e4e1ad908af2bf73db4d60a29691cce9
+    model_files:
+      model_A8_BOOST.pt: a940ce8d451cd68faaff80367294399489399a7371c1a1f1d5cca7f247eb6d3c
+      model_A8_BOOST_NEGPULSE.pt: 462baa977e68e8374f6a8c0ac0ef8f1197fae2556b43b47ec4e4d06ea9c15727
+      model_A8_BOOST_NEGPULSE_1S.pt: 6eac6eb05f6f3114bc2631658f51add9c9587944db02ac7e595b1ab5c863a944
+      model_A8_BOOST_REST.pt: 1e8adf350e1366f1b442e2025804ff5401e2ceef470066fedf3deadb9e6526ea
+      model_A8_CC.pt: 94476b4723ba295d9bb3bc33c057a0fd341a539851b56578fd4246a71a505761
+      model_A8_CC_CELL2.pt: ed5928fe3770e73582b6a3e4476f7cc474db77bbde97bece84ea1612fe41248c
+      pred_A8_BOOST.npz: c90736240453b043732cbce13a770ad8e6a51fda23cca9f7378a497a7389ed7a
+      pred_A8_BOOST_NEGPULSE.npz: 83a09bfde17b61702f258dd3616efd94ad555ee002441285f2a4516eb27aa233
+      pred_A8_BOOST_NEGPULSE_1S.npz: 73056d7d477f9f355f73432dabc1e249ca3e9a70149e5f669de0c1b0d6fe994f
+      pred_A8_BOOST_REST.npz: c69586e3a935ba9013ebb1042122d51c36752467b89fd85d1045bfab5cc06fea
+      pred_A8_CC.npz: 90431d9efa491abab4ece3175d7a392f5fb3c6f4d9db9678927cafe7736b5f01
+      pred_A8_CC_CELL2.npz: 0ca5e5879a66836ac8c981fb91bd0ee2da5715f5d22f860768f2519e429b2924
+  runs_trim_v2:
+    trained_on: cache/trim
+    files:
+      trim_BOOST.npz: b884f1bfa6aae93afb9801426cd17af0cd54af311877cf5055723c1caf43f9a4
+      trim_BOOST_NEGPULSE.npz: d3344ec7a77bc753821c87dedf113cda8f9c0ef2c77b16d1972aca09a75b00af
+      trim_BOOST_NEGPULSE_1S.npz: a0c2d7308ba08f5d9c22b1c4d24864727144c0d83a6b0a848a668c4da5764c87
+      trim_BOOST_REST.npz: 1e312b832f66c84de3fa960dc9fb144411424b36c35fbfd308d63bcd5ecdb326
+      trim_CC.npz: a93a73df2781b076a45c3f4212377849c4e94241a9396170bbb1a5163bfcf32b
+      trim_CC_CELL2.npz: 535dd10f9a94d726763b0cda35eefb89881e9531353d6d6a1f12e207753d42a7
+    model_files:
+      model_A3_BOOST.pt: 8f573bb93a90cf8f71453096e7868659d1e6de8457ebc0f2b55451e06b331ea3
+      model_A3_BOOST_NEGPULSE.pt: 349429a4d46c93041907c893d6be71958dbeca3391a7d7d9cedfefddd3c097a4
+      model_A3_BOOST_NEGPULSE_1S.pt: 479a542389133c0279aea01bf35476053f23105abc9342684802f1b3b8a761d0
+      model_A3_BOOST_REST.pt: c091e8bf651bc3e62e8b0e7d8d03f2b028c2a1659b262ce1718f4871e575c254
+      model_A3_CC.pt: 49281b7624927d41a3452dc163f4de3f1d37d204f7cbe5dbb43a3387f4c01f09
+      model_A3_CC_CELL2.pt: c610ba0dd7cd0e396cc2930e5bdc687b634e029d150d9bd2c14e28dc5a4c9b55
+      pred_A3_BOOST.npz: e75ceb77e1b844eed4bbcf0357117b11212835956be9f5ca9089be1c77a73eca
+      pred_A3_BOOST_NEGPULSE.npz: ee8b417272980a2e24d8d5f47179ece7966085f1b40135cf5091761956a82cd8
+      pred_A3_BOOST_NEGPULSE_1S.npz: 1cdc17a2c0083f0c39b8c179dd0c493af054eb123c17934bed1c3f056111d1ba
+      pred_A3_BOOST_REST.npz: 44cccb5f6781e827ff6211875956c983a4adb2ae64d7977f9d1814ddaf35d866
+      pred_A3_CC.npz: cd7bda2cb11d1b81073561080342544feb64b136de5cd29d934e2a38ac0e65af
+      pred_A3_CC_CELL2.npz: a1641b50f37212d689e1c5ee4d7db6da55b8dc0c45c480c393dec3625893ebdb
+  runs_trim_chg_v2:
+    trained_on: cache/trim_chg
+    files:
+      trim_BOOST.npz: 8bae16981e1b523a41e03f74a0a30b1cc3af4a8121f716b00d3b391e0d8037a5
+      trim_BOOST_NEGPULSE.npz: 5188a2501fdd664d9ee3a53ea7152341d97c650226e5140488b8892bc4c54624
+      trim_BOOST_NEGPULSE_1S.npz: 968c3f12a8f998f53bd7132e9be699cf283392b0c058fc688de02e861b24efbb
+      trim_BOOST_REST.npz: 45c2c9b342c709ad1ce9d1bead3935dd5996d69950961c4896efbfa930d14a98
+      trim_CC.npz: bf237e0e2c1f08d7b3329b8b453f26a7de5c6a15088fbb5a160324e3f350b202
+      trim_CC_CELL2.npz: 0b97a6a1ab7a8cf4157bdeaf2ec276e7e4e1ad908af2bf73db4d60a29691cce9
+    model_files:
+      model_A3_BOOST.pt: 1c5e29b3696cc455379a29028d80bf932c9243e9fcaf05651ac1378bb95b6395
+      model_A3_BOOST_NEGPULSE.pt: 87fcbeefeeef22b886e8604fe6d28f69aa510a7e495c42468c147b5cc21b190d
+      model_A3_BOOST_NEGPULSE_1S.pt: 94dcba46df875509fc8899d8292b94321a92d38935d4f94a324180318021a2d8
+      model_A3_BOOST_REST.pt: 8bc06d10e511bdd6573745a4d6874c7257357118307483466f743cdf317f6db0
+      model_A3_CC.pt: da73cb232d8827db8aa9b6eb8f5c846b7a7c3ece112b65af6b94b17bb2b1f75b
+      model_A3_CC_CELL2.pt: 8e4330910034ae6da642b89a8f56c5166aca7d2d341bd991d2932dba3e7ac93e
+      pred_A3_BOOST.npz: 8a95f6649767c01998f35dd71d367a883055af0430a8a7df3baaca298207fd84
+      pred_A3_BOOST_NEGPULSE.npz: 2e62906de20845a8974104b75eec3d5550023c5eb6239557f1958e2fffeadc53
+      pred_A3_BOOST_NEGPULSE_1S.npz: 3bda46e74a438e9186ab645e55a0999b86ee74a538201c8b431ec8f9e4143574
+      pred_A3_BOOST_REST.npz: 368788d737378193fe45de39a201fbf25b01035f09c9b36a19839d5a4228bd39
+      pred_A3_CC.npz: daed093539ffa02edf64ff0ac7a02ba08a6a4ed5bf4b66790ac7d819b2da3796
+      pred_A3_CC_CELL2.npz: c25ae7f24c3441babc3a812d05513b5aa1833b24548f7167e930d9524bbb8b5d
+  runs_trim_a8_deploy:
+    trained_on: cache/trim
+    files:
+      trim_BOOST.npz: b884f1bfa6aae93afb9801426cd17af0cd54af311877cf5055723c1caf43f9a4
+      trim_BOOST_NEGPULSE.npz: d3344ec7a77bc753821c87dedf113cda8f9c0ef2c77b16d1972aca09a75b00af
+      trim_BOOST_NEGPULSE_1S.npz: a0c2d7308ba08f5d9c22b1c4d24864727144c0d83a6b0a848a668c4da5764c87
+      trim_BOOST_REST.npz: 1e312b832f66c84de3fa960dc9fb144411424b36c35fbfd308d63bcd5ecdb326
+      trim_CC.npz: a93a73df2781b076a45c3f4212377849c4e94241a9396170bbb1a5163bfcf32b
+      trim_CC_CELL2.npz: 535dd10f9a94d726763b0cda35eefb89881e9531353d6d6a1f12e207753d42a7
+    model_files:
+      model_A8_ALL.pt: 5dd2711b62a970fae67727e8f19d474c13016da1d208edd3893158815cee357d
+      pred_A8_ALL.npz: 696364ccf4cc2b0f227a3ff0f07b8cc08546329392900554e9daf361adbfd640
+  runs_trim_a8_chg_deploy:
+    trained_on: cache/trim_chg
+    files:
+      trim_BOOST.npz: 8bae16981e1b523a41e03f74a0a30b1cc3af4a8121f716b00d3b391e0d8037a5
+      trim_BOOST_NEGPULSE.npz: 5188a2501fdd664d9ee3a53ea7152341d97c650226e5140488b8892bc4c54624
+      trim_BOOST_NEGPULSE_1S.npz: 968c3f12a8f998f53bd7132e9be699cf283392b0c058fc688de02e861b24efbb
+      trim_BOOST_REST.npz: 45c2c9b342c709ad1ce9d1bead3935dd5996d69950961c4896efbfa930d14a98
+      trim_CC.npz: bf237e0e2c1f08d7b3329b8b453f26a7de5c6a15088fbb5a160324e3f350b202
+      trim_CC_CELL2.npz: 0b97a6a1ab7a8cf4157bdeaf2ec276e7e4e1ad908af2bf73db4d60a29691cce9
+    model_files:
+      model_A8_ALL.pt: bf9b0d76988f5efc8c0aef4fc6985fd5d1243f87ebe112c4baad0d7697c678cf
+      pred_A8_ALL.npz: 1d3d15ffecf95ef6f934250fe5c2724324162e74f5f1dee7dd371601d2fcf366
+  runs_soh_ridge:
+    trained_on: cache/soh_charge.npz
+    files:
+      soh_charge.npz: 5fd5e9faecc830fe1cf359d840ce5784ba86eaae72764b92b16dab117048dced
+    model_files:
+      soh_ALL.npz: 907b111da998d11e28e44eab7121893518f5421fdebdae5a11a12c602673f2d7
+      soh_BOOST.npz: c90e9305becd03c7adeaf2dfe2f74c0d7694876530733c8ff576174fee3b22df
+      soh_BOOST_NEGPULSE.npz: 0b1670a3edbaa8ba245b654c9f30add7ae07f2912b82a65e34a307fa7497325d
+      soh_BOOST_NEGPULSE_1S.npz: d237aa74928478e3c54274bc4c637cdd9bf1910edb8f5b9a328d890ed6c457e0
+      soh_BOOST_REST.npz: bdb34120eb1a1a76a73fb6fdfcce73f38ccf0cfc0100cb7d2b9fd89d14357053
+      soh_CC.npz: 9304e9471696c4b27b054d8bf1da711cc07d4976b997a07d3d9a348d64416656
+      soh_CC_CELL2.npz: ec083587f8cd929ef65888290e3a5762cf451bd8b07dc0cdf6bae48bdfed7f73
+  runs_soh_cnn:
+    trained_on: cache/soh_charge.npz
+    files:
+      soh_charge.npz: 5fd5e9faecc830fe1cf359d840ce5784ba86eaae72764b92b16dab117048dced
+    model_files:
+      soh_BOOST.pt: 6f9aa587f1ba291555dafe87367098687336782f7978ae6f103c0a6db6e9157a
+      soh_BOOST_NEGPULSE.pt: 131495988535c265a13299f5f2b77891f0f61858c2dd3115332227f025449ea4
+      soh_BOOST_NEGPULSE_1S.pt: 396bf427693222ff5a662a0c4a20577028b448c58c633bbd7f7efedf1d1ebeed
+      soh_BOOST_REST.pt: 0b6726b73dd4d08ebe25586cc5e528cc9a59cfc316a15213c934bc20c9f9778f
+      soh_CC.pt: 97a03038b1004d43be4499a312c3a9208ef9271f113664deb7160880d2a75479
+      soh_CC_CELL2.pt: 11f22801529258ea5c7c666397403a400a85abf2368c2019f2333b65b1ef13b9
