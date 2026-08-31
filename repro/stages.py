@@ -175,6 +175,37 @@ STAGES = [
          outputs=[f'runs_trim_a8_chg/pred_A8_{c}.npz' for c in CELLS],
          why='The adopted trim (charge).  It beat A3 in 32.7.'),
 
+    # The two fits that actually ship.  These had no stage at all, which
+    # meant the header on the board was produced by a command that existed
+    # only in a shell history -- the same class of gap as a published number
+    # with no producer.
+    dict(id='trim_deploy_dis', tier=4, minutes=9, measured=True,
+         cmd='{py} sop_trim.py --rung A8 --data cache/trim '
+             '--out runs_trim_a8_deploy --deployment --save-pred',
+         inputs=['cache/trim/trim_BOOST.npz',
+                 'cache/trim/trim_BOOST_NEGPULSE.npz',
+                 'cache/trim/trim_BOOST_NEGPULSE_1S.npz',
+                 'cache/trim/trim_BOOST_REST.npz',
+                 'cache/trim/trim_CC.npz',
+                 'cache/trim/trim_CC_CELL2.npz'],
+         outputs=['runs_trim_a8_deploy/model_A8_ALL.pt'],
+         why='The all-cell discharge fit that goes on the board.  It is the '
+             'artifact and it is never evaluated: there is no seventh cell to '
+             'hold out, so the leave-one-cell-out folds are the honest '
+             'estimate of what it does on a cell it has not seen.'),
+
+    dict(id='trim_deploy_chg', tier=4, minutes=8, measured=True,
+         cmd='{py} sop_trim.py --rung A8 --data cache/trim_chg '
+             '--out runs_trim_a8_chg_deploy --deployment --save-pred',
+         inputs=['cache/trim_chg/trim_BOOST.npz',
+                 'cache/trim_chg/trim_BOOST_NEGPULSE.npz',
+                 'cache/trim_chg/trim_BOOST_NEGPULSE_1S.npz',
+                 'cache/trim_chg/trim_BOOST_REST.npz',
+                 'cache/trim_chg/trim_CC.npz',
+                 'cache/trim_chg/trim_CC_CELL2.npz'],
+         outputs=['runs_trim_a8_chg_deploy/model_A8_ALL.pt'],
+         why='The charge twin of trim_deploy_dis.'),
+
     dict(id='trim_a3_dis', tier=4, minutes=11, measured=True,
          cmd='{py} sop_trim.py --rung A3 --data cache/trim '
              '--out runs_trim_v2 --save-pred',

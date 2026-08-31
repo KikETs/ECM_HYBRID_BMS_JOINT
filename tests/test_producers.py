@@ -471,3 +471,20 @@ def test_check_mode_fails_on_a_corrupted_table(script, table, tmp_path):
         assert 'MISMATCH' in (out + err)
     finally:
         shutil.copy(backup, p)
+
+
+def test_everything_that_ships_has_a_producer_stage():
+    """An artifact that reaches the board must be rebuildable by the graph.
+
+    runs_trim_a8_deploy and its charge twin had no stage: the header on the
+    board came from a command that existed only in a shell history.  Being
+    committed is not the same as being reproducible.
+    """
+    from stages import STAGES
+    outs = [os.path.normpath(o) for s in STAGES for o in s['outputs']]
+    ships = ['runs_trim_a8_deploy', 'runs_trim_a8_chg_deploy',
+             'runs_soh_ridge', '../mcu/sop_tables.h', '../mcu/soh_tables.h']
+    for want in ships:
+        w = os.path.normpath(want)
+        assert any(o == w or o.startswith(w + os.sep) for o in outs), (
+            f'{want} ends up on the board but no stage produces it')

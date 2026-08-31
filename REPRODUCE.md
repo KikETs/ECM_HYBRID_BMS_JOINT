@@ -57,6 +57,8 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 |---|---:|---|---|
 | `trim_dis` | 9 | `python3 sop_trim.py --rung A8 --data cache/trim --out runs_trim_a8 --save-pred` | `runs_trim_a8/pred_A8_BOOST.npz +5` |
 | `trim_chg` | 8 | `python3 sop_trim.py --rung A8 --data cache/trim_chg --out runs_trim_a8_chg --save-pred` | `runs_trim_a8_chg/pred_A8_BOOST.npz +5` |
+| `trim_deploy_dis` | 9 | `python3 sop_trim.py --rung A8 --data cache/trim --out runs_trim_a8_deploy --deployment --save-pred` | `runs_trim_a8_deploy/model_A8_ALL.pt` |
+| `trim_deploy_chg` | 8 | `python3 sop_trim.py --rung A8 --data cache/trim_chg --out runs_trim_a8_chg_deploy --deployment --save-pred` | `runs_trim_a8_chg_deploy/model_A8_ALL.pt` |
 | `trim_a3_dis` | 11 | `python3 sop_trim.py --rung A3 --data cache/trim --out runs_trim_v2 --save-pred` | `runs_trim_v2/pred_A3_BOOST.npz +5` |
 | `trim_a3_chg` | 10~ | `python3 sop_trim.py --rung A3 --data cache/trim_chg --out runs_trim_chg_v2 --save-pred` | `runs_trim_chg_v2/pred_A3_BOOST.npz +5` |
 | `soh_select` | 3 | `python3 ../repro/run_soh_nested.py` | `results/tables/soh_nested.csv +1` |
@@ -99,7 +101,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: about 1048 minutes (17 h). `~` marks an estimate that was never timed.
+Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never timed.
 
 ## Published numbers
 
