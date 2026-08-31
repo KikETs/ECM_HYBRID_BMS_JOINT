@@ -84,7 +84,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `soc_headline` | 3 | `python3 ../repro/run_soc_headline.py` | `results/tables/soc_headline.csv` |
 | `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
 | `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `results/tables/safety_strict_lstm_oracle.csv +2` |
-| `chen2026` | 6 | `python3 ../repro/run_chen2026_baseline.py` | `results/tables/chen2026_baseline.csv` |
+| `chen2026` | 6 | `python3 ../repro/run_chen2026_baseline.py` | `results/tables/chen2026_baseline.csv +1` |
 | `nested_selection` | 120 | `python3 ../repro/run_nested_selection.py` | `results/tables/nested_selection.csv` |
 | `end_to_end` | 12 | `python3 ../repro/run_end_to_end.py` | `results/tables/end_to_end.csv +3` |
 | `external` | 15 | `python3 ../repro/run_external_a8.py` | `results/tables/external_a8.csv +2` |
@@ -180,6 +180,11 @@ Full rebuild: about 1048 minutes (17 h). `~` marks an estimate that was never ti
 | `e2e.fixed.disc.est_est.usable` | 72.02 | `end_to_end_fixed_lambda.csv` | sec 37.2 |
 | `method.a8.rank.disc10` | 2 | `method_comparison.csv` | sec 37.3 |
 | `method.ffrls.disc10.usable` | 43.28 | `method_comparison.csv` | sec 37.3 |
+| `ext.temp.m20.margin` | 0.486 | `external_temp_envelope.csv` | sec 37.4 |
+| `ext.temp.m20.exceed` | 5 | `external_temp_envelope.csv` | sec 37.4 |
+| `ext.temp.0.margin` | 1.396 | `external_temp_envelope.csv` | sec 37.4 |
+| `ext.temp.40.exceed` | 0 | `external_temp_envelope.csv` | sec 37.4 |
+| `ext.temp.25.soc_min` | 0.4 | `external_temp_envelope.csv` | sec 37.4 |
 
 ## Cells
 
