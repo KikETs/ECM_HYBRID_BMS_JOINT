@@ -201,6 +201,15 @@ RETRACTED = [
      '33.2 / 37.10 — no integrated loop was timed and no WCET tool was run; '
      'it is a sum of per-stage observed maxima'),
 
+    # --- sixth review round, 2026-09-01 ------------------------------------
+    (r'holding (?:a|one) cell out costs nothing'
+     r'|(?:lambda|safety factor) generali[sz]ation costs nothing'
+     r'|costs nothing to hold a cell out',
+     'claiming that holding a cell out is free',
+     '37.19 — vs_fleet is 100.0 by IDENTITY for five of six cells, and the '
+     'sixth buys its excess with every exceedance in the arm; the two '
+     'policies do not carry the same risk'),
+
     (r'for a production BMS|production-ready',
      'the production framing',
      '35.8 / 37.1 — withdrawn; oracle-state validation scores a row set the '
@@ -450,6 +459,9 @@ CORRECTION_MARKERS = (
     '[retracted', '[updated', '[added', '[corrected', '[audited',
     '[superseded', '[narrowed', '[note —', '[note -', '[wrong',
     '[i was wrong', '[both earlier accounts were wrong',
+    # A section that announces itself a retraction has to be able to
+    # print the sentence it retracts, in its heading.
+    'retraction', 'retracted:',
 )
 
 # Words that mark a sentence as talking ABOUT a claim rather than making it.

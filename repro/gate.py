@@ -40,9 +40,32 @@ PY = sys.executable
 # A tool CI runs must not be silently absent here.  ruff lives next to the
 # interpreter in a conda env and is often not on PATH, which made the gate
 # report "skipped" for the one step that blocks CI on lint.
-RUFF = os.path.join(os.path.dirname(PY), 'ruff')
-if not os.path.exists(RUFF):
-    RUFF = 'ruff'
+def _ruff():
+    """ruff next to the interpreter, whatever the platform calls it.
+
+    conda puts it in the same directory as python on POSIX and in Scripts\\
+    with a .exe on Windows.  The first version looked only for a bare 'ruff'
+    beside sys.executable, which meant the lint step -- the one CI blocks on
+    -- reported "skipped" anywhere else.
+    """
+    d = os.path.dirname(PY)
+    for cand in (os.path.join(d, 'ruff'), os.path.join(d, 'ruff.exe'),
+                 os.path.join(d, 'Scripts', 'ruff.exe'),
+                 os.path.join(os.path.dirname(d), 'Scripts', 'ruff.exe')):
+        if os.path.exists(cand):
+            return cand
+    return 'ruff'
+
+
+RUFF = _ruff()
+
+# What this gate can and cannot stand in for.  CI runs ubuntu-latest, and two
+# things here are POSIX-shaped: run.py joins stage commands with && through
+# shell=True, and the firmware stages need arm-none-eabi and STM32_Programmer_CLI.
+# The checks in steps() are plain subprocess calls and portable; the clean-clone
+# pass shells out to git.  Say so rather than let a green run on Windows imply
+# more than it covers.
+SUPPORTED = 'linux'
 
 
 def steps(root):
@@ -183,6 +206,13 @@ def main():
         print('  (--fix) REPRODUCE.md regenerated\n')
 
     print('== submission gate\n')
+    if not sys.platform.startswith(SUPPORTED):
+        print(f'  NOTE  running on {sys.platform!r}; CI runs ubuntu-latest.  '
+              f'The checks below are\n        portable, but the stage runner '
+              f'(repro/run.py) joins commands with && through\n        a '
+              f'shell, and the firmware job needs a POSIX ARM toolchain.  A '
+              f'green result here\n        is not evidence those work on '
+              f'this platform.\n')
     results = [run(*s, a.quiet) for s in steps(ROOT)]
     if a.strict_clone:
         results.append(clean_clone_pass(a.quiet))

@@ -112,3 +112,26 @@ def test_the_gate_finds_at_least_the_core_checks():
         assert any(needle in c for c in ci), (
             f'the ci.yml parser found no {needle!r} command, so it is not '
             f'reading the workflow -- fix the parser, not the assertion')
+
+
+def test_the_documented_platform_matches_what_ci_runs():
+    """README names a platform; ci.yml is the only evidence for it.
+
+    A "Linux only" note that drifts from the workflow is worse than none: it
+    is the sentence a reader trusts instead of checking.
+    """
+    import yaml
+    doc = yaml.safe_load(open(CI, encoding='utf-8'))
+    runners = {j['runs-on'] for j in doc['jobs'].values() if 'runs-on' in j}
+    assert runners, 'no runs-on in ci.yml'
+    assert all('ubuntu' in r for r in runners), (
+        f'ci.yml runs on {runners}, so README must not say Linux only')
+
+    readme = open(os.path.join(ROOT, 'README.md'), encoding='utf-8').read()
+    assert 'ubuntu-latest' in readme, (
+        'README does not name the runner CI actually uses')
+
+    import gate
+    assert gate.SUPPORTED == 'linux', (
+        'gate.py no longer declares the platform it stands in for, so it '
+        'cannot warn when it is running somewhere CI does not')

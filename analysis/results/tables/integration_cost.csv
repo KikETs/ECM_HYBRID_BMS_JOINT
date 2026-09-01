@@ -1,0 +1,6 @@
+quantity,integrated_us,summed_us,delta_us,delta_pct
+median over 500 points,53.206,53.320,+0.114,+0.214
+maximum over 500 points,81.092,81.020,-0.072,-0.089
+sum of the two stage maxima,81.092,81.352,+0.260,+0.321
+worst single point,51.164,51.564,+0.400,+0.782
+points where summing is the larger,500,442,,88.4

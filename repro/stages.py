@@ -459,6 +459,15 @@ STAGES = [
          why='The SOC headline recomputed from the runs, after the original '
              'averaged seven rows while describing six.'),
 
+    dict(id='integration_cost', tier=5, minutes=1, measured=True,
+         cmd='{py} ../repro/run_integration_cost.py',
+         inputs=['../mcu/sop_mcu_bench.csv'],
+         outputs=['results/tables/integration_cost.csv'],
+         why='mcu_cycle.csv adds per-stage maxima and 37.10 refuses to call '
+             'that a WCET.  SOP_CMD_FULL times the trim and the solve in one '
+             'window, so the summation error can be measured on the largest '
+             'pair the firmware integrates.'),
+
     dict(id='usable_reference', tier=5, minutes=1, measured=True,
          cmd='{py} ../repro/run_usable_reference.py',
          inputs=['results/eval/'],

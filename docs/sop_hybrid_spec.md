@@ -6056,12 +6056,14 @@ though it were model error.
 
 Two reference points were missing. `run_usable_reference.py` adds both.
 
-**Against the all-cells ceiling — holding one of these six cells out costs nothing.**
+> **[Corrected — 37.20, 2026-09-01]** This subsection first read "holding one
+> of these six cells out costs nothing" and that is wrong as a summary. The
+> comparison is not iso-risk: where the deployed λ exceeds the fleet λ it
+> permits more current and pays for it in exceedance. Corrected below, with
+> the exceedance of both policies in the table.
 
-Read that at its scope: six cells of one model from one order, one cell per aging
-protocol, so this says nothing about a manufacturing population and nothing about
-a cell whose protocol is not among the six.  `generalization_scope.yaml` holds
-both axes at PARTIAL.
+**Against the all-cells ceiling — an identity for five cells, and a risk
+trade for the sixth.**
 
 | method | discharge τ=10 | discharge τ=2 | charge τ=10 | charge τ=2 |
 |---|---:|---:|---:|---:|
@@ -6072,13 +6074,31 @@ both axes at PARTIAL.
 | shrink | 100.7 | 100.1 | 101.9 | 101.1 |
 | ffrls | 105.4 | 112.4 | 101.8 | 103.9 |
 
-The mechanism is plain once the binding cell is identified: whenever it is in
-the training set the leave-one-cell-out λ *equals* the all-cells λ, and when
-it is held out the remaining five are less demanding so λ comes out slightly
-larger — which is why every entry is at or above 100. **Holding a cell out
-costs nothing at all.** That is a strong result and it was not previously
-computed. FFRLS gains most from being spared its own worst rows, which is
-another way of saying it is the least stable of the six.
+Read the per-cell rows, not the mean. For **five of six** held-out cells the
+deployed λ *equals* the all-cells λ to four decimals, so `vs_fleet` is 100.0
+**by identity rather than by measurement** — the binding cell
+(BOOST_NEGPULSE_1S) is in the training set and fixes the factor, and nothing
+is being estimated.
+
+The sixth row is the binding cell held out. There the remaining five are less
+demanding, λ comes out **looser** than the fleet factor (0.6930 against
+0.6831 on discharge τ = 10 s; 0.5992 against 0.5272 on charge τ = 10 s), and
+that is where every entry above 100 comes from. **It is not free.** All seven
+exceedances in the A8 estimated-SOH arm sit on those four rows — 1, 1, 2 and
+3 across the conditions, worst overshoot 3.03 A — against **zero** under the
+fleet factor on the same rows.
+
+So the honest statement is the opposite of the first draft: holding a cell out
+costs nothing in usable current *precisely because* it costs something in
+exceedance. At matched risk there is no gain to report — capping the deployed
+λ at the fleet factor returns exactly 100.0 % everywhere, which is the
+identity again.
+
+What survives, and it is still worth saying: **the five training cells alone
+determine the same safety factor the whole set would have chosen**, in every
+condition and for every method. The failure mode is specific and it is
+visible — it is the cell that sets the constraint, and holding *that* one out
+leaves the factor too loose.
 
 **Against a per-cell oracle λ — field calibration is worth 5 to 19 %p.**
 
@@ -6117,3 +6137,74 @@ labels. They may be reported and must never be used to select λ, a tolerance
 or a model — that is selection on the test set, which is the defect this
 audit exists to remove. The published `usable_pct` stays the headline; these
 two say what it is a percentage of.
+
+### 37.20 Retraction: "holding a cell out costs nothing"
+
+§37.19 first summarised the `vs_fleet` column as *holding one of these six
+cells out costs nothing*. That is wrong, and the sixth review named the reason
+exactly: **the two policies being compared do not carry the same risk.**
+
+The column divides usable current under the leave-one-cell-out λ by usable
+current under the all-cells λ. Where those two factors are equal the ratio is
+100.0 and nothing has been measured. Where they differ, the deployed factor is
+the **looser** one, so it permits more current — and a ratio above 100 is that
+permission, not a free gain.
+
+| held out | λ deployed | λ fleet | vs fleet | exceed, deployed | exceed, fleet |
+|---|---:|---:|---:|---:|---:|
+| BOOST | 0.6831 | 0.6831 | 100.0 | 0 | 0 |
+| BOOST_NEGPULSE | 0.6831 | 0.6831 | 100.0 | 0 | 0 |
+| BOOST_REST | 0.6831 | 0.6831 | 100.0 | 0 | 0 |
+| CC | 0.6831 | 0.6831 | 100.0 | 0 | 0 |
+| CC_CELL2 | 0.6831 | 0.6831 | 100.0 | 0 | 0 |
+| **BOOST_NEGPULSE_1S** | **0.6930** | 0.6831 | **101.4** | **1** | **0** |
+
+Discharge τ = 10 s. The pattern repeats in all four conditions, and the four
+binding-cell rows carry **every one of the seven exceedances** in the A8
+estimated-SOH arm — 1, 1, 2, 3 — against **zero** under the fleet factor on
+the same rows. Worst overshoot 3.03 A on charge τ = 10 s.
+
+So the statement inverts. The usable current is unchanged only because the
+exceedance is not: the ratio above 100 and the seven exceedances are the same
+event seen twice. Cap the deployed λ at the fleet factor and the ratio is
+100.0 everywhere, which is the identity again — there is no iso-risk gain to
+report.
+
+**What survives.** For five of six held-out cells the training cells alone fix
+the same safety factor the whole set would have chosen, exactly, in every
+condition and for every method. And the failure mode is specific and visible:
+it is the cell that sets the constraint, and holding *that* one out leaves the
+factor too loose. Both are worth reporting; neither is "costs nothing".
+
+`usable_reference.csv` now carries `exceed_deployed` and `exceed_fleet` so the
+comparison cannot be read without its risk. `qc.py` fails on the retracted
+phrasing.
+
+### 37.21 How wrong is adding per-stage timings?
+
+§37.10 relabelled 339.84 µs a derived cycle-budget estimate rather than a
+WCET, because no integrated loop was ever timed. Honest, and it leaves the
+size of the error unmeasured. The firmware answers part of it: `SOP_CMD_FULL`
+runs the trim and the solve inside one DWT window, while `SOP_CMD_TRIM` and
+`SOP_CMD_SOLVE` time the same two pieces separately over the same 500
+operating points. That is 80 of the 340 µs, paired on (SOC, SOH, τ).
+
+| quantity | integrated | summed | Δ % |
+|---|---:|---:|---:|
+| median over 500 points | 53.206 | 53.320 | +0.214 |
+| maximum over 500 points | 81.092 | 81.020 | **−0.089** |
+| sum of the two stage maxima | 81.092 | 81.352 | +0.321 |
+| worst single point | 51.164 | 51.564 | +0.782 |
+
+Summing is the larger figure at 88.4 % of operating points, and the quantity
+`mcu_cycle.csv` actually uses — the sum of stage maxima — sits 0.32 % above the
+integrated maximum. **It is not conservative pointwise.** At the single worst
+integrated point the paired sum is 0.089 % *below* it, because the two maxima
+fall at different operating points. Small here, and not a property to rely on.
+
+This bounds the summation error where it can be measured. It does not extend
+to the EKF or the feature stage, which are only ever timed alone; an
+integrated loop over all four needs firmware that cannot be built on the audit
+host (no `arm-none-eabi` toolchain); and cache and pipeline interactions over
+a longer chain are exactly what a two-stage pair cannot show. **339.84 µs is
+still not a WCET.**

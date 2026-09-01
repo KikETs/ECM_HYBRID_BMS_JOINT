@@ -1295,6 +1295,81 @@
    "value": 68.89,
    "source": "sec 37.19 — row-weighted, matches method_comparison_est.csv exactly; the three references share one number",
    "tol": 0.02
+  },
+  {
+   "id": "usable.ref.binding.exceed_dep",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "charge",
+    "tau_s": "10.0",
+    "cell": "BOOST_NEGPULSE_1S"
+   },
+   "column": "exceed_deployed",
+   "value": 2,
+   "source": "sec 37.19 — the binding cell held out gets a looser lambda and pays for it",
+   "tol": 0
+  },
+  {
+   "id": "usable.ref.binding.exceed_fleet",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "charge",
+    "tau_s": "10.0",
+    "cell": "BOOST_NEGPULSE_1S"
+   },
+   "column": "exceed_fleet",
+   "value": 0,
+   "source": "sec 37.19 — zero on the same rows under the all-cells lambda; the vs_fleet comparison is not iso-risk",
+   "tol": 0
+  },
+  {
+   "id": "usable.ref.nonbinding.identity",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "cell": "BOOST_REST"
+   },
+   "column": "vs_fleet_pct",
+   "value": 100.0,
+   "source": "sec 37.19 — 100.0 by identity: the deployed lambda equals the all-cells lambda when the binding cell is in training",
+   "tol": 0.05
+  },
+  {
+   "id": "mcu.integration.stage_maxima",
+   "table": "integration_cost.csv",
+   "where": {
+    "quantity": "sum of the two stage maxima"
+   },
+   "column": "delta_pct",
+   "value": 0.321,
+   "source": "sec 37.21 — the summation mcu_cycle.csv uses sits 0.32 % above the integrated maximum on the pair that can be measured",
+   "tol": 0.01
+  },
+  {
+   "id": "mcu.integration.pointwise",
+   "table": "integration_cost.csv",
+   "where": {
+    "quantity": "maximum over 500 points"
+   },
+   "column": "delta_pct",
+   "value": -0.089,
+   "source": "sec 37.21 — and is NOT conservative pointwise: the maxima fall at different operating points",
+   "tol": 0.01
+  },
+  {
+   "id": "mcu.integration.worst_point",
+   "table": "integration_cost.csv",
+   "where": {
+    "quantity": "worst single point"
+   },
+   "column": "delta_pct",
+   "value": 0.782,
+   "source": "sec 37.21 — largest paired overestimate",
+   "tol": 0.01
   }
  ],
  "tables": {
@@ -3426,6 +3501,8 @@
     "usable_pct",
     "vs_fleet_pct",
     "vs_cell_oracle_pct",
+    "exceed_deployed",
+    "exceed_fleet",
     "binding_cell"
    ],
    "numeric": [
@@ -3433,17 +3510,42 @@
     "n",
     "usable_pct",
     "vs_fleet_pct",
-    "vs_cell_oracle_pct"
+    "vs_cell_oracle_pct",
+    "exceed_deployed",
+    "exceed_fleet"
    ],
    "units": {
     "usable_pct": "% of the cell own measured SOP",
     "vs_fleet_pct": "% of the all-cells lambda ceiling (ORACLE BOUND)",
-    "vs_cell_oracle_pct": "% of a lambda fitted on the evaluated cell itself (ORACLE BOUND)"
+    "vs_cell_oracle_pct": "% of a lambda fitted on the evaluated cell itself (ORACLE BOUND)",
+    "exceed_deployed": "rows exceeding under the leave-one-cell-out lambda",
+    "exceed_fleet": "rows exceeding under the all-cells lambda; where these differ the vs_fleet comparison is NOT iso-risk"
+   }
+  },
+  "integration_cost.csv": {
+   "producer": "python3 repro/run_integration_cost.py",
+   "stage": "integration_cost",
+   "required": true,
+   "rows": 5,
+   "columns": [
+    "quantity",
+    "integrated_us",
+    "summed_us",
+    "delta_us",
+    "delta_pct"
+   ],
+   "numeric": [
+    "delta_pct"
+   ],
+   "units": {
+    "integrated_us": "us, SOP_CMD_FULL (trim+solve in one DWT window)",
+    "summed_us": "us, SOP_CMD_TRIM + SOP_CMD_SOLVE timed separately",
+    "delta_pct": "% , summed relative to integrated; positive means adding stages over-reports"
    }
   }
  },
  "completeness": {
-  "total_checks": 106,
+  "total_checks": 112,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3478,7 +3580,8 @@
    "soc_soh_selection.csv": 4,
    "method_comparison_est.csv": 2,
    "external_a8_surfaces.csv": 4,
-   "usable_reference.csv": 4
+   "usable_reference.csv": 7,
+   "integration_cost.csv": 3
   },
   "check_ids": [
    "sop.disc.10s.lambda",
@@ -3586,7 +3689,13 @@
    "usable.ref.a8.disc10.fleet",
    "usable.ref.a8.disc10.oracle",
    "usable.ref.a8.chg10.oracle",
-   "usable.ref.a8.disc10.usable"
+   "usable.ref.a8.disc10.usable",
+   "usable.ref.binding.exceed_dep",
+   "usable.ref.binding.exceed_fleet",
+   "usable.ref.nonbinding.identity",
+   "mcu.integration.stage_maxima",
+   "mcu.integration.pointwise",
+   "mcu.integration.worst_point"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

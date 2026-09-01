@@ -104,9 +104,12 @@ capability no single-λ policy can reach. Two reference points make the 69 %
 readable (§37.19):
 
 - against the best λ fitted with **all six cells visible**, the leave-one-cell-out
-  λ scores **100.4 %**. Holding one of these six cells out costs nothing — six
-  cells of one model, one per aging protocol, so it is not a statement about a
-  manufacturing population.
+  λ scores **100.4 %** — but read that per cell, not as a mean. For five of the
+  six it is 100.0 *by identity*: the binding cell is in the training set and
+  fixes the factor. For the sixth, held out, λ comes out looser and carries all
+  seven exceedances in the arm against zero under the fleet factor. The two
+  policies do not have the same risk, so this is a trade, not a free lunch
+  (§37.19).
 - against a λ fitted on the **evaluated cell itself**, it scores **95.2 %** on
   discharge and **81.8 %** on charge. That is what a per-cell field calibration
   would be worth.
@@ -189,10 +192,19 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 106 stored published values
+python3 repro/verify.py        # check the 112 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```
+
+**Platform.** Linux. CI runs `ubuntu-latest` and that is the only combination
+tested end to end. The checks in `verify.py`, `gate.py` and the test suite are
+plain Python and should run anywhere, but two things are POSIX-shaped: the
+stage runner joins commands with `&&` through a shell, and the firmware job
+needs `arm-none-eabi-gcc` plus `STM32_Programmer_CLI`. `gate.py` says so when
+it starts on anything else rather than letting a green run imply more than it
+covers. Windows is untested; macOS is untested but has no known blocker
+outside the firmware stages.
 
 `gate.py` exists because four review rounds each found a defect that was
 already in the working tree — the checks for most of them existed, in four
@@ -204,7 +216,7 @@ an uncommitted file.
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
 in [DATA.md](DATA.md) into `raw/` and run `python3 repro/run.py <stage>`.
-Full rebuild sums to 1211 minutes (20.2 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 710 minutes (11.8 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
+Full rebuild sums to 1212 minutes (20.2 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 711 minutes (11.8 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
 
 [REPRODUCE.md](REPRODUCE.md) maps every published number to the command
 that produces it.
