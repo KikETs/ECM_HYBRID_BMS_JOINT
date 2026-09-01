@@ -32,6 +32,13 @@ claims:
     ledger: safety_calibration
     status: PARTIAL
     note: "These are the pooled-median lambdas.  Per-cell held-out lambdas span 0.683-0.708 (discharge 10 s)."
+    replacement: >
+      Current, from safety_strict_oracle.csv after the deterministic retrain:
+      pooled-median lambda 0.6834 (discharge 10 s), 0.4703 (discharge 2 s),
+      0.5862 (charge 10 s), 0.5601 (charge 2 s).  PARTIAL because one number
+      hides the spread: the per-cell held-out values run 0.6834-0.7081 on
+      discharge 10 s, and it is the smallest of them a deployment must ship.
+      Quote the pooled median with its range, never alone.
 
   - id: sop.ladder
     text: "A8 beats A0 by ~10 %p usable current; A8 >= A3 on charge"
@@ -141,9 +148,18 @@ claims:
 
   - id: sop.seq_baselines
     text: "a larger sequence model would do better"
-    table: ladder.csv + safety_strict_{lstm,gru,ffrls}_oracle.csv
+    table: method_comparison.csv
     producer: "python3 repro/run_sop_seq_baselines.py"
     status: CONTRADICTED
+    replacement: >
+      Current, from method_comparison.csv: on discharge 10 s the ranking is
+      A3 70.03 %, A8 69.61, GRU 69.54, LSTM 69.09, shrinkage 64.69, FFRLS
+      43.28, and every bootstrap interval except FFRLS overlaps A8's.  Across
+      the four direction x horizon conditions A8 places 3rd, 3rd, 2nd and 5th
+      of six - never first - and 3 of 20 intervals separate from it, all three
+      FFRLS.  A larger sequence model does not do better on the property the
+      paper claims, at 1,100x the parameters; nor does the trim beat them.
+      The supported word is "competitive" (37.3).
     note: >
       LSTM and GRU are 28-30 % better than A8 on voltage RMSE and
       statistically indistinguishable on usable current - all four bootstrap
@@ -154,6 +170,12 @@ claims:
     table: soh_ablations.csv
     producer: "python3 repro/run_soh_ablations.py"
     status: CONTRADICTED
+    replacement: >
+      Current, from soh_ablations.csv with the adopted ridge arm: dQ/dV alone
+      0.0094, time-per-bin alone 0.0096, both together 0.0095.  The
+      representation is not what makes the arm work.  What is load-bearing is
+      the voltage WINDOW: a single 3.6-3.7 V band gives 0.0261, nearly three
+      times worse.
     note: >
       dQ/dV, time-per-bin and both are 0.0094 / 0.0096 / 0.0095.  The
       representation is not load-bearing.  The full voltage window is.
@@ -173,6 +195,16 @@ claims:
     table: pack.csv
     status: PARTIAL
     note: "Resampling simulation of single-cell rows, not a pack measurement.  Say 'pack-level simulation sensitivity'."
+    replacement: >
+      Current, from pack.csv: 0.0 % exceedance at N = 1, 12, 48, 96 and 192 in
+      both directions at the shipped lambdas.  Two qualifications travel with
+      it or the claim is wrong.  It is a Monte Carlo resampling of single-cell
+      evaluation rows within condition groups - there is no pack hardware, so
+      "pack-level simulation sensitivity", never "pack validation" (qc.py
+      fails if that phrase reappears).  And it holds AT those lambdas: 31.2
+      reconfirmed it conditionally, not in general.  Omitted by construction:
+      inter-cell error correlation beyond the condition bin, a shared current
+      trajectory, thermal gradient, imbalance.
 
   - id: e2e.soc_penalty_magnitude
     text: >
