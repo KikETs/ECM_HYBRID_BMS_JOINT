@@ -137,13 +137,16 @@ def clean_clone_pass(quiet):
             return False
         print(f'\n  -- clean clone of HEAD in {dst}')
         good = True
-        for label, argv, cwd, advisory, in (
-                ('clone: verify', [PY, 'repro/verify.py'], dst, False),
-                ('clone: tests', [PY, '-m', 'pytest', 'tests', '-q'], dst,
-                 False),
-                ('clone: report is byte-identical',
-                 [PY, 'repro/report.py'], dst, False)):
-            if run(label, argv, cwd, advisory, quiet) is False:
+        # The whole step list, not a hand-picked subset.  The subset version
+        # ran verify and the tests but no producer --check, and CI failed on
+        # exactly the step it skipped: run_soc_percell.py read a gitignored
+        # npz, which the working tree had and a fresh checkout did not.
+        # Choosing which checks the clone deserves is the optimism this file
+        # exists to remove.
+        for label, argv, cwd, advisory in steps(dst):
+            if argv[:2] == ['git', 'diff']:
+                continue        # nothing is edited in the clone
+            if run('clone: ' + label, argv, cwd, advisory, quiet) is False:
                 good = False
         if good:
             a = os.path.join(dst, 'REPRODUCE.md')

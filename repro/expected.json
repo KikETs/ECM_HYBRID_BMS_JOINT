@@ -3061,6 +3061,32 @@
     "margin_min": "ratio of lambda_needed to the shipped 0.6832",
     "exceed_ub95_pct": "% , Clopper-Pearson over ROWS of one physical cell, conditional on the tested grid"
    }
+  },
+  "soc_perturb_runs.csv": {
+   "producer": "python3 analysis/soc_perturb_bench.py",
+   "stage": "soc",
+   "required": true,
+   "rows": 1260,
+   "columns": [
+    "config",
+    "perturbation",
+    "run_index",
+    "cell",
+    "soh",
+    "rmse_full_pct",
+    "rmse_tail_pct"
+   ],
+   "numeric": [
+    "run_index",
+    "soh",
+    "rmse_full_pct",
+    "rmse_tail_pct"
+   ],
+   "units": {
+    "soh": "fraction of rated capacity",
+    "rmse_full_pct": "%p over the whole run",
+    "rmse_tail_pct": "%p over the last quarter"
+   }
   }
  },
  "completeness": {

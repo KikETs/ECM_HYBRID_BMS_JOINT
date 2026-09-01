@@ -68,6 +68,53 @@ def _one(job):
     return ci, pi, np.array(full), np.array(tail)
 
 
+RUNS_CSV = 'results/tables/soc_perturb_runs.csv'
+RUNS_HEADER = ['config', 'perturbation', 'run_index', 'cell', 'soh',
+               'rmse_full_pct', 'rmse_tail_pct']
+
+
+def write_runs_csv(F, T, runs, path=RUNS_CSV):
+    """Every run's error, one row each, as committed text.
+
+    results/soc_perturb.npz carries these already, but it is gitignored, so a
+    clean clone had no way to recompute anything derived from it -- CI found
+    exactly that when run_soc_percell.py went in.  The npz stays ignored; this
+    is the committed form, and it carries the cell label too, because
+    soc_runs.pkl is gitignored as well.
+
+    main() writes it after a real run.  --from-npz writes it from an existing
+    npz through this same function, so the committed file is byte-for-byte
+    what the stage produces rather than a second rendering of it.
+    """
+    import csv as _csv
+    import os as _os
+    _os.makedirs(_os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', newline='', encoding='utf-8') as f:
+        w = _csv.writer(f)
+        w.writerow(RUNS_HEADER)
+        for c, (cn, _) in enumerate(CONFIGS):
+            for p_, (pn, _) in enumerate(PERTURB):
+                for i, r in enumerate(runs):
+                    w.writerow([cn, pn, i, r['cell'], f"{r['soh']:.4f}",
+                                f'{F[(c, p_)][i] * 100:.4f}',
+                                f'{T[(c, p_)][i] * 100:.4f}'])
+    print(f'  -> {path}  ({len(CONFIGS) * len(PERTURB) * len(runs)} rows)',
+          flush=True)
+
+
+def from_npz():
+    """Rebuild the per-run CSV from an existing npz, without re-simulating."""
+    runs = pickle.load(open(os.environ.get('SOC_RUNS',
+                            'results/soc_runs.pkl'), 'rb'))
+    z = np.load('results/soc_perturb.npz')
+    nper = len(PERTURB)
+    F = {(c, p): z['full'][c * nper + p]
+         for c in range(len(CONFIGS)) for p in range(nper)}
+    T = {(c, p): z['tail'][c * nper + p]
+         for c in range(len(CONFIGS)) for p in range(nper)}
+    write_runs_csv(F, T, runs)
+
+
 def main():
     global RUNS
     RUNS = pickle.load(open(os.environ.get('SOC_RUNS',
@@ -91,6 +138,7 @@ def main():
                              f'{T[(_c, _p)].mean()*100:.3f}',
                              f'{F[(_c, _p)].max()*100:.3f}'])
     print('  -> results/tables/soc_perturb.csv', flush=True)
+    write_runs_csv(F, T, RUNS)
     np.savez('results/soc_perturb.npz', soh=soh,
              full=np.array([F[(c, p)] for c in range(len(CONFIGS))
                             for p in range(len(PERTURB))]),
@@ -115,4 +163,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import sys as _sys
+    if '--from-npz' in _sys.argv:
+        from_npz()
+    else:
+        main()

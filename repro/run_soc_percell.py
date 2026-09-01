@@ -8,10 +8,15 @@ tell whether 2.14 %p is what every cell does or the average of one good cell
 and one bad one.  The per-run errors were computed and then averaged away.
 
 Nothing is re-simulated here.  soc_perturb_bench.py already writes every
-run's RMSE to results/soc_perturb.npz; this reads that array and the cell
-label of each run from soc_runs.pkl, so the per-cell numbers are the pooled
-number taken apart, not a second experiment that might disagree with it.
-The index mapping is asserted against soc_headline.csv on every run.
+run's RMSE, so the per-cell numbers are the pooled number taken apart, not a
+second experiment that might disagree with it.  The totals are asserted
+against soc_headline.csv on every run.
+
+It reads results/tables/soc_perturb_runs.csv, which is committed.  The first
+version read results/soc_perturb.npz and soc_runs.pkl instead, and both are
+gitignored, so it worked here and died in CI on a fresh checkout with
+FileNotFoundError -- the table existed in the repository with no way for
+anyone to recompute it.
 
 Two things the pooled number hides, and they belong next to it:
 
@@ -28,7 +33,6 @@ Two things the pooled number hides, and they belong next to it:
 import argparse
 import csv
 import os
-import pickle
 import sys
 
 import numpy as np
@@ -49,43 +53,59 @@ HEADER = ['cell', 'n_runs', 'undisturbed_pct', 'mean_6_pct', 'worst_of_6_pct',
 
 
 def load():
-    from soc_perturb_bench import CONFIGS, PERTURB
-    z = np.load(os.path.join(RESULTS, 'soc_perturb.npz'))
-    runs = pickle.load(open(os.path.join(RESULTS, 'soc_runs.pkl'), 'rb'))
-    ci = [n for n, _ in CONFIGS].index(ADOPTED)
-    nper = len(PERTURB)
-    full = z['full']
-    if full.shape[0] != len(CONFIGS) * nper:
+    """Per-run errors for the adopted filter, by cell.
+
+    Reads the committed per-run table rather than the gitignored npz, and
+    still checks itself against soc_headline.csv: if the two ever disagree,
+    the decomposition is wrong and this refuses to write.
+    """
+    src = os.path.join(RESULTS, 'tables', 'soc_perturb_runs.csv')
+    if not os.path.exists(src):
         raise SystemExit(
-            f'soc_perturb.npz holds {full.shape[0]} rows, expected '
-            f'{len(CONFIGS) * nper} = {len(CONFIGS)} configs x {nper} '
-            f'perturbations.  Re-run the soc stage.')
-    if full.shape[1] != len(runs):
-        raise SystemExit(
-            f'soc_perturb.npz has {full.shape[1]} runs per row but '
-            f'soc_runs.pkl holds {len(runs)}.  They are out of step; re-run '
-            f'the soc_runs and soc stages together.')
-    # The row order is config-major (see soc_perturb_bench.main).  Getting it
-    # wrong would silently report a different filter's numbers as the adopted
-    # one, so it is checked against the published table rather than trusted.
-    block = full[ci * nper:(ci + 1) * nper]
+            f'{os.path.relpath(src, ROOT)} is missing.  It is written by the '
+            f'soc stage, or from an existing npz with\n'
+            f'    cd analysis && python3 soc_perturb_bench.py --from-npz')
+    rows_in = list(csv.DictReader(open(src, encoding='utf-8')))
+    pert = []
+    for r in rows_in:
+        if r['config'] == ADOPTED and r['perturbation'] not in pert:
+            pert.append(r['perturbation'])
+    if not pert:
+        raise SystemExit(f'no rows for config {ADOPTED!r} in {src}')
+
+    cells, by = {}, {p: {} for p in pert}
+    for r in rows_in:
+        if r['config'] != ADOPTED:
+            continue
+        i = int(r['run_index'])
+        cells[i] = r['cell']
+        by[r['perturbation']][i] = float(r['rmse_full_pct'])
+    n = len(cells)
+    idx = sorted(cells)
+    for p in pert:
+        if len(by[p]) != n:
+            raise SystemExit(
+                f'perturbation {p!r} has {len(by[p])} runs, expected {n}; '
+                f'{os.path.relpath(src, ROOT)} is incomplete')
+    block = np.array([[by[p][i] for i in idx] for p in pert]) / 100.0
+    cell_list = [cells[i] for i in idx]
+
     published = {r['config']: r for r in csv.DictReader(
         open(os.path.join(RESULTS, 'tables', 'soc_headline.csv'),
              encoding='utf-8'))}[ADOPTED]
     for label, mine, col in (
             ('undisturbed', block[0].mean() * 100, 'undisturbed_pct'),
-            ('mean of 6', np.mean([block[p].mean() for p in range(1, nper)])
+            ('mean of 6', np.mean([block[p].mean() for p in range(1, len(pert))])
              * 100, 'mean_6_disturbances_pct'),
-            ('worst of 6', max(block[p].mean() for p in range(1, nper)) * 100,
-             'worst_of_6_pct')):
+            ('worst of 6', max(block[p].mean() for p in range(1, len(pert)))
+             * 100, 'worst_of_6_pct')):
         theirs = float(published[col])
         if abs(mine - theirs) > 5e-3:
             raise SystemExit(
-                f'index mapping is wrong: this script reads {label} = '
-                f'{mine:.3f} %p from soc_perturb.npz, soc_headline.csv '
-                f'publishes {theirs:.3f}.')
-    cells = [r['cell'] for r in runs]
-    return block, cells, [n for n, _ in PERTURB]
+                f'the per-run table and the headline disagree: this script '
+                f'reads {label} = {mine:.3f} %p, soc_headline.csv publishes '
+                f'{theirs:.3f}.')
+    return block, cell_list, pert
 
 
 def rows(block, cells, pert_names):
