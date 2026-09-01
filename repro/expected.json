@@ -989,6 +989,39 @@
       "value": 339.84,
       "tol": 0.01,
       "source": "sec 33.2 — worst case of the same composite"
+    },
+    {
+      "id": "ext.crate.0C.margin",
+      "table": "external_crate_envelope.csv",
+      "where": {
+        "prior_rate": "0C"
+      },
+      "column": "margin",
+      "value": 1.672,
+      "tol": 0.001,
+      "source": "sec 37.12 — no prior discharge, the most favourable case"
+    },
+    {
+      "id": "ext.crate.4C.margin",
+      "table": "external_crate_envelope.csv",
+      "where": {
+        "prior_rate": "4C"
+      },
+      "column": "margin",
+      "value": 1.655,
+      "tol": 0.001,
+      "source": "sec 37.12 — 4C prior discharge; the margin barely moves"
+    },
+    {
+      "id": "ext.crate.pooled.exceed",
+      "table": "external_crate_envelope.csv",
+      "where": {
+        "prior_rate": "0C..4C pooled"
+      },
+      "column": "exceed",
+      "value": 0,
+      "tol": 0,
+      "source": "sec 37.12 — zero exceedance over 48 in-hull points, bounded at 6.1 %"
     }
   ],
   "tables": {
@@ -2882,10 +2915,37 @@
         "cycle_total_us",
         "load_at_100Hz_pct"
       ]
+    },
+    "external_crate_envelope.csv": {
+      "producer": "python3 repro/run_external_crate.py",
+      "stage": "external_crate",
+      "required": false,
+      "rows": 7,
+      "columns": [
+        "prior_rate",
+        "n_points",
+        "n_in_hull",
+        "soc_in_hull_min",
+        "soc_in_hull_max",
+        "lambda_shipped",
+        "lambda_needed",
+        "margin",
+        "exceed",
+        "exceed_ub95_pct",
+        "worst_overshoot_W"
+      ],
+      "numeric": [
+        "n_points",
+        "n_in_hull",
+        "lambda_shipped",
+        "exceed",
+        "exceed_ub95_pct"
+      ],
+      "note": "The last row pools the six prior rates and leaves per-rate columns blank."
     }
   },
   "completeness": {
-    "total_checks": 80,
+    "total_checks": 83,
     "checks_per_table": {
       "alpha.csv": 2,
       "cold_ratio.csv": 2,
@@ -2981,7 +3041,10 @@
       "ext.temp.40.exceed",
       "ext.temp.25.soc_min",
       "mcu.cycle.median",
-      "mcu.cycle.wcet"
+      "mcu.cycle.wcet",
+      "ext.crate.0C.margin",
+      "ext.crate.4C.margin",
+      "ext.crate.pooled.exceed"
     ],
     "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
   }

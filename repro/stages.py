@@ -486,6 +486,16 @@ STAGES = [
              'sheet with a temperature axis, and it decides how far the '
              'frozen safety factor reaches.'),
 
+    dict(id='external_crate', tier=5, minutes=3, measured=True,
+         cmd='{py} ../repro/run_external_crate.py',
+         inputs=['rpcwby_sop_test8.csv', 'cache/pool'],
+         outputs=['results/tables/external_crate_envelope.csv'],
+         why='RPCWBY Test#8: the same cell at 0 C after discharging at six '
+             'different rates.  0 C is where the frozen lambda has least room '
+             '(margin 1.396), so if prior load moves the requirement it moves '
+             'it there.  Physics layer only - Test#8 has no paired drive '
+             'cycle either, so the trim cannot be scored on it (37.12).'),
+
     dict(id='nested_selection', tier=5, minutes=120, measured=True,
          cmd='{py} ../repro/run_nested_selection.py',
          inputs=['cache/trim', 'cache/trim_chg'],

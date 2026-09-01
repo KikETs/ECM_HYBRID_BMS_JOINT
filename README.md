@@ -139,7 +139,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 80 stored published values
+python3 repro/verify.py        # check the 83 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 ```
 

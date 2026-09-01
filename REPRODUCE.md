@@ -87,6 +87,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
 | `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `runs_trim_lstm +2` |
 | `chen2026` | 6 | `python3 ../repro/run_chen2026_baseline.py` | `results/tables/chen2026_baseline.csv +1` |
+| `external_crate` | 3 | `python3 ../repro/run_external_crate.py` | `results/tables/external_crate_envelope.csv` |
 | `nested_selection` | 120 | `python3 ../repro/run_nested_selection.py` | `results/tables/nested_selection.csv` |
 | `end_to_end` | 12 | `python3 ../repro/run_end_to_end.py` | `results/tables/end_to_end.csv +3` |
 | `external` | 15 | `python3 ../repro/run_external_a8.py` | `results/tables/external_a8.csv +2` |
@@ -101,7 +102,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv +1` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never timed.
+Full rebuild: about 1068 minutes (18 h). `~` marks an estimate that was never timed.
 
 ## Published numbers
 
@@ -189,6 +190,9 @@ Full rebuild: about 1065 minutes (18 h). `~` marks an estimate that was never ti
 | `ext.temp.25.soc_min` | 0.4 | `external_temp_envelope.csv` | sec 37.4 |
 | `mcu.cycle.median` | 227.79 | `mcu_cycle.csv` | sec 33.2 |
 | `mcu.cycle.wcet` | 339.84 | `mcu_cycle.csv` | sec 33.2 |
+| `ext.crate.0C.margin` | 1.672 | `external_crate_envelope.csv` | sec 37.12 |
+| `ext.crate.4C.margin` | 1.655 | `external_crate_envelope.csv` | sec 37.12 |
+| `ext.crate.pooled.exceed` | 0 | `external_crate_envelope.csv` | sec 37.12 |
 
 ## Cells
 

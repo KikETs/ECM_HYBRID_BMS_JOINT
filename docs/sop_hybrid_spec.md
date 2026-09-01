@@ -5719,3 +5719,44 @@ This one was not found by a sweep or a reviewer's file list — it was found by
 being asked whether the paper really had that many claims, and counting.
 Eleven survive, not the thirteen I reported, because two of the "verified"
 ones were describing a model the paper no longer uses.
+
+### 37.12 Prior load, at the temperature with the least room
+
+§37.4 left 0 °C as the cold edge of where the frozen λ still holds, with a
+margin of 1.396 against 1.447 at 40 °C. RPCWBY Test#8 sweeps the one axis
+Test#3 does not — the rate the cell was discharged at **before** the pulse:
+0, C/3, 1C, 2C, 3C and 4C, at 0 °C, over thirteen SOC points. If recent load
+history moves what the physics layer owes, it should move it here.
+
+| prior rate | in hull | λ needed | margin | exceed | 95 % upper |
+|---|---:|---:|---:|---:|---:|
+| 0C | 8 / 12 | 1.1421 | 1.672 | 0 | 31.2 % |
+| C/3 | 8 / 13 | 1.1375 | 1.665 | 0 | 31.2 % |
+| 1C | 8 / 12 | 1.1352 | 1.662 | 0 | 31.2 % |
+| 2C | 8 / 12 | 1.1352 | 1.662 | 0 | 31.2 % |
+| 3C | 8 / 12 | 1.1338 | 1.659 | 0 | 31.2 % |
+| 4C | 8 / 11 | 1.1309 | 1.655 | 0 | 31.2 % |
+| **pooled** | **48** | | | **0** | **6.1 %** |
+
+**Prior load barely moves it.** λ_needed spans 1.1309–1.1421 across a
+twelve-fold change in prior rate — a spread of 1 %, and every value is well
+above the shipped 0.6832. Zero exceedance in all 48 in-hull points, bounded
+at 6.1 %.
+
+Two things to take from that, and one not to.
+
+The frozen factor has **more** room here than the Test#3 sweep suggested at
+the same temperature (margin 1.66 against 1.396), which is worth stating
+because it is the opposite of a caveat: Test#8's protocol reaches a different
+part of the operating space and the model is further inside its envelope
+there.
+
+The hull is again the binding constraint, not the physics: 8 of 12–13 points
+per rate, SOC 0.30–0.95 every time. Below 0.30 there is still nothing.
+
+What this does **not** show is that the trim is insensitive to prior load.
+Test#8 has no paired drive cycle either, so the A8 trim cannot be computed on
+it — this is the nominal 2RC layer, and the trim exists precisely because that
+layer needs correcting from drive history. A reader could easily take "prior
+rate does not matter" as undermining the trim's premise; it does not, because
+the trim was never evaluated here.
