@@ -736,23 +736,58 @@ reproduction_pipeline:
     - "run_extras.py read cold-check input from /tmp"
 
 licence:
-  status: VERIFIED
-  detail: >
-    Chosen by the author on 2026-08-27: MIT for the source code (LICENSE),
-    CC BY 4.0 for the derived data, tables, figures and documentation
-    (LICENSE-DATA).  The upstream attribution chain is recorded there:
-    RPCWBY and Mendeley are both CC BY 4.0 and that obligation passes
-    through to anything derived from them.
-  remaining: >
-    UYPYDJ states no licence in its readme and the Borealis landing page was
-    not reachable from this host - see data_provenance.licences.  Confirm
-    with the depositor before redistributing material derived from it.
-  note_on_chen: >
-    The Chen 2026 article is CC BY-NC 4.0.  Only its search algorithm is
-    reimplemented, from the published equations, in
-    repro/run_chen2026_baseline.py; no text or figure is reproduced.  The NC
-    clause is noted in LICENSE-DATA.
+  status: CONFLICT_UNRESOLVED_UPSTREAM
+  detail: 'Chosen by the author on 2026-08-27: MIT for the source code (LICENSE).
+    The derived data, tables, model weights, figures and documentation moved from
+    CC BY 4.0 to CC BY-SA 4.0 on 2026-09-01 (LICENSE-DATA).
 
+    '
+  why_the_change: 'UYPYDJ is CC BY-SA 4.0 in the Borealis dataset record, and
+    ShareAlike propagates to adapted material.  What this repository redistributes
+    is not summary statistics: uypydj_hppc_resistance.csv is 57,674 rows,
+    uypydj_ecm.csv 27,894, uypydj_ocv.csv 11,703, plus 112 model files trained on
+    the dataset.  Under CC BY-SA 4.0 section 4(b) a database built from a
+    substantial portion of the licensed contents is itself Adapted Material, so
+    CC BY would have been non-compliant.
+
+    '
+  conflict: 'THE DEPOSIT CONTRADICTS ITSELF.  Borealis licence field says CC BY-SA
+    4.0 (version 2.0, updated 2025-02-19).  The readme inside the same deposit says
+    "Licenses/restrictions: CC BY 4.0" at line 47.  Both are the depositors'' own
+    statements.  Verified 2026-09-01: the Borealis field was read through the
+    dataverse_json export, and the readme was re-downloaded (datafile 880402, 7151
+    bytes) with SHA-256 matching manifests/raw_data.yaml, so the CC BY line is in
+    the file as published.  The more restrictive reading is applied.
+
+    '
+  correction_2026_09_01: '[I WAS WRONG TWICE] This entry read "licence not stated
+    in the readme" until 2026-08-31, then "CC BY 4.0, release blocker cleared" on
+    the strength of the readme alone.  Neither version checked the Borealis licence
+    field, which is what the depositor actually selected when publishing.  The
+    release blocker was declared cleared on incomplete evidence.
+
+    '
+  open_question_for_the_author: 'Ask the depositor to reconcile the readme with the
+    Borealis record.  If the readme governs, the derived data reverts to CC BY 4.0
+    and the ShareAlike problem for the manuscript disappears.
+
+    '
+  manuscript_risk: 'ShareAlike asks for adapted material under CC BY-SA 4.0.
+    Elsevier offers CC BY 4.0 and CC BY-NC-ND 4.0 for open access, and its own terms
+    for subscription; none is BY-SA.  If figures or tables in the manuscript are
+    Adapted Material of this data, that conflict has to be resolved before
+    submission.  Three routes are set out in LICENSE-DATA.  Not legal advice and not
+    checked with a lawyer - it is recorded so a qualified person answers it rather
+    than the proof stage discovering it.
+
+    '
+  other_datasets: 'RPCWBY verified CC BY 4.0 on 2026-09-01 through the same Borealis
+    export.  Mendeley recorded CC BY 4.0 from its landing page on 2026-08-27; the
+    public API did not return JSON on 2026-09-01, so that one rests on the earlier
+    reading.  CC BY material combines into a BY-SA work without difficulty.
+
+    '
+  note_on_chen: 'The Chen 2026 article is CC BY-NC 4.0.  Only its search algorithm is reimplemented, from the published equations, in repro/run_chen2026_baseline.py; no text or figure is reproduced.  The NC clause is noted in LICENSE-DATA.\n'
 soh_replacement:
   status: VERIFIED_MEASURED
   producer: >

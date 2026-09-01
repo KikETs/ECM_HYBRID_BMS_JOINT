@@ -1,11 +1,28 @@
-Creative Commons Attribution 4.0 International (CC BY 4.0)
+Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
 
-Applies to: the derived data, result tables, figures and prose documentation
-in this repository — specifically analysis/results/, docs/, manifests/,
+Applies to: the derived data, result tables, model weights, figures and prose
+documentation in this repository — specifically analysis/results/,
+analysis/uypydj_*.csv, analysis/runs_trim_*/, docs/, manifests/,
 .paper_state/, REPRODUCE.md, DATA.md, README.md and the results_fig_*.png
 files. The source code is under the MIT License; see LICENSE.
 
-Full text: https://creativecommons.org/licenses/by/4.0/legalcode
+Full text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+## Why ShareAlike, and why this changed on 2026-09-01
+
+This file said CC BY 4.0 until 2026-09-01, on the strength of the licence
+line inside the UYPYDJ readme.  The Borealis record for the same DOI says
+CC BY-SA 4.0, and ShareAlike propagates: adapted material has to carry the
+same licence.  The two upstream CC BY 4.0 datasets can be combined into a
+BY-SA work, so BY-SA governs the whole of the derived material here.
+
+This is not a formality for this repository.  What is redistributed is not
+summary statistics but substantial derived extractions —
+analysis/uypydj_hppc_resistance.csv is 57,674 rows, uypydj_ecm.csv 27,894,
+uypydj_ocv.csv 11,703 — plus 112 model files trained on the dataset.  Under
+CC BY-SA 4.0 section 4(b) a database built from a substantial portion of the
+licensed contents is itself Adapted Material.  Treating these as BY would be
+non-compliant, so the more restrictive reading is the one applied.
 
 ## Upstream attribution
 
@@ -16,8 +33,15 @@ through to anything derived from them. Cite all three:
   Kollmeyer, P. J., & da Silva Duque, J. "Battery Aging Dataset for 15
   Minute Fast Charging of Samsung 30T Cells." Borealis (McMaster University
   Dataverse). doi:10.5683/SP3/UYPYDJ
-  — Licence not stated in the dataset readme; confirm terms with the
-    depositor before redistributing anything derived from it.
+  — CC BY-SA 4.0, per the Borealis dataset record (version 2.0, last
+    updated 2025-02-19).  UNRESOLVED CONFLICT: the readme file inside the
+    same deposit says "Licenses/restrictions: CC BY 4.0" at line 47.  Both
+    statements are the depositors' own.  Verified 2026-09-01 by reading the
+    Borealis licence field through the dataverse_json export and by
+    downloading the readme (datafile 880402, 7151 bytes, SHA-256
+    20411cecdbfe954df0e3d238c486f11a5c86d53dd7ad128b3a8858efbe59dfb3, which
+    matches manifests/raw_data.yaml).  This repository follows the more
+    restrictive of the two.  Ask the depositor to reconcile them.
 
   Chen, J., Emadi, A., & Kollmeyer, P. "Battery State-of-power Measurement
   Dataset — Samsung 30T 3Ah, BYD Blade 135Ah, A123 APR18650M1A 1.1Ah, Tesla
@@ -40,3 +64,26 @@ manifests/raw_data.yaml.
   Their constant-power binary search is reimplemented in
   repro/run_chen2026_baseline.py. Their LSTM battery model is not
   reproduced. Note the NC clause on that article.
+
+## What ShareAlike means for a journal submission
+
+If a figure or table in a manuscript is Adapted Material of this repository's
+derived data, ShareAlike asks for it under CC BY-SA 4.0.  Elsevier's open
+access options are CC BY 4.0 and CC BY-NC-ND 4.0, and subscription articles
+run under Elsevier's own terms; none of the three is BY-SA.  That is a real
+conflict to resolve BEFORE submission, not after.
+
+Three ways out, in the order worth trying:
+
+  1. Ask the depositor to reconcile the readme with the Borealis record.  The
+     readme already says CC BY 4.0, so this may simply resolve.
+  2. Establish that the published figures are aggregate results rather than
+     Adapted Material.  Facts are not copyrightable, and a margin or an RMSE
+     is not a substantial extraction of the database.  This is arguable and
+     is a different question from the repository's own redistribution, which
+     plainly does extract substantially.
+  3. Obtain written permission from the depositor for the specific use.
+
+None of this is legal advice and none of it was checked with a lawyer.  It is
+recorded here so the question is answered by someone qualified rather than
+discovered at the proof stage.
