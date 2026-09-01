@@ -11,7 +11,35 @@ UYPYDJ:
   repo: "Borealis (McMaster University Dataverse)"
   version: "readme dated 2025-02-17 (six-cell revision); no numbered version exposed by the landing page"
   cell: "Samsung INR21700-30T, 3.0 Ah"
-  authors: "Josimar da Silva Duque; Phillip J. Kollmeyer"
+  authors: "Duque, Josimar; Kollmeyer, Phillip J.; Naguib, Mina (all McMaster University) - the designated forms from the Borealis citation block, verified 2026-09-01"
+  authors_correction_2026_09_01: >
+    This field read "Josimar da Silva Duque; Phillip J. Kollmeyer" and was
+    MISSING A CREDITED AUTHOR, Mina Naguib.  CC BY-SA 4.0 section 3(a)(1)(A)(i)
+    requires retaining identification of the creators, so an attribution that
+    names two of three is not compliant - and this was the citation carried in
+    LICENSE-DATA, which is the file a reuser reads.  The name forms are also
+    now the ones the depositors designated rather than a reconstruction.
+  citation_verbatim: >
+    Duque, Josimar; Kollmeyer, Phillip J.; Naguib, Mina, 2023, "Battery Aging
+    Dataset for 15 Minute Fast Charging of Samsung 30T Cells",
+    https://doi.org/10.5683/SP3/UYPYDJ, Borealis, V2,
+    UNF:6:67fgtEhvw+rwb1FgShO9tg==
+  related_publication: >
+    J. Duque, P. J. Kollmeyer, M. Naguib and A. Emadi, "Battery Dual Extended
+    Kalman Filter State of Charge and Health Estimation Strategy for Traction
+    Applications", 2022 IEEE Transportation Electrification Conference & Expo
+    (ITEC), Anaheim, pp. 975-980.  doi:10.1109/ITEC53557.2022.9813961
+    The depositors' own SOC/SOH paper on this data, which is why the campaign
+    has an HPPC every 30 cycles and an OCV every 60 (docs/ecm_kf_plan.md).
+    It is prior work on the same dataset for the same task and belongs in the
+    manuscript's related work.
+  conditions: >
+    All testing in a thermal chamber at 25 C on an Arbin cycler, six brand new
+    3 Ah Samsung INR21700-30T cells aged to about 70 % SOH over 1500-2000
+    cycles.  Two cells share the standard CC/CV profile, one is boost charge,
+    three are pulsed methods - which is the source of the one-cell-per-protocol
+    confound in generalization_scope.yaml, and of the CC / CC_CELL2 pair being
+    the only same-protocol comparison.  Single temperature by design.
   license: "CC BY-SA 4.0 (Borealis dataset record, version 2.0, last updated 2025-02-19; verified 2026-09-01 through the dataverse_json export)"
   license_conflict: >
     THE DEPOSIT CONTRADICTS ITSELF AND THIS IS NOT RESOLVED.
@@ -139,8 +167,8 @@ Mendeley:
   repo: "Mendeley Data"
   version: "2 (published 2023-12-04)"
   cell: "Samsung INR21700-30T, 3.0 Ah"
-  authors: "Phillip Kollmeyer; Michael Skells"
-  license: "CC BY 4.0 (stated on the Mendeley landing page)"
+  authors: "Phillip Kollmeyer; Michael Skells (landing page).  DataCite lists only 'Kollmeyer, Phillip' for this DOI - the deposit's creator metadata looks incomplete, so the fuller list from the landing page is kept."
+  license: "CC BY 4.0 (Mendeley landing page 2026-08-27; re-verified 2026-09-01 through DataCite, rightsIdentifier cc-by-4.0)"
   role: "temperature axis for ecm_temp_factor; drive cycles (UDDS/HWFET/LA92/US06)"
   code_path: "raw/Mendeley/"
   verified: "2026-08-27"

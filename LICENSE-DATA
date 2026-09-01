@@ -30,9 +30,17 @@ This repository contains work derived from three datasets. Two of them are
 themselves CC BY 4.0, which carries an attribution requirement that passes
 through to anything derived from them. Cite all three:
 
-  Kollmeyer, P. J., & da Silva Duque, J. "Battery Aging Dataset for 15
-  Minute Fast Charging of Samsung 30T Cells." Borealis (McMaster University
-  Dataverse). doi:10.5683/SP3/UYPYDJ
+  Duque, Josimar; Kollmeyer, Phillip J.; Naguib, Mina, 2023, "Battery Aging
+  Dataset for 15 Minute Fast Charging of Samsung 30T Cells",
+  https://doi.org/10.5683/SP3/UYPYDJ, Borealis, V2,
+  UNF:6:67fgtEhvw+rwb1FgShO9tg==
+  — the dataset's own citation form.  This block previously named two of the
+    three creators, omitting Mina Naguib, which is not the attribution
+    CC BY-SA 4.0 section 3(a)(1)(A)(i) asks for.  Corrected 2026-09-01.
+  — Related publication, the depositors' own: J. Duque, P. J. Kollmeyer,
+    M. Naguib and A. Emadi, "Battery Dual Extended Kalman Filter State of
+    Charge and Health Estimation Strategy for Traction Applications",
+    2022 IEEE ITEC, pp. 975-980, doi:10.1109/ITEC53557.2022.9813961
   — CC BY-SA 4.0, per the Borealis dataset record (version 2.0, last
     updated 2025-02-19).  UNRESOLVED CONFLICT: the readme file inside the
     same deposit says "Licenses/restrictions: CC BY 4.0" at line 47.  Both
