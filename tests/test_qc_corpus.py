@@ -187,6 +187,10 @@ SCOPE_MUST_FLAG = [
      'A single calibration transfers to all cells without adjustment.'),
     ('WCET stated flat',
      'The measured WCET of the full cycle is 339.84 us.'),
+    ('binomial bound quoted as a risk figure',
+     'External exceedance risk is bounded at 9.2 % with 95 % confidence.'),
+    ('pooled bound with no denominator',
+     'Pooling the sweep gives a one-sided 95 % upper bound of 6.1 %.'),
     # section_preamble deliberately reads only the section's opening lines.
     # A caveat thirty lines down is one a reader quoting the section never
     # sees, so it must not exempt.  Without this case, widening the window to
@@ -217,6 +221,11 @@ SCOPE_MUST_NOT_FLAG = [
      'one model from one order.'),
     ('WCET named as a derived sum',
      'This is not a measured WCET: it is the sum of per-stage maxima.'),
+    ('bound with its denominator as a fraction',
+     'Internal holdout exceedance 3/651 = 0.46 %, 95 % upper bound 1.19 %.'),
+    ('bound stated as conditional on the grid',
+     'Zero in 48 in-hull points, 95 % upper bound 6.1 % over rows of one '
+     'physical cell, conditional on the tested grid.'),
     ('the section preamble carries the caveat for the section',
      '## 28. Pack level\n'
      '\n'

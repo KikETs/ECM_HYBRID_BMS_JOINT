@@ -62,8 +62,13 @@ def main():
             out = s['outputs'][0] + (f' +{n - 1}' if n > 1 else '')
             w(f"| `{s['id']}` | {m} | `{cmd}` | `{out}` |")
         w('')
-    w(f'Full rebuild: about {tot} minutes ({tot / 60:.0f} h). '
-      '`~` marks an estimate that was never timed.\n')
+    meas = sum(x['minutes'] for x in STAGES if x.get('measured'))
+    w(f'Full rebuild: {tot} minutes ({tot / 60:.1f} h) if every stage takes '
+      f'the time recorded against it. `~` marks an estimate that was never '
+      f'timed, and those account for {tot - meas} of those minutes '
+      f'({(tot - meas) / tot * 100:.0f} %) — so treat the total as a '
+      f'planning figure, not a measurement. Measured stages sum to {meas} '
+      f'minutes ({meas / 60:.1f} h).\n')
 
     w('## Published numbers\n')
     w('`python3 repro/verify.py` recomputes each of these from the tables. '
@@ -75,10 +80,31 @@ def main():
         w(f"| `{c['id']}` | {c['value']} | `{c['table']}` | {src} |")
     w('')
 
-    w('## Cells\n')
+    w('## Cells and evaluation protocol\n')
     w(', '.join(f'`{c}`' for c in CELLS) + '\n')
-    w('Leave-one-cell-out everywhere: the evaluated cell trains no model '
-      'and calibrates no safety factor.\n')
+    w('The three arms are NOT evaluated the same way, and a single sentence '
+      'about all three would be wrong about one of them.\n')
+    w('| arm | protocol | what a number from it means |')
+    w('|---|---|---|')
+    w('| SOP | leave-one-cell-out | the evaluated cell trains no model and '
+      'calibrates no safety factor |')
+    w('| SOH | leave-one-cell-out | same, over the same six folds |')
+    w('| SOC | **per-cell calibrated, not held out** | every filter reads '
+      'its own cell\'s characterisation surface, so the spread is over '
+      'operating conditions within a cell and says nothing about transfer '
+      'to an unseen cell |')
+    w('')
+    w('One more thing the fold names hide: the dataset runs one physical '
+      'cell per aging protocol, so holding out a cell holds out its '
+      'protocol too. That makes the held-out test harder than cell '
+      'variation alone, and it means no result here can attribute a '
+      'difference to cell or to protocol separately. `CC` and `CC_CELL2` '
+      'are the only same-protocol pair. `manifests/generalization_scope.yaml`'
+      ' holds both axes at PARTIAL for this reason.\n')
+    w('What ships is neither protocol: the board carries an all-cell fit, '
+      'because a product must not be a model trained without one of its own '
+      'six cells. Leave-one-cell-out measures the cost of generalising; it '
+      'is not the artifact.\n')
 
     w('## Not on the critical path\n')
     w('`python3 repro/run.py --exploratory` lists the remaining scripts '

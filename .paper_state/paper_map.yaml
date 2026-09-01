@@ -108,6 +108,25 @@ claims:
       pair, and it alone spans 1.29x of the 1.35x total.  Say "six
       protocol-cell combinations".
 
+  - id: ext.crate.margin
+    text: >
+      (new, 37.12/37.14) Test#8 at 0 C: the frozen lambda holds across prior
+      discharge rates from 0 to 4C.
+    table: external_crate_surfaces.csv
+    producer: "python3 repro/run_external_crate.py --all-surfaces"
+    status: VERIFIED
+    note: >
+      The conclusion is surface-independent - zero exceedance in all 48
+      in-hull points against every one of the six internal surfaces - but the
+      MARGIN is not.  It spans 1.351 (CC_CELL2) to 1.655 (CC), a 1.22x range,
+      while prior C-rate moves it by about 1 % within any one surface.  37.12
+      first published 1.655-1.672 because --holdout defaults to CC, which was
+      the most favourable of the six.  Quote 1.351.  The 6.1 % upper bound is
+      exact-binomial over rows of ONE physical cell, conditional on the
+      tested SOC and prior-rate grid; it is not a cell- or population-level
+      risk, and the six surface columns must not be pooled - they are the
+      same 48 measurements scored six times.
+
   - id: mcu.cycle_time
     text: "214.8 us per control cycle, 142.1 KB flash"
     table: mcu_cycle.csv

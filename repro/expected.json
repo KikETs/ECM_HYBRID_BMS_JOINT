@@ -1055,6 +1055,39 @@
    "value": 2.372,
    "source": "sec 37.13 — same protocol as CC, different cell: the one contrast where cell and protocol are not confounded",
    "tol": 0.01
+  },
+  {
+   "id": "ext.crate.surface.margin_min",
+   "table": "external_crate_surfaces.csv",
+   "where": {
+    "surface": "CC_CELL2"
+   },
+   "column": "margin_min",
+   "value": 1.351,
+   "source": "sec 37.14 — worst of the six internal surfaces; this is the margin to quote, not CC 1.655",
+   "tol": 0.002
+  },
+  {
+   "id": "ext.crate.surface.margin_max",
+   "table": "external_crate_surfaces.csv",
+   "where": {
+    "surface": "CC"
+   },
+   "column": "margin_min",
+   "value": 1.655,
+   "source": "sec 37.14 — the most favourable surface, which is the one that had been published alone",
+   "tol": 0.002
+  },
+  {
+   "id": "ext.crate.surface.boost",
+   "table": "external_crate_surfaces.csv",
+   "where": {
+    "surface": "BOOST"
+   },
+   "column": "margin_min",
+   "value": 1.448,
+   "source": "sec 37.14 — a middle surface; the spread is 1.22x",
+   "tol": 0.002
   }
  ],
  "tables": {
@@ -3001,10 +3034,37 @@
     "mean_6_pct": "%p RMSE, mean over the six disturbances",
     "worst_of_6_pct": "%p RMSE, worst single disturbance"
    }
+  },
+  "external_crate_surfaces.csv": {
+   "producer": "python3 repro/run_external_crate.py --all-surfaces",
+   "stage": "external_crate",
+   "required": true,
+   "rows": 7,
+   "columns": [
+    "surface",
+    "n_in_hull",
+    "lambda_needed_min",
+    "lambda_needed_max",
+    "margin_min",
+    "exceed",
+    "exceed_ub95_pct",
+    "worst_overshoot_W"
+   ],
+   "numeric": [
+    "lambda_needed_min",
+    "lambda_needed_max",
+    "margin_min"
+   ],
+   "units": {
+    "lambda_needed_min": "dimensionless",
+    "lambda_needed_max": "dimensionless",
+    "margin_min": "ratio of lambda_needed to the shipped 0.6832",
+    "exceed_ub95_pct": "% , Clopper-Pearson over ROWS of one physical cell, conditional on the tested grid"
+   }
   }
  },
  "completeness": {
-  "total_checks": 86,
+  "total_checks": 89,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3033,7 +3093,8 @@
    "external_temp_envelope.csv": 5,
    "mcu_cycle.csv": 2,
    "external_crate_envelope.csv": 3,
-   "soc_percell.csv": 3
+   "soc_percell.csv": 3,
+   "external_crate_surfaces.csv": 3
   },
   "check_ids": [
    "sop.disc.10s.lambda",
@@ -3121,7 +3182,10 @@
    "ext.crate.pooled.exceed",
    "soc.percell.worst",
    "soc.percell.best",
-   "soc.percell.cc2"
+   "soc.percell.cc2",
+   "ext.crate.surface.margin_min",
+   "ext.crate.surface.margin_max",
+   "ext.crate.surface.boost"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

@@ -122,6 +122,14 @@ only 7–8 in-hull points, so a zero there is bounded at about **31 %** by a
 one-sided 95 % interval, and pooled across 0–40 °C (31 points) at **9.2 %**.
 Zero observed is not zero risk at this sample size.
 
+Read those bounds narrowly. They are exact-binomial bounds over **rows**, and
+the rows are one physical cell measured repeatedly across SOC and temperature
+— not independent draws from anything. So 9.2 % is a statement about this
+grid on this cell, conditional on the tested points; cell-level or
+population-level risk is not estimable from a single external cell at any
+sample size. The same applies to the 6.1 % from the C-rate sweep (§37.12),
+which scores the same 48 measurements.
+
 The pooled hull **never reaches below SOC 0.30 at any temperature**, which is
 also why Test#2's low-SOC coverage is 0 %. So: the physics layer shows no
 exceedance from 0 to 40 °C above SOC 0.30 with a 9.2 % upper bound, and fails
@@ -146,14 +154,14 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 86 stored published values
+python3 repro/verify.py        # check the 89 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 ```
 
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
 in [DATA.md](DATA.md) into `raw/` and run `python3 repro/run.py <stage>`.
-Full rebuild is about 12 hours.
+Full rebuild sums to 1069 minutes (17.8 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 568 minutes (9.5 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
 
 [REPRODUCE.md](REPRODUCE.md) maps every published number to the command
 that produces it.

@@ -2114,7 +2114,9 @@ grade.
 ### 21.6 What it does not guarantee
 
 - **"Zero" is an observation, not a guarantee.** The 95 % upper bounds are
-  1.19 % internally and 9.2–19.3 % externally. A regression model cannot
+  1.19 % internally (over 651 held-out rows) and 9.2–19.3 % externally (over
+  rows of one external cell, conditional on the tested grid — neither figure
+  is a cell-level or population-level risk). A regression model cannot
   guarantee an upper bound. The real guarantee comes from the undervoltage
   cutoff as a protection layer, and the SOP estimator's job is to make that
   cutoff fire rarely.
@@ -5760,7 +5762,15 @@ history moves what the physics layer owes, it should move it here.
 **Prior load barely moves it.** λ_needed spans 1.1309–1.1421 across a
 twelve-fold change in prior rate — a spread of 1 %, and every value is well
 above the shipped 0.6832. Zero exceedance in all 48 in-hull points, bounded
-at 6.1 %.
+at 6.1 % — an exact-binomial bound over those rows, which are one physical
+cell measured across SOC and prior rate. It is conditional on this grid and
+this cell, and it is not a cell-level or population-level risk; a single
+external cell cannot support one at any sample size.
+
+The table above is scored against the CC surface. **That was a choice, and it
+was the most favourable of six** — see §37.14, which repeats the whole test
+against every internal surface. The margin to quote from this experiment is
+1.351, not the 1.672 above.
 
 Two things to take from that, and one not to.
 
@@ -5829,3 +5839,40 @@ over all six. Nearly the whole apparent protocol effect is reproducible from
 two cells running the *same* protocol. `generalization_scope.yaml` therefore
 holds `protocol` at PARTIAL as well as `cell`, and the claim limit is "six
 protocol-cell combinations", never "generalises across charge protocols".
+
+### 37.14 Which surface Test#8 is scored against changes the answer
+
+§37.12 ran against `--holdout CC` because that is the script's default. Test#8
+is external, so nothing is held out for it: all six internal surfaces are
+models built on internal cells and applied to a cell none of them saw, and
+every one is equally entitled to be used. Reporting one was a selection, and
+it happened to land on the most favourable.
+
+`run_external_crate.py --all-surfaces` runs all six.
+
+| surface | λ needed (min–max over rates) | margin | exceed |
+|---|---:|---:|---:|
+| CC_CELL2 | 0.9232–0.9325 | **1.351** | 0 / 48 |
+| BOOST | 0.9891–0.9922 | 1.448 | 0 / 48 |
+| BOOST_REST | 1.0706–1.0746 | 1.567 | 0 / 48 |
+| BOOST_NEGPULSE | 1.0961–1.1091 | 1.604 | 0 / 48 |
+| BOOST_NEGPULSE_1S | 1.1241–1.1354 | 1.645 | 0 / 48 |
+| CC | 1.1309–1.1421 | **1.655** | 0 / 48 |
+
+**The conclusion survives; the number does not.** Every surface clears the
+shipped 0.6832 with room, and every surface gives zero exceedance in all 48
+in-hull points, so "the frozen factor holds at 0 °C across prior load" does
+not depend on which surface is picked. But the margin spans 1.351 to 1.655, a
+1.22× range — against a ~1 % spread across prior C-rate *within* any one
+surface. **Prior load is not what moves this number. The choice of internal
+surface is**, by twenty times as much, and §37.12's headline had that
+variation hidden inside a default argument.
+
+So the honest reading of Test#8 is narrower than it first looked: it says the
+nominal 2RC layer, built on any of the six internal cells, is conservative on
+this external cell at 0 °C regardless of prior discharge rate, with at least
+35 % of margin left over. It does not say the margin is 66 %.
+
+**Do not pool the six columns.** They are the same 48 measurements scored six
+times; 288 would read as six times the evidence and there is none of it. The
+summary row in `external_crate_surfaces.csv` reports 48 for that reason.

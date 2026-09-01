@@ -51,6 +51,9 @@ jobs:
           python repro/run_mcu_table.py --check
           python repro/run_method_comparison.py --check
           python repro/run_soh_deploy_tables.py --check
+          python repro/run_soc_percell.py --check
+          python repro/run_external_crate.py --check
+          python repro/run_external_crate.py --all-surfaces --check
 
       - name: Unit and integration tests
         run: python -m pytest tests -q
@@ -67,6 +70,9 @@ jobs:
         run: |
           python repro/report.py
           git diff --exit-code REPRODUCE.md
+
+      - name: Claim scope (stale, retracted and unbounded claims)
+        run: python repro/qc.py --fail-on-current
 
       - name: Raw-data manifest is present and parses
         run: python -c "import sys;sys.exit(0 if open('manifests/raw_data.yaml').read().count('sha256')>20 else 1)"

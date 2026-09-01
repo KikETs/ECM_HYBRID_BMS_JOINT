@@ -77,17 +77,18 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `safety_strict` | 2 | `python3 ../repro/run_safety_strict.py --arm oracle && python3 ../repro/run_safety_strict.py --arm est && python3 ../repro/run_safety_strict.py --arm oracle --method a3 && python3 ../repro/run_safety_strict.py --arm oracle --method lstm && python3 ../repro/run_safety_strict.py --arm oracle --method gru && python3 ../repro/run_safety_strict.py --arm oracle --method ffrls && python3 ../repro/run_safety_strict.py --arm oracle --method shrink` | `results/tables/safety_strict_a3_oracle.csv +20` |
 | `pack` | 5 | `python3 sop_pack2.py` | `results/tables/pack.csv` |
 | `soc_runs` | 4 | `python3 ../repro/build_soc_runs.py` | `results/soc_runs.pkl` |
-| `soc` | 55 | `python3 soc_perturb_bench.py && python3 soc_est_soh.py` | `results/tables/soc_perturb.csv` |
+| `soc` | 55 | `python3 soc_perturb_bench.py && python3 soc_est_soh.py` | `results/tables/soc_perturb.csv +1` |
 | `figures` | 3 | `python3 ../repro/fig_ladder.py && python3 ../repro/fig_soc_traj.py && python3 ../repro/fig_soh_traj.py && python3 ../repro/fig_sop_traj.py --direction discharge && python3 ../repro/fig_sop_traj.py --direction charge && python3 ../repro/fig_usable_ci.py` | `../results_fig_ladder.png +5` |
 | `extras` | 2 | `python3 ../repro/run_extras.py` | `results/tables/alpha.csv +3` |
 | `soh_baselines` | 2 | `python3 ../repro/run_soh_baselines.py` | `results/tables/soh_baselines.csv` |
 | `soh_ablations` | 3 | `python3 ../repro/run_soh_ablations.py` | `results/tables/soh_ablations.csv` |
 | `soc_baselines` | 4 | `python3 ../repro/run_soc_baselines.py` | `results/tables/soc_baselines.csv` |
 | `soc_headline` | 3 | `python3 ../repro/run_soc_headline.py` | `results/tables/soc_headline.csv` |
+| `soc_percell` | 1 | `python3 ../repro/run_soc_percell.py` | `results/tables/soc_percell.csv` |
 | `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
 | `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `runs_trim_lstm +2` |
 | `chen2026` | 6 | `python3 ../repro/run_chen2026_baseline.py` | `results/tables/chen2026_baseline.csv +1` |
-| `external_crate` | 3 | `python3 ../repro/run_external_crate.py` | `results/tables/external_crate_envelope.csv` |
+| `external_crate` | 3 | `python3 ../repro/run_external_crate.py && python3 ../repro/run_external_crate.py --all-surfaces` | `results/tables/external_crate_envelope.csv +1` |
 | `nested_selection` | 120 | `python3 ../repro/run_nested_selection.py` | `results/tables/nested_selection.csv` |
 | `end_to_end` | 12 | `python3 ../repro/run_end_to_end.py` | `results/tables/end_to_end.csv +3` |
 | `external` | 15 | `python3 ../repro/run_external_a8.py` | `results/tables/external_a8.csv +2` |
@@ -102,7 +103,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv +1` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: about 1068 minutes (18 h). `~` marks an estimate that was never timed.
+Full rebuild: 1069 minutes (17.8 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (47 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 568 minutes (9.5 h).
 
 ## Published numbers
 
@@ -193,12 +194,28 @@ Full rebuild: about 1068 minutes (18 h). `~` marks an estimate that was never ti
 | `ext.crate.0C.margin` | 1.672 | `external_crate_envelope.csv` | sec 37.12 |
 | `ext.crate.4C.margin` | 1.655 | `external_crate_envelope.csv` | sec 37.12 |
 | `ext.crate.pooled.exceed` | 0 | `external_crate_envelope.csv` | sec 37.12 |
+| `soc.percell.worst` | 2.474 | `soc_percell.csv` | sec 37.13 |
+| `soc.percell.best` | 1.834 | `soc_percell.csv` | sec 37.13 |
+| `soc.percell.cc2` | 2.372 | `soc_percell.csv` | sec 37.13 |
+| `ext.crate.surface.margin_min` | 1.351 | `external_crate_surfaces.csv` | sec 37.14 |
+| `ext.crate.surface.margin_max` | 1.655 | `external_crate_surfaces.csv` | sec 37.14 |
+| `ext.crate.surface.boost` | 1.448 | `external_crate_surfaces.csv` | sec 37.14 |
 
-## Cells
+## Cells and evaluation protocol
 
 `BOOST`, `BOOST_NEGPULSE`, `BOOST_NEGPULSE_1S`, `BOOST_REST`, `CC`, `CC_CELL2`
 
-Leave-one-cell-out everywhere: the evaluated cell trains no model and calibrates no safety factor.
+The three arms are NOT evaluated the same way, and a single sentence about all three would be wrong about one of them.
+
+| arm | protocol | what a number from it means |
+|---|---|---|
+| SOP | leave-one-cell-out | the evaluated cell trains no model and calibrates no safety factor |
+| SOH | leave-one-cell-out | same, over the same six folds |
+| SOC | **per-cell calibrated, not held out** | every filter reads its own cell's characterisation surface, so the spread is over operating conditions within a cell and says nothing about transfer to an unseen cell |
+
+One more thing the fold names hide: the dataset runs one physical cell per aging protocol, so holding out a cell holds out its protocol too. That makes the held-out test harder than cell variation alone, and it means no result here can attribute a difference to cell or to protocol separately. `CC` and `CC_CELL2` are the only same-protocol pair. `manifests/generalization_scope.yaml` holds both axes at PARTIAL for this reason.
+
+What ships is neither protocol: the board carries an all-cell fit, because a product must not be a model trained without one of its own six cells. Leave-one-cell-out measures the cost of generalising; it is not the artifact.
 
 ## Not on the critical path
 

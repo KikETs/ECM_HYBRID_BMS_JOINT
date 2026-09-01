@@ -833,7 +833,9 @@ genuinely open.
 - **The trim's spread across 12 blocks is not an uncertainty measure**:
   corr −0.087, and larger spread is if anything less optimistic. Rejected.
 - Limits: "zero" is an observation, not a guarantee (95 % upper bound
-  9.2–19.3 % externally). The real guarantee comes from undervoltage cutoff.
+  9.2–19.3 % externally, over rows of one external cell and conditional on
+  the tested grid — not a cell- or population-level risk). The real guarantee
+  comes from undervoltage cutoff.
   External validation is all τ = 10 s and effectively one point at 10 °C.
 
 ### 10.cc The temperature axis (2026-08-24)

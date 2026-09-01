@@ -180,3 +180,32 @@ def test_the_readme_number_of_checks_matches_expected_json():
     for h in hits:
         assert int(h) == n, (
             f'README says {h} published numbers, expected.json holds {n}')
+
+
+def test_the_readme_rebuild_time_matches_the_stage_table():
+    """README quotes a rebuild time; stages.py is the only place it lives.
+
+    The two drifted -- README said 12 hours while the generated document said
+    18 -- because one was hand-written and neither was checked.  A reviewer
+    found it, which is the expensive way.  Any stage added or retimed now
+    fails here instead.
+    """
+    import re
+    import sys
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    from stages import STAGES
+
+    total = sum(s['minutes'] for s in STAGES)
+    measured = sum(s['minutes'] for s in STAGES if s.get('measured'))
+    readme = open(os.path.join(ROOT, 'README.md'), encoding='utf-8').read()
+
+    for label, want in (('total minutes', total),
+                        ('untimed minutes', total - measured),
+                        ('measured minutes', measured)):
+        assert re.search(rf'(?<![\d.]){want}(?![\d])', readme), (
+            f'README does not quote the {label} ({want}) that stages.py '
+            f'implies.  Rerun the arithmetic in the rebuild paragraph.')
+    assert f'{total / 60:.1f} h' in readme, (
+        f'README does not quote the rebuild total {total / 60:.1f} h')
+    assert f'{measured / 60:.1f} h' in readme, (
+        f'README does not quote the measured total {measured / 60:.1f} h')

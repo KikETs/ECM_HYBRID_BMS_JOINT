@@ -21,6 +21,7 @@ in deliberately as a comparison group.
 import csv
 import os
 import re
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -307,6 +308,24 @@ SCOPED = [
      'six cells from one order of one model is not a manufacturing '
      'population; generalization_scope.yaml holds axes.cell at PARTIAL'),
 
+    # An exact-binomial bound over rows of one cell reads as a risk figure
+    # unless the sentence says otherwise.  Trigger on the bound being quoted
+    # as a percentage next to an exceedance/upper-bound word; require the
+    # block to say what the denominator is.
+    (r'(?:upper bound|ub95|one-sided|Clopper)\D{0,40}\d+(?:\.\d+)? *%'
+     r'|\d+(?:\.\d+)? *% *(?:upper bound|one-sided)'
+     # The phrasing a paper actually reaches for.  The corpus caught that the
+     # first two alternatives miss "bounded at 9.2 %", which is the sentence
+     # most likely to be written and the one that reads hardest as a risk.
+     r'|bounded at \d+(?:\.\d+)? *%'
+     r'|\d+(?:\.\d+)? *% *(?:with )?(?:at )?\d+ *% confidence',
+     r'row|conditional|one (?:physical )?cell|single external cell|'
+     r'this grid|not .{0,30}(?:risk|population)|in-hull|sample size|'
+     r'per-cell|points\b|\d+ */ *\d+',
+     'a binomial upper bound quoted without its denominator',
+     'the bound is over rows of one physical cell, conditional on the tested '
+     'grid; cell- or population-level risk is not estimable from it'),
+
     (r'\bWCET\b|worst[- ]case execution',
      r'sum of|per-stage|not a measured|derived|budget|stage maxima',
      'WCET stated as if measured',
@@ -530,6 +549,15 @@ def table_numbers():
 
 
 def main():
+    # Sections 1 and 4 are advisory by design: a stale-looking value may be a
+    # deliberate comparison group, and an orphan number may be prose.  Those
+    # need a person.  Sections 2 and 3 do not -- a retracted claim standing as
+    # an assertion, or a claim without the fact that bounds it, is a defect
+    # under a rule with a regression corpus behind it.  --fail-on-current
+    # gates on exactly those two, plus stale values in CURRENT sections, so
+    # repro/gate.py can refuse a push without turning the advisory lists into
+    # noise that has to be silenced.
+    gate = '--fail-on-current' in sys.argv
     st, rt, orp, scp = scan()
 
     CURRENT_FROM = 34
@@ -593,6 +621,19 @@ def main():
     print("\n  This list is 'where to look', not 'what to fix' — values left "
           "in deliberately as comparison groups also show up.", flush=True)
 
+    if gate:
+        live_now = [h for h in st if not h[6]
+                    and (h[7] == 0 or h[7] >= CURRENT_FROM)]
+        hard = len(live_now) + len(rt) + len(scp)
+        if hard:
+            print(f'\n  --fail-on-current: {len(live_now)} stale values in '
+                  f'current text, {len(rt)} standing retracted claims, '
+                  f'{len(scp)} unbounded claims.', flush=True)
+            return 1
+        print('\n  --fail-on-current: sections 1 (current text), 2 and 3 are '
+              'clean.', flush=True)
+    return 0
+
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

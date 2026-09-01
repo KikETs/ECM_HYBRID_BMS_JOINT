@@ -498,9 +498,11 @@ STAGES = [
              'frozen safety factor reaches.'),
 
     dict(id='external_crate', tier=5, minutes=3, measured=True,
-         cmd='{py} ../repro/run_external_crate.py',
+         cmd='{py} ../repro/run_external_crate.py && '
+             '{py} ../repro/run_external_crate.py --all-surfaces',
          inputs=['rpcwby_sop_test8.csv', 'cache/pool'],
-         outputs=['results/tables/external_crate_envelope.csv'],
+         outputs=['results/tables/external_crate_envelope.csv',
+                  'results/tables/external_crate_surfaces.csv'],
          why='RPCWBY Test#8: the same cell at 0 C after discharging at six '
              'different rates.  0 C is where the frozen lambda has least room '
              '(margin 1.396), so if prior load moves the requirement it moves '
