@@ -368,7 +368,8 @@ STAGES = [
     dict(id='soc', tier=5, minutes=55, measured=True,
          cmd='{py} soc_perturb_bench.py && {py} soc_est_soh.py',
          inputs=['results/soc_runs.pkl', 'results/soh_pred.npz'],
-         outputs=['results/tables/soc_perturb.csv'],
+         outputs=['results/tables/soc_perturb.csv',
+                  'results/soc_perturb.npz'],
          why='The SOC benchmark with the circularity broken.  It separates '
              'the current that made the label from the current the filter '
              'sees.  Section 30.'),
@@ -456,6 +457,16 @@ STAGES = [
          outputs=['results/tables/soc_headline.csv'],
          why='The SOC headline recomputed from the runs, after the original '
              'averaged seven rows while describing six.'),
+
+    dict(id='soc_percell', tier=5, minutes=1, measured=True,
+         cmd='{py} ../repro/run_soc_percell.py',
+         inputs=['results/soc_perturb.npz', 'results/soc_runs.pkl',
+                 'results/tables/soc_headline.csv'],
+         outputs=['results/tables/soc_percell.csv'],
+         why='The SOC arm published one pooled mean and no spread, while the '
+             'SOP and SOH arms both report a per-cell breakdown, a worst '
+             'cell and an interval.  Reads the per-run errors already in '
+             'soc_perturb.npz, so it cannot disagree with the headline.'),
 
     dict(id='label_quality', tier=5, minutes=2, measured=True,
          cmd='{py} ../repro/run_label_quality.py',

@@ -22,11 +22,25 @@ axes:
       cell".  Never "generalises across cells", and never a statement about
       the INR21700-30T as a part number.
   protocol:
-    status: COVERED
+    status: PARTIAL
     detail: >
       Five distinct fast-charge protocols (CC, CC second cell, boost,
       boost+negative pulse, boost+1 s negative pulse, boost+rest).  This is
       the axis the dataset was built to vary.
+    confounded_with_cell: >
+      One physical cell per protocol, so protocol and cell identity are
+      confounded: holding out BOOST_REST holds out a protocol AND a cell, and
+      no result here can say which of the two moved.  CC and CC_CELL2 are the
+      single exception - same protocol, different cell - and they are the
+      only clean read on cell-to-cell variation in the whole set.
+      soc_percell.csv puts a number on it: the per-cell mean-of-six spans
+      1.834 to 2.474 %p across all six, a 1.35x spread, while the CC /
+      CC_CELL2 pair alone spans 1.834 to 2.372, a 1.29x spread.  Nearly all
+      of the apparent protocol spread is available from two cells running the
+      same protocol.
+    claim_limit: >
+      "six protocol-cell combinations", never "generalises across charge
+      protocols" - the design cannot separate the two.
   aging_state:
     status: COVERED
     detail: "SOH 1.00 down to ~0.68, ~1400-1900 cycles per cell."

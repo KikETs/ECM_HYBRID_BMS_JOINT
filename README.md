@@ -24,7 +24,7 @@ Timing measured on a NUCLEO-H563ZI (Cortex-M33, 250 MHz).
 |---|---|---|---|---|---|
 | SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | leave-one-cell-out | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
 | SOH | dQ/dV ridge | 65 coefficients | leave-one-cell-out | RMSE 0.0094, bias −0.0005 | 0.0130 (BOOST_REST) |
-| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated**, not held out | 2.14 %p over six sensor disturbances | 3.77 %p (current offset −0.10 A) |
+| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated**, not held out | 2.14 %p over six sensor disturbances, per cell 1.83–2.47 | 3.77 %p (current offset −0.10 A) |
 
 The SOH arm was a 10,945-parameter CNN until the second audit round. Nested
 selection — every candidate scored on the five training cells before the
@@ -142,7 +142,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 83 stored published values
+python3 repro/verify.py        # check the 86 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 ```
 

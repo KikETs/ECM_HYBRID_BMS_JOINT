@@ -1,3051 +1,3128 @@
 {
-  "note": "Numbers cited in the paper and the table row each comes from. verify.py recomputes them; a mismatch means the paper is wrong.",
-  "generated": "2026-08-26",
-  "adopted_config": {
-    "trim": "A8 (dR_fast only, 4 parameters, 2 EW states)",
-    "trim_agg": "max",
-    "tolerance_A": {
-      "discharge": 0.0,
-      "charge": 0.5
-    },
-    "note": "The 0.5 A charge tolerance is the knee established in sec 25. Without it the published charge lambda cannot be reproduced."
+ "note": "Numbers cited in the paper and the table row each comes from. verify.py recomputes them; a mismatch means the paper is wrong.",
+ "generated": "2026-08-26",
+ "adopted_config": {
+  "trim": "A8 (dR_fast only, 4 parameters, 2 EW states)",
+  "trim_agg": "max",
+  "tolerance_A": {
+   "discharge": 0.0,
+   "charge": 0.5
   },
-  "checks": [
-    {
-      "id": "sop.disc.10s.lambda",
-      "table": "safety.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "soh": "oracle"
-      },
-      "column": "lambda",
-      "value": 0.683,
-      "source": "sec 32.6 — discharge lambda, 10 s"
-    },
-    {
-      "id": "sop.disc.10s.usable",
-      "table": "safety.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "soh": "oracle"
-      },
-      "column": "usable_pct",
-      "value": 69.1,
-      "source": "sec 32.6 — usable current, discharge 10 s"
-    },
-    {
-      "id": "sop.chg.10s.lambda",
-      "table": "safety.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "10.0",
-        "soh": "oracle"
-      },
-      "column": "lambda",
-      "value": 0.586,
-      "source": "sec 32.7 — charge lambda, 10 s"
-    },
-    {
-      "id": "sop.chg.10s.usable",
-      "table": "safety.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "10.0",
-        "soh": "oracle"
-      },
-      "column": "usable_pct",
-      "value": 59.6,
-      "source": "sec 32.7 — usable current, charge 10 s"
-    },
-    {
-      "id": "sop.disc.10s.usable.est_soh",
-      "table": "safety.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "soh": "est"
-      },
-      "column": "usable_pct",
-      "value": 69.0,
-      "source": "sec 29 / 30.11 — estimated SOH, not oracle",
-      "note": "[2026-08-31 SOH replacement] SOH arm replaced by ridge (36): estimated-SOH usable current 67.2 -> 69.0 %"
-    },
-    {
-      "id": "sop.chg.10s.usable.est_soh",
-      "table": "safety.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "10.0",
-        "soh": "est"
-      },
-      "column": "usable_pct",
-      "value": 54.2,
-      "source": "sec 29 / 30.11 — estimated SOH, not oracle",
-      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted.  A 55.54 seen mid-audit was a stale table, not a measurement: safety_strict had not been re-run after run_evals (37.1)"
-    },
-    {
-      "id": "ladder.disc.A0",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "A0  no correction"
-      },
-      "column": "usable_pct",
-      "value": 59.3,
-      "source": "sec 32.5 — classical HPPC resistance table"
-    },
-    {
-      "id": "ladder.disc.direct",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "direct plug-in"
-      },
-      "column": "usable_pct",
-      "value": 32.6,
-      "source": "sec 32.5 — raw RLS estimate is worse than no correction"
-    },
-    {
-      "id": "ladder.disc.shrink",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "shrinkage coefficient"
-      },
-      "column": "usable_pct",
-      "value": 62.0,
-      "source": "sec 32.5 — two-parameter transfer gain",
-      "note": "[2026-08-31 rebuild adopted] settles at 62.0 on the rebuilt models.  It read 62.4 twice and 62.0 twice during the audit as the grid step flipped; determinism.py removes the flipping (37.1, 37.5)"
-    },
-    {
-      "id": "ladder.disc.A8",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "A8  dR_fast alone"
-      },
-      "column": "usable_pct",
-      "value": 69.1,
-      "source": "sec 32.5 — adopted trim"
-    },
-    {
-      "id": "ladder.disc.A3",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "A3  12 features"
-      },
-      "column": "usable_pct",
-      "value": 70.3,
-      "source": "sec 32.5 — 12-feature comparison"
-    },
-    {
-      "id": "ladder.disc.rls_bound",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "[upper bound] HPPC-RLS"
-      },
-      "column": "usable_pct",
-      "value": 71.1,
-      "source": "sec 32.5 — upper bound if the vehicle could run HPPC"
-    },
-    {
-      "id": "ladder.chg.A8_beats_A3",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "10.0",
-        "method": "A8  dR_fast alone"
-      },
-      "column": "usable_pct",
-      "value": 59.6,
-      "source": "sec 32.7 — 4 parameters beat 26 on charge"
-    },
-    {
-      "id": "ladder.chg.A3",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "10.0",
-        "method": "A3  12 features"
-      },
-      "column": "usable_pct",
-      "value": 57.9,
-      "source": "sec 32.7 — 12-feature comparison"
-    },
-    {
-      "id": "ladder.chg.rls_bound_loses",
-      "table": "ladder.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "10.0",
-        "method": "[upper bound] HPPC-RLS"
-      },
-      "column": "usable_pct",
-      "value": 55.2,
-      "source": "sec 32.6 — best on voltage, fourth on current"
-    },
-    {
-      "id": "pack.disc.10s.exceed.N192",
-      "table": "pack.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "soh": "oracle",
-        "N": "192"
-      },
-      "column": "exceed_pct",
-      "value": 0.0,
-      "source": "sec 31.2 — zero exceedance after recalibration"
-    },
-    {
-      "id": "pack.disc.10s.exceed.est.N192",
-      "table": "pack.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "soh": "estimated",
-        "N": "192"
-      },
-      "column": "exceed_pct",
-      "value": 0.0,
-      "source": "sec 31.2 — same under estimated SOH"
-    },
-    {
-      "id": "pack.chg.10s.worst.N192",
-      "table": "pack.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "10.0",
-        "soh": "oracle",
-        "N": "192"
-      },
-      "column": "worst_A",
-      "value": 0.09,
-      "source": "sec 31.2 — within the 0.5 A charge tolerance",
-      "tol": 0.02
-    },
-    {
-      "id": "soc.adopted.no_perturb",
-      "table": "soc_perturb.csv",
-      "where": {
-        "config": "EKF adopted (gate)",
-        "perturbation": "no distortion"
-      },
-      "column": "rmse_full_pct",
-      "value": 1.51,
-      "source": "sec 30.1 — circular benchmark, not the headline number",
-      "tol": 0.01
-    },
-    {
-      "id": "soc.open_loop.no_perturb",
-      "table": "soc_perturb.csv",
-      "where": {
-        "config": "pure current integration",
-        "perturbation": "no distortion"
-      },
-      "column": "rmse_full_pct",
-      "value": 0.12,
-      "source": "sec 30.1 — not using voltage wins 12x; the circularity",
-      "tol": 0.01
-    },
-    {
-      "id": "soc.open_loop.ibias",
-      "table": "soc_perturb.csv",
-      "where": {
-        "config": "pure current integration",
-        "perturbation": "current offset +0.10 A"
-      },
-      "column": "rmse_full_pct",
-      "value": 10.32,
-      "source": "sec 30.4 — coulomb counting diverges once decoupled",
-      "tol": 0.02
-    },
-    {
-      "id": "soc.adopted.ibias",
-      "table": "soc_perturb.csv",
-      "where": {
-        "config": "EKF adopted (gate)",
-        "perturbation": "current offset +0.10 A"
-      },
-      "column": "rmse_full_pct",
-      "value": 2.86,
-      "source": "sec 30.4 — the only weakness of the adopted filter",
-      "tol": 0.02
-    },
-    {
-      "id": "volt.disc.A0",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "pooled",
-        "method": "A0"
-      },
-      "column": "rmse_mV",
-      "value": 85.36,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
-    },
-    {
-      "id": "volt.disc.direct",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "pooled",
-        "method": "direct"
-      },
-      "column": "rmse_mV",
-      "value": 134.57,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
-      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
-    },
-    {
-      "id": "volt.disc.shrink",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "pooled",
-        "method": "shrink"
-      },
-      "column": "rmse_mV",
-      "value": 69.23,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
-      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted.  The shrink baseline moves most because fit_alpha is an argmin over a 51-point grid (37.1)"
-    },
-    {
-      "id": "volt.disc.A8",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "pooled",
-        "method": "A8"
-      },
-      "column": "rmse_mV",
-      "value": 62.78,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
-      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted: the trims were retrained on the current cache (37.1)"
-    },
-    {
-      "id": "volt.disc.A3",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "pooled",
-        "method": "A3"
-      },
-      "column": "rmse_mV",
-      "value": 58.71,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
-      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
-    },
-    {
-      "id": "volt.disc.RLS",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "pooled",
-        "method": "RLS"
-      },
-      "column": "rmse_mV",
-      "value": 49.89,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
-    },
-    {
-      "id": "volt.char.A0",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "pooled",
-        "method": "A0"
-      },
-      "column": "rmse_mV",
-      "value": 49.9,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
-    },
-    {
-      "id": "volt.char.A8",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "pooled",
-        "method": "A8"
-      },
-      "column": "rmse_mV",
-      "value": 36.7,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
-      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1); matches the 36.70 predicted in 33.4"
-    },
-    {
-      "id": "volt.char.A3",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "pooled",
-        "method": "A3"
-      },
-      "column": "rmse_mV",
-      "value": 34.09,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
-      "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
-    },
-    {
-      "id": "volt.char.RLS",
-      "table": "voltage.csv",
-      "where": {
-        "direction": "charge",
-        "tau_s": "pooled",
-        "method": "RLS"
-      },
-      "column": "rmse_mV",
-      "value": 33.59,
-      "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
-    },
-    {
-      "id": "mcu.feat",
-      "table": "mcu.csv",
-      "where": {
-        "stage": "FEAT"
-      },
-      "column": "median_us",
-      "value": 13.94,
-      "tol": 0.6,
-      "source": "sec 33.1 — A3 feature update",
-      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
-    },
-    {
-      "id": "mcu.feat_a8",
-      "table": "mcu.csv",
-      "where": {
-        "stage": "FEAT_A8"
-      },
-      "column": "median_us",
-      "value": 6.79,
-      "tol": 0.6,
-      "source": "sec 33.1 — adopted A8, 55% faster",
-      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
-    },
-    {
-      "id": "mcu.ekf",
-      "table": "mcu.csv",
-      "where": {
-        "stage": "EKF"
-      },
-      "column": "median_us",
-      "value": 8.16,
-      "tol": 0.6,
-      "source": "sec 33.2 — SOC EKF step",
-      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
-    },
-    {
-      "id": "mcu.full",
-      "table": "mcu.csv",
-      "where": {
-        "stage": "FULL"
-      },
-      "column": "median_us",
-      "value": 53.2,
-      "tol": 0.6,
-      "source": "sec 33.2 — one SOP inversion",
-      "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image.  SLOWER than the CNN image (50.50) — an instruction-cache placement effect, not a cost of ridge: with the cache disabled the ordering reverses (36.4)"
-    },
-    {
-      "id": "soh.rmse",
-      "table": "soh.csv",
-      "where": {
-        "cell": "ALL"
-      },
-      "column": "rmse",
-      "value": 0.0094,
-      "tol": 0.0002,
-      "source": "sec 30.12 — after excluding 8 temperature-fault curves",
-      "note": "[2026-08-31 SOH replacement] ridge instead of the 1D CNN (36.1)"
-    },
-    {
-      "id": "soh.bias",
-      "table": "soh.csv",
-      "where": {
-        "cell": "ALL"
-      },
-      "column": "bias",
-      "value": -0.0005,
-      "tol": 0.0002,
-      "source": "sec 30.12 — bias fell 10x once the faults were removed",
-      "note": "[2026-08-31 SOH replacement] ridge instead of the 1D CNN (36.1)"
-    },
-    {
-      "id": "alpha.disc.CC",
-      "table": "alpha.csv",
-      "where": {
-        "direction": "discharge",
-        "holdout": "CC"
-      },
-      "column": "alpha_fast",
-      "value": 0.2,
-      "tol": 0.001,
-      "source": "sec 32.3 — low-current residual transfers at about 1/5"
-    },
-    {
-      "id": "alpha.chg.CC.slow",
-      "table": "alpha.csv",
-      "where": {
-        "direction": "charge",
-        "holdout": "CC"
-      },
-      "column": "alpha_slow",
-      "value": 0.02,
-      "tol": 0.001,
-      "source": "sec 32.6 — the slow branch contributes nothing on charge"
-    },
-    {
-      "id": "corr.disc.10s",
-      "table": "correlation.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10"
-      },
-      "column": "corr_meas_vs_ratio",
-      "value": -0.608,
-      "tol": 0.005,
-      "source": "sec 31.4 — weaker cells are estimated more optimistically"
-    },
-    {
-      "id": "cold.BOOST.ratio",
-      "table": "cold_ratio.csv",
-      "where": {
-        "cell": "BOOST",
-        "cycle": "1462"
-      },
-      "column": "ratio",
-      "value": 0.98,
-      "tol": 0.02,
-      "source": "sec 33.5 — 0 C would give 3-5x; 1x means only the log broke"
-    },
-    {
-      "id": "cold.CC.ratio",
-      "table": "cold_ratio.csv",
-      "where": {
-        "cell": "CC",
-        "cycle": "1500"
-      },
-      "column": "ratio",
-      "value": 0.98,
-      "tol": 0.02,
-      "source": "sec 33.5 — same check on the second cell"
-    },
-    {
-      "id": "soc.base.adopted.ibias",
-      "table": "soc_baselines.csv",
-      "where": {
-        "estimator": "2RC-EKF (adopted)",
-        "perturbation": "current offset +0.10 A"
-      },
-      "column": "rmse_mean_pct",
-      "value": 2.864,
-      "tol": 0.01,
-      "source": "sec 30.4 cross-check — the same number soc_perturb.csv reports, via a different producer"
-    },
-    {
-      "id": "soc.base.dual.mean_ibias",
-      "table": "soc_baselines.csv",
-      "where": {
-        "estimator": "dual EKF (current bias)",
-        "perturbation": "current offset +0.10 A"
-      },
-      "column": "rmse_mean_pct",
-      "value": 2.353,
-      "tol": 0.3,
-      "source": "audit — the current-bias state is what the offset condition rewards"
-    },
-    {
-      "id": "soc.base.ukf.undist",
-      "table": "soc_baselines.csv",
-      "where": {
-        "estimator": "UKF",
-        "perturbation": "no distortion"
-      },
-      "column": "rmse_mean_pct",
-      "value": 1.425,
-      "tol": 0.05,
-      "source": "audit — the UKF does not pay for itself on this model"
-    },
-    {
-      "id": "soh.abl.dqdv",
-      "table": "soh_ablations.csv",
-      "where": {
-        "axis": "input, ridge",
-        "variant": "dQ/dV only (shipped)"
-      },
-      "column": "rmse_pooled",
-      "value": 0.0094,
-      "tol": 0.0003,
-      "source": "audit — ridge on the shipped input"
-    },
-    {
-      "id": "soh.abl.time_only",
-      "table": "soh_ablations.csv",
-      "where": {
-        "axis": "input, ridge",
-        "variant": "time-per-bin only"
-      },
-      "column": "rmse_pooled",
-      "value": 0.0096,
-      "tol": 0.0003,
-      "source": "audit — the representation is not load-bearing"
-    },
-    {
-      "id": "e2e.disch.oracle.usable",
-      "table": "end_to_end.csv",
-      "where": {
-        "condition": "oracle SOH + oracle SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "usable_mean_pct",
-      "value": 69.61,
-      "tol": 0.05,
-      "source": "audit — the corner the paper reports"
-    },
-    {
-      "id": "e2e.disch.est_est.usable",
-      "table": "end_to_end.csv",
-      "where": {
-        "condition": "estimated SOH + estimated SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "usable_mean_pct",
-      "value": 66.24,
-      "tol": 0.05,
-      "source": "audit — the only corner a vehicle can execute",
-      "note": "[2026-08-31 SOH replacement] estimated-SOH corner now uses ridge (36.3)"
-    },
-    {
-      "id": "e2e.disch.est_est.exceed",
-      "table": "end_to_end.csv",
-      "where": {
-        "condition": "estimated SOH + estimated SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "exceed",
-      "value": 20.0,
-      "tol": 0,
-      "source": "audit — exceedance survives per-cell recalibration",
-      "note": "[2026-08-31 SOH replacement] estimated-SOH corner now uses ridge (36.3)"
-    },
-    {
-      "id": "mcu.build.both",
-      "table": "build_size.csv",
-      "where": {
-        "build": "both"
-      },
-      "column": "text_B",
-      "value": 72700,
-      "tol": 0,
-      "source": "sec 33.6 — comparison build, text section",
-      "note": "[2026-08-31 SOH replacement] the CNN leaving takes 71,264 B of flash with it (36.4)"
-    },
-    {
-      "id": "mcu.build.a8_only",
-      "table": "build_size.csv",
-      "where": {
-        "build": "a8_only"
-      },
-      "column": "text_B",
-      "value": 70796,
-      "tol": 0,
-      "source": "sec 33.6 — deployment build, text section",
-      "note": "[2026-08-31 SOH replacement] the CNN leaving takes 71,264 B of flash with it (36.4)"
-    },
-    {
-      "id": "e2e.paired.disc.est_est.exceed",
-      "table": "end_to_end_paired.csv",
-      "where": {
-        "condition": "estimated SOH + estimated SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "exceed",
-      "value": 3.0,
-      "tol": 0,
-      "source": "sec 35.1 — the fully estimated corner on the common 388 rows",
-      "note": "[2026-08-31 SOH replacement] on the common 388 rows with ridge SOH (36.3)"
-    },
-    {
-      "id": "e2e.paired.disc.oracle.exceed",
-      "table": "end_to_end_paired.csv",
-      "where": {
-        "condition": "oracle SOH + oracle SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "exceed",
-      "value": 3,
-      "tol": 0,
-      "source": "sec 35.1 — the oracle corner on the same 388 rows"
-    },
-    {
-      "id": "e2e.drift.disc.est_est.rate",
-      "table": "end_to_end_drift.csv",
-      "where": {
-        "condition": "estimated SOH + estimated SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "exceed_rate_pct",
-      "value": 27.84,
-      "tol": 0.01,
-      "source": "sec 35.2 — exceedance in the rows only the estimated corner admits",
-      "note": "[2026-08-31 SOH replacement] rows only the fully estimated corner admits, with ridge SOH (36.3)"
-    },
-    {
-      "id": "ext.cov.disc",
-      "table": "external_a8_coverage.csv",
-      "where": {
-        "axis": "direction",
-        "value": "discharge"
-      },
-      "column": "in_hull_pct",
-      "value": 54.2,
-      "tol": 0.05,
-      "source": "sec 35.5 — in-hull share of discharge calls"
-    },
-    {
-      "id": "ext.safety.chg.margin",
-      "table": "external_a8_safety.csv",
-      "where": {
-        "fold": "CC",
-        "direction": "charge"
-      },
-      "column": "margin",
-      "value": 0.677,
-      "tol": 0.001,
-      "source": "sec 35.5 — the frozen charge lambda is not conservative enough"
-    },
-    {
-      "id": "ext.safety.disc.exceed",
-      "table": "external_a8_safety.csv",
-      "where": {
-        "fold": "CC",
-        "direction": "discharge"
-      },
-      "column": "exceed",
-      "value": 0,
-      "tol": 0,
-      "source": "sec 35.5 — zero exceedance on external discharge"
-    },
-    {
-      "id": "soh.ridge.rmse",
-      "table": "soh_model_cost.csv",
-      "where": {
-        "model": "ridge (adopted)"
-      },
-      "column": "rmse_pooled",
-      "value": 0.0094,
-      "tol": 0,
-      "source": "sec 36.1 — ridge, leave-one-cell-out"
-    },
-    {
-      "id": "soh.cnn.rmse",
-      "table": "soh_model_cost.csv",
-      "where": {
-        "model": "1D CNN (baseline)"
-      },
-      "column": "rmse_pooled",
-      "value": 0.0135,
-      "tol": 0,
-      "source": "sec 36.1 — the 1D CNN baseline, same splits"
-    },
-    {
-      "id": "soh.ridge.us",
-      "table": "soh_model_cost.csv",
-      "where": {
-        "model": "ridge (adopted)"
-      },
-      "column": "soh_median_us",
-      "value": 6.5,
-      "tol": 0.01,
-      "source": "sec 36.4 — SOH inference on the board"
-    },
-    {
-      "id": "soh.cnn.us",
-      "table": "soh_model_cost.csv",
-      "where": {
-        "model": "1D CNN (baseline)"
-      },
-      "column": "soh_median_us",
-      "value": 19442.25,
-      "tol": 0.01,
-      "source": "sec 36.4 — the CNN, measured before it was replaced"
-    },
-    {
-      "id": "soh.nested.pooled",
-      "table": "soh_nested_summary.csv",
-      "where": {
-        "procedure": "nested selection"
-      },
-      "column": "rmse_pooled",
-      "value": 0.0095,
-      "tol": 0,
-      "source": "sec 36.1 — error of the selection procedure itself"
-    },
-    {
-      "id": "soh.nested.cnn_inner.BOOST",
-      "table": "soh_nested.csv",
-      "where": {
-        "holdout": "BOOST"
-      },
-      "column": "inner_1D CNN",
-      "value": 0.0142,
-      "tol": 0,
-      "source": "sec 36.1 — the CNN's inner score, never the best on any fold",
-      "note": "[2026-08-31 determinism] the CNN is now trained through a deterministic pool; its inner score moved 0.0141 -> 0.0142 and it is still last on all six folds"
-    },
-    {
-      "id": "mcu.icache.on.ridge",
-      "table": "mcu_icache.csv",
-      "where": {
-        "icache": "on",
-        "soh_model": "ridge",
-        "stage": "FULL"
-      },
-      "column": "median_us",
-      "value": 53.2,
-      "tol": 0.01,
-      "source": "sec 36.4 — deployment image, cache enabled"
-    },
-    {
-      "id": "mcu.icache.off.ridge",
-      "table": "mcu_icache.csv",
-      "where": {
-        "icache": "off",
-        "soh_model": "ridge",
-        "stage": "FULL"
-      },
-      "column": "median_us",
-      "value": 106.38,
-      "tol": 0.01,
-      "source": "sec 36.4 — same image, cache disabled: the penalty reverses"
-    },
-    {
-      "id": "mcu.icache.off.cnn",
-      "table": "mcu_icache.csv",
-      "where": {
-        "icache": "off",
-        "soh_model": "CNN",
-        "stage": "FULL"
-      },
-      "column": "median_us",
-      "value": 107.89,
-      "tol": 0.01,
-      "source": "sec 36.4 — CNN image, cache disabled"
-    },
-    {
-      "id": "e2e.fixed.disc.est_est.exceed",
-      "table": "end_to_end_fixed_lambda.csv",
-      "where": {
-        "condition": "estimated SOH + estimated SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "exceed",
-      "value": 1,
-      "tol": 0,
-      "source": "sec 37.2 — both estimated, same rows, lambda frozen at the oracle corner"
-    },
-    {
-      "id": "e2e.fixed.disc.oracle.exceed",
-      "table": "end_to_end_fixed_lambda.csv",
-      "where": {
-        "condition": "oracle SOH + oracle SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "exceed",
-      "value": 3,
-      "tol": 0,
-      "source": "sec 37.2 — the oracle corner under its own lambda, same rows"
-    },
-    {
-      "id": "e2e.fixed.disc.est_est.usable",
-      "table": "end_to_end_fixed_lambda.csv",
-      "where": {
-        "condition": "estimated SOH + estimated SOC",
-        "direction": "discharge",
-        "tau_s": "10.0"
-      },
-      "column": "usable_mean_pct",
-      "value": 72.02,
-      "tol": 0.01,
-      "source": "sec 37.2 — what estimated state costs when lambda is not refitted"
-    },
-    {
-      "id": "method.a8.rank.disc10",
-      "table": "method_comparison.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "a8"
-      },
-      "column": "rank_in_condition",
-      "value": 2,
-      "tol": 0,
-      "source": "sec 37.3 — A8 is not first; the ranking moves by condition"
-    },
-    {
-      "id": "method.ffrls.disc10.usable",
-      "table": "method_comparison.csv",
-      "where": {
-        "direction": "discharge",
-        "tau_s": "10.0",
-        "method": "ffrls"
-      },
-      "column": "usable_mean_pct",
-      "value": 43.28,
-      "tol": 0.01,
-      "source": "sec 37.3 — the one baseline whose interval separates from A8"
-    },
-    {
-      "id": "ext.temp.m20.margin",
-      "table": "external_temp_envelope.csv",
-      "where": {
-        "temp_set_C": "-20"
-      },
-      "column": "margin",
-      "value": 0.486,
-      "tol": 0.001,
-      "source": "sec 37.4 — the frozen lambda is not conservative at -20 C"
-    },
-    {
-      "id": "ext.temp.m20.exceed",
-      "table": "external_temp_envelope.csv",
-      "where": {
-        "temp_set_C": "-20"
-      },
-      "column": "exceed",
-      "value": 5,
-      "tol": 0,
-      "source": "sec 37.4 — five of eight in-hull points exceed at -20 C"
-    },
-    {
-      "id": "ext.temp.0.margin",
-      "table": "external_temp_envelope.csv",
-      "where": {
-        "temp_set_C": "0"
-      },
-      "column": "margin",
-      "value": 1.396,
-      "tol": 0.001,
-      "source": "sec 37.4 — 0 C is the coldest temperature the frozen factor covers"
-    },
-    {
-      "id": "ext.temp.40.exceed",
-      "table": "external_temp_envelope.csv",
-      "where": {
-        "temp_set_C": "40"
-      },
-      "column": "exceed",
-      "value": 0,
-      "tol": 0,
-      "source": "sec 37.4 — warm end of the measured validity range"
-    },
-    {
-      "id": "ext.temp.25.soc_min",
-      "table": "external_temp_envelope.csv",
-      "where": {
-        "temp_set_C": "25"
-      },
-      "column": "soc_in_hull_min",
-      "value": 0.4,
-      "tol": 0.001,
-      "source": "sec 37.4 — the hull never reaches low SOC at any temperature"
-    },
-    {
-      "id": "mcu.cycle.median",
-      "table": "mcu_cycle.csv",
-      "where": {
-        "case": "median"
-      },
-      "column": "cycle_total_us",
-      "value": 227.79,
-      "tol": 0.01,
-      "source": "sec 33.2 — one control cycle: EKF + A8 feature update + four SOP inversions"
-    },
-    {
-      "id": "mcu.cycle.sum_of_stage_maxima",
-      "table": "mcu_cycle.csv",
-      "where": {
-        "case": "sum_of_stage_maxima"
-      },
-      "column": "cycle_total_us",
-      "value": 339.84,
-      "tol": 0.01,
-      "source": "sec 33.2 — sum of each stage's observed maximum, a derived cycle-budget estimate and NOT a measured WCET"
-    },
-    {
-      "id": "ext.crate.0C.margin",
-      "table": "external_crate_envelope.csv",
-      "where": {
-        "prior_rate": "0C"
-      },
-      "column": "margin",
-      "value": 1.672,
-      "tol": 0.001,
-      "source": "sec 37.12 — no prior discharge, the most favourable case"
-    },
-    {
-      "id": "ext.crate.4C.margin",
-      "table": "external_crate_envelope.csv",
-      "where": {
-        "prior_rate": "4C"
-      },
-      "column": "margin",
-      "value": 1.655,
-      "tol": 0.001,
-      "source": "sec 37.12 — 4C prior discharge; the margin barely moves"
-    },
-    {
-      "id": "ext.crate.pooled.exceed",
-      "table": "external_crate_envelope.csv",
-      "where": {
-        "prior_rate": "0C..4C pooled"
-      },
-      "column": "exceed",
-      "value": 0,
-      "tol": 0,
-      "source": "sec 37.12 — zero exceedance over 48 in-hull points, bounded at 6.1 %"
-    }
-  ],
-  "tables": {
-    "alpha.csv": {
-      "producer": "python3 repro/run_extras.py",
-      "stage": "extras",
-      "required": true,
-      "rows": 12,
-      "columns": [
-        "direction",
-        "holdout",
-        "alpha_fast",
-        "alpha_slow"
-      ],
-      "numeric": [
-        "alpha_fast",
-        "alpha_slow"
-      ],
-      "units": {
-        "alpha_fast": "dimensionless",
-        "alpha_slow": "dimensionless"
-      }
-    },
-    "build_size.csv": {
-      "producer": "python3 repro/run_extras.py",
-      "stage": "extras",
-      "required": false,
-      "rows": 2,
-      "columns": [
-        "build",
-        "text_B",
-        "bss_B"
-      ],
-      "numeric": [
-        "text_B",
-        "bss_B"
-      ],
-      "units": {
-        "text_B": "B",
-        "bss_B": "B"
-      }
-    },
-    "cold_ratio.csv": {
-      "producer": "python3 repro/run_extras.py",
-      "stage": "extras",
-      "required": true,
-      "rows": 2,
-      "columns": [
-        "cell",
-        "cycle",
-        "R_mOhm",
-        "neighbour_mOhm",
-        "ratio"
-      ],
-      "numeric": [
-        "cycle",
-        "R_mOhm",
-        "neighbour_mOhm",
-        "ratio"
-      ],
-      "units": {
-        "cycle": "cycle index",
-        "R_mOhm": "mOhm",
-        "neighbour_mOhm": "mOhm",
-        "ratio": "dimensionless"
-      }
-    },
-    "correlation.csv": {
-      "producer": "python3 repro/run_extras.py",
-      "stage": "extras",
-      "required": true,
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "n",
-        "corr_meas_vs_ratio"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "corr_meas_vs_ratio"
-      ],
-      "units": {
-        "tau_s": "s",
-        "n": "count",
-        "corr_meas_vs_ratio": "dimensionless"
-      }
-    },
-    "ladder.csv": {
-      "producer": "python3 repro/run_safety.py",
-      "stage": "safety",
-      "required": true,
-      "rows": 36,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "params",
-        "n",
-        "lambda",
-        "optimism_pct",
-        "rmse_A",
-        "usable_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "params",
-        "n",
-        "lambda",
-        "optimism_pct",
-        "rmse_A",
-        "usable_pct"
-      ],
-      "units": {
-        "tau_s": "s",
-        "params": "count",
-        "n": "count",
-        "lambda": "dimensionless",
-        "optimism_pct": "%",
-        "rmse_A": "A",
-        "usable_pct": "%"
-      },
-      "note": "extended by the audit with LSTM, GRU and FFRLS baselines: 24 -> 36 rows"
-    },
-    "mcu.csv": {
-      "producer": "python3 repro/run_mcu_table.py",
-      "stage": "mcu_table",
-      "required": true,
-      "rows": 8,
-      "columns": [
-        "stage",
-        "n",
-        "median_us",
-        "p95_us",
-        "max_us"
-      ],
-      "numeric": [
-        "n",
-        "median_us",
-        "p95_us",
-        "max_us"
-      ],
-      "units": {
-        "n": "count",
-        "median_us": "us",
-        "p95_us": "us",
-        "max_us": "us"
-      }
-    },
-    "pack.csv": {
-      "producer": "python3 analysis/sop_pack2.py",
-      "stage": "pack",
-      "required": true,
-      "rows": 40,
-      "columns": [
-        "direction",
-        "tau_s",
-        "soh",
-        "lambda",
-        "N",
-        "exceed_pct",
-        "worst_A",
-        "usable_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "lambda",
-        "N",
-        "exceed_pct",
-        "worst_A",
-        "usable_pct"
-      ],
-      "units": {
-        "tau_s": "s",
-        "lambda": "dimensionless",
-        "N": "cells",
-        "exceed_pct": "%",
-        "worst_A": "A",
-        "usable_pct": "%"
-      }
-    },
-    "safety.csv": {
-      "producer": "python3 repro/run_safety.py",
-      "stage": "safety",
-      "required": true,
-      "rows": 8,
-      "columns": [
-        "direction",
-        "tau_s",
-        "soh",
-        "n",
-        "lambda",
-        "optimism_pct",
-        "rmse_A",
-        "usable_pct",
-        "worst_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda",
-        "optimism_pct",
-        "rmse_A",
-        "usable_pct",
-        "worst_A"
-      ],
-      "units": {
-        "tau_s": "s",
-        "n": "count",
-        "lambda": "dimensionless",
-        "optimism_pct": "%",
-        "rmse_A": "A",
-        "usable_pct": "%",
-        "worst_A": "A"
-      }
-    },
-    "soc_perturb.csv": {
-      "producer": "python3 analysis/soc_perturb_bench.py",
-      "stage": "soc",
-      "required": true,
-      "rows": 35,
-      "columns": [
-        "config",
-        "perturbation",
-        "rmse_full_pct",
-        "rmse_tail_pct",
-        "worst_pct"
-      ],
-      "numeric": [
-        "rmse_full_pct",
-        "rmse_tail_pct",
-        "worst_pct"
-      ],
-      "units": {
-        "rmse_full_pct": "%p",
-        "rmse_tail_pct": "%p",
-        "worst_pct": "%p"
-      }
-    },
-    "soh.csv": {
-      "producer": "python3 repro/run_soh_table.py",
-      "stage": "soh_table",
-      "required": true,
-      "rows": 7,
-      "columns": [
-        "cell",
-        "n",
-        "rmse",
-        "mae",
-        "bias"
-      ],
-      "numeric": [
-        "n",
-        "rmse",
-        "mae",
-        "bias"
-      ],
-      "units": {
-        "n": "count",
-        "rmse": "fraction SOH",
-        "mae": "fraction SOH",
-        "bias": "fraction SOH"
-      }
-    },
-    "soh_cost.csv": {
-      "producer": "python3 repro/run_safety.py",
-      "stage": "safety",
-      "required": false,
-      "rows": 8,
-      "columns": [
-        "direction",
-        "tau_s",
-        "trim",
-        "lambda_oracle",
-        "lambda_est",
-        "usable_oracle_pct",
-        "usable_est_pct",
-        "delta_pct_pt"
-      ],
-      "numeric": [
-        "tau_s",
-        "lambda_oracle",
-        "lambda_est",
-        "usable_oracle_pct",
-        "usable_est_pct",
-        "delta_pct_pt"
-      ],
-      "units": {
-        "tau_s": "s",
-        "lambda_oracle": "dimensionless",
-        "lambda_est": "dimensionless",
-        "usable_oracle_pct": "%",
-        "usable_est_pct": "%",
-        "delta_pct_pt": "%p"
-      }
-    },
-    "voltage.csv": {
-      "producer": "python3 repro/run_voltage.py",
-      "stage": "voltage",
-      "required": true,
-      "rows": 36,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "n_cells",
-        "rmse_mV",
-        "BOOST",
-        "BOOST_NEGPULSE",
-        "BOOST_NEGPULSE_1S",
-        "BOOST_REST",
-        "CC",
-        "CC_CELL2"
-      ],
-      "numeric": [
-        "n_cells",
-        "rmse_mV",
-        "BOOST",
-        "BOOST_NEGPULSE",
-        "BOOST_NEGPULSE_1S",
-        "BOOST_REST",
-        "CC",
-        "CC_CELL2"
-      ],
-      "units": {
-        "n_cells": "count",
-        "rmse_mV": "mV",
-        "BOOST": "mV",
-        "BOOST_NEGPULSE": "mV",
-        "BOOST_NEGPULSE_1S": "mV",
-        "BOOST_REST": "mV",
-        "CC": "mV",
-        "CC_CELL2": "mV"
-      }
-    },
-    "label_quality.csv": {
-      "rows": 6,
-      "columns": [
-        "direction",
-        "extrap_band",
-        "n",
-        "share_pct",
-        "extrap_median",
-        "spread_A_median",
-        "spread_rel_pct",
-        "fit_r2_median",
-        "fit_r2_min",
-        "n_with_lin2hi",
-        "abs_I_star_median_A"
-      ],
-      "numeric": [
-        "n",
-        "share_pct",
-        "extrap_median",
-        "spread_A_median",
-        "spread_rel_pct",
-        "fit_r2_median",
-        "fit_r2_min",
-        "n_with_lin2hi",
-        "abs_I_star_median_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_label_quality.py",
-      "stage": "label_quality",
-      "units": {
-        "n": "[EVIDENCE REQUIRED]",
-        "share_pct": "[EVIDENCE REQUIRED]",
-        "extrap_median": "[EVIDENCE REQUIRED]",
-        "spread_A_median": "[EVIDENCE REQUIRED]",
-        "spread_rel_pct": "[EVIDENCE REQUIRED]",
-        "fit_r2_median": "[EVIDENCE REQUIRED]",
-        "fit_r2_min": "[EVIDENCE REQUIRED]",
-        "n_with_lin2hi": "[EVIDENCE REQUIRED]",
-        "abs_I_star_median_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "label_sensitivity.csv": {
-      "rows": 30,
-      "columns": [
-        "direction",
-        "tau_s",
-        "extrap_max",
-        "method",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "extrap_max",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_label_quality.py",
-      "stage": "label_quality",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "extrap_max": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_est.csv": {
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "soh_arm",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "worst_cell",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --arm est",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n_cells": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_median_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "lambda_min": "[EVIDENCE REQUIRED]",
-        "lambda_median": "[EVIDENCE REQUIRED]",
-        "lambda_max": "[EVIDENCE REQUIRED]",
-        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_oracle.csv": {
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "worst_cell",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --arm oracle",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n_cells": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_median_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "lambda_min": "[EVIDENCE REQUIRED]",
-        "lambda_median": "[EVIDENCE REQUIRED]",
-        "lambda_max": "[EVIDENCE REQUIRED]",
-        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_percell_est.csv": {
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "soh_arm",
-        "cell",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --arm est",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n": "[EVIDENCE REQUIRED]",
-        "lambda_i": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "worst_A": "[EVIDENCE REQUIRED]",
-        "usable_pct": "[EVIDENCE REQUIRED]",
-        "optimism_pct": "[EVIDENCE REQUIRED]",
-        "rmse_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_percell_oracle.csv": {
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "cell",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --arm oracle",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n": "[EVIDENCE REQUIRED]",
-        "lambda_i": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "worst_A": "[EVIDENCE REQUIRED]",
-        "usable_pct": "[EVIDENCE REQUIRED]",
-        "optimism_pct": "[EVIDENCE REQUIRED]",
-        "rmse_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_tolsens_est.csv": {
-      "rows": 16,
-      "columns": [
-        "direction",
-        "tau_s",
-        "soh_arm",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --arm est",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "tolerance_A": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_tolsens_oracle.csv": {
-      "rows": 16,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --arm oracle",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "tolerance_A": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "soc_headline.csv": {
-      "rows": 5,
-      "columns": [
-        "config",
-        "n_rows",
-        "undisturbed_pct",
-        "mean_6_disturbances_pct",
-        "mean_7_rows_pct",
-        "median_6_pct",
-        "worst_of_6_pct",
-        "mean_of_3_pair_means_pct"
-      ],
-      "numeric": [
-        "n_rows",
-        "undisturbed_pct",
-        "mean_6_disturbances_pct",
-        "mean_7_rows_pct",
-        "median_6_pct",
-        "worst_of_6_pct",
-        "mean_of_3_pair_means_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_soc_headline.py",
-      "stage": "soc_headline",
-      "units": {
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "undisturbed_pct": "[EVIDENCE REQUIRED]",
-        "mean_6_disturbances_pct": "[EVIDENCE REQUIRED]",
-        "mean_7_rows_pct": "[EVIDENCE REQUIRED]",
-        "median_6_pct": "[EVIDENCE REQUIRED]",
-        "worst_of_6_pct": "[EVIDENCE REQUIRED]",
-        "mean_of_3_pair_means_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "soh_baselines.csv": {
-      "rows": 6,
-      "columns": [
-        "method",
-        "rmse_pooled",
-        "rmse_mean_of_cells",
-        "rmse_worst_cell",
-        "worst_cell",
-        "hyperparameter_per_fold",
-        "BOOST",
-        "BOOST_NEGPULSE",
-        "BOOST_NEGPULSE_1S",
-        "BOOST_REST",
-        "CC",
-        "CC_CELL2"
-      ],
-      "numeric": [
-        "rmse_pooled",
-        "rmse_mean_of_cells",
-        "rmse_worst_cell",
-        "BOOST",
-        "BOOST_NEGPULSE",
-        "BOOST_NEGPULSE_1S",
-        "BOOST_REST",
-        "CC",
-        "CC_CELL2"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_soh_baselines.py",
-      "stage": "soh_baselines",
-      "units": {
-        "rmse_pooled": "[EVIDENCE REQUIRED]",
-        "rmse_mean_of_cells": "[EVIDENCE REQUIRED]",
-        "rmse_worst_cell": "[EVIDENCE REQUIRED]",
-        "BOOST": "[EVIDENCE REQUIRED]",
-        "BOOST_NEGPULSE": "[EVIDENCE REQUIRED]",
-        "BOOST_NEGPULSE_1S": "[EVIDENCE REQUIRED]",
-        "BOOST_REST": "[EVIDENCE REQUIRED]",
-        "CC": "[EVIDENCE REQUIRED]",
-        "CC_CELL2": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_a3_oracle.csv": {
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "worst_cell",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --method a3",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n_cells": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_median_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "lambda_min": "[EVIDENCE REQUIRED]",
-        "lambda_median": "[EVIDENCE REQUIRED]",
-        "lambda_max": "[EVIDENCE REQUIRED]",
-        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_ffrls_oracle.csv": {
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "worst_cell",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --method ffrls",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n_cells": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_median_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "lambda_min": "[EVIDENCE REQUIRED]",
-        "lambda_median": "[EVIDENCE REQUIRED]",
-        "lambda_max": "[EVIDENCE REQUIRED]",
-        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_gru_oracle.csv": {
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "worst_cell",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --method gru",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n_cells": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_median_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "lambda_min": "[EVIDENCE REQUIRED]",
-        "lambda_median": "[EVIDENCE REQUIRED]",
-        "lambda_max": "[EVIDENCE REQUIRED]",
-        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_lstm_oracle.csv": {
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "worst_cell",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --method lstm",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n_cells": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_median_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "lambda_min": "[EVIDENCE REQUIRED]",
-        "lambda_median": "[EVIDENCE REQUIRED]",
-        "lambda_max": "[EVIDENCE REQUIRED]",
-        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_percell_a3_oracle.csv": {
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "cell",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n": "[EVIDENCE REQUIRED]",
-        "lambda_i": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "worst_A": "[EVIDENCE REQUIRED]",
-        "usable_pct": "[EVIDENCE REQUIRED]",
-        "optimism_pct": "[EVIDENCE REQUIRED]",
-        "rmse_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_percell_ffrls_oracle.csv": {
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "cell",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n": "[EVIDENCE REQUIRED]",
-        "lambda_i": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "worst_A": "[EVIDENCE REQUIRED]",
-        "usable_pct": "[EVIDENCE REQUIRED]",
-        "optimism_pct": "[EVIDENCE REQUIRED]",
-        "rmse_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_percell_gru_oracle.csv": {
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "cell",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n": "[EVIDENCE REQUIRED]",
-        "lambda_i": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "worst_A": "[EVIDENCE REQUIRED]",
-        "usable_pct": "[EVIDENCE REQUIRED]",
-        "optimism_pct": "[EVIDENCE REQUIRED]",
-        "rmse_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_percell_lstm_oracle.csv": {
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "cell",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n": "[EVIDENCE REQUIRED]",
-        "lambda_i": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "worst_A": "[EVIDENCE REQUIRED]",
-        "usable_pct": "[EVIDENCE REQUIRED]",
-        "optimism_pct": "[EVIDENCE REQUIRED]",
-        "rmse_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_percell_shrink_oracle.csv": {
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "cell",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "numeric": [
-        "tau_s",
-        "n",
-        "lambda_i",
-        "exceed",
-        "worst_A",
-        "usable_pct",
-        "optimism_pct",
-        "rmse_A"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n": "[EVIDENCE REQUIRED]",
-        "lambda_i": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "worst_A": "[EVIDENCE REQUIRED]",
-        "usable_pct": "[EVIDENCE REQUIRED]",
-        "optimism_pct": "[EVIDENCE REQUIRED]",
-        "rmse_A": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_shrink_oracle.csv": {
-      "rows": 4,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "worst_cell",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_cells",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_median_pct",
-        "usable_worst_pct",
-        "lambda_min",
-        "lambda_median",
-        "lambda_max",
-        "lambda_pooled_shipped",
-        "exceed_ub95_pct",
-        "usable_boot_lo_pct",
-        "usable_boot_hi_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_safety_strict.py --method shrink",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "n_cells": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_median_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "lambda_min": "[EVIDENCE REQUIRED]",
-        "lambda_median": "[EVIDENCE REQUIRED]",
-        "lambda_max": "[EVIDENCE REQUIRED]",
-        "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
-        "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_tolsens_a3_oracle.csv": {
-      "rows": 16,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "tolerance_A": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_tolsens_ffrls_oracle.csv": {
-      "rows": 16,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "tolerance_A": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_tolsens_gru_oracle.csv": {
-      "rows": 16,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "tolerance_A": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_tolsens_lstm_oracle.csv": {
-      "rows": 16,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "tolerance_A": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "safety_strict_tolsens_shrink_oracle.csv": {
-      "rows": 16,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "soh_arm",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "tolerance_A",
-        "n_rows",
-        "exceed",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "exceed_ub95_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/[EVIDENCE REQUIRED]",
-      "stage": "safety_strict",
-      "units": {
-        "tau_s": "[EVIDENCE REQUIRED]",
-        "tolerance_A": "[EVIDENCE REQUIRED]",
-        "n_rows": "[EVIDENCE REQUIRED]",
-        "exceed": "[EVIDENCE REQUIRED]",
-        "usable_mean_pct": "[EVIDENCE REQUIRED]",
-        "usable_worst_pct": "[EVIDENCE REQUIRED]",
-        "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "chen2026_baseline.csv": {
-      "producer": "python3 repro/run_chen2026_baseline.py",
-      "stage": "chen2026",
-      "required": false,
-      "rows": 84,
-      "columns": [
-        "temp_set_C",
-        "temp_cell_C",
-        "SOC",
-        "SOP_meas_W",
-        "SOP_pred_W",
-        "error_W",
-        "limit_hit"
-      ],
-      "numeric": [
-        "temp_set_C",
-        "temp_cell_C",
-        "SOC",
-        "SOP_meas_W",
-        "SOP_pred_W",
-        "error_W"
-      ],
-      "units": {
-        "temp_set_C": "C",
-        "temp_cell_C": "C",
-        "SOC": "fraction",
-        "SOP_meas_W": "W",
-        "SOP_pred_W": "W",
-        "error_W": "W"
-      },
-      "note": "RPCWBY Test#3 external validation, physics-only model under Chen 2026 search"
-    },
-    "end_to_end.csv": {
-      "producer": "python3 repro/run_end_to_end.py",
-      "stage": "end_to_end",
-      "required": true,
-      "rows": 16,
-      "columns": [
-        "condition",
-        "direction",
-        "tau_s",
-        "n_rows",
-        "exceed",
-        "lambda_median",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "worst_cell"
-      ],
-      "numeric": [
-        "tau_s",
-        "n_rows",
-        "exceed",
-        "lambda_median",
-        "usable_mean_pct",
-        "usable_worst_pct"
-      ],
-      "units": {}
-    },
-    "external_a8.csv": {
-      "rows": 4356,
-      "columns": [
-        "fold",
-        "direction",
-        "cycle",
-        "SOH",
-        "temp_C",
-        "SOC",
-        "SOP_meas_W",
-        "SOP_A0_W",
-        "SOP_A8_W",
-        "k_f",
-        "k_s",
-        "limit_hit"
-      ],
-      "numeric": [
-        "cycle",
-        "SOH",
-        "temp_C",
-        "SOC",
-        "SOP_meas_W",
-        "SOP_A0_W",
-        "SOP_A8_W",
-        "k_f",
-        "k_s"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_external_a8.py",
-      "stage": "external",
-      "units": {
-        "cycle": "[EVIDENCE REQUIRED]",
-        "SOH": "[EVIDENCE REQUIRED]",
-        "temp_C": "[EVIDENCE REQUIRED]",
-        "SOC": "[EVIDENCE REQUIRED]",
-        "SOP_meas_W": "[EVIDENCE REQUIRED]",
-        "SOP_A0_W": "[EVIDENCE REQUIRED]",
-        "SOP_A8_W": "[EVIDENCE REQUIRED]",
-        "k_f": "[EVIDENCE REQUIRED]",
-        "k_s": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "soc_baselines.csv": {
-      "rows": 42,
-      "columns": [
-        "estimator",
-        "perturbation",
-        "rmse_mean_pct",
-        "rmse_worst_run_pct"
-      ],
-      "numeric": [
-        "rmse_mean_pct",
-        "rmse_worst_run_pct"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_soc_baselines.py",
-      "stage": "soc_baselines",
-      "units": {
-        "rmse_mean_pct": "[EVIDENCE REQUIRED]",
-        "rmse_worst_run_pct": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "soh_ablations.csv": {
-      "rows": 22,
-      "columns": [
-        "axis",
-        "variant",
-        "rmse_pooled",
-        "rmse_worst_cell",
-        "worst_cell",
-        "note"
-      ],
-      "numeric": [
-        "rmse_pooled",
-        "rmse_worst_cell"
-      ],
-      "required": false,
-      "producer": "python3 repro/run_soh_ablations.py",
-      "stage": "soh_ablations",
-      "units": {
-        "rmse_pooled": "[EVIDENCE REQUIRED]",
-        "rmse_worst_cell": "[EVIDENCE REQUIRED]"
-      }
-    },
-    "nested_selection.csv": {
-      "producer": "python3 repro/run_nested_selection.py",
-      "stage": "nested_selection",
-      "required": true,
-      "rows": 22,
-      "columns": [
-        "direction",
-        "tau_s",
-        "outer_cell",
-        "picked_rung",
-        "picked_agg",
-        "picked_tol_A",
-        "lambda",
-        "n_rows",
-        "exceed",
-        "outer_usable_pct",
-        "inner_usable_pct"
-      ],
-      "numeric": [
-        "tau_s",
-        "picked_tol_A",
-        "lambda",
-        "n_rows",
-        "exceed",
-        "outer_usable_pct",
-        "inner_usable_pct"
-      ],
-      "units": {}
-    },
-    "end_to_end_paired.csv": {
-      "producer": "python3 repro/run_end_to_end.py",
-      "stage": "end_to_end",
-      "required": false,
-      "rows": 16,
-      "columns": [
-        "condition",
-        "direction",
-        "tau_s",
-        "n_rows",
-        "exceed",
-        "exceed_rate_upper95_pct",
-        "worst_overshoot_A",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "lambda_median",
-        "per_cell_exceed"
-      ],
-      "numeric": [
-        "exceed",
-        "n_rows",
-        "usable_mean_pct",
-        "worst_overshoot_A",
-        "exceed_rate_upper95_pct",
-        "lambda_median",
-        "usable_worst_pct"
-      ]
-    },
-    "end_to_end_drift.csv": {
-      "producer": "python3 repro/run_end_to_end.py",
-      "stage": "end_to_end",
-      "required": false,
-      "rows": 16,
-      "columns": [
-        "condition",
-        "direction",
-        "tau_s",
-        "n_kept",
-        "n_common",
-        "n_outside",
-        "n_scored",
-        "exceed",
-        "exceed_rate_pct"
-      ],
-      "numeric": [
-        "n_kept",
-        "n_common",
-        "n_outside",
-        "n_scored",
-        "exceed"
-      ]
-    },
-    "external_a8_coverage.csv": {
-      "producer": "python3 repro/run_external_a8.py",
-      "stage": "external",
-      "required": false,
-      "rows": 30,
-      "columns": [
-        "axis",
-        "value",
-        "n_calls",
-        "n_in_hull",
-        "in_hull_pct"
-      ],
-      "numeric": [
-        "n_calls",
-        "n_in_hull",
-        "in_hull_pct"
-      ]
-    },
-    "external_a8_safety.csv": {
-      "producer": "python3 repro/run_external_a8.py",
-      "stage": "external",
-      "required": false,
-      "rows": 12,
-      "columns": [
-        "fold",
-        "direction",
-        "n_in_hull",
-        "lambda_uypydj",
-        "lambda_needed",
-        "margin",
-        "exceed",
-        "usable_pct",
-        "worst_overshoot_W"
-      ],
-      "numeric": [
-        "n_in_hull",
-        "lambda_uypydj",
-        "lambda_needed",
-        "margin",
-        "exceed",
-        "usable_pct",
-        "worst_overshoot_W"
-      ]
-    },
-    "soh_nested.csv": {
-      "producer": "python3 repro/run_soh_nested.py",
-      "stage": "soh_select",
-      "required": false,
-      "rows": 6,
-      "columns": [
-        "holdout",
-        "n",
-        "chosen_family",
-        "chosen_param",
-        "inner_rmse",
-        "outer_rmse",
-        "inner_mean baseline",
-        "inner_ridge",
-        "inner_PLS",
-        "inner_SVR (RBF)",
-        "inner_gradient boosting",
-        "inner_1D CNN"
-      ],
-      "numeric": [
-        "n",
-        "inner_rmse",
-        "outer_rmse",
-        "inner_mean baseline",
-        "inner_ridge",
-        "inner_PLS",
-        "inner_SVR (RBF)",
-        "inner_gradient boosting",
-        "inner_1D CNN"
-      ]
-    },
-    "soh_nested_summary.csv": {
-      "producer": "python3 repro/run_soh_nested.py",
-      "stage": "soh_select",
-      "required": false,
-      "rows": 1,
-      "columns": [
-        "procedure",
-        "rmse_pooled",
-        "rmse_mean_of_cells",
-        "rmse_worst_cell",
-        "worst_cell",
-        "families_chosen"
-      ],
-      "numeric": [
-        "rmse_pooled",
-        "rmse_mean_of_cells",
-        "rmse_worst_cell"
-      ]
-    },
-    "soh_model_cost.csv": {
-      "producer": "python3 repro/run_soh_deploy_tables.py",
-      "stage": "soh_deploy_tables",
-      "required": false,
-      "rows": 2,
-      "columns": [
-        "model",
-        "coefficients",
-        "rmse_pooled",
-        "rmse_worst_cell",
-        "worst_cell",
-        "soh_median_us",
-        "soh_p95_us",
-        "soh_max_us",
-        "firmware_text_B",
-        "firmware_bss_B"
-      ],
-      "numeric": [
-        "coefficients",
-        "rmse_pooled",
-        "rmse_worst_cell",
-        "soh_median_us",
-        "soh_p95_us",
-        "soh_max_us",
-        "firmware_text_B",
-        "firmware_bss_B"
-      ]
-    },
-    "mcu_icache.csv": {
-      "producer": "python3 repro/run_soh_deploy_tables.py",
-      "stage": "soh_deploy_tables",
-      "required": false,
-      "rows": 12,
-      "columns": [
-        "icache",
-        "soh_model",
-        "stage",
-        "median_us",
-        "p95_us",
-        "max_us",
-        "note"
-      ],
-      "numeric": [
-        "median_us",
-        "p95_us",
-        "max_us"
-      ]
-    },
-    "end_to_end_fixed_lambda.csv": {
-      "producer": "python3 repro/run_end_to_end.py",
-      "stage": "end_to_end",
-      "required": false,
-      "rows": 16,
-      "columns": [
-        "condition",
-        "direction",
-        "tau_s",
-        "n_rows",
-        "exceed",
-        "exceed_rate_upper95_pct",
-        "worst_overshoot_A",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "lambda_median_from_oracle",
-        "per_cell_exceed"
-      ],
-      "numeric": [
-        "n_rows",
-        "exceed",
-        "exceed_rate_upper95_pct",
-        "worst_overshoot_A",
-        "usable_mean_pct",
-        "usable_worst_pct",
-        "lambda_median_from_oracle"
-      ]
-    },
-    "method_comparison.csv": {
-      "producer": "python3 repro/run_method_comparison.py",
-      "stage": "method_comparison",
-      "required": false,
-      "rows": 24,
-      "columns": [
-        "direction",
-        "tau_s",
-        "method",
-        "usable_mean_pct",
-        "boot_lo_pct",
-        "boot_hi_pct",
-        "n_rows",
-        "exceed",
-        "usable_worst_pct",
-        "rank_in_condition",
-        "interval_vs_a8"
-      ],
-      "numeric": [
-        "usable_mean_pct",
-        "boot_lo_pct",
-        "boot_hi_pct",
-        "n_rows",
-        "exceed",
-        "usable_worst_pct",
-        "rank_in_condition"
-      ]
-    },
-    "external_temp_envelope.csv": {
-      "producer": "python3 repro/run_chen2026_baseline.py",
-      "stage": "chen2026",
-      "required": false,
-      "rows": 7,
-      "columns": [
-        "temp_set_C",
-        "temp_cell_C_mean",
-        "n_points",
-        "n_in_hull",
-        "in_hull_pct",
-        "soc_in_hull_min",
-        "soc_in_hull_max",
-        "lambda_shipped",
-        "lambda_needed",
-        "margin",
-        "exceed",
-        "exceed_ub95_pct",
-        "worst_overshoot_W",
-        "worst_raw_overshoot_W"
-      ],
-      "numeric": [
-        "n_points",
-        "n_in_hull",
-        "exceed",
-        "exceed_ub95_pct",
-        "lambda_shipped"
-      ],
-      "note": "The last row pools 0-40 C.  It leaves the per-temperature columns blank on purpose, so only the columns every row fills are declared numeric."
-    },
-    "mcu_cycle.csv": {
-      "producer": "python3 repro/run_mcu_table.py",
-      "stage": "mcu_table",
-      "required": false,
-      "rows": 2,
-      "columns": [
-        "case",
-        "soc_ekf_us",
-        "feat_a8_us",
-        "one_sop_us",
-        "four_sop_us",
-        "cycle_total_us",
-        "load_at_100Hz_pct"
-      ],
-      "numeric": [
-        "soc_ekf_us",
-        "feat_a8_us",
-        "one_sop_us",
-        "four_sop_us",
-        "cycle_total_us",
-        "load_at_100Hz_pct"
-      ]
-    },
-    "external_crate_envelope.csv": {
-      "producer": "python3 repro/run_external_crate.py",
-      "stage": "external_crate",
-      "required": false,
-      "rows": 7,
-      "columns": [
-        "prior_rate",
-        "n_points",
-        "n_in_hull",
-        "soc_in_hull_min",
-        "soc_in_hull_max",
-        "lambda_shipped",
-        "lambda_needed",
-        "margin",
-        "exceed",
-        "exceed_ub95_pct",
-        "worst_overshoot_W"
-      ],
-      "numeric": [
-        "n_points",
-        "n_in_hull",
-        "lambda_shipped",
-        "exceed",
-        "exceed_ub95_pct"
-      ],
-      "note": "The last row pools the six prior rates and leaves per-rate columns blank."
-    }
+  "note": "The 0.5 A charge tolerance is the knee established in sec 25. Without it the published charge lambda cannot be reproduced."
+ },
+ "checks": [
+  {
+   "id": "sop.disc.10s.lambda",
+   "table": "safety.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "soh": "oracle"
+   },
+   "column": "lambda",
+   "value": 0.683,
+   "source": "sec 32.6 — discharge lambda, 10 s"
   },
-  "completeness": {
-    "total_checks": 83,
-    "checks_per_table": {
-      "alpha.csv": 2,
-      "cold_ratio.csv": 2,
-      "correlation.csv": 1,
-      "end_to_end.csv": 3,
-      "ladder.csv": 9,
-      "mcu.csv": 4,
-      "pack.csv": 3,
-      "safety.csv": 6,
-      "soc_baselines.csv": 3,
-      "soc_perturb.csv": 4,
-      "soh.csv": 2,
-      "soh_ablations.csv": 2,
-      "voltage.csv": 10
-    },
-    "check_ids": [
-      "sop.disc.10s.lambda",
-      "sop.disc.10s.usable",
-      "sop.chg.10s.lambda",
-      "sop.chg.10s.usable",
-      "sop.disc.10s.usable.est_soh",
-      "sop.chg.10s.usable.est_soh",
-      "ladder.disc.A0",
-      "ladder.disc.direct",
-      "ladder.disc.shrink",
-      "ladder.disc.A8",
-      "ladder.disc.A3",
-      "ladder.disc.rls_bound",
-      "ladder.chg.A8_beats_A3",
-      "ladder.chg.A3",
-      "ladder.chg.rls_bound_loses",
-      "pack.disc.10s.exceed.N192",
-      "pack.disc.10s.exceed.est.N192",
-      "pack.chg.10s.worst.N192",
-      "soc.adopted.no_perturb",
-      "soc.open_loop.no_perturb",
-      "soc.open_loop.ibias",
-      "soc.adopted.ibias",
-      "volt.disc.A0",
-      "volt.disc.direct",
-      "volt.disc.shrink",
-      "volt.disc.A8",
-      "volt.disc.A3",
-      "volt.disc.RLS",
-      "volt.char.A0",
-      "volt.char.A8",
-      "volt.char.A3",
-      "volt.char.RLS",
-      "mcu.feat",
-      "mcu.feat_a8",
-      "mcu.ekf",
-      "mcu.full",
-      "soh.rmse",
-      "soh.bias",
-      "alpha.disc.CC",
-      "alpha.chg.CC.slow",
-      "corr.disc.10s",
-      "cold.BOOST.ratio",
-      "cold.CC.ratio",
-      "soc.base.adopted.ibias",
-      "soc.base.dual.mean_ibias",
-      "soc.base.ukf.undist",
-      "soh.abl.dqdv",
-      "soh.abl.time_only",
-      "e2e.disch.oracle.usable",
-      "e2e.disch.est_est.usable",
-      "e2e.disch.est_est.exceed",
-      "mcu.build.both",
-      "mcu.build.a8_only",
-      "e2e.paired.disc.est_est.exceed",
-      "e2e.paired.disc.oracle.exceed",
-      "e2e.drift.disc.est_est.rate",
-      "ext.cov.disc",
-      "ext.safety.chg.margin",
-      "ext.safety.disc.exceed",
-      "soh.ridge.rmse",
-      "soh.cnn.rmse",
-      "soh.ridge.us",
-      "soh.cnn.us",
-      "soh.nested.pooled",
-      "soh.nested.cnn_inner.BOOST",
-      "mcu.icache.on.ridge",
-      "mcu.icache.off.ridge",
-      "mcu.icache.off.cnn",
-      "e2e.fixed.disc.est_est.exceed",
-      "e2e.fixed.disc.oracle.exceed",
-      "e2e.fixed.disc.est_est.usable",
-      "method.a8.rank.disc10",
-      "method.ffrls.disc10.usable",
-      "ext.temp.m20.margin",
-      "ext.temp.m20.exceed",
-      "ext.temp.0.margin",
-      "ext.temp.40.exceed",
-      "ext.temp.25.soc_min",
-      "mcu.cycle.median",
-      "mcu.cycle.sum_of_stage_maxima",
-      "ext.crate.0C.margin",
-      "ext.crate.4C.margin",
-      "ext.crate.pooled.exceed"
-    ],
-    "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
+  {
+   "id": "sop.disc.10s.usable",
+   "table": "safety.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "soh": "oracle"
+   },
+   "column": "usable_pct",
+   "value": 69.1,
+   "source": "sec 32.6 — usable current, discharge 10 s"
+  },
+  {
+   "id": "sop.chg.10s.lambda",
+   "table": "safety.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "soh": "oracle"
+   },
+   "column": "lambda",
+   "value": 0.586,
+   "source": "sec 32.7 — charge lambda, 10 s"
+  },
+  {
+   "id": "sop.chg.10s.usable",
+   "table": "safety.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "soh": "oracle"
+   },
+   "column": "usable_pct",
+   "value": 59.6,
+   "source": "sec 32.7 — usable current, charge 10 s"
+  },
+  {
+   "id": "sop.disc.10s.usable.est_soh",
+   "table": "safety.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "soh": "est"
+   },
+   "column": "usable_pct",
+   "value": 69.0,
+   "source": "sec 29 / 30.11 — estimated SOH, not oracle",
+   "note": "[2026-08-31 SOH replacement] SOH arm replaced by ridge (36): estimated-SOH usable current 67.2 -> 69.0 %"
+  },
+  {
+   "id": "sop.chg.10s.usable.est_soh",
+   "table": "safety.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "soh": "est"
+   },
+   "column": "usable_pct",
+   "value": 54.2,
+   "source": "sec 29 / 30.11 — estimated SOH, not oracle",
+   "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted.  A 55.54 seen mid-audit was a stale table, not a measurement: safety_strict had not been re-run after run_evals (37.1)"
+  },
+  {
+   "id": "ladder.disc.A0",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "A0  no correction"
+   },
+   "column": "usable_pct",
+   "value": 59.3,
+   "source": "sec 32.5 — classical HPPC resistance table"
+  },
+  {
+   "id": "ladder.disc.direct",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "direct plug-in"
+   },
+   "column": "usable_pct",
+   "value": 32.6,
+   "source": "sec 32.5 — raw RLS estimate is worse than no correction"
+  },
+  {
+   "id": "ladder.disc.shrink",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "shrinkage coefficient"
+   },
+   "column": "usable_pct",
+   "value": 62.0,
+   "source": "sec 32.5 — two-parameter transfer gain",
+   "note": "[2026-08-31 rebuild adopted] settles at 62.0 on the rebuilt models.  It read 62.4 twice and 62.0 twice during the audit as the grid step flipped; determinism.py removes the flipping (37.1, 37.5)"
+  },
+  {
+   "id": "ladder.disc.A8",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "A8  dR_fast alone"
+   },
+   "column": "usable_pct",
+   "value": 69.1,
+   "source": "sec 32.5 — adopted trim"
+  },
+  {
+   "id": "ladder.disc.A3",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "A3  12 features"
+   },
+   "column": "usable_pct",
+   "value": 70.3,
+   "source": "sec 32.5 — 12-feature comparison"
+  },
+  {
+   "id": "ladder.disc.rls_bound",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "[upper bound] HPPC-RLS"
+   },
+   "column": "usable_pct",
+   "value": 71.1,
+   "source": "sec 32.5 — upper bound if the vehicle could run HPPC"
+  },
+  {
+   "id": "ladder.chg.A8_beats_A3",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "method": "A8  dR_fast alone"
+   },
+   "column": "usable_pct",
+   "value": 59.6,
+   "source": "sec 32.7 — 4 parameters beat 26 on charge"
+  },
+  {
+   "id": "ladder.chg.A3",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "method": "A3  12 features"
+   },
+   "column": "usable_pct",
+   "value": 57.9,
+   "source": "sec 32.7 — 12-feature comparison"
+  },
+  {
+   "id": "ladder.chg.rls_bound_loses",
+   "table": "ladder.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "method": "[upper bound] HPPC-RLS"
+   },
+   "column": "usable_pct",
+   "value": 55.2,
+   "source": "sec 32.6 — best on voltage, fourth on current"
+  },
+  {
+   "id": "pack.disc.10s.exceed.N192",
+   "table": "pack.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "soh": "oracle",
+    "N": "192"
+   },
+   "column": "exceed_pct",
+   "value": 0.0,
+   "source": "sec 31.2 — zero exceedance after recalibration"
+  },
+  {
+   "id": "pack.disc.10s.exceed.est.N192",
+   "table": "pack.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "soh": "estimated",
+    "N": "192"
+   },
+   "column": "exceed_pct",
+   "value": 0.0,
+   "source": "sec 31.2 — same under estimated SOH"
+  },
+  {
+   "id": "pack.chg.10s.worst.N192",
+   "table": "pack.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "soh": "oracle",
+    "N": "192"
+   },
+   "column": "worst_A",
+   "value": 0.09,
+   "source": "sec 31.2 — within the 0.5 A charge tolerance",
+   "tol": 0.02
+  },
+  {
+   "id": "soc.adopted.no_perturb",
+   "table": "soc_perturb.csv",
+   "where": {
+    "config": "EKF adopted (gate)",
+    "perturbation": "no distortion"
+   },
+   "column": "rmse_full_pct",
+   "value": 1.51,
+   "source": "sec 30.1 — circular benchmark, not the headline number",
+   "tol": 0.01
+  },
+  {
+   "id": "soc.open_loop.no_perturb",
+   "table": "soc_perturb.csv",
+   "where": {
+    "config": "pure current integration",
+    "perturbation": "no distortion"
+   },
+   "column": "rmse_full_pct",
+   "value": 0.12,
+   "source": "sec 30.1 — not using voltage wins 12x; the circularity",
+   "tol": 0.01
+  },
+  {
+   "id": "soc.open_loop.ibias",
+   "table": "soc_perturb.csv",
+   "where": {
+    "config": "pure current integration",
+    "perturbation": "current offset +0.10 A"
+   },
+   "column": "rmse_full_pct",
+   "value": 10.32,
+   "source": "sec 30.4 — coulomb counting diverges once decoupled",
+   "tol": 0.02
+  },
+  {
+   "id": "soc.adopted.ibias",
+   "table": "soc_perturb.csv",
+   "where": {
+    "config": "EKF adopted (gate)",
+    "perturbation": "current offset +0.10 A"
+   },
+   "column": "rmse_full_pct",
+   "value": 2.86,
+   "source": "sec 30.4 — the only weakness of the adopted filter",
+   "tol": 0.02
+  },
+  {
+   "id": "volt.disc.A0",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "pooled",
+    "method": "A0"
+   },
+   "column": "rmse_mV",
+   "value": 85.36,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+  },
+  {
+   "id": "volt.disc.direct",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "pooled",
+    "method": "direct"
+   },
+   "column": "rmse_mV",
+   "value": 134.57,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+   "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
+  },
+  {
+   "id": "volt.disc.shrink",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "pooled",
+    "method": "shrink"
+   },
+   "column": "rmse_mV",
+   "value": 69.23,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+   "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted.  The shrink baseline moves most because fit_alpha is an argmin over a 51-point grid (37.1)"
+  },
+  {
+   "id": "volt.disc.A8",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "pooled",
+    "method": "A8"
+   },
+   "column": "rmse_mV",
+   "value": 62.78,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+   "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted: the trims were retrained on the current cache (37.1)"
+  },
+  {
+   "id": "volt.disc.A3",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "pooled",
+    "method": "A3"
+   },
+   "column": "rmse_mV",
+   "value": 58.71,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+   "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
+  },
+  {
+   "id": "volt.disc.RLS",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "pooled",
+    "method": "RLS"
+   },
+   "column": "rmse_mV",
+   "value": 49.89,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+  },
+  {
+   "id": "volt.char.A0",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "pooled",
+    "method": "A0"
+   },
+   "column": "rmse_mV",
+   "value": 49.9,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+  },
+  {
+   "id": "volt.char.A8",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "pooled",
+    "method": "A8"
+   },
+   "column": "rmse_mV",
+   "value": 36.7,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+   "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1); matches the 36.70 predicted in 33.4"
+  },
+  {
+   "id": "volt.char.A3",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "pooled",
+    "method": "A3"
+   },
+   "column": "rmse_mV",
+   "value": 34.09,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE",
+   "note": "[2026-08-31 rebuild adopted] defect-excluded rebuild adopted (37.1)"
+  },
+  {
+   "id": "volt.char.RLS",
+   "table": "voltage.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "pooled",
+    "method": "RLS"
+   },
+   "column": "rmse_mV",
+   "value": 33.59,
+   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+  },
+  {
+   "id": "mcu.feat",
+   "table": "mcu.csv",
+   "where": {
+    "stage": "FEAT"
+   },
+   "column": "median_us",
+   "value": 13.94,
+   "tol": 0.6,
+   "source": "sec 33.1 — A3 feature update",
+   "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
+  },
+  {
+   "id": "mcu.feat_a8",
+   "table": "mcu.csv",
+   "where": {
+    "stage": "FEAT_A8"
+   },
+   "column": "median_us",
+   "value": 6.79,
+   "tol": 0.6,
+   "source": "sec 33.1 — adopted A8, 55% faster",
+   "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
+  },
+  {
+   "id": "mcu.ekf",
+   "table": "mcu.csv",
+   "where": {
+    "stage": "EKF"
+   },
+   "column": "median_us",
+   "value": 8.16,
+   "tol": 0.6,
+   "source": "sec 33.2 — SOC EKF step",
+   "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image (36.4)"
+  },
+  {
+   "id": "mcu.full",
+   "table": "mcu.csv",
+   "where": {
+    "stage": "FULL"
+   },
+   "column": "median_us",
+   "value": 53.2,
+   "tol": 0.6,
+   "source": "sec 33.2 — one SOP inversion",
+   "note": "[2026-08-31 SOH replacement] remeasured on the ridge deployment image.  SLOWER than the CNN image (50.50) — an instruction-cache placement effect, not a cost of ridge: with the cache disabled the ordering reverses (36.4)"
+  },
+  {
+   "id": "soh.rmse",
+   "table": "soh.csv",
+   "where": {
+    "cell": "ALL"
+   },
+   "column": "rmse",
+   "value": 0.0094,
+   "tol": 0.0002,
+   "source": "sec 30.12 — after excluding 8 temperature-fault curves",
+   "note": "[2026-08-31 SOH replacement] ridge instead of the 1D CNN (36.1)"
+  },
+  {
+   "id": "soh.bias",
+   "table": "soh.csv",
+   "where": {
+    "cell": "ALL"
+   },
+   "column": "bias",
+   "value": -0.0005,
+   "tol": 0.0002,
+   "source": "sec 30.12 — bias fell 10x once the faults were removed",
+   "note": "[2026-08-31 SOH replacement] ridge instead of the 1D CNN (36.1)"
+  },
+  {
+   "id": "alpha.disc.CC",
+   "table": "alpha.csv",
+   "where": {
+    "direction": "discharge",
+    "holdout": "CC"
+   },
+   "column": "alpha_fast",
+   "value": 0.2,
+   "tol": 0.001,
+   "source": "sec 32.3 — low-current residual transfers at about 1/5"
+  },
+  {
+   "id": "alpha.chg.CC.slow",
+   "table": "alpha.csv",
+   "where": {
+    "direction": "charge",
+    "holdout": "CC"
+   },
+   "column": "alpha_slow",
+   "value": 0.02,
+   "tol": 0.001,
+   "source": "sec 32.6 — the slow branch contributes nothing on charge"
+  },
+  {
+   "id": "corr.disc.10s",
+   "table": "correlation.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10"
+   },
+   "column": "corr_meas_vs_ratio",
+   "value": -0.608,
+   "tol": 0.005,
+   "source": "sec 31.4 — weaker cells are estimated more optimistically"
+  },
+  {
+   "id": "cold.BOOST.ratio",
+   "table": "cold_ratio.csv",
+   "where": {
+    "cell": "BOOST",
+    "cycle": "1462"
+   },
+   "column": "ratio",
+   "value": 0.98,
+   "tol": 0.02,
+   "source": "sec 33.5 — 0 C would give 3-5x; 1x means only the log broke"
+  },
+  {
+   "id": "cold.CC.ratio",
+   "table": "cold_ratio.csv",
+   "where": {
+    "cell": "CC",
+    "cycle": "1500"
+   },
+   "column": "ratio",
+   "value": 0.98,
+   "tol": 0.02,
+   "source": "sec 33.5 — same check on the second cell"
+  },
+  {
+   "id": "soc.base.adopted.ibias",
+   "table": "soc_baselines.csv",
+   "where": {
+    "estimator": "2RC-EKF (adopted)",
+    "perturbation": "current offset +0.10 A"
+   },
+   "column": "rmse_mean_pct",
+   "value": 2.864,
+   "tol": 0.01,
+   "source": "sec 30.4 cross-check — the same number soc_perturb.csv reports, via a different producer"
+  },
+  {
+   "id": "soc.base.dual.mean_ibias",
+   "table": "soc_baselines.csv",
+   "where": {
+    "estimator": "dual EKF (current bias)",
+    "perturbation": "current offset +0.10 A"
+   },
+   "column": "rmse_mean_pct",
+   "value": 2.353,
+   "tol": 0.3,
+   "source": "audit — the current-bias state is what the offset condition rewards"
+  },
+  {
+   "id": "soc.base.ukf.undist",
+   "table": "soc_baselines.csv",
+   "where": {
+    "estimator": "UKF",
+    "perturbation": "no distortion"
+   },
+   "column": "rmse_mean_pct",
+   "value": 1.425,
+   "tol": 0.05,
+   "source": "audit — the UKF does not pay for itself on this model"
+  },
+  {
+   "id": "soh.abl.dqdv",
+   "table": "soh_ablations.csv",
+   "where": {
+    "axis": "input, ridge",
+    "variant": "dQ/dV only (shipped)"
+   },
+   "column": "rmse_pooled",
+   "value": 0.0094,
+   "tol": 0.0003,
+   "source": "audit — ridge on the shipped input"
+  },
+  {
+   "id": "soh.abl.time_only",
+   "table": "soh_ablations.csv",
+   "where": {
+    "axis": "input, ridge",
+    "variant": "time-per-bin only"
+   },
+   "column": "rmse_pooled",
+   "value": 0.0096,
+   "tol": 0.0003,
+   "source": "audit — the representation is not load-bearing"
+  },
+  {
+   "id": "e2e.disch.oracle.usable",
+   "table": "end_to_end.csv",
+   "where": {
+    "condition": "oracle SOH + oracle SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "usable_mean_pct",
+   "value": 69.61,
+   "tol": 0.05,
+   "source": "audit — the corner the paper reports"
+  },
+  {
+   "id": "e2e.disch.est_est.usable",
+   "table": "end_to_end.csv",
+   "where": {
+    "condition": "estimated SOH + estimated SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "usable_mean_pct",
+   "value": 66.24,
+   "tol": 0.05,
+   "source": "audit — the only corner a vehicle can execute",
+   "note": "[2026-08-31 SOH replacement] estimated-SOH corner now uses ridge (36.3)"
+  },
+  {
+   "id": "e2e.disch.est_est.exceed",
+   "table": "end_to_end.csv",
+   "where": {
+    "condition": "estimated SOH + estimated SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "exceed",
+   "value": 20.0,
+   "tol": 0,
+   "source": "audit — exceedance survives per-cell recalibration",
+   "note": "[2026-08-31 SOH replacement] estimated-SOH corner now uses ridge (36.3)"
+  },
+  {
+   "id": "mcu.build.both",
+   "table": "build_size.csv",
+   "where": {
+    "build": "both"
+   },
+   "column": "text_B",
+   "value": 72700,
+   "tol": 0,
+   "source": "sec 33.6 — comparison build, text section",
+   "note": "[2026-08-31 SOH replacement] the CNN leaving takes 71,264 B of flash with it (36.4)"
+  },
+  {
+   "id": "mcu.build.a8_only",
+   "table": "build_size.csv",
+   "where": {
+    "build": "a8_only"
+   },
+   "column": "text_B",
+   "value": 70796,
+   "tol": 0,
+   "source": "sec 33.6 — deployment build, text section",
+   "note": "[2026-08-31 SOH replacement] the CNN leaving takes 71,264 B of flash with it (36.4)"
+  },
+  {
+   "id": "e2e.paired.disc.est_est.exceed",
+   "table": "end_to_end_paired.csv",
+   "where": {
+    "condition": "estimated SOH + estimated SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "exceed",
+   "value": 3.0,
+   "tol": 0,
+   "source": "sec 35.1 — the fully estimated corner on the common 388 rows",
+   "note": "[2026-08-31 SOH replacement] on the common 388 rows with ridge SOH (36.3)"
+  },
+  {
+   "id": "e2e.paired.disc.oracle.exceed",
+   "table": "end_to_end_paired.csv",
+   "where": {
+    "condition": "oracle SOH + oracle SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "exceed",
+   "value": 3,
+   "tol": 0,
+   "source": "sec 35.1 — the oracle corner on the same 388 rows"
+  },
+  {
+   "id": "e2e.drift.disc.est_est.rate",
+   "table": "end_to_end_drift.csv",
+   "where": {
+    "condition": "estimated SOH + estimated SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "exceed_rate_pct",
+   "value": 27.84,
+   "tol": 0.01,
+   "source": "sec 35.2 — exceedance in the rows only the estimated corner admits",
+   "note": "[2026-08-31 SOH replacement] rows only the fully estimated corner admits, with ridge SOH (36.3)"
+  },
+  {
+   "id": "ext.cov.disc",
+   "table": "external_a8_coverage.csv",
+   "where": {
+    "axis": "direction",
+    "value": "discharge"
+   },
+   "column": "in_hull_pct",
+   "value": 54.2,
+   "tol": 0.05,
+   "source": "sec 35.5 — in-hull share of discharge calls"
+  },
+  {
+   "id": "ext.safety.chg.margin",
+   "table": "external_a8_safety.csv",
+   "where": {
+    "fold": "CC",
+    "direction": "charge"
+   },
+   "column": "margin",
+   "value": 0.677,
+   "tol": 0.001,
+   "source": "sec 35.5 — the frozen charge lambda is not conservative enough"
+  },
+  {
+   "id": "ext.safety.disc.exceed",
+   "table": "external_a8_safety.csv",
+   "where": {
+    "fold": "CC",
+    "direction": "discharge"
+   },
+   "column": "exceed",
+   "value": 0,
+   "tol": 0,
+   "source": "sec 35.5 — zero exceedance on external discharge"
+  },
+  {
+   "id": "soh.ridge.rmse",
+   "table": "soh_model_cost.csv",
+   "where": {
+    "model": "ridge (adopted)"
+   },
+   "column": "rmse_pooled",
+   "value": 0.0094,
+   "tol": 0,
+   "source": "sec 36.1 — ridge, leave-one-cell-out"
+  },
+  {
+   "id": "soh.cnn.rmse",
+   "table": "soh_model_cost.csv",
+   "where": {
+    "model": "1D CNN (baseline)"
+   },
+   "column": "rmse_pooled",
+   "value": 0.0135,
+   "tol": 0,
+   "source": "sec 36.1 — the 1D CNN baseline, same splits"
+  },
+  {
+   "id": "soh.ridge.us",
+   "table": "soh_model_cost.csv",
+   "where": {
+    "model": "ridge (adopted)"
+   },
+   "column": "soh_median_us",
+   "value": 6.5,
+   "tol": 0.01,
+   "source": "sec 36.4 — SOH inference on the board"
+  },
+  {
+   "id": "soh.cnn.us",
+   "table": "soh_model_cost.csv",
+   "where": {
+    "model": "1D CNN (baseline)"
+   },
+   "column": "soh_median_us",
+   "value": 19442.25,
+   "tol": 0.01,
+   "source": "sec 36.4 — the CNN, measured before it was replaced"
+  },
+  {
+   "id": "soh.nested.pooled",
+   "table": "soh_nested_summary.csv",
+   "where": {
+    "procedure": "nested selection"
+   },
+   "column": "rmse_pooled",
+   "value": 0.0095,
+   "tol": 0,
+   "source": "sec 36.1 — error of the selection procedure itself"
+  },
+  {
+   "id": "soh.nested.cnn_inner.BOOST",
+   "table": "soh_nested.csv",
+   "where": {
+    "holdout": "BOOST"
+   },
+   "column": "inner_1D CNN",
+   "value": 0.0142,
+   "tol": 0,
+   "source": "sec 36.1 — the CNN's inner score, never the best on any fold",
+   "note": "[2026-08-31 determinism] the CNN is now trained through a deterministic pool; its inner score moved 0.0141 -> 0.0142 and it is still last on all six folds"
+  },
+  {
+   "id": "mcu.icache.on.ridge",
+   "table": "mcu_icache.csv",
+   "where": {
+    "icache": "on",
+    "soh_model": "ridge",
+    "stage": "FULL"
+   },
+   "column": "median_us",
+   "value": 53.2,
+   "tol": 0.01,
+   "source": "sec 36.4 — deployment image, cache enabled"
+  },
+  {
+   "id": "mcu.icache.off.ridge",
+   "table": "mcu_icache.csv",
+   "where": {
+    "icache": "off",
+    "soh_model": "ridge",
+    "stage": "FULL"
+   },
+   "column": "median_us",
+   "value": 106.38,
+   "tol": 0.01,
+   "source": "sec 36.4 — same image, cache disabled: the penalty reverses"
+  },
+  {
+   "id": "mcu.icache.off.cnn",
+   "table": "mcu_icache.csv",
+   "where": {
+    "icache": "off",
+    "soh_model": "CNN",
+    "stage": "FULL"
+   },
+   "column": "median_us",
+   "value": 107.89,
+   "tol": 0.01,
+   "source": "sec 36.4 — CNN image, cache disabled"
+  },
+  {
+   "id": "e2e.fixed.disc.est_est.exceed",
+   "table": "end_to_end_fixed_lambda.csv",
+   "where": {
+    "condition": "estimated SOH + estimated SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "exceed",
+   "value": 1,
+   "tol": 0,
+   "source": "sec 37.2 — both estimated, same rows, lambda frozen at the oracle corner"
+  },
+  {
+   "id": "e2e.fixed.disc.oracle.exceed",
+   "table": "end_to_end_fixed_lambda.csv",
+   "where": {
+    "condition": "oracle SOH + oracle SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "exceed",
+   "value": 3,
+   "tol": 0,
+   "source": "sec 37.2 — the oracle corner under its own lambda, same rows"
+  },
+  {
+   "id": "e2e.fixed.disc.est_est.usable",
+   "table": "end_to_end_fixed_lambda.csv",
+   "where": {
+    "condition": "estimated SOH + estimated SOC",
+    "direction": "discharge",
+    "tau_s": "10.0"
+   },
+   "column": "usable_mean_pct",
+   "value": 72.02,
+   "tol": 0.01,
+   "source": "sec 37.2 — what estimated state costs when lambda is not refitted"
+  },
+  {
+   "id": "method.a8.rank.disc10",
+   "table": "method_comparison.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "a8"
+   },
+   "column": "rank_in_condition",
+   "value": 2,
+   "tol": 0,
+   "source": "sec 37.3 — A8 is not first; the ranking moves by condition"
+  },
+  {
+   "id": "method.ffrls.disc10.usable",
+   "table": "method_comparison.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "ffrls"
+   },
+   "column": "usable_mean_pct",
+   "value": 43.28,
+   "tol": 0.01,
+   "source": "sec 37.3 — the one baseline whose interval separates from A8"
+  },
+  {
+   "id": "ext.temp.m20.margin",
+   "table": "external_temp_envelope.csv",
+   "where": {
+    "temp_set_C": "-20"
+   },
+   "column": "margin",
+   "value": 0.486,
+   "tol": 0.001,
+   "source": "sec 37.4 — the frozen lambda is not conservative at -20 C"
+  },
+  {
+   "id": "ext.temp.m20.exceed",
+   "table": "external_temp_envelope.csv",
+   "where": {
+    "temp_set_C": "-20"
+   },
+   "column": "exceed",
+   "value": 5,
+   "tol": 0,
+   "source": "sec 37.4 — five of eight in-hull points exceed at -20 C"
+  },
+  {
+   "id": "ext.temp.0.margin",
+   "table": "external_temp_envelope.csv",
+   "where": {
+    "temp_set_C": "0"
+   },
+   "column": "margin",
+   "value": 1.396,
+   "tol": 0.001,
+   "source": "sec 37.4 — 0 C is the coldest temperature the frozen factor covers"
+  },
+  {
+   "id": "ext.temp.40.exceed",
+   "table": "external_temp_envelope.csv",
+   "where": {
+    "temp_set_C": "40"
+   },
+   "column": "exceed",
+   "value": 0,
+   "tol": 0,
+   "source": "sec 37.4 — warm end of the measured validity range"
+  },
+  {
+   "id": "ext.temp.25.soc_min",
+   "table": "external_temp_envelope.csv",
+   "where": {
+    "temp_set_C": "25"
+   },
+   "column": "soc_in_hull_min",
+   "value": 0.4,
+   "tol": 0.001,
+   "source": "sec 37.4 — the hull never reaches low SOC at any temperature"
+  },
+  {
+   "id": "mcu.cycle.median",
+   "table": "mcu_cycle.csv",
+   "where": {
+    "case": "median"
+   },
+   "column": "cycle_total_us",
+   "value": 227.79,
+   "tol": 0.01,
+   "source": "sec 33.2 — one control cycle: EKF + A8 feature update + four SOP inversions"
+  },
+  {
+   "id": "mcu.cycle.sum_of_stage_maxima",
+   "table": "mcu_cycle.csv",
+   "where": {
+    "case": "sum_of_stage_maxima"
+   },
+   "column": "cycle_total_us",
+   "value": 339.84,
+   "tol": 0.01,
+   "source": "sec 33.2 — sum of each stage's observed maximum, a derived cycle-budget estimate and NOT a measured WCET"
+  },
+  {
+   "id": "ext.crate.0C.margin",
+   "table": "external_crate_envelope.csv",
+   "where": {
+    "prior_rate": "0C"
+   },
+   "column": "margin",
+   "value": 1.672,
+   "tol": 0.001,
+   "source": "sec 37.12 — no prior discharge, the most favourable case"
+  },
+  {
+   "id": "ext.crate.4C.margin",
+   "table": "external_crate_envelope.csv",
+   "where": {
+    "prior_rate": "4C"
+   },
+   "column": "margin",
+   "value": 1.655,
+   "tol": 0.001,
+   "source": "sec 37.12 — 4C prior discharge; the margin barely moves"
+  },
+  {
+   "id": "ext.crate.pooled.exceed",
+   "table": "external_crate_envelope.csv",
+   "where": {
+    "prior_rate": "0C..4C pooled"
+   },
+   "column": "exceed",
+   "value": 0,
+   "tol": 0,
+   "source": "sec 37.12 — zero exceedance over 48 in-hull points, bounded at 6.1 %"
+  },
+  {
+   "id": "soc.percell.worst",
+   "table": "soc_percell.csv",
+   "where": {
+    "cell": "BOOST_NEGPULSE_1S"
+   },
+   "column": "mean_6_pct",
+   "value": 2.474,
+   "source": "sec 37.13 — worst cell of six, 1.35x the best",
+   "tol": 0.01
+  },
+  {
+   "id": "soc.percell.best",
+   "table": "soc_percell.csv",
+   "where": {
+    "cell": "CC"
+   },
+   "column": "mean_6_pct",
+   "value": 1.834,
+   "source": "sec 37.13 — best cell; the pooled 2.140 sits between",
+   "tol": 0.01
+  },
+  {
+   "id": "soc.percell.cc2",
+   "table": "soc_percell.csv",
+   "where": {
+    "cell": "CC_CELL2"
+   },
+   "column": "mean_6_pct",
+   "value": 2.372,
+   "source": "sec 37.13 — same protocol as CC, different cell: the one contrast where cell and protocol are not confounded",
+   "tol": 0.01
   }
+ ],
+ "tables": {
+  "alpha.csv": {
+   "producer": "python3 repro/run_extras.py",
+   "stage": "extras",
+   "required": true,
+   "rows": 12,
+   "columns": [
+    "direction",
+    "holdout",
+    "alpha_fast",
+    "alpha_slow"
+   ],
+   "numeric": [
+    "alpha_fast",
+    "alpha_slow"
+   ],
+   "units": {
+    "alpha_fast": "dimensionless",
+    "alpha_slow": "dimensionless"
+   }
+  },
+  "build_size.csv": {
+   "producer": "python3 repro/run_extras.py",
+   "stage": "extras",
+   "required": false,
+   "rows": 2,
+   "columns": [
+    "build",
+    "text_B",
+    "bss_B"
+   ],
+   "numeric": [
+    "text_B",
+    "bss_B"
+   ],
+   "units": {
+    "text_B": "B",
+    "bss_B": "B"
+   }
+  },
+  "cold_ratio.csv": {
+   "producer": "python3 repro/run_extras.py",
+   "stage": "extras",
+   "required": true,
+   "rows": 2,
+   "columns": [
+    "cell",
+    "cycle",
+    "R_mOhm",
+    "neighbour_mOhm",
+    "ratio"
+   ],
+   "numeric": [
+    "cycle",
+    "R_mOhm",
+    "neighbour_mOhm",
+    "ratio"
+   ],
+   "units": {
+    "cycle": "cycle index",
+    "R_mOhm": "mOhm",
+    "neighbour_mOhm": "mOhm",
+    "ratio": "dimensionless"
+   }
+  },
+  "correlation.csv": {
+   "producer": "python3 repro/run_extras.py",
+   "stage": "extras",
+   "required": true,
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "n",
+    "corr_meas_vs_ratio"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "corr_meas_vs_ratio"
+   ],
+   "units": {
+    "tau_s": "s",
+    "n": "count",
+    "corr_meas_vs_ratio": "dimensionless"
+   }
+  },
+  "ladder.csv": {
+   "producer": "python3 repro/run_safety.py",
+   "stage": "safety",
+   "required": true,
+   "rows": 36,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "params",
+    "n",
+    "lambda",
+    "optimism_pct",
+    "rmse_A",
+    "usable_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "params",
+    "n",
+    "lambda",
+    "optimism_pct",
+    "rmse_A",
+    "usable_pct"
+   ],
+   "units": {
+    "tau_s": "s",
+    "params": "count",
+    "n": "count",
+    "lambda": "dimensionless",
+    "optimism_pct": "%",
+    "rmse_A": "A",
+    "usable_pct": "%"
+   },
+   "note": "extended by the audit with LSTM, GRU and FFRLS baselines: 24 -> 36 rows"
+  },
+  "mcu.csv": {
+   "producer": "python3 repro/run_mcu_table.py",
+   "stage": "mcu_table",
+   "required": true,
+   "rows": 8,
+   "columns": [
+    "stage",
+    "n",
+    "median_us",
+    "p95_us",
+    "max_us"
+   ],
+   "numeric": [
+    "n",
+    "median_us",
+    "p95_us",
+    "max_us"
+   ],
+   "units": {
+    "n": "count",
+    "median_us": "us",
+    "p95_us": "us",
+    "max_us": "us"
+   }
+  },
+  "pack.csv": {
+   "producer": "python3 analysis/sop_pack2.py",
+   "stage": "pack",
+   "required": true,
+   "rows": 40,
+   "columns": [
+    "direction",
+    "tau_s",
+    "soh",
+    "lambda",
+    "N",
+    "exceed_pct",
+    "worst_A",
+    "usable_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "lambda",
+    "N",
+    "exceed_pct",
+    "worst_A",
+    "usable_pct"
+   ],
+   "units": {
+    "tau_s": "s",
+    "lambda": "dimensionless",
+    "N": "cells",
+    "exceed_pct": "%",
+    "worst_A": "A",
+    "usable_pct": "%"
+   }
+  },
+  "safety.csv": {
+   "producer": "python3 repro/run_safety.py",
+   "stage": "safety",
+   "required": true,
+   "rows": 8,
+   "columns": [
+    "direction",
+    "tau_s",
+    "soh",
+    "n",
+    "lambda",
+    "optimism_pct",
+    "rmse_A",
+    "usable_pct",
+    "worst_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda",
+    "optimism_pct",
+    "rmse_A",
+    "usable_pct",
+    "worst_A"
+   ],
+   "units": {
+    "tau_s": "s",
+    "n": "count",
+    "lambda": "dimensionless",
+    "optimism_pct": "%",
+    "rmse_A": "A",
+    "usable_pct": "%",
+    "worst_A": "A"
+   }
+  },
+  "soc_perturb.csv": {
+   "producer": "python3 analysis/soc_perturb_bench.py",
+   "stage": "soc",
+   "required": true,
+   "rows": 35,
+   "columns": [
+    "config",
+    "perturbation",
+    "rmse_full_pct",
+    "rmse_tail_pct",
+    "worst_pct"
+   ],
+   "numeric": [
+    "rmse_full_pct",
+    "rmse_tail_pct",
+    "worst_pct"
+   ],
+   "units": {
+    "rmse_full_pct": "%p",
+    "rmse_tail_pct": "%p",
+    "worst_pct": "%p"
+   }
+  },
+  "soh.csv": {
+   "producer": "python3 repro/run_soh_table.py",
+   "stage": "soh_table",
+   "required": true,
+   "rows": 7,
+   "columns": [
+    "cell",
+    "n",
+    "rmse",
+    "mae",
+    "bias"
+   ],
+   "numeric": [
+    "n",
+    "rmse",
+    "mae",
+    "bias"
+   ],
+   "units": {
+    "n": "count",
+    "rmse": "fraction SOH",
+    "mae": "fraction SOH",
+    "bias": "fraction SOH"
+   }
+  },
+  "soh_cost.csv": {
+   "producer": "python3 repro/run_safety.py",
+   "stage": "safety",
+   "required": false,
+   "rows": 8,
+   "columns": [
+    "direction",
+    "tau_s",
+    "trim",
+    "lambda_oracle",
+    "lambda_est",
+    "usable_oracle_pct",
+    "usable_est_pct",
+    "delta_pct_pt"
+   ],
+   "numeric": [
+    "tau_s",
+    "lambda_oracle",
+    "lambda_est",
+    "usable_oracle_pct",
+    "usable_est_pct",
+    "delta_pct_pt"
+   ],
+   "units": {
+    "tau_s": "s",
+    "lambda_oracle": "dimensionless",
+    "lambda_est": "dimensionless",
+    "usable_oracle_pct": "%",
+    "usable_est_pct": "%",
+    "delta_pct_pt": "%p"
+   }
+  },
+  "voltage.csv": {
+   "producer": "python3 repro/run_voltage.py",
+   "stage": "voltage",
+   "required": true,
+   "rows": 36,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "n_cells",
+    "rmse_mV",
+    "BOOST",
+    "BOOST_NEGPULSE",
+    "BOOST_NEGPULSE_1S",
+    "BOOST_REST",
+    "CC",
+    "CC_CELL2"
+   ],
+   "numeric": [
+    "n_cells",
+    "rmse_mV",
+    "BOOST",
+    "BOOST_NEGPULSE",
+    "BOOST_NEGPULSE_1S",
+    "BOOST_REST",
+    "CC",
+    "CC_CELL2"
+   ],
+   "units": {
+    "n_cells": "count",
+    "rmse_mV": "mV",
+    "BOOST": "mV",
+    "BOOST_NEGPULSE": "mV",
+    "BOOST_NEGPULSE_1S": "mV",
+    "BOOST_REST": "mV",
+    "CC": "mV",
+    "CC_CELL2": "mV"
+   }
+  },
+  "label_quality.csv": {
+   "rows": 6,
+   "columns": [
+    "direction",
+    "extrap_band",
+    "n",
+    "share_pct",
+    "extrap_median",
+    "spread_A_median",
+    "spread_rel_pct",
+    "fit_r2_median",
+    "fit_r2_min",
+    "n_with_lin2hi",
+    "abs_I_star_median_A"
+   ],
+   "numeric": [
+    "n",
+    "share_pct",
+    "extrap_median",
+    "spread_A_median",
+    "spread_rel_pct",
+    "fit_r2_median",
+    "fit_r2_min",
+    "n_with_lin2hi",
+    "abs_I_star_median_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_label_quality.py",
+   "stage": "label_quality",
+   "units": {
+    "n": "[EVIDENCE REQUIRED]",
+    "share_pct": "[EVIDENCE REQUIRED]",
+    "extrap_median": "[EVIDENCE REQUIRED]",
+    "spread_A_median": "[EVIDENCE REQUIRED]",
+    "spread_rel_pct": "[EVIDENCE REQUIRED]",
+    "fit_r2_median": "[EVIDENCE REQUIRED]",
+    "fit_r2_min": "[EVIDENCE REQUIRED]",
+    "n_with_lin2hi": "[EVIDENCE REQUIRED]",
+    "abs_I_star_median_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "label_sensitivity.csv": {
+   "rows": 30,
+   "columns": [
+    "direction",
+    "tau_s",
+    "extrap_max",
+    "method",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "extrap_max",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_label_quality.py",
+   "stage": "label_quality",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "extrap_max": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_est.csv": {
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "soh_arm",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "worst_cell",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --arm est",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n_cells": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_median_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "lambda_min": "[EVIDENCE REQUIRED]",
+    "lambda_median": "[EVIDENCE REQUIRED]",
+    "lambda_max": "[EVIDENCE REQUIRED]",
+    "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_oracle.csv": {
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "worst_cell",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --arm oracle",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n_cells": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_median_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "lambda_min": "[EVIDENCE REQUIRED]",
+    "lambda_median": "[EVIDENCE REQUIRED]",
+    "lambda_max": "[EVIDENCE REQUIRED]",
+    "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_percell_est.csv": {
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "soh_arm",
+    "cell",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --arm est",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n": "[EVIDENCE REQUIRED]",
+    "lambda_i": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "worst_A": "[EVIDENCE REQUIRED]",
+    "usable_pct": "[EVIDENCE REQUIRED]",
+    "optimism_pct": "[EVIDENCE REQUIRED]",
+    "rmse_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_percell_oracle.csv": {
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "cell",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --arm oracle",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n": "[EVIDENCE REQUIRED]",
+    "lambda_i": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "worst_A": "[EVIDENCE REQUIRED]",
+    "usable_pct": "[EVIDENCE REQUIRED]",
+    "optimism_pct": "[EVIDENCE REQUIRED]",
+    "rmse_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_tolsens_est.csv": {
+   "rows": 16,
+   "columns": [
+    "direction",
+    "tau_s",
+    "soh_arm",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --arm est",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "tolerance_A": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_tolsens_oracle.csv": {
+   "rows": 16,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --arm oracle",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "tolerance_A": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "soc_headline.csv": {
+   "rows": 5,
+   "columns": [
+    "config",
+    "n_rows",
+    "undisturbed_pct",
+    "mean_6_disturbances_pct",
+    "mean_7_rows_pct",
+    "median_6_pct",
+    "worst_of_6_pct",
+    "mean_of_3_pair_means_pct"
+   ],
+   "numeric": [
+    "n_rows",
+    "undisturbed_pct",
+    "mean_6_disturbances_pct",
+    "mean_7_rows_pct",
+    "median_6_pct",
+    "worst_of_6_pct",
+    "mean_of_3_pair_means_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_soc_headline.py",
+   "stage": "soc_headline",
+   "units": {
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "undisturbed_pct": "[EVIDENCE REQUIRED]",
+    "mean_6_disturbances_pct": "[EVIDENCE REQUIRED]",
+    "mean_7_rows_pct": "[EVIDENCE REQUIRED]",
+    "median_6_pct": "[EVIDENCE REQUIRED]",
+    "worst_of_6_pct": "[EVIDENCE REQUIRED]",
+    "mean_of_3_pair_means_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "soh_baselines.csv": {
+   "rows": 6,
+   "columns": [
+    "method",
+    "rmse_pooled",
+    "rmse_mean_of_cells",
+    "rmse_worst_cell",
+    "worst_cell",
+    "hyperparameter_per_fold",
+    "BOOST",
+    "BOOST_NEGPULSE",
+    "BOOST_NEGPULSE_1S",
+    "BOOST_REST",
+    "CC",
+    "CC_CELL2"
+   ],
+   "numeric": [
+    "rmse_pooled",
+    "rmse_mean_of_cells",
+    "rmse_worst_cell",
+    "BOOST",
+    "BOOST_NEGPULSE",
+    "BOOST_NEGPULSE_1S",
+    "BOOST_REST",
+    "CC",
+    "CC_CELL2"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_soh_baselines.py",
+   "stage": "soh_baselines",
+   "units": {
+    "rmse_pooled": "[EVIDENCE REQUIRED]",
+    "rmse_mean_of_cells": "[EVIDENCE REQUIRED]",
+    "rmse_worst_cell": "[EVIDENCE REQUIRED]",
+    "BOOST": "[EVIDENCE REQUIRED]",
+    "BOOST_NEGPULSE": "[EVIDENCE REQUIRED]",
+    "BOOST_NEGPULSE_1S": "[EVIDENCE REQUIRED]",
+    "BOOST_REST": "[EVIDENCE REQUIRED]",
+    "CC": "[EVIDENCE REQUIRED]",
+    "CC_CELL2": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_a3_oracle.csv": {
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "worst_cell",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --method a3",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n_cells": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_median_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "lambda_min": "[EVIDENCE REQUIRED]",
+    "lambda_median": "[EVIDENCE REQUIRED]",
+    "lambda_max": "[EVIDENCE REQUIRED]",
+    "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_ffrls_oracle.csv": {
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "worst_cell",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --method ffrls",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n_cells": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_median_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "lambda_min": "[EVIDENCE REQUIRED]",
+    "lambda_median": "[EVIDENCE REQUIRED]",
+    "lambda_max": "[EVIDENCE REQUIRED]",
+    "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_gru_oracle.csv": {
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "worst_cell",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --method gru",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n_cells": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_median_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "lambda_min": "[EVIDENCE REQUIRED]",
+    "lambda_median": "[EVIDENCE REQUIRED]",
+    "lambda_max": "[EVIDENCE REQUIRED]",
+    "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_lstm_oracle.csv": {
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "worst_cell",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --method lstm",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n_cells": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_median_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "lambda_min": "[EVIDENCE REQUIRED]",
+    "lambda_median": "[EVIDENCE REQUIRED]",
+    "lambda_max": "[EVIDENCE REQUIRED]",
+    "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_percell_a3_oracle.csv": {
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "cell",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n": "[EVIDENCE REQUIRED]",
+    "lambda_i": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "worst_A": "[EVIDENCE REQUIRED]",
+    "usable_pct": "[EVIDENCE REQUIRED]",
+    "optimism_pct": "[EVIDENCE REQUIRED]",
+    "rmse_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_percell_ffrls_oracle.csv": {
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "cell",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n": "[EVIDENCE REQUIRED]",
+    "lambda_i": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "worst_A": "[EVIDENCE REQUIRED]",
+    "usable_pct": "[EVIDENCE REQUIRED]",
+    "optimism_pct": "[EVIDENCE REQUIRED]",
+    "rmse_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_percell_gru_oracle.csv": {
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "cell",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n": "[EVIDENCE REQUIRED]",
+    "lambda_i": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "worst_A": "[EVIDENCE REQUIRED]",
+    "usable_pct": "[EVIDENCE REQUIRED]",
+    "optimism_pct": "[EVIDENCE REQUIRED]",
+    "rmse_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_percell_lstm_oracle.csv": {
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "cell",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n": "[EVIDENCE REQUIRED]",
+    "lambda_i": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "worst_A": "[EVIDENCE REQUIRED]",
+    "usable_pct": "[EVIDENCE REQUIRED]",
+    "optimism_pct": "[EVIDENCE REQUIRED]",
+    "rmse_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_percell_shrink_oracle.csv": {
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "cell",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "lambda_i",
+    "exceed",
+    "worst_A",
+    "usable_pct",
+    "optimism_pct",
+    "rmse_A"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n": "[EVIDENCE REQUIRED]",
+    "lambda_i": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "worst_A": "[EVIDENCE REQUIRED]",
+    "usable_pct": "[EVIDENCE REQUIRED]",
+    "optimism_pct": "[EVIDENCE REQUIRED]",
+    "rmse_A": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_shrink_oracle.csv": {
+   "rows": 4,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "worst_cell",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_cells",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_median_pct",
+    "usable_worst_pct",
+    "lambda_min",
+    "lambda_median",
+    "lambda_max",
+    "lambda_pooled_shipped",
+    "exceed_ub95_pct",
+    "usable_boot_lo_pct",
+    "usable_boot_hi_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_safety_strict.py --method shrink",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "n_cells": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_median_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "lambda_min": "[EVIDENCE REQUIRED]",
+    "lambda_median": "[EVIDENCE REQUIRED]",
+    "lambda_max": "[EVIDENCE REQUIRED]",
+    "lambda_pooled_shipped": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_lo_pct": "[EVIDENCE REQUIRED]",
+    "usable_boot_hi_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_tolsens_a3_oracle.csv": {
+   "rows": 16,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "tolerance_A": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_tolsens_ffrls_oracle.csv": {
+   "rows": 16,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "tolerance_A": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_tolsens_gru_oracle.csv": {
+   "rows": 16,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "tolerance_A": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_tolsens_lstm_oracle.csv": {
+   "rows": 16,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "tolerance_A": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "safety_strict_tolsens_shrink_oracle.csv": {
+   "rows": 16,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "soh_arm",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "tolerance_A",
+    "n_rows",
+    "exceed",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "exceed_ub95_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/[EVIDENCE REQUIRED]",
+   "stage": "safety_strict",
+   "units": {
+    "tau_s": "[EVIDENCE REQUIRED]",
+    "tolerance_A": "[EVIDENCE REQUIRED]",
+    "n_rows": "[EVIDENCE REQUIRED]",
+    "exceed": "[EVIDENCE REQUIRED]",
+    "usable_mean_pct": "[EVIDENCE REQUIRED]",
+    "usable_worst_pct": "[EVIDENCE REQUIRED]",
+    "exceed_ub95_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "chen2026_baseline.csv": {
+   "producer": "python3 repro/run_chen2026_baseline.py",
+   "stage": "chen2026",
+   "required": false,
+   "rows": 84,
+   "columns": [
+    "temp_set_C",
+    "temp_cell_C",
+    "SOC",
+    "SOP_meas_W",
+    "SOP_pred_W",
+    "error_W",
+    "limit_hit"
+   ],
+   "numeric": [
+    "temp_set_C",
+    "temp_cell_C",
+    "SOC",
+    "SOP_meas_W",
+    "SOP_pred_W",
+    "error_W"
+   ],
+   "units": {
+    "temp_set_C": "C",
+    "temp_cell_C": "C",
+    "SOC": "fraction",
+    "SOP_meas_W": "W",
+    "SOP_pred_W": "W",
+    "error_W": "W"
+   },
+   "note": "RPCWBY Test#3 external validation, physics-only model under Chen 2026 search"
+  },
+  "end_to_end.csv": {
+   "producer": "python3 repro/run_end_to_end.py",
+   "stage": "end_to_end",
+   "required": true,
+   "rows": 16,
+   "columns": [
+    "condition",
+    "direction",
+    "tau_s",
+    "n_rows",
+    "exceed",
+    "lambda_median",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "worst_cell"
+   ],
+   "numeric": [
+    "tau_s",
+    "n_rows",
+    "exceed",
+    "lambda_median",
+    "usable_mean_pct",
+    "usable_worst_pct"
+   ],
+   "units": {}
+  },
+  "external_a8.csv": {
+   "rows": 4356,
+   "columns": [
+    "fold",
+    "direction",
+    "cycle",
+    "SOH",
+    "temp_C",
+    "SOC",
+    "SOP_meas_W",
+    "SOP_A0_W",
+    "SOP_A8_W",
+    "k_f",
+    "k_s",
+    "limit_hit"
+   ],
+   "numeric": [
+    "cycle",
+    "SOH",
+    "temp_C",
+    "SOC",
+    "SOP_meas_W",
+    "SOP_A0_W",
+    "SOP_A8_W",
+    "k_f",
+    "k_s"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_external_a8.py",
+   "stage": "external",
+   "units": {
+    "cycle": "[EVIDENCE REQUIRED]",
+    "SOH": "[EVIDENCE REQUIRED]",
+    "temp_C": "[EVIDENCE REQUIRED]",
+    "SOC": "[EVIDENCE REQUIRED]",
+    "SOP_meas_W": "[EVIDENCE REQUIRED]",
+    "SOP_A0_W": "[EVIDENCE REQUIRED]",
+    "SOP_A8_W": "[EVIDENCE REQUIRED]",
+    "k_f": "[EVIDENCE REQUIRED]",
+    "k_s": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "soc_baselines.csv": {
+   "rows": 42,
+   "columns": [
+    "estimator",
+    "perturbation",
+    "rmse_mean_pct",
+    "rmse_worst_run_pct"
+   ],
+   "numeric": [
+    "rmse_mean_pct",
+    "rmse_worst_run_pct"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_soc_baselines.py",
+   "stage": "soc_baselines",
+   "units": {
+    "rmse_mean_pct": "[EVIDENCE REQUIRED]",
+    "rmse_worst_run_pct": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "soh_ablations.csv": {
+   "rows": 22,
+   "columns": [
+    "axis",
+    "variant",
+    "rmse_pooled",
+    "rmse_worst_cell",
+    "worst_cell",
+    "note"
+   ],
+   "numeric": [
+    "rmse_pooled",
+    "rmse_worst_cell"
+   ],
+   "required": false,
+   "producer": "python3 repro/run_soh_ablations.py",
+   "stage": "soh_ablations",
+   "units": {
+    "rmse_pooled": "[EVIDENCE REQUIRED]",
+    "rmse_worst_cell": "[EVIDENCE REQUIRED]"
+   }
+  },
+  "nested_selection.csv": {
+   "producer": "python3 repro/run_nested_selection.py",
+   "stage": "nested_selection",
+   "required": true,
+   "rows": 22,
+   "columns": [
+    "direction",
+    "tau_s",
+    "outer_cell",
+    "picked_rung",
+    "picked_agg",
+    "picked_tol_A",
+    "lambda",
+    "n_rows",
+    "exceed",
+    "outer_usable_pct",
+    "inner_usable_pct"
+   ],
+   "numeric": [
+    "tau_s",
+    "picked_tol_A",
+    "lambda",
+    "n_rows",
+    "exceed",
+    "outer_usable_pct",
+    "inner_usable_pct"
+   ],
+   "units": {}
+  },
+  "end_to_end_paired.csv": {
+   "producer": "python3 repro/run_end_to_end.py",
+   "stage": "end_to_end",
+   "required": false,
+   "rows": 16,
+   "columns": [
+    "condition",
+    "direction",
+    "tau_s",
+    "n_rows",
+    "exceed",
+    "exceed_rate_upper95_pct",
+    "worst_overshoot_A",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "lambda_median",
+    "per_cell_exceed"
+   ],
+   "numeric": [
+    "exceed",
+    "n_rows",
+    "usable_mean_pct",
+    "worst_overshoot_A",
+    "exceed_rate_upper95_pct",
+    "lambda_median",
+    "usable_worst_pct"
+   ]
+  },
+  "end_to_end_drift.csv": {
+   "producer": "python3 repro/run_end_to_end.py",
+   "stage": "end_to_end",
+   "required": false,
+   "rows": 16,
+   "columns": [
+    "condition",
+    "direction",
+    "tau_s",
+    "n_kept",
+    "n_common",
+    "n_outside",
+    "n_scored",
+    "exceed",
+    "exceed_rate_pct"
+   ],
+   "numeric": [
+    "n_kept",
+    "n_common",
+    "n_outside",
+    "n_scored",
+    "exceed"
+   ]
+  },
+  "external_a8_coverage.csv": {
+   "producer": "python3 repro/run_external_a8.py",
+   "stage": "external",
+   "required": false,
+   "rows": 30,
+   "columns": [
+    "axis",
+    "value",
+    "n_calls",
+    "n_in_hull",
+    "in_hull_pct"
+   ],
+   "numeric": [
+    "n_calls",
+    "n_in_hull",
+    "in_hull_pct"
+   ]
+  },
+  "external_a8_safety.csv": {
+   "producer": "python3 repro/run_external_a8.py",
+   "stage": "external",
+   "required": false,
+   "rows": 12,
+   "columns": [
+    "fold",
+    "direction",
+    "n_in_hull",
+    "lambda_uypydj",
+    "lambda_needed",
+    "margin",
+    "exceed",
+    "usable_pct",
+    "worst_overshoot_W"
+   ],
+   "numeric": [
+    "n_in_hull",
+    "lambda_uypydj",
+    "lambda_needed",
+    "margin",
+    "exceed",
+    "usable_pct",
+    "worst_overshoot_W"
+   ]
+  },
+  "soh_nested.csv": {
+   "producer": "python3 repro/run_soh_nested.py",
+   "stage": "soh_select",
+   "required": false,
+   "rows": 6,
+   "columns": [
+    "holdout",
+    "n",
+    "chosen_family",
+    "chosen_param",
+    "inner_rmse",
+    "outer_rmse",
+    "inner_mean baseline",
+    "inner_ridge",
+    "inner_PLS",
+    "inner_SVR (RBF)",
+    "inner_gradient boosting",
+    "inner_1D CNN"
+   ],
+   "numeric": [
+    "n",
+    "inner_rmse",
+    "outer_rmse",
+    "inner_mean baseline",
+    "inner_ridge",
+    "inner_PLS",
+    "inner_SVR (RBF)",
+    "inner_gradient boosting",
+    "inner_1D CNN"
+   ]
+  },
+  "soh_nested_summary.csv": {
+   "producer": "python3 repro/run_soh_nested.py",
+   "stage": "soh_select",
+   "required": false,
+   "rows": 1,
+   "columns": [
+    "procedure",
+    "rmse_pooled",
+    "rmse_mean_of_cells",
+    "rmse_worst_cell",
+    "worst_cell",
+    "families_chosen"
+   ],
+   "numeric": [
+    "rmse_pooled",
+    "rmse_mean_of_cells",
+    "rmse_worst_cell"
+   ]
+  },
+  "soh_model_cost.csv": {
+   "producer": "python3 repro/run_soh_deploy_tables.py",
+   "stage": "soh_deploy_tables",
+   "required": false,
+   "rows": 2,
+   "columns": [
+    "model",
+    "coefficients",
+    "rmse_pooled",
+    "rmse_worst_cell",
+    "worst_cell",
+    "soh_median_us",
+    "soh_p95_us",
+    "soh_max_us",
+    "firmware_text_B",
+    "firmware_bss_B"
+   ],
+   "numeric": [
+    "coefficients",
+    "rmse_pooled",
+    "rmse_worst_cell",
+    "soh_median_us",
+    "soh_p95_us",
+    "soh_max_us",
+    "firmware_text_B",
+    "firmware_bss_B"
+   ]
+  },
+  "mcu_icache.csv": {
+   "producer": "python3 repro/run_soh_deploy_tables.py",
+   "stage": "soh_deploy_tables",
+   "required": false,
+   "rows": 12,
+   "columns": [
+    "icache",
+    "soh_model",
+    "stage",
+    "median_us",
+    "p95_us",
+    "max_us",
+    "note"
+   ],
+   "numeric": [
+    "median_us",
+    "p95_us",
+    "max_us"
+   ]
+  },
+  "end_to_end_fixed_lambda.csv": {
+   "producer": "python3 repro/run_end_to_end.py",
+   "stage": "end_to_end",
+   "required": false,
+   "rows": 16,
+   "columns": [
+    "condition",
+    "direction",
+    "tau_s",
+    "n_rows",
+    "exceed",
+    "exceed_rate_upper95_pct",
+    "worst_overshoot_A",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "lambda_median_from_oracle",
+    "per_cell_exceed"
+   ],
+   "numeric": [
+    "n_rows",
+    "exceed",
+    "exceed_rate_upper95_pct",
+    "worst_overshoot_A",
+    "usable_mean_pct",
+    "usable_worst_pct",
+    "lambda_median_from_oracle"
+   ]
+  },
+  "method_comparison.csv": {
+   "producer": "python3 repro/run_method_comparison.py",
+   "stage": "method_comparison",
+   "required": false,
+   "rows": 24,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "usable_mean_pct",
+    "boot_lo_pct",
+    "boot_hi_pct",
+    "n_rows",
+    "exceed",
+    "usable_worst_pct",
+    "rank_in_condition",
+    "interval_vs_a8"
+   ],
+   "numeric": [
+    "usable_mean_pct",
+    "boot_lo_pct",
+    "boot_hi_pct",
+    "n_rows",
+    "exceed",
+    "usable_worst_pct",
+    "rank_in_condition"
+   ]
+  },
+  "external_temp_envelope.csv": {
+   "producer": "python3 repro/run_chen2026_baseline.py",
+   "stage": "chen2026",
+   "required": false,
+   "rows": 7,
+   "columns": [
+    "temp_set_C",
+    "temp_cell_C_mean",
+    "n_points",
+    "n_in_hull",
+    "in_hull_pct",
+    "soc_in_hull_min",
+    "soc_in_hull_max",
+    "lambda_shipped",
+    "lambda_needed",
+    "margin",
+    "exceed",
+    "exceed_ub95_pct",
+    "worst_overshoot_W",
+    "worst_raw_overshoot_W"
+   ],
+   "numeric": [
+    "n_points",
+    "n_in_hull",
+    "exceed",
+    "exceed_ub95_pct",
+    "lambda_shipped"
+   ],
+   "note": "The last row pools 0-40 C.  It leaves the per-temperature columns blank on purpose, so only the columns every row fills are declared numeric."
+  },
+  "mcu_cycle.csv": {
+   "producer": "python3 repro/run_mcu_table.py",
+   "stage": "mcu_table",
+   "required": false,
+   "rows": 2,
+   "columns": [
+    "case",
+    "soc_ekf_us",
+    "feat_a8_us",
+    "one_sop_us",
+    "four_sop_us",
+    "cycle_total_us",
+    "load_at_100Hz_pct"
+   ],
+   "numeric": [
+    "soc_ekf_us",
+    "feat_a8_us",
+    "one_sop_us",
+    "four_sop_us",
+    "cycle_total_us",
+    "load_at_100Hz_pct"
+   ]
+  },
+  "external_crate_envelope.csv": {
+   "producer": "python3 repro/run_external_crate.py",
+   "stage": "external_crate",
+   "required": false,
+   "rows": 7,
+   "columns": [
+    "prior_rate",
+    "n_points",
+    "n_in_hull",
+    "soc_in_hull_min",
+    "soc_in_hull_max",
+    "lambda_shipped",
+    "lambda_needed",
+    "margin",
+    "exceed",
+    "exceed_ub95_pct",
+    "worst_overshoot_W"
+   ],
+   "numeric": [
+    "n_points",
+    "n_in_hull",
+    "lambda_shipped",
+    "exceed",
+    "exceed_ub95_pct"
+   ],
+   "note": "The last row pools the six prior rates and leaves per-rate columns blank."
+  },
+  "soc_percell.csv": {
+   "producer": "python3 repro/run_soc_percell.py",
+   "stage": "soc_percell",
+   "required": true,
+   "rows": 6,
+   "columns": [
+    "cell",
+    "n_runs",
+    "undisturbed_pct",
+    "mean_6_pct",
+    "worst_of_6_pct",
+    "worst_perturbation"
+   ],
+   "numeric": [
+    "n_runs",
+    "undisturbed_pct",
+    "mean_6_pct",
+    "worst_of_6_pct"
+   ],
+   "units": {
+    "n_runs": "count",
+    "undisturbed_pct": "%p RMSE",
+    "mean_6_pct": "%p RMSE, mean over the six disturbances",
+    "worst_of_6_pct": "%p RMSE, worst single disturbance"
+   }
+  }
+ },
+ "completeness": {
+  "total_checks": 86,
+  "checks_per_table": {
+   "safety.csv": 6,
+   "ladder.csv": 9,
+   "pack.csv": 3,
+   "soc_perturb.csv": 4,
+   "voltage.csv": 10,
+   "mcu.csv": 4,
+   "soh.csv": 2,
+   "alpha.csv": 2,
+   "correlation.csv": 1,
+   "cold_ratio.csv": 2,
+   "soc_baselines.csv": 3,
+   "soh_ablations.csv": 2,
+   "end_to_end.csv": 3,
+   "build_size.csv": 2,
+   "end_to_end_paired.csv": 2,
+   "end_to_end_drift.csv": 1,
+   "external_a8_coverage.csv": 1,
+   "external_a8_safety.csv": 2,
+   "soh_model_cost.csv": 4,
+   "soh_nested_summary.csv": 1,
+   "soh_nested.csv": 1,
+   "mcu_icache.csv": 3,
+   "end_to_end_fixed_lambda.csv": 3,
+   "method_comparison.csv": 2,
+   "external_temp_envelope.csv": 5,
+   "mcu_cycle.csv": 2,
+   "external_crate_envelope.csv": 3,
+   "soc_percell.csv": 3
+  },
+  "check_ids": [
+   "sop.disc.10s.lambda",
+   "sop.disc.10s.usable",
+   "sop.chg.10s.lambda",
+   "sop.chg.10s.usable",
+   "sop.disc.10s.usable.est_soh",
+   "sop.chg.10s.usable.est_soh",
+   "ladder.disc.A0",
+   "ladder.disc.direct",
+   "ladder.disc.shrink",
+   "ladder.disc.A8",
+   "ladder.disc.A3",
+   "ladder.disc.rls_bound",
+   "ladder.chg.A8_beats_A3",
+   "ladder.chg.A3",
+   "ladder.chg.rls_bound_loses",
+   "pack.disc.10s.exceed.N192",
+   "pack.disc.10s.exceed.est.N192",
+   "pack.chg.10s.worst.N192",
+   "soc.adopted.no_perturb",
+   "soc.open_loop.no_perturb",
+   "soc.open_loop.ibias",
+   "soc.adopted.ibias",
+   "volt.disc.A0",
+   "volt.disc.direct",
+   "volt.disc.shrink",
+   "volt.disc.A8",
+   "volt.disc.A3",
+   "volt.disc.RLS",
+   "volt.char.A0",
+   "volt.char.A8",
+   "volt.char.A3",
+   "volt.char.RLS",
+   "mcu.feat",
+   "mcu.feat_a8",
+   "mcu.ekf",
+   "mcu.full",
+   "soh.rmse",
+   "soh.bias",
+   "alpha.disc.CC",
+   "alpha.chg.CC.slow",
+   "corr.disc.10s",
+   "cold.BOOST.ratio",
+   "cold.CC.ratio",
+   "soc.base.adopted.ibias",
+   "soc.base.dual.mean_ibias",
+   "soc.base.ukf.undist",
+   "soh.abl.dqdv",
+   "soh.abl.time_only",
+   "e2e.disch.oracle.usable",
+   "e2e.disch.est_est.usable",
+   "e2e.disch.est_est.exceed",
+   "mcu.build.both",
+   "mcu.build.a8_only",
+   "e2e.paired.disc.est_est.exceed",
+   "e2e.paired.disc.oracle.exceed",
+   "e2e.drift.disc.est_est.rate",
+   "ext.cov.disc",
+   "ext.safety.chg.margin",
+   "ext.safety.disc.exceed",
+   "soh.ridge.rmse",
+   "soh.cnn.rmse",
+   "soh.ridge.us",
+   "soh.cnn.us",
+   "soh.nested.pooled",
+   "soh.nested.cnn_inner.BOOST",
+   "mcu.icache.on.ridge",
+   "mcu.icache.off.ridge",
+   "mcu.icache.off.cnn",
+   "e2e.fixed.disc.est_est.exceed",
+   "e2e.fixed.disc.oracle.exceed",
+   "e2e.fixed.disc.est_est.usable",
+   "method.a8.rank.disc10",
+   "method.ffrls.disc10.usable",
+   "ext.temp.m20.margin",
+   "ext.temp.m20.exceed",
+   "ext.temp.0.margin",
+   "ext.temp.40.exceed",
+   "ext.temp.25.soc_min",
+   "mcu.cycle.median",
+   "mcu.cycle.sum_of_stage_maxima",
+   "ext.crate.0C.margin",
+   "ext.crate.4C.margin",
+   "ext.crate.pooled.exceed",
+   "soc.percell.worst",
+   "soc.percell.best",
+   "soc.percell.cc2"
+  ],
+  "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
+ }
 }

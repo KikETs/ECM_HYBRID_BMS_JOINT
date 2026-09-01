@@ -86,6 +86,27 @@ claims:
     producer: "python3 repro/run_soc_headline.py"
     status: CONTRADICTED
     replacement: "2.14 %p over the six disturbances; 2.05 %p only if the undisturbed row is included; worst condition 3.77 %p."
+    note: >
+      Since 37.13 the pooled number no longer travels alone: soc_percell.csv
+      breaks it into six cells, 1.834 (CC) to 2.474 (BOOST_NEGPULSE_1S), a
+      1.35x spread with a cell-cluster 95 % interval of [1.962, 2.326].  Quote
+      it with the spread or not at all.
+
+  - id: soc.percell.scope
+    text: >
+      (new, 37.13) The SOC spread is a per-cell CALIBRATED result, and cell is
+      confounded with protocol.
+    table: soc_percell.csv
+    producer: "python3 repro/run_soc_percell.py"
+    status: VERIFIED
+    note: >
+      Two limits travel with every SOC number.  Each filter reads its own
+      cell's characterisation surface, so unlike the SOP and SOH arms this is
+      not a leave-one-cell-out transfer and says nothing about an unseen cell.
+      And the dataset runs one physical cell per protocol, so holding out a
+      cell holds out a protocol too; CC / CC_CELL2 is the only same-protocol
+      pair, and it alone spans 1.29x of the 1.35x total.  Say "six
+      protocol-cell combinations".
 
   - id: mcu.cycle_time
     text: "214.8 us per control cycle, 142.1 KB flash"

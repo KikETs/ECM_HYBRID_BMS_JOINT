@@ -5779,3 +5779,53 @@ it — this is the nominal 2RC layer, and the trim exists precisely because that
 layer needs correcting from drive history. A reader could easily take "prior
 rate does not matter" as undermining the trim's premise; it does not, because
 the trim was never evaluated here.
+
+### 37.13 The SOC arm had a mean and nothing else
+
+The SOP arm publishes a per-cell held-out λ, the worst cell and a cell-cluster
+bootstrap interval. The SOH arm publishes a per-cell RMSE and the worst cell.
+The SOC arm published `2.140 %p` — one pooled mean over six disturbances — and
+a reader had no way to tell whether that is what every cell does or the average
+of one good cell and one bad one. The per-run errors existed; they were
+averaged away on the way to the table.
+
+`repro/run_soc_percell.py` takes the pooled number apart. It re-simulates
+nothing: `soc_perturb.npz` already holds every run's RMSE, and `soc_runs.pkl`
+carries the cell label of each run, so the decomposition cannot disagree with
+the headline. The row order in that array is config-major, and reading it
+wrong would silently publish another filter's numbers under the adopted
+filter's name, so the script asserts its own indexing against three values in
+`soc_headline.csv` before it writes anything.
+
+| Cell | undistorted | mean of 6 | worst of 6 | worst disturbance |
+|---|---:|---:|---:|---|
+| CC | 1.201 | **1.834** | 3.406 | current offset −0.10 A |
+| BOOST | 1.292 | 1.948 | 3.458 | current offset −0.10 A |
+| BOOST_NEGPULSE | 1.269 | 2.001 | 3.742 | current offset −0.10 A |
+| BOOST_REST | 1.565 | 2.213 | 4.243 | current offset −0.10 A |
+| CC_CELL2 | 1.818 | 2.372 | 4.321 | current offset −0.10 A |
+| BOOST_NEGPULSE_1S | 1.910 | **2.474** | 3.599 | current offset +0.10 A |
+
+Pooled 2.140 %p, worst cell 2.474, cell-cluster 95 % interval [1.962, 2.326]
+over six clusters. The spread is 1.35×, which is tight — the headline is not
+carried by one cell — and a current offset of ±0.10 A is the worst disturbance
+for every cell but one. That last point is the useful one for a deployment:
+the sensitivity that matters is current-sensor bias, not initial-SOC error.
+
+**Two things this is not.** Every filter reads its own cell's
+characterisation surface, so this is a per-cell *calibrated* deployment and
+the spread is over operating conditions within a cell — it is not a
+leave-one-cell-out transfer like the SOP and SOH arms, and nothing here says
+the filter works on a cell it has never seen. And the six cells each carry a
+different aging protocol, so a per-cell spread is a cell-and-protocol spread.
+
+That second point is worth stating on its own, because it reaches past the SOC
+arm. **The dataset runs one physical cell per protocol.** Holding out
+BOOST_REST holds out a protocol and a cell at once, and no result in this
+repository can say which of the two moved. CC and CC_CELL2 — same protocol,
+second cell — are the only clean read on cell-to-cell variation in the entire
+set, and they span 1.834 to 2.372 %p, a 1.29× ratio against the 1.35× spread
+over all six. Nearly the whole apparent protocol effect is reproducible from
+two cells running the *same* protocol. `generalization_scope.yaml` therefore
+holds `protocol` at PARTIAL as well as `cell`, and the claim limit is "six
+protocol-cell combinations", never "generalises across charge protocols".
