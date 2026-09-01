@@ -8,6 +8,10 @@ matters more than the headline numbers:
 
 * **SOP and SOH** are leave-one-cell-out: the model scoring cell *i* never
   saw cell *i*, and the safety factor λ is fitted with cell *i* removed too.
+  The dataset runs one cell per aging protocol, so holding out a cell holds
+  out its protocol as well — a harder held-out test than cell variation
+  alone, and one whose result cannot be attributed to either factor
+  separately. CC and CC_CELL2 are the only same-protocol pair.
 * **SOC** is *not*. Every filter reads its own cell's characterisation
   surface, so the EKF numbers describe a per-cell-calibrated deployment, not
   a transfer to an unseen cell.
