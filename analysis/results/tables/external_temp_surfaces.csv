@@ -1,0 +1,8 @@
+surface,warm_worst_margin,warm_exceed,warm_n,warm_exceed_ub95_pct,cold_m10_margin,cold_m20_margin,cold_m20_exceed,cold_m20_n
+BOOST,1.248,0,32,8.9,0.861,0.550,4,8
+BOOST_NEGPULSE,1.213,0,32,8.9,0.728,0.419,5,8
+BOOST_NEGPULSE_1S,1.339,0,31,9.2,0.869,0.481,4,8
+BOOST_REST,1.170,0,32,8.9,0.701,0.404,3,8
+CC,1.394,0,31,9.2,0.878,0.486,5,8
+CC_CELL2,1.156,0,32,8.9,0.716,0.412,5,8
+worst over surfaces,1.156,0,32,,0.701,0.404,5,8

@@ -21,18 +21,25 @@ OUT = os.path.join(ANALYSIS, 'results', 'eval')
 SOH_PRED = os.path.join(ANALYSIS, 'results', 'soh_pred.npz')
 
 # (name, discharge trim dir, charge trim dir, also run estimated SOH)
+#
+# The estimated-SOH column was True for a8 and a3 only, so the six-method
+# comparison ranked every method on ORACLE SOH -- and four of the six had
+# never been evaluated under estimated SOH at all.  That makes the ranking a
+# statement about a condition the deployment does not have.  The four
+# baselines in method_comparison.csv are now True as well; 'rls' and 'direct'
+# stay False because neither appears in that comparison.
 TRIMS = [
     ('a8',     'runs_trim_a8',      'runs_trim_a8_chg',      True),
     ('a3',     'runs_trim_v2',      'runs_trim_chg_v2',      True),
     ('direct', 'runs_trim_direct',  'runs_trim_direct_chg',  False),
-    ('shrink', 'runs_trim_shrink',  'runs_trim_shrink_chg',  False),
+    ('shrink', 'runs_trim_shrink',  'runs_trim_shrink_chg',  True),
     ('rls',    'runs_trim_rls',     'runs_trim_rls_chg',     False),
     # Added by the audit: a sequence model over the same 12 causal drive
     # blocks, and a forgetting-factor RLS adaptive ECM.  Same splits, same
     # output head, same inversion.
-    ('lstm',   'runs_trim_lstm',    'runs_trim_lstm_chg',    False),
-    ('gru',    'runs_trim_gru',     'runs_trim_gru_chg',     False),
-    ('ffrls',  'runs_trim_ffrls',   'runs_trim_ffrls_chg',   False),
+    ('lstm',   'runs_trim_lstm',    'runs_trim_lstm_chg',    True),
+    ('gru',    'runs_trim_gru',     'runs_trim_gru_chg',     True),
+    ('ffrls',  'runs_trim_ffrls',   'runs_trim_ffrls_chg',   True),
 ]
 
 # The adopted evaluation configuration.  31.1 confirmed it reproduces

@@ -84,15 +84,16 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `soh_ablations` | 3 | `python3 ../repro/run_soh_ablations.py` | `results/tables/soh_ablations.csv` |
 | `soc_baselines` | 4 | `python3 ../repro/run_soc_baselines.py` | `results/tables/soc_baselines.csv` |
 | `soc_headline` | 3 | `python3 ../repro/run_soc_headline.py` | `results/tables/soc_headline.csv` |
+| `soc_soh_selection` | 50 | `python3 ../repro/run_soc_soh_selection.py` | `results/tables/soc_soh_selection.csv` |
 | `soc_percell` | 1 | `python3 ../repro/run_soc_percell.py` | `results/tables/soc_percell.csv` |
 | `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
 | `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `runs_trim_lstm +2` |
-| `chen2026` | 6 | `python3 ../repro/run_chen2026_baseline.py` | `results/tables/chen2026_baseline.csv +1` |
+| `chen2026` | 7 | `python3 ../repro/run_chen2026_baseline.py && python3 ../repro/run_chen2026_baseline.py --all-surfaces` | `results/tables/chen2026_baseline.csv +2` |
 | `external_crate` | 3 | `python3 ../repro/run_external_crate.py && python3 ../repro/run_external_crate.py --all-surfaces` | `results/tables/external_crate_envelope.csv +1` |
 | `nested_selection` | 120 | `python3 ../repro/run_nested_selection.py` | `results/tables/nested_selection.csv` |
 | `end_to_end` | 12 | `python3 ../repro/run_end_to_end.py` | `results/tables/end_to_end.csv +3` |
-| `external` | 15 | `python3 ../repro/run_external_a8.py` | `results/tables/external_a8.csv +2` |
-| `method_comparison` | 1 | `python3 ../repro/run_method_comparison.py` | `results/tables/method_comparison.csv` |
+| `external` | 105 | `python3 ../repro/run_external_a8.py && python3 ../repro/run_external_a8.py --all-surfaces` | `results/tables/external_a8.csv +3` |
+| `method_comparison` | 1 | `python3 ../repro/run_method_comparison.py && python3 ../repro/run_method_comparison.py --arm est` | `results/tables/method_comparison.csv +1` |
 
 ### tier 6 — board
 
@@ -103,7 +104,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv +1` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: 1069 minutes (17.8 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (47 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 568 minutes (9.5 h).
+Full rebuild: 1210 minutes (20.2 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (41 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 709 minutes (11.8 h).
 
 ## Published numbers
 
@@ -200,6 +201,19 @@ Full rebuild: 1069 minutes (17.8 h) if every stage takes the time recorded again
 | `ext.crate.surface.margin_min` | 1.351 | `external_crate_surfaces.csv` | sec 37.14 |
 | `ext.crate.surface.margin_max` | 1.655 | `external_crate_surfaces.csv` | sec 37.14 |
 | `ext.crate.surface.boost` | 1.448 | `external_crate_surfaces.csv` | sec 37.14 |
+| `ext.temp.surface.warm_worst` | 1.156 | `external_temp_surfaces.csv` | sec 37.15 |
+| `ext.temp.surface.warm_best` | 1.394 | `external_temp_surfaces.csv` | sec 37.15 |
+| `ext.temp.surface.m20_exceed` | 3 | `external_temp_surfaces.csv` | sec 37.15 |
+| `soc.soh.adopted.est` | 2.206 | `soc_soh_selection.csv` | sec 37.16 |
+| `soc.soh.adopted.oracle` | 2.14 | `soc_soh_selection.csv` | sec 37.16 |
+| `soc.soh.adopted.bias_up` | 2.405 | `soc_soh_selection.csv` | sec 37.16 |
+| `soc.soh.adopted.rank` | 1 | `soc_soh_selection.csv` | sec 37.16 |
+| `method.a8.rank.disc10.est` | 1 | `method_comparison_est.csv` | sec 37.17 |
+| `method.a8.rank.chg10.est` | 4 | `method_comparison_est.csv` | sec 37.17 |
+| `ext.a8.surface.disc_worst` | 1.125 | `external_a8_surfaces.csv` | sec 37.18 |
+| `ext.a8.surface.disc_cc` | 1.297 | `external_a8_surfaces.csv` | sec 37.18 |
+| `ext.a8.surface.chg_worst` | 0.61 | `external_a8_surfaces.csv` | sec 37.18 |
+| `ext.a8.surface.disc_exceed` | 0 | `external_a8_surfaces.csv` | sec 37.18 |
 
 ## Cells and evaluation protocol
 

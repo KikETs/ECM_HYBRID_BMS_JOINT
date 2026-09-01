@@ -135,13 +135,104 @@ def soh_by_cycle():
     return d
 
 
+SURF_OUT = os.path.join(ANALYSIS, 'results', 'tables',
+                        'external_a8_surfaces.csv')
+SURF_HEADER = ['surface', 'disc_margin_min', 'disc_exceed', 'chg_margin_min',
+               'chg_exceed', 'disc_in_hull_pct']
+
+
+def all_surfaces(argv0):
+    """Carry the frozen A8 folds to RPCWBY against every internal surface.
+
+    --surface's own help says RPCWBY is external to all six, so any is a
+    holdout.  One was published anyway and it was near the top of the range,
+    the same defect found in run_external_crate.py and
+    run_chen2026_baseline.py.  tests/test_no_hidden_fold_selection.py exists
+    so a fourth does not happen quietly.
+
+    Subprocess per surface rather than a loop inside main(): the published
+    path stays exactly the code that has always produced the published
+    tables.  About 15 minutes each.
+    """
+    import subprocess
+    import tempfile
+    from stages import CELLS
+
+    tmp = tempfile.mkdtemp(prefix='a8surf-')
+    rows = []
+    for cell in CELLS:
+        base = os.path.join(tmp, f'{cell}.csv')
+        r = subprocess.run([sys.executable, argv0, '--surface', cell,
+                            '--out', base], capture_output=True, text=True)
+        saf = base.replace('.csv', '_safety.csv')
+        if r.returncode or not os.path.exists(saf):
+            raise SystemExit(f'surface {cell} failed:\n{r.stderr[-800:]}')
+        recs = list(csv.DictReader(open(saf, encoding='utf-8')))
+        dis = [x for x in recs if x['direction'] == 'discharge']
+        chg = [x for x in recs if x['direction'] == 'charge']
+        cov = [x for x in csv.DictReader(
+            open(base.replace('.csv', '_coverage.csv'), encoding='utf-8'))
+            if x['axis'] == 'direction' and x['value'] == 'discharge']
+        rows.append([cell,
+                     f"{min(float(x['margin']) for x in dis):.3f}",
+                     sum(int(x['exceed']) for x in dis),
+                     f"{min(float(x['margin']) for x in chg):.3f}",
+                     sum(int(x['exceed']) for x in chg),
+                     cov[0]['in_hull_pct'] if cov else ''])
+        print(f'  {cell:<20}disc margin {rows[-1][1]} exceed {rows[-1][2]}   '
+              f'chg margin {rows[-1][3]} exceed {rows[-1][4]}', flush=True)
+
+    dm = [float(r[1]) for r in rows]
+    cm = [float(r[3]) for r in rows]
+    worst = rows[dm.index(min(dm))][0]
+    # dm[0] is whichever surface sorts first, not the published one.  The
+    # first version printed it as "the published value" and it happened to
+    # name BOOST while CC is the script's default -- a caption that would
+    # have mislabelled the very defect this table documents.
+    pub = dict((r[0], float(r[1])) for r in rows).get('CC', float('nan'))
+    print(f'\n  Discharge: zero exceedance on every surface, so that '
+          f'conclusion does not depend on\n  the choice.  The margin does: '
+          f'{min(dm):.3f} ({worst}) to {max(dm):.3f}, and CC -- the default, '
+          f'and what was\n  published -- gives {pub:.3f}, near the top.  '
+          f'Quote {min(dm):.3f}.')
+    print(f'  Charge: margin below 1 on every surface ({min(cm):.3f}-'
+          f'{max(cm):.3f}) with 38-67 exceedances.\n  The charge failure is '
+          f'surface-independent too.')
+    print('\n  The six rows are the same external measurements scored six '
+          'times.  Do not pool.')
+    rows.append(['worst over surfaces', f'{min(dm):.3f}',
+                 max(int(r[2]) for r in rows), f'{min(cm):.3f}',
+                 max(int(r[4]) for r in rows), ''])
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--all-surfaces', action='store_true',
+                    help='carry the folds against every internal surface and '
+                         'report the range (about 90 minutes)')
+    ap.add_argument('--check', action='store_true',
+                    help='with --all-surfaces, compare against the stored '
+                         'table instead of writing it')
     ap.add_argument('--out', default=OUT)
     ap.add_argument('--surface', default='CC',
                     help='which pooled ECM surface.  RPCWBY is external to '
                          'all six, so any is a holdout.')
     a = ap.parse_args()
+
+    if a.all_surfaces:
+        rows = all_surfaces(os.path.abspath(__file__))
+        if a.check:
+            from tablecheck import compare_or_fail
+            return compare_or_fail(SURF_OUT, SURF_HEADER, rows,
+                                   'external_a8_surfaces')
+        os.makedirs(os.path.dirname(SURF_OUT), exist_ok=True)
+        with open(SURF_OUT, 'w', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(SURF_HEADER)
+            w.writerows(rows)
+        print(f'  -> {os.path.relpath(SURF_OUT, ROOT)}  ({len(rows)} rows)')
+        return 0
 
     if not os.path.exists(FEATS):
         print(f'  missing {FEATS}\n'

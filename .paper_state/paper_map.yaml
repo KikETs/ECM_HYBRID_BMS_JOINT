@@ -85,7 +85,7 @@ claims:
     table: soc_headline.csv
     producer: "python3 repro/run_soc_headline.py"
     status: CONTRADICTED
-    replacement: "2.14 %p over the six disturbances; 2.05 %p only if the undisturbed row is included; worst condition 3.77 %p."
+    replacement: "2.21 %p over the six disturbances on ESTIMATED SOH, which is the deployment condition; 2.14 %p on true SOH; 2.05 %p only if the undisturbed row is included; worst condition 3.78 %p."
     note: >
       Since 37.13 the pooled number no longer travels alone: soc_percell.csv
       breaks it into six cells, 1.834 (CC) to 2.474 (BOOST_NEGPULSE_1S), a
@@ -108,6 +108,25 @@ claims:
       pair, and it alone spans 1.29x of the 1.35x total.  Say "six
       protocol-cell combinations".
 
+  - id: soh.conditioning
+    text: >
+      (new, 37.16/37.17) Every headline is now quoted on ESTIMATED SOH, and
+      both selections were re-checked under it.
+    table: soc_soh_selection.csv
+    producer: "python3 repro/run_soc_soh_selection.py"
+    status: VERIFIED
+    note: >
+      Two selections had been made on true SOH.  The SOC filter survives:
+      the adopted gate configuration places first under oracle, estimated
+      and +-0.02 bias, so 2.206 %p replaces 2.140 without changing the
+      filter.  The SOP method ranking does not: A8 moves from [3,3,2,5] to
+      [4,3,1,5] and the leader changes in three of four conditions, because
+      four of the six baselines had never been evaluated under estimated SOH
+      at all.  The separation count is 3 of 20 in both arms, so the weak
+      claim survives.  Overestimating SOH costs 3x what underestimating does
+      (+0.264 vs +0.091 %p) - R_volt falls with apparent health, so the
+      filter trusts a model that is wrong by more than it thinks.
+
   - id: core.safe_claim
     text: >
       The sentence the repository is entitled to: "A8 provides competitive
@@ -119,13 +138,30 @@ claims:
     ledger: reviewer, fifth round, 2026-09-01
     note: >
       Every word of it is backed: "competitive" by method_comparison.csv
-      (A8 ranks 3rd, 3rd, 2nd, 5th of six, 3 of 20 intervals separate and
+      (under estimated SOH A8 ranks 4th, 3rd, 1st, 5th of six; 3 of 20
+      intervals separate in both SOH arms and
       all three are FFRLS), "compact" by soh_model_cost.csv and the
       firmware build, and the three named limitations by 37.2, 35.5/37.14
       and 37.4/37.13.  Five words may NOT be used, and qc.py now fails on
       each rather than leaving it to a reader: superior, statistically
       equivalent, pack-validated, generalizable across cells or protocols,
       formal WCET.  Corpus cases pin all five in both directions.
+
+  - id: ext.temp.margin
+    text: >
+      (37.4/37.15) The frozen lambda is conservative from 0 to 40 C above SOC
+      0.30 and is not below 0 C.
+    table: external_temp_surfaces.csv
+    producer: "python3 repro/run_chen2026_baseline.py --all-surfaces"
+    status: VERIFIED
+    note: >
+      Surface-independent in its conclusions and not in its numbers.  All six
+      internal surfaces give zero exceedance 0-40 C, exceedance at -20 C, and
+      a margin below 1 at -10 C.  The 0-40 C margin spans 1.156 (CC_CELL2) to
+      1.394 (CC), and 37.4 published 1.394 because --holdout defaults to CC.
+      Quote 1.156.  The 9.2 % pooled bound is exact-binomial over rows of one
+      external cell, conditional on the tested grid, and the six surface rows
+      are the same measurements scored six times - not poolable.
 
   - id: ext.crate.margin
     text: >
@@ -216,7 +252,8 @@ claims:
       Current, from method_comparison.csv: on discharge 10 s the ranking is
       A3 70.03 %, A8 69.61, GRU 69.54, LSTM 69.09, shrinkage 64.69, FFRLS
       43.28, and every bootstrap interval except FFRLS overlaps A8's.  Across
-      the four direction x horizon conditions A8 places 3rd, 3rd, 2nd and 5th
+      the four direction x horizon conditions A8 places 4th, 3rd, 1st and 5th
+      under estimated SOH (3rd, 3rd, 2nd, 5th on oracle; 37.17) and 5th
       of six - never first - and 3 of 20 intervals separate from it, all three
       FFRLS.  A larger sequence model does not do better on the property the
       paper claims, at 1,100x the parameters; nor does the trim beat them.
@@ -376,7 +413,8 @@ claims:
       not superiority, and not a qualified production estimator.  See 35.8.
       [SUPERSEDED 2026-08-31, third round]  "Equivalence" is withdrawn too: no
       margin was pre-specified and no noninferiority test was run.  A8 places
-      3rd, 3rd, 2nd and 5th of six across the four direction x horizon
+      4th, 3rd, 1st and 5th of six under estimated SOH, 3rd/3rd/2nd/5th on
+      oracle, across the four direction x horizon
       conditions and only FFRLS separates from it, so the supported word is
       COMPETITIVE.  See 37.3 and method_comparison.csv.
   - id: soh.model_family

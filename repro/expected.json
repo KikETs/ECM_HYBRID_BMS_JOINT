@@ -1088,6 +1088,157 @@
    "value": 1.448,
    "source": "sec 37.14 — a middle surface; the spread is 1.22x",
    "tol": 0.002
+  },
+  {
+   "id": "ext.temp.surface.warm_worst",
+   "table": "external_temp_surfaces.csv",
+   "where": {
+    "surface": "CC_CELL2"
+   },
+   "column": "warm_worst_margin",
+   "value": 1.156,
+   "source": "sec 37.15 — worst 0-40 C margin of the six surfaces; the figure to quote instead of CC 1.394",
+   "tol": 0.002
+  },
+  {
+   "id": "ext.temp.surface.warm_best",
+   "table": "external_temp_surfaces.csv",
+   "where": {
+    "surface": "CC"
+   },
+   "column": "warm_worst_margin",
+   "value": 1.394,
+   "source": "sec 37.15 — the published surface, the most favourable of six",
+   "tol": 0.002
+  },
+  {
+   "id": "ext.temp.surface.m20_exceed",
+   "table": "external_temp_surfaces.csv",
+   "where": {
+    "surface": "BOOST_REST"
+   },
+   "column": "cold_m20_exceed",
+   "value": 3,
+   "source": "sec 37.15 — every surface exceeds at -20 C; the failure is surface-independent",
+   "tol": 0
+  },
+  {
+   "id": "soc.soh.adopted.est",
+   "table": "soc_soh_selection.csv",
+   "where": {
+    "soh_input": "estimated",
+    "config": "EKF adopted (gate)"
+   },
+   "column": "mean_6_pct",
+   "value": 2.206,
+   "source": "sec 37.16 — the SOC headline under the SOH the estimator actually produces; the deployment condition",
+   "tol": 0.005
+  },
+  {
+   "id": "soc.soh.adopted.oracle",
+   "table": "soc_soh_selection.csv",
+   "where": {
+    "soh_input": "oracle",
+    "config": "EKF adopted (gate)"
+   },
+   "column": "mean_6_pct",
+   "value": 2.14,
+   "source": "sec 37.16 — the same filter on true SOH, which is what the selection saw and what the headline used to quote",
+   "tol": 0.005
+  },
+  {
+   "id": "soc.soh.adopted.bias_up",
+   "table": "soc_soh_selection.csv",
+   "where": {
+    "soh_input": "bias +0.02",
+    "config": "EKF adopted (gate)"
+   },
+   "column": "mean_6_pct",
+   "value": 2.405,
+   "source": "sec 37.16 — overestimating SOH costs 3x what underestimating it does (+0.264 against +0.091)",
+   "tol": 0.005
+  },
+  {
+   "id": "soc.soh.adopted.rank",
+   "table": "soc_soh_selection.csv",
+   "where": {
+    "soh_input": "estimated",
+    "config": "EKF adopted (gate)"
+   },
+   "column": "rank_by_mean6",
+   "value": 1,
+   "source": "sec 37.16 — the adopted filter still places first under estimated SOH, so the choice was not an oracle artefact",
+   "tol": 0
+  },
+  {
+   "id": "method.a8.rank.disc10.est",
+   "table": "method_comparison_est.csv",
+   "where": {
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "method": "a8"
+   },
+   "column": "rank_in_condition",
+   "value": 1,
+   "source": "sec 37.17 — under estimated SOH A8 places FIRST here, against 2nd on oracle: it degrades least",
+   "tol": 0
+  },
+  {
+   "id": "method.a8.rank.chg10.est",
+   "table": "method_comparison_est.csv",
+   "where": {
+    "direction": "charge",
+    "tau_s": "10.0",
+    "method": "a8"
+   },
+   "column": "rank_in_condition",
+   "value": 4,
+   "source": "sec 37.17 — and 4th here, against 3rd on oracle; the ranking moves in both directions",
+   "tol": 0
+  },
+  {
+   "id": "ext.a8.surface.disc_worst",
+   "table": "external_a8_surfaces.csv",
+   "where": {
+    "surface": "BOOST_REST"
+   },
+   "column": "disc_margin_min",
+   "value": 1.125,
+   "source": "sec 37.18 — worst discharge margin of the six surfaces; the figure to quote instead of CC 1.297",
+   "tol": 0.002
+  },
+  {
+   "id": "ext.a8.surface.disc_cc",
+   "table": "external_a8_surfaces.csv",
+   "where": {
+    "surface": "CC"
+   },
+   "column": "disc_margin_min",
+   "value": 1.297,
+   "source": "sec 37.18 — the default surface, near the top of the range",
+   "tol": 0.002
+  },
+  {
+   "id": "ext.a8.surface.chg_worst",
+   "table": "external_a8_surfaces.csv",
+   "where": {
+    "surface": "CC_CELL2"
+   },
+   "column": "chg_margin_min",
+   "value": 0.61,
+   "source": "sec 37.18 — charge fails on every surface; worst margin",
+   "tol": 0.002
+  },
+  {
+   "id": "ext.a8.surface.disc_exceed",
+   "table": "external_a8_surfaces.csv",
+   "where": {
+    "surface": "BOOST_REST"
+   },
+   "column": "disc_exceed",
+   "value": 0,
+   "source": "sec 37.18 — zero discharge exceedance on every surface, so that conclusion is surface-independent",
+   "tol": 0
   }
  ],
  "tables": {
@@ -3087,10 +3238,124 @@
     "rmse_full_pct": "%p over the whole run",
     "rmse_tail_pct": "%p over the last quarter"
    }
+  },
+  "external_temp_surfaces.csv": {
+   "producer": "python3 repro/run_chen2026_baseline.py --all-surfaces",
+   "stage": "chen2026",
+   "required": true,
+   "rows": 7,
+   "columns": [
+    "surface",
+    "warm_worst_margin",
+    "warm_exceed",
+    "warm_n",
+    "warm_exceed_ub95_pct",
+    "cold_m10_margin",
+    "cold_m20_margin",
+    "cold_m20_exceed",
+    "cold_m20_n"
+   ],
+   "numeric": [
+    "warm_worst_margin",
+    "warm_exceed",
+    "warm_n",
+    "cold_m10_margin",
+    "cold_m20_margin",
+    "cold_m20_exceed",
+    "cold_m20_n"
+   ],
+   "units": {
+    "warm_worst_margin": "ratio of lambda_needed to the shipped 0.6832, worst over 0/25/40 C",
+    "cold_m10_margin": "same at -10 C",
+    "cold_m20_margin": "same at -20 C",
+    "warm_exceed_ub95_pct": "%, Clopper-Pearson over ROWS of one external cell, conditional on the grid"
+   }
+  },
+  "soc_soh_selection.csv": {
+   "producer": "python3 repro/run_soc_soh_selection.py",
+   "stage": "soc_soh_selection",
+   "required": true,
+   "rows": 20,
+   "columns": [
+    "soh_input",
+    "config",
+    "undisturbed_pct",
+    "mean_6_pct",
+    "worst_of_6_pct",
+    "rank_by_mean6",
+    "delta_vs_oracle_pct"
+   ],
+   "numeric": [
+    "undisturbed_pct",
+    "mean_6_pct",
+    "worst_of_6_pct",
+    "rank_by_mean6",
+    "delta_vs_oracle_pct"
+   ],
+   "units": {
+    "mean_6_pct": "%p RMSE, mean over the six sensor disturbances",
+    "delta_vs_oracle_pct": "%p, this SOH input minus oracle"
+   }
+  },
+  "method_comparison_est.csv": {
+   "producer": "python3 repro/run_method_comparison.py --arm est",
+   "stage": "method_comparison",
+   "required": true,
+   "rows": 24,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "usable_mean_pct",
+    "boot_lo_pct",
+    "boot_hi_pct",
+    "n_rows",
+    "exceed",
+    "usable_worst_pct",
+    "rank_in_condition",
+    "interval_vs_a8"
+   ],
+   "numeric": [
+    "tau_s",
+    "usable_mean_pct",
+    "boot_lo_pct",
+    "boot_hi_pct",
+    "n_rows",
+    "exceed",
+    "usable_worst_pct",
+    "rank_in_condition"
+   ],
+   "units": {
+    "usable_mean_pct": "% of measured SOP usable after the safety factor, estimated SOH fed to the inversion"
+   }
+  },
+  "external_a8_surfaces.csv": {
+   "producer": "python3 repro/run_external_a8.py --all-surfaces",
+   "stage": "external",
+   "required": true,
+   "rows": 7,
+   "columns": [
+    "surface",
+    "disc_margin_min",
+    "disc_exceed",
+    "chg_margin_min",
+    "chg_exceed",
+    "disc_in_hull_pct"
+   ],
+   "numeric": [
+    "disc_margin_min",
+    "disc_exceed",
+    "chg_margin_min",
+    "chg_exceed"
+   ],
+   "units": {
+    "disc_margin_min": "ratio of lambda_needed to the shipped factor, worst over the six A8 folds",
+    "chg_margin_min": "same on charge; below 1 means not conservative"
+   }
   }
  },
  "completeness": {
-  "total_checks": 89,
+  "total_checks": 102,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3120,7 +3385,11 @@
    "mcu_cycle.csv": 2,
    "external_crate_envelope.csv": 3,
    "soc_percell.csv": 3,
-   "external_crate_surfaces.csv": 3
+   "external_crate_surfaces.csv": 3,
+   "external_temp_surfaces.csv": 3,
+   "soc_soh_selection.csv": 4,
+   "method_comparison_est.csv": 2,
+   "external_a8_surfaces.csv": 4
   },
   "check_ids": [
    "sop.disc.10s.lambda",
@@ -3211,7 +3480,20 @@
    "soc.percell.cc2",
    "ext.crate.surface.margin_min",
    "ext.crate.surface.margin_max",
-   "ext.crate.surface.boost"
+   "ext.crate.surface.boost",
+   "ext.temp.surface.warm_worst",
+   "ext.temp.surface.warm_best",
+   "ext.temp.surface.m20_exceed",
+   "soc.soh.adopted.est",
+   "soc.soh.adopted.oracle",
+   "soc.soh.adopted.bias_up",
+   "soc.soh.adopted.rank",
+   "method.a8.rank.disc10.est",
+   "method.a8.rank.chg10.est",
+   "ext.a8.surface.disc_worst",
+   "ext.a8.surface.disc_cc",
+   "ext.a8.surface.chg_worst",
+   "ext.a8.surface.disc_exceed"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

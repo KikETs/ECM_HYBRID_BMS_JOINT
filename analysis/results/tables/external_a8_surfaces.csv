@@ -1,0 +1,8 @@
+surface,disc_margin_min,disc_exceed,chg_margin_min,chg_exceed,disc_in_hull_pct
+BOOST,1.302,0,0.677,63,55.0
+BOOST_NEGPULSE,1.186,0,0.610,47,54.2
+BOOST_NEGPULSE_1S,1.210,0,0.677,67,53.9
+BOOST_REST,1.125,0,0.706,38,55.2
+CC,1.297,0,0.677,57,54.2
+CC_CELL2,1.246,0,0.610,58,55.0
+worst over surfaces,1.125,0,0.610,67,

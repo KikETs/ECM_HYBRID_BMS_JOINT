@@ -203,8 +203,94 @@ def chen_search(surf, soc0, soh, T, L, ocv_fn):
     return best, lim
 
 
+SURF_OUT = os.path.join(ANALYSIS, 'results', 'tables',
+                        'external_temp_surfaces.csv')
+SURF_HEADER = ['surface', 'warm_worst_margin', 'warm_exceed', 'warm_n',
+               'warm_exceed_ub95_pct', 'cold_m10_margin', 'cold_m20_margin',
+               'cold_m20_exceed', 'cold_m20_n']
+
+
+def all_surfaces(tau, soh):
+    """The temperature envelope against every internal surface.
+
+    --holdout's own help says it: RPCWBY is external, so no UYPYDJ cell is
+    held out here and every surface is equally entitled to be used.  One was
+    published anyway, and it was the most favourable -- the same defect the
+    fifth review found in the C-rate sweep, in the script next door.
+
+    Runs this file once per surface as a subprocess rather than refactoring
+    a 392-line main() around a loop: the published path stays the code that
+    has always produced the published table, and the sweep cannot change it
+    by accident.
+    """
+    import subprocess
+    import tempfile
+    from stages import CELLS
+
+    def num(x):
+        try:
+            return float(x)
+        except ValueError:
+            return None
+
+    rows = []
+    tmp = tempfile.mkdtemp(prefix='tempsweep-')
+    for cell in CELLS:
+        env = os.path.join(tmp, f'env_{cell}.csv')
+        base = os.path.join(tmp, f'base_{cell}.csv')
+        r = subprocess.run(
+            [sys.executable, os.path.abspath(__file__), '--holdout', cell,
+             '--tau', str(tau), '--soh', str(soh), '--out', base,
+             '--envelope-out', env], capture_output=True, text=True)
+        if r.returncode or not os.path.exists(env):
+            raise SystemExit(f'surface {cell} failed:\n{r.stderr[-800:]}')
+        per = list(csv.DictReader(open(env, encoding='utf-8')))
+        temps = [x for x in per if num(x['temp_set_C']) is not None]
+        pooled = [x for x in per if num(x['temp_set_C']) is None]
+        warm = [x for x in temps if float(x['temp_set_C']) >= 0]
+        at = {x['temp_set_C']: x for x in temps}
+        rows.append([
+            cell,
+            f"{min(float(x['margin']) for x in warm):.3f}",
+            sum(int(x['exceed']) for x in warm),
+            sum(int(x['n_in_hull']) for x in warm),
+            pooled[0]['exceed_ub95_pct'] if pooled else '',
+            at['-10']['margin'], at['-20']['margin'],
+            at['-20']['exceed'], at['-20']['n_in_hull']])
+        print(f"  {cell:<20}0-40 C worst margin {rows[-1][1]}   "
+              f"{rows[-1][2]}/{rows[-1][3]} exceed   "
+              f"-20 C {at['-20']['exceed']}/{at['-20']['n_in_hull']}")
+
+    warm_margins = [float(r[1]) for r in rows]
+    lo, hi = min(warm_margins), max(warm_margins)
+    worst = rows[int(np.argmin(warm_margins))][0]
+    print(f'\n  Every surface: zero exceedance from 0 to 40 C, and '
+          f'exceedance at -20 C.  Both conclusions\n  are '
+          f'surface-independent.  The MARGIN is not: 0-40 C worst spans '
+          f'{lo:.3f} ({worst}) to {hi:.3f},\n  and the published '
+          f'{hi:.3f} was the most favourable of the six.  Quote {lo:.3f}.')
+    print('  At -10 C no surface is conservative (margin 0.70-0.88), so that '
+          'failure is robust too.')
+    print('\n  The six rows are NOT independent evidence: the same external '
+          'measurements\n  scored six times.  Do not pool them.')
+    rows.append(['worst over surfaces', f'{lo:.3f}',
+                 max(int(r[2]) for r in rows),
+                 max(int(r[3]) for r in rows), '',
+                 f"{min(float(r[5]) for r in rows):.3f}",
+                 f"{min(float(r[6]) for r in rows):.3f}",
+                 max(int(r[7]) for r in rows),
+                 max(int(r[8]) for r in rows)])
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--all-surfaces', action='store_true',
+                    help='score the temperature envelope against every '
+                         'internal surface and report the range')
+    ap.add_argument('--check', action='store_true',
+                    help='with --all-surfaces, compare against the table on '
+                         'disk instead of writing it')
     ap.add_argument('--holdout', default='CC',
                     help='which pooled ECM surface to use.  RPCWBY is an '
                          'external cell, so no UYPYDJ cell is "held out" '
@@ -212,7 +298,24 @@ def main():
     ap.add_argument('--tau', type=float, default=10.0)
     ap.add_argument('--soh', type=float, default=SOH_25C)
     ap.add_argument('--out', default=OUT)
+    ap.add_argument('--envelope-out', default=None,
+                    help='where to write external_temp_envelope.csv; '
+                         'defaults to the published path')
     a = ap.parse_args()
+
+    if a.all_surfaces:
+        rows = all_surfaces(a.tau, a.soh)
+        if a.check:
+            from tablecheck import compare_or_fail
+            return compare_or_fail(SURF_OUT, SURF_HEADER, rows,
+                                   'external_temp_surfaces')
+        os.makedirs(os.path.dirname(SURF_OUT), exist_ok=True)
+        with open(SURF_OUT, 'w', newline='', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(SURF_HEADER)
+            w.writerows(rows)
+        print(f'  -> {os.path.relpath(SURF_OUT, ROOT)}  ({len(rows)} rows)')
+        return 0
 
     from ecm_surface import ECMSurface
     surf = ECMSurface(a.holdout, 'discharge')
@@ -286,9 +389,12 @@ def main():
     written = [dict(temp_set_C=str(x[0]), temp_cell_C=str(x[1]),
                     SOC=str(x[2]), SOP_meas_W=str(x[3]),
                     SOP_pred_W=str(x[4]), limit_hit=str(x[6])) for x in out]
+    # --envelope-out, not a hard-coded path: this script writes two tables
+    # and only the first honoured --out, so a sweep run with --out to a
+    # scratch file still overwrote the published envelope.  It did, once.
     temperature_envelope(
-        written, os.path.join(ANALYSIS, 'results', 'tables',
-                     'external_temp_envelope.csv'))
+        written, a.envelope_out or os.path.join(
+            ANALYSIS, 'results', 'tables', 'external_temp_envelope.csv'))
     return 0
 
 

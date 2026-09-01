@@ -1,0 +1,21 @@
+soh_input,config,undisturbed_pct,mean_6_pct,worst_of_6_pct,rank_by_mean6,delta_vs_oracle_pct
+oracle,pure current integration,0.125,6.892,10.390,5,0.000
+oracle,EKF no gate,3.105,3.133,3.956,2,0.000
+oracle,EKF adopted (gate),1.509,2.140,3.773,1,0.000
+oracle,EKF gate + spread k=20,0.836,3.248,8.154,3,0.000
+oracle,EKF gate + spread k=200,0.775,3.584,8.640,4,0.000
+estimated,pure current integration,0.125,6.892,10.390,5,-0.000
+estimated,EKF no gate,3.116,3.147,3.934,2,+0.015
+estimated,EKF adopted (gate),1.592,2.206,3.780,1,+0.066
+estimated,EKF gate + spread k=20,0.971,3.332,8.149,3,+0.084
+estimated,EKF gate + spread k=200,0.909,3.619,8.644,4,+0.036
+bias +0.02,pure current integration,0.125,6.892,10.390,5,+0.000
+bias +0.02,EKF no gate,3.924,3.935,4.752,4,+0.802
+bias +0.02,EKF adopted (gate),1.900,2.405,4.329,1,+0.264
+bias +0.02,EKF gate + spread k=20,0.998,3.356,8.045,2,+0.108
+bias +0.02,EKF gate + spread k=200,0.991,3.644,9.074,3,+0.060
+bias -0.02,pure current integration,0.125,6.892,10.390,5,-0.000
+bias -0.02,EKF no gate,2.468,2.539,3.199,2,-0.594
+bias -0.02,EKF adopted (gate),1.538,2.231,3.703,1,+0.091
+bias -0.02,EKF gate + spread k=20,1.175,3.472,8.674,3,+0.224
+bias -0.02,EKF gate + spread k=200,1.087,3.664,8.844,4,+0.080

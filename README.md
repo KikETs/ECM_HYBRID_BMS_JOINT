@@ -28,7 +28,7 @@ Timing measured on a NUCLEO-H563ZI (Cortex-M33, 250 MHz).
 |---|---|---|---|---|---|
 | SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | leave-one-cell-out | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
 | SOH | dQ/dV ridge | 65 coefficients | leave-one-cell-out | RMSE 0.0094, bias −0.0005 | 0.0130 (BOOST_REST) |
-| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated**, not held out | 2.14 %p over six sensor disturbances, per cell 1.83–2.47 | 3.77 %p (current offset −0.10 A) |
+| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated**, not held out | **2.21 %p** over six sensor disturbances on estimated SOH (2.14 on true SOH), per cell 1.83–2.47 | 3.78 %p (current offset −0.10 A) |
 
 The SOH arm was a 10,945-parameter CNN until the second audit round. Nested
 selection — every candidate scored on the five training cells before the
@@ -109,6 +109,14 @@ covers. On **charge** it did not transfer: the factor would have to fall from
 0.586 to 0.397, and as shipped it overshoots on 9–11 of 248 in-hull rows per
 fold (§35.5).
 
+Those figures come from the CC surface, the script's default. Repeating the
+transfer against all six internal surfaces (§37.18) leaves both conclusions
+intact — zero discharge exceedance on every surface, a charge margin below 1
+on every surface, hull coverage 53.9–55.2 % — but the margins were reported
+from near the top of the range. **Quote the worst: discharge 1.125, charge
+0.610.** The same held for the C-rate sweep (1.351, not 1.655; §37.14) and the
+temperature envelope (1.156, not 1.394; §37.15).
+
 **Temperature envelope of the nominal 2RC layer.** Test#3 sweeps −20 to 40 °C
 on the same cell. It carries **no paired drive cycle, so the A8 trim cannot be
 computed on it at all** — what is scored there is the nominal 2RC layer the
@@ -129,6 +137,13 @@ grid on this cell, conditional on the tested points; cell-level or
 population-level risk is not estimable from a single external cell at any
 sample size. The same applies to the 6.1 % from the C-rate sweep (§37.12),
 which scores the same 48 measurements.
+
+Those figures come from the CC surface. Repeating the whole sweep against
+each of the six internal surfaces (§37.15) leaves both conclusions intact —
+zero exceedance 0–40 °C on all six, exceedance at −20 °C on all six, margin
+below 1 at −10 °C on all six — but the 0–40 °C margin spans 1.156 to 1.394,
+and 1.394 was the most favourable. **The margin to quote is 1.156.** The same
+was true of the C-rate sweep (§37.14): 1.351, not 1.655.
 
 The pooled hull **never reaches below SOC 0.30 at any temperature**, which is
 also why Test#2's low-SOC coverage is 0 %. So: the physics layer shows no
@@ -154,7 +169,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 89 stored published values
+python3 repro/verify.py        # check the 102 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```
@@ -169,7 +184,7 @@ an uncommitted file.
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
 in [DATA.md](DATA.md) into `raw/` and run `python3 repro/run.py <stage>`.
-Full rebuild sums to 1069 minutes (17.8 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 568 minutes (9.5 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
+Full rebuild sums to 1210 minutes (20.2 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 709 minutes (11.8 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
 
 [REPRODUCE.md](REPRODUCE.md) maps every published number to the command
 that produces it.

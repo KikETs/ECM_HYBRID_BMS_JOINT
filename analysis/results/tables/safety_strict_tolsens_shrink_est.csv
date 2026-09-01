@@ -1,0 +1,17 @@
+direction,tau_s,method,soh_arm,tolerance_A,n_rows,exceed,usable_mean_pct,usable_worst_pct,exceed_ub95_pct
+discharge,10.0,shrink,est,0.00,496,2,65.30,58.67,1.264
+discharge,10.0,shrink,est,0.25,496,2,65.91,59.21,1.264
+discharge,10.0,shrink,est,0.50,496,2,66.52,59.75,1.264
+discharge,10.0,shrink,est,1.00,496,2,67.73,60.82,1.264
+discharge,2.0,shrink,est,0.00,138,1,61.60,60.37,3.391
+discharge,2.0,shrink,est,0.25,138,1,62.56,61.31,3.391
+discharge,2.0,shrink,est,0.50,138,1,63.53,62.25,3.391
+discharge,2.0,shrink,est,1.00,138,1,65.46,64.14,3.391
+charge,10.0,shrink,est,0.00,2459,1,44.89,39.85,0.193
+charge,10.0,shrink,est,0.25,2459,1,51.65,45.89,0.193
+charge,10.0,shrink,est,0.50,2459,2,55.62,48.80,0.256
+charge,10.0,shrink,est,1.00,2459,2,58.18,50.12,0.256
+charge,2.0,shrink,est,0.00,2080,1,43.68,37.72,0.228
+charge,2.0,shrink,est,0.25,2080,1,50.26,43.44,0.228
+charge,2.0,shrink,est,0.50,2080,3,56.27,48.53,0.372
+charge,2.0,shrink,est,1.00,2080,2,59.98,51.15,0.302

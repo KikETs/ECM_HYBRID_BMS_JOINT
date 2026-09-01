@@ -5876,3 +5876,166 @@ this external cell at 0 °C regardless of prior discharge rate, with at least
 **Do not pool the six columns.** They are the same 48 measurements scored six
 times; 288 would read as six times the evidence and there is none of it. The
 summary row in `external_crate_surfaces.csv` reports 48 for that reason.
+
+### 37.15 The temperature envelope had the same defect, one script over
+
+§37.14 found that Test#8's margin depended on which internal surface it was
+scored against, and that the published number came from the default argument.
+`run_chen2026_baseline.py` — which produces `external_temp_envelope.csv`, and
+with it five of the published checks and every temperature claim in the
+README — takes the same `--holdout`, defaults it the same way, and its own
+help text already said why that is arbitrary: *"RPCWBY is an external cell, so
+no UYPYDJ cell is 'held out' here; every surface is equally external."*
+
+| surface | 0–40 °C worst margin | 0–40 °C exceed | −10 °C margin | −20 °C exceed |
+|---|---:|---:|---:|---:|
+| CC_CELL2 | **1.156** | 0 / 32 | 0.716 | 5 / 8 |
+| BOOST_REST | 1.170 | 0 / 32 | 0.701 | 3 / 8 |
+| BOOST_NEGPULSE | 1.213 | 0 / 32 | 0.728 | 5 / 8 |
+| BOOST | 1.248 | 0 / 32 | 0.861 | 4 / 8 |
+| BOOST_NEGPULSE_1S | 1.339 | 0 / 31 | 0.869 | 4 / 8 |
+| CC | **1.394** | 0 / 31 | 0.878 | 5 / 8 |
+
+**Both conclusions are surface-independent, and that is the useful result.**
+Zero exceedance from 0 to 40 °C on every one of the six. Exceedance at −20 °C
+on every one of the six. A margin below 1 at −10 °C on every one of the six.
+Nothing about "the frozen λ holds down to 0 °C and fails below it" depends on
+which surface was picked.
+
+**The margin is surface-dependent, and the published one was again the most
+favourable.** 1.394 was CC; the worst of the six is 1.156. Quote 1.156.
+
+That is now two tables, in two scripts, where a default argument chose the
+best of six folds and nothing in the repository would have said so.
+`tests/test_no_hidden_fold_selection.py` fails if a third appears: any script
+that defaults a fold selector and whose stage publishes a checked table must
+also register a sweep. It found `run_external_a8.py` the first time it ran.
+
+### 37.16 The SOC filter was chosen on a SOH it will not have
+
+`soc_perturb_bench.py` hands every configuration its cell's **true** SOH. The
+adopted filter — gate at 1 A, 30 s rest hold — was selected on that benchmark,
+and §29.4 later re-scored it under the ridge estimate. Re-scoring is not
+re-selecting: `soc_est_soh.py:56` hard-codes `i_gate=1.0, rest_hold_s=30.0`,
+so it can say what the chosen filter costs and not whether it is still the one
+that would be chosen. Picking a model under a condition the deployment does
+not have is the same defect as scoring an external test against one surface
+out of six (§37.14).
+
+`repro/run_soc_soh_selection.py` re-runs the whole comparison under four SOH
+inputs: the true value, the ridge estimate, and a deliberate ±0.02 bias — the
+bias separates "sensitive to SOH being wrong" from "sensitive to *this*
+estimator", whose error varies by cell and correlates with cell condition.
+
+| config | oracle | estimated | bias +0.02 | bias −0.02 |
+|---|---:|---:|---:|---:|
+| **EKF adopted (gate)** | **2.140** | **2.206** | **2.405** | **2.231** |
+| EKF no gate | 3.133 | 3.147 | 3.935 | 2.539 |
+| EKF gate + spread k=20 | 3.248 | 3.332 | 3.356 | 3.472 |
+| EKF gate + spread k=200 | 3.584 | 3.619 | 3.644 | 3.664 |
+| pure current integration | 6.892 | 6.892 | 6.892 | 6.892 |
+
+**The winner is stable.** The adopted configuration places first under every
+SOH input, so the choice was not an artefact of the oracle benchmark, and the
+estimated-SOH column is the one to quote: **2.206 %p, not 2.140**.
+
+The full ranking is *not* stable, and saying otherwise would overstate this.
+Under a +0.02 bias three placements below first change: no-gate falls 2 → 4
+while both spread variants rise. Nothing in the paper rests on those, but the
+sentence "the ranking is stable" would have been wrong.
+
+**Overestimating SOH costs three times what underestimating it does** — +0.264
+%p against +0.091. The asymmetry has a mechanism: a high SOH reads as a
+healthier cell, `R_volt` drops (110 mV at 0.70, 15 mV at 1.00), and the filter
+trusts a model that is wrong by more than it thinks. Under-estimating errs
+toward distrust, which is the safe direction. For a deployment that is a
+reason to bias the SOH estimator low, and this repository does not do that —
+the ridge estimator's bias is −0.0003, essentially centred.
+
+### 37.17 So does the SOP method ranking, and four baselines had never been scored
+
+The same question asked of the SOP arm found a larger version of it.
+`run_evals.py` carried a per-method flag for whether to also run the estimated
+SOH, and it was set for A8 and A3 only. The four baselines in the six-method
+comparison — LSTM, GRU, FFRLS, shrink — **had never been evaluated under
+estimated SOH at all**, and `run_method_comparison.py` filtered
+`soh_arm != 'oracle'`. The paper's central comparative claim was therefore an
+oracle-SOH statement, and no other statement was available.
+
+Eight evaluations and five safety tables later, it is. Re-running the oracle
+arm first reproduced every published table byte-for-byte, so the two arms
+differ only in the SOH.
+
+| condition | 1st on oracle | 1st on estimated | A8 |
+|---|---|---|---|
+| charge τ = 10 s | lstm | gru | 3rd → **4th** |
+| charge τ = 2 s | lstm | gru | 3rd |
+| discharge τ = 10 s | a3 | **a8** | 2nd → **1st** |
+| discharge τ = 2 s | shrink | shrink | 5th |
+
+**A8's rank vector moves from [3, 3, 2, 5] to [4, 3, 1, 5]**, and the leader
+changes in three of the four conditions. Twelve of twenty-four rows change
+placement. What does *not* change is the separation count: 3 of 20 intervals,
+all FFRLS, in both arms. The weak claim the paper is entitled to — that the
+data does not separate A8 from the other four — survives the switch intact.
+
+Degradation is ordered, and the order is the interesting part:
+
+| method | mean Δ, oracle → estimated |
+|---|---:|
+| a3 | −0.82 %p |
+| **a8** | −0.69 |
+| lstm | −0.63 |
+| gru | −0.11 |
+| ffrls, shrink | +0.06 |
+
+The more a method leans on the SOH-indexed surface, the more estimated SOH
+costs it; shrink and FFRLS are unmoved because they adapt from the measured
+signal instead. A8 loses less than A3, which is why it takes first place at
+discharge τ = 10 s under the honest condition while placing second under the
+oracle one.
+
+**The published ranking sentence has to be rewritten**, and the replacement is
+not worse for the paper: on the deployment condition A8 leads the longest
+discharge horizon outright, and drops one place on charge.
+
+### 37.18 The third surface selection, and the rule that found it
+
+§37.14 found Test#8 scored against one internal surface out of six, and
+§37.15 found the temperature envelope with the same defect one script over.
+Two instances of a pattern is a pattern, so it went into a test rather than a
+memo: `tests/test_no_hidden_fold_selection.py` parses every script in
+`repro/` for an argument that selects a fold, cell, surface or arm **by
+default**, and fails if that script's stage publishes a checked table without
+also registering a sweep. Either the selection is swept, or it is listed as
+deliberate with a reason.
+
+It found a third the first time it ran: `run_external_a8.py --surface`,
+default `CC`, feeding `external_a8_coverage.csv` and `external_a8_safety.csv`
+— which carry three published checks and the whole external-validation
+claim.
+
+| surface | discharge margin | disc exceed | charge margin | chg exceed | in-hull % |
+|---|---:|---:|---:|---:|---:|
+| BOOST_REST | **1.125** | 0 | 0.706 | 38 | 55.2 |
+| BOOST_NEGPULSE | 1.186 | 0 | 0.610 | 47 | 54.2 |
+| BOOST_NEGPULSE_1S | 1.210 | 0 | 0.677 | 67 | 53.9 |
+| CC_CELL2 | 1.246 | 0 | **0.610** | 58 | 55.0 |
+| CC (published) | 1.297 | 0 | 0.677 | 57 | 54.2 |
+| BOOST | **1.302** | 0 | 0.677 | 63 | 55.0 |
+
+**Both conclusions are surface-independent.** Discharge: zero exceedance on
+every one of the six. Charge: a margin below 1 on every one of the six, with
+38 to 67 exceedances. The external result — discharge transfers, charge does
+not — does not depend on which internal surface carries it, and neither does
+the hull coverage, which sits between 53.9 % and 55.2 %.
+
+**The margins were again reported from near the top of the range.** Published
+discharge 1.297 against a worst of 1.125; published charge 0.677 against a
+worst of 0.610. Quote the worst.
+
+That is three tables, in three scripts, where a default argument picked one
+fold of six and nothing in the repository would have said so. In all three
+the qualitative conclusion survived and only the number moved, which is worth
+stating plainly: the defect did not change what the paper concludes. It would
+have changed what a reviewer could believe about how the numbers were chosen.

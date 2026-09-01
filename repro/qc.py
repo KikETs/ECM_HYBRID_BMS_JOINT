@@ -154,7 +154,8 @@ RETRACTED = [
     (r'(?<!not )(?<!never )deployment-efficient equivalence',
      'claiming equivalence between the trim and the baselines',
      '37.3 — no margin was pre-specified and no noninferiority test was run; '
-     'A8 places 3rd, 3rd, 2nd and 5th of six'),
+     'A8 places 4th, 3rd, 1st and 5th of six under estimated SOH '
+     '(3rd, 3rd, 2nd, 5th on oracle)'),
     # Must name a universal claim.  "A8 beats A0 at every extrapolation
     # ceiling" is true and specific; the retracted claim was "all baselines".
     (r'A8 (?:outperform\w*|beats|is superior to) (?:all|every|the other) '
@@ -180,7 +181,8 @@ RETRACTED = [
      r'|superior to (?:all|the|every) (?:other )?baselines?',
      'calling the trim superior to the baselines',
      '37.3 — 3 of 20 bootstrap intervals separate and all three are FFRLS; '
-     'A8 places 3rd, 3rd, 2nd and 5th of six'),
+     'A8 places 4th, 3rd, 1st and 5th of six under estimated SOH '
+     '(3rd, 3rd, 2nd, 5th on oracle)'),
     (r'(?<!not )(?<!never )statistically equivalent'
      r'|equivalent to (?:all|the|every) (?:other )?baselines?',
      'claiming equivalence with the baselines',

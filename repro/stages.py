@@ -459,6 +459,16 @@ STAGES = [
          why='The SOC headline recomputed from the runs, after the original '
              'averaged seven rows while describing six.'),
 
+    dict(id='soc_soh_selection', tier=5, minutes=50, measured=True,
+         cmd='{py} ../repro/run_soc_soh_selection.py',
+         inputs=['results/soc_runs.pkl', 'results/soh_pred.npz'],
+         outputs=['results/tables/soc_soh_selection.csv'],
+         why='The SOC filter was selected on a benchmark that hands every '
+             'configuration its cell TRUE SOH.  This re-runs the whole '
+             'comparison under the ridge estimate and under a deliberate '
+             '+-0.02 bias, so the choice can be checked against the '
+             'condition it deploys in.'),
+
     dict(id='soc_percell', tier=5, minutes=1, measured=True,
          cmd='{py} ../repro/run_soc_percell.py',
          inputs=['results/tables/soc_perturb_runs.csv',
@@ -488,11 +498,13 @@ STAGES = [
              'was wrong and it hid an ordering trap - run_evals scored the '
              'previous sequence models when this ran second.'),
 
-    dict(id='chen2026', tier=5, minutes=6, measured=True,
-         cmd='{py} ../repro/run_chen2026_baseline.py',
+    dict(id='chen2026', tier=5, minutes=7, measured=True,
+         cmd='{py} ../repro/run_chen2026_baseline.py && '
+             '{py} ../repro/run_chen2026_baseline.py --all-surfaces',
          inputs=['cache/pool', 'sop_label_measured.csv'],
          outputs=['results/tables/chen2026_baseline.csv',
-                  'results/tables/external_temp_envelope.csv'],
+                  'results/tables/external_temp_envelope.csv',
+                  'results/tables/external_temp_surfaces.csv'],
          why="Chen 2026's constant-power binary search reimplemented on this "
              'data, to its own published tolerances.  The same rows also give '
              'the external temperature envelope: Test#3 is the only external '
@@ -531,25 +543,29 @@ STAGES = [
              'all four keep, paired under a lambda frozen at the oracle '
              "corner's calibration, and the rows the intersection drops."),
 
-    dict(id='external', tier=5, minutes=15, measured=True,
-         cmd='{py} ../repro/run_external_a8.py',
+    dict(id='external', tier=5, minutes=105, measured=True,
+         cmd='{py} ../repro/run_external_a8.py && '
+             '{py} ../repro/run_external_a8.py --all-surfaces',
          inputs=['rpcwby_ecm.csv', 'runs_trim_a8'],
          outputs=['results/tables/external_a8.csv',
                   'results/tables/external_a8_coverage.csv',
-                  'results/tables/external_a8_safety.csv'],
+                  'results/tables/external_a8_safety.csv',
+                  'results/tables/external_a8_surfaces.csv'],
          why='The six frozen A8 folds carried to RPCWBY Test#2 without '
              'refitting: error, in-hull coverage by operating point, and '
              'whether the frozen lambda stays conservative.'),
 
     dict(id='method_comparison', tier=5, minutes=1, measured=True,
-         cmd='{py} ../repro/run_method_comparison.py',
+         cmd='{py} ../repro/run_method_comparison.py && '
+             '{py} ../repro/run_method_comparison.py --arm est',
          inputs=['results/tables/safety_strict_oracle.csv',
                  'results/tables/safety_strict_a3_oracle.csv',
                  'results/tables/safety_strict_lstm_oracle.csv',
                  'results/tables/safety_strict_gru_oracle.csv',
                  'results/tables/safety_strict_ffrls_oracle.csv',
                  'results/tables/safety_strict_shrink_oracle.csv'],
-         outputs=['results/tables/method_comparison.csv'],
+         outputs=['results/tables/method_comparison.csv',
+                  'results/tables/method_comparison_est.csv'],
          why='Every method side by side with its bootstrap interval and its '
              'rank.  A8 places 3rd, 3rd, 2nd and 5th across the four '
              'conditions and only FFRLS separates from it, which is what '

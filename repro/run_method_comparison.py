@@ -16,6 +16,18 @@ two, which is all the paper is entitled to.
 The ranking column exists because the ranking moves: A8 is not uniformly first
 across direction and horizon, and a reader should be able to see that in one
 place rather than reconstruct it from six files.
+
+WHICH SOH THE RANKING IS COMPUTED ON
+    It used to be oracle, silently.  This script filtered soh_arm != 'oracle'
+    and four of the six methods had never been evaluated under estimated SOH
+    at all -- run_evals.py ran the estimated arm for a8 and a3 only.  So the
+    ranking, which is the paper's central comparative claim, described a
+    condition no deployment has: the true SOH handed to the inversion.
+
+    --arm est now scores the same comparison on the SOH the ridge estimator
+    actually produces.  Both tables are written.  If a method's placement
+    depends on which one you read, the paper has to say so, and the honest
+    headline is the estimated one.
 """
 import argparse
 import csv
@@ -29,10 +41,10 @@ TABLES = os.path.join(ROOT, 'analysis', 'results', 'tables')
 REF = 'a8'
 
 
-def rows_for(path):
+def rows_for(path, arm):
     out = []
     for r in csv.DictReader(open(path, encoding='utf-8')):
-        if r.get('soh_arm') != 'oracle':
+        if r.get('soh_arm') != arm:
             continue
         out.append(dict(
             method=r.get('method', 'a8'),
@@ -47,26 +59,37 @@ def rows_for(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--out', default=os.path.join(TABLES,
-                                                  'method_comparison.csv'))
+    ap.add_argument('--out', default=None)
+    ap.add_argument('--arm', default='oracle', choices=['oracle', 'est'],
+                    help='oracle = true SOH fed to the inversion, which is '
+                         'what the ranking used to be computed on; est = the '
+                         'SOH the ridge estimator produces, which is what '
+                         'ships')
     ap.add_argument('--check', action='store_true',
                     help='compare the stored table with a fresh computation '
                          'instead of overwriting it')
     a = ap.parse_args()
+    if a.out is None:
+        a.out = os.path.join(TABLES, 'method_comparison.csv' if
+                             a.arm == 'oracle' else
+                             f'method_comparison_{a.arm}.csv')
 
     found = []
     for p in sorted(glob.glob(os.path.join(TABLES,
-                                           'safety_strict_*oracle.csv'))):
+                                           f'safety_strict_*{a.arm}.csv'))):
         b = os.path.basename(p)
         if 'percell' in b or 'tolsens' in b:
             continue
-        found += rows_for(p)
+        found += rows_for(p, a.arm)
     if not found:
-        print('  no safety_strict_*_oracle.csv tables found', file=sys.stderr)
+        print(f'  no safety_strict_*_{a.arm}.csv tables found', file=sys.stderr)
         return 1
 
     keys = sorted({(r['direction'], r['tau']) for r in found})
     rows = []
+    print(f'  SOH fed to the inversion: {a.arm}'
+          + ('   (this is the deployment condition)' if a.arm == 'est'
+             else '   (true SOH — not a deployment condition)'))
     print(f"  {'dir':<10}{'tau':>5}  {'method':<9}{'usable %':>10}"
           f"{'boot 95 %':>18}{'exceed':>8}{'rank':>6}   vs A8")
     print('  ' + '-' * 84)
@@ -97,7 +120,8 @@ def main():
               'usable_worst_pct', 'rank_in_condition', 'interval_vs_a8']
     if a.check:
         from tablecheck import compare_or_fail
-        return compare_or_fail(a.out, HEADER, rows)
+        return compare_or_fail(a.out, HEADER, rows,
+                               os.path.basename(a.out)[:-4])
     with open(a.out, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(HEADER)
