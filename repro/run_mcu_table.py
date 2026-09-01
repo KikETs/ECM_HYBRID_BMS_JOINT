@@ -59,13 +59,23 @@ def cycle_rows(stage):
     One control cycle at 100 Hz is one SOC EKF step, one A8 feature update
     and four SOP inversions -- the four are the discharge and charge limits
     at both horizons.
+
+    NOT A MEASURED WCET.  These rows add up per-stage figures measured
+    separately; no integrated loop was ever timed end to end on the board.
+    The "worst" row is the sum of each stage's observed maximum, which is an
+    upper bound on a combination that need not occur in any single cycle --
+    the SOP inversion's 17-iteration worst case and the EKF's worst case are
+    not known to coincide.  Call it a derived cycle-budget estimate.  A real
+    WCET needs the loop instrumented as a loop, which the firmware does not
+    currently do.
     """
     g = {r['stage']: r for r in stage}
     need = ('EKF', 'FEAT_A8', 'FULL')
     if any(k not in g for k in need):
         return []
     out = []
-    for label, col in (('median', 'median_us'), ('wcet', 'max_us')):
+    for label, col in (('median', 'median_us'),
+                       ('sum_of_stage_maxima', 'max_us')):
         ekf = float(g['EKF'][col])
         feat = float(g['FEAT_A8'][col])
         sop = float(g['FULL'][col])

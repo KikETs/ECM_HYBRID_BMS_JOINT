@@ -1,3 +1,3 @@
 case,soc_ekf_us,feat_a8_us,one_sop_us,four_sop_us,cycle_total_us,load_at_100Hz_pct
 median,8.16,6.79,53.21,212.84,227.79,2.278
-wcet,8.32,7.16,81.09,324.36,339.84,3.398
+sum_of_stage_maxima,8.32,7.16,81.09,324.36,339.84,3.398

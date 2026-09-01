@@ -980,15 +980,15 @@
       "source": "sec 33.2 — one control cycle: EKF + A8 feature update + four SOP inversions"
     },
     {
-      "id": "mcu.cycle.wcet",
+      "id": "mcu.cycle.sum_of_stage_maxima",
       "table": "mcu_cycle.csv",
       "where": {
-        "case": "wcet"
+        "case": "sum_of_stage_maxima"
       },
       "column": "cycle_total_us",
       "value": 339.84,
       "tol": 0.01,
-      "source": "sec 33.2 — worst case of the same composite"
+      "source": "sec 33.2 — sum of each stage's observed maximum, a derived cycle-budget estimate and NOT a measured WCET"
     },
     {
       "id": "ext.crate.0C.margin",
@@ -3041,7 +3041,7 @@
       "ext.temp.40.exceed",
       "ext.temp.25.soc_min",
       "mcu.cycle.median",
-      "mcu.cycle.wcet",
+      "mcu.cycle.sum_of_stage_maxima",
       "ext.crate.0C.margin",
       "ext.crate.4C.margin",
       "ext.crate.pooled.exceed"

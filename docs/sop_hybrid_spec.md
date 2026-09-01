@@ -3309,6 +3309,16 @@ are still rare at automotive grade.
 
 ## 28. Pack level — the min operation does not protect (2026-08-25)
 
+> **Everything in this section is a resampling simulation.** There is no pack,
+> no module, no HIL bench. `analysis/sop_pack2.py` draws single-cell
+> evaluation rows within condition groups and takes their min, so it can show
+> that a cell-calibrated margin is *not* safe by construction on a series
+> string — a negative result a simulation can carry — but it cannot show that
+> any margin *is* safe on real hardware. Inter-cell error correlation beyond
+> the condition bin, a shared current trajectory, thermal gradients and
+> imbalance are all absent. The deliverable of this work is cell-level margin
+> design; pack behaviour is a sensitivity study pointing at future work.
+
 Sections 19–27 are all single-cell. In a series pack the current is common, so
 
     pack SOP = min over cells ( per-cell I* )
@@ -3387,10 +3397,14 @@ zero tolerance, but the worst overshoot is 0.09 A, **inside charge's design
 tolerance of 0.5 A**, so it is not an exceedance. The flat lambda table of §28.2
 did not reproduce (31.4).
 
-**So the conclusion is not "it works on a pack too" but "it works on a pack too
-because the margin was set on a cell basis".** Any attempt to reduce the margin
-must be revalidated at pack level — a lambda that looks safe at cell level is
-broken through threefold on a pack.
+**So the conclusion is not "it works on a pack too". It is narrower: in this
+simulation the shipped margin survives the min only because it was set on a
+cell basis with room to spare.** That is a statement about the resampling, not
+about a pack — no pack was built or measured, so nothing here demonstrates
+pack-level safety. What it does establish is the negative: a lambda that looks
+safe at cell level is broken through threefold once the min is applied, so any
+attempt to reduce the margin would have to be revalidated on real pack
+hardware, which this work does not have.
 
 ### 28.5 Limitations
 
@@ -3984,7 +3998,11 @@ BOOST_NEGPULSE_1S (cycle 1149 twice). That cell has 5 effective runs.
 
 ## 31. Pack level again, on estimated SOH (2026-08-26)
 
-Every number in §28 sat on true SOH (the point §29 raised). It is re-measured
+> Same standing caveat as §28: this is the resampling simulation, not pack
+> hardware. "Re-measured" below means the simulation was re-run on estimated
+> SOH, not that anything was measured on a pack.
+
+Every number in §28 sat on true SOH (the point §29 raised). It is re-run
 here.
 
 ### 31.1 The adopted evaluation configuration was pinned down
@@ -4030,7 +4048,8 @@ tau = 2 s barely moves (83.5 -> 81.7 %).
 
 ### 31.3 Without re-setting the margin, discharge at tau = 2 s breaks through
 
-Using the lambda set on true SOH directly on the estimated-SOH version:
+Using the lambda set on true SOH directly on the estimated-SOH version.  N is
+the string length in the resampling simulation, not cells on a bench:
 
 | Direction | tau | lambda used | N=1 | N=12 | N=48 | N=96 | N=192 | N=192 worst |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|

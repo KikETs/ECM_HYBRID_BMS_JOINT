@@ -97,7 +97,14 @@ timing_us:
     measurement is a number that will be wrong, so run_mcu_table.py now
     derives the composite into mcu_cycle.csv and verify.py checks it.
   full_cycle_median: 227.79
-  full_cycle_wcet: 339.84
+  full_cycle_sum_of_stage_maxima: 339.84
+  not_a_measured_wcet: >
+    339.84 is the sum of each stage's observed maximum, measured separately.
+    It bounds a combination that need not occur in any single cycle - the SOP
+    inversion's 17-iteration worst case and the EKF's worst case are not known
+    to coincide - and no integrated control loop has ever been timed end to
+    end on this board.  Call it a derived cycle-budget estimate.  A real WCET
+    needs the loop instrumented as a loop, which the firmware does not do.
   composition: "one SOC EKF step + one A8 feature update + four SOP inversions"
   per_sample_median: 6.79
   per_decision_median: 212.84
@@ -108,7 +115,7 @@ timing_us:
     NACK path added during the audit changed the worst-case call chain.  No
     published table quotes the stack figure.
   load_at_100Hz_median_pct: 2.278
-  load_at_100Hz_wcet_pct: 3.398
+  load_at_100Hz_sum_of_maxima_pct: 3.398
   soh_model: >
     MEASURED 2026-08-31, and no longer a CNN.  mcu/bench_soh.py sends real
     dQ/dV curves from the cache and checks the board's answer against NumPy.

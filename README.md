@@ -40,8 +40,11 @@ a λ fitted with cell *i* removed entirely. Per-cell λ spans 0.683–0.708
 number to quote. "Usable current" is the median of λ·predicted / measured.
 
 Per-cycle cost on the board: one SOC EKF step, one A8 feature update and four
-SOP inversions — **227.79 µs median, 339.84 µs worst case**, which is
-2.278 % and 3.398 % of a 100 Hz budget. Individually: SOP
+SOP inversions — **227.79 µs median**, and **339.84 µs** if each stage hits
+its own observed maximum at once, which is 2.278 % and 3.398 % of a 100 Hz
+budget. The second figure is a **derived cycle-budget estimate, not a measured
+WCET**: it sums per-stage maxima measured separately, and no integrated loop
+was ever timed end to end on the board. Individually: SOP
 inversion 53.21 µs median and 81.09 worst, SOC EKF 8.16, A8 feature
 update 6.79, SOH 6.50 once per charge rather than per cycle. Deployment
 build text **70 796 B**. Measured on a NUCLEO-H563ZI

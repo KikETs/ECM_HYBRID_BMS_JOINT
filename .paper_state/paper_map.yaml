@@ -95,7 +95,8 @@ claims:
     replacement: >
       Both figures moved twice - the ridge SOH arm and the deterministic
       retrain changed the image - and the manifest recording them went stale
-      with them.  Per-cycle 227.79 us median and 339.84 us worst case, 2.278 %
+      with them.  Per-cycle 227.79 us median; 339.84 us is the SUM OF STAGE
+      MAXIMA, not a measured WCET - no integrated loop was timed.  2.278 %
       and 3.398 % of a 100 Hz budget; deployment build text 70796 B.  Derived
       into mcu_cycle.csv now instead of typed into a manifest (37.10).
     note: >
@@ -104,7 +105,8 @@ claims:
       = 138.7 KiB = 142.1 kB decimal — state the unit.
       [SUPERSEDED 2026-08-31]  All three moved and none of them was noticed
       until a systematic sweep: the ridge SOH arm and the deterministic
-      retrain changed the image.  Per-cycle median 227.79 us, WCET 339.84 us,
+      retrain changed the image.  Per-cycle median 227.79 us; 339.84 us is a
+      derived budget, the sum of separately measured stage maxima, not a WCET;
       deployment build text 70796 B.  The composite is derived into
       mcu_cycle.csv now instead of being typed into a manifest.
 

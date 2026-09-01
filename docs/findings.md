@@ -1,5 +1,14 @@
 # Samsung INR21700-30T — data audit and reproduction status
 
+> **[Historical — read spec §34–37 for current results]** This file is the
+> design-era findings log. Its tables record what each configuration measured
+> at the time, and most of those configurations have since been superseded:
+> the SOH arm is ridge, not the CNN (§36); the trims were retrained
+> deterministically (§37.5); the per-cycle cost and the deployment build both
+> moved (§37.10). `.paper_state/paper_map.yaml` is the authority on which
+> claims still hold, and `analysis/results/tables/` on what the numbers are.
+> Numbers here are dated, not wrong.
+
 > **[Audited 2026-08-27]** Six claims in this file and the spec did not
 > survive an external audit: the zero-exceedance framing (§34.1), the SOC
 > headline 2.05 %p (§34.2), the SOH CNN against ridge (§34.3), the
@@ -628,7 +637,7 @@ All three arms have been evaluated leave-one-cell-out. Adoption status:
 | Status | Arm | Model | Score | Basis |
 |---|---|---|---|---|
 | **adopted** | SOP | hybrid linear **A8 (4 effective coefficients)** | usable current **69.6 %** discharge / **59.5 %** charge, 1 exceedance each | `sop_hybrid_spec.md` §32.7, §33, **§34.1** |
-| **adopted** | SOH (charge) | dQ/dV CNN (10,945) — **but ridge beats it, §34.3** | SOH RMSE **0.0135**, bias +0.0001; ridge 0.0094 | `soh_extension_design.md`, §30.12, **§34.3** |
+| **adopted** | SOH (charge) | **dQ/dV ridge (65 coefficients)** — the CNN is a baseline, §36 | SOH RMSE **0.0094**, bias −0.0005, worst cell 0.0130; 1D CNN 0.0135 / 0.0291 | `soh_extension_design.md`, §30.12, **§34.3** |
 | held | SOH (driving) | (V,I) CNN (16,241) | **0.0191** per file | per-cell bias unresolved |
 | reference | voltage | LSTM M2 (1.08 M) | **21.75 mV** on drive cycles | for conditioning comparison |
 

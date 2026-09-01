@@ -157,3 +157,118 @@ def test_the_repository_itself_is_clean():
     line = [x for x in r.stdout.splitlines() if 'retracted or refuted' in x]
     assert line, r.stdout[-800:]
     assert ' 0 places' in line[0], line[0]
+
+
+# --- scope rules -----------------------------------------------------------
+#
+# SCOPED is the other half: not "is this retracted wording back" but "is this
+# claim standing without the fact that bounds it".  A blacklist only catches
+# the phrasing someone already used, so the first draft of these triggers
+# matched on proximity -- and immediately flagged "10-14 %p of pack peak
+# current" and "within 1.06x across cells", which are a cell-level result and
+# a measured spread.  Both are pinned below.  Widening a trigger until real
+# text stops tripping it is the same failure as widening an exemption.
+
+SCOPE_MUST_FLAG = [
+    ('pack exceedance with no mention of the simulation',
+     'At the shipped lambdas the pack exceedance is 0.0 % at every string '
+     'length.'),
+    ('paraphrase that dodges the banned phrase',
+     'The margin was confirmed on a 192-cell string in both directions.'),
+    ('pack-level safety asserted',
+     'These numbers establish pack-level safety at the shipped margin.'),
+    ('lambda safe on a pack',
+     'The shipped lambda is safe on a pack of any length we tried.'),
+    ('cell generalisation asserted',
+     'The estimator generalises across cells of this chemistry.'),
+    ('part-number generalisation',
+     'The result holds for INR21700-30T cells in general.'),
+    ('transfer to all cells',
+     'A single calibration transfers to all cells without adjustment.'),
+    ('WCET stated flat',
+     'The measured WCET of the full cycle is 339.84 us.'),
+    # section_preamble deliberately reads only the section's opening lines.
+    # A caveat thirty lines down is one a reader quoting the section never
+    # sees, so it must not exempt.  Without this case, widening the window to
+    # the whole section passes the corpus.
+    ('caveat buried mid-section does not cover the section',
+     '## 28. Pack level\n'
+     '\n'
+     + '\n'.join(f'Filler line {i} of the argument.' for i in range(30))
+     + '\n'
+     '\n'
+     'It is only a resampling simulation, of course.\n'
+     '\n'
+     'The shipped lambda is safe on a pack of any length.'),
+]
+
+SCOPE_MUST_NOT_FLAG = [
+    ('pack as a unit of current, not a system under test',
+     'At the same zero-exceedance standard the trim buys back 10-14 %p of '
+     'pack peak current.'),
+    ('a measured spread across cells is not a generalisation claim',
+     'R0 is unidentifiable at 1 Hz while being within 1.06x across cells '
+     'anyway.'),
+    ('pack claim carrying its qualifier',
+     'In the resampling simulation the pack exceedance is 0.0 % at every '
+     'string length; there is no pack hardware.'),
+    ('cell claim carrying its population',
+     'It generalises across the six cells under leave-one-cell-out, which is '
+     'one model from one order.'),
+    ('WCET named as a derived sum',
+     'This is not a measured WCET: it is the sum of per-stage maxima.'),
+    ('the section preamble carries the caveat for the section',
+     '## 28. Pack level\n'
+     '\n'
+     '> Everything in this section is a resampling simulation.  There is no\n'
+     '> pack and no HIL bench.\n'
+     '\n'
+     'Using a cell-calibrated lambda directly on a pack raises the discharge\n'
+     'exceedance rate more than threefold.'),
+    ('pack-master is a part class, not a claim',
+     'The S32K344 is a mainstream BMS pack-master class part.'),
+    # The scope rules run through is_assertion for the same reason the
+    # retraction rules do: a document that records what it withdrew has to be
+    # able to write the withdrawn sentence down.
+    ('a withdrawn pack claim, struck through',
+     'The draft said ~~the pack exceedance is 0.0 % at every string '
+     'length~~.'),
+    ('a correction block quoting the unbounded claim',
+     '[Corrected - 34.10] An earlier draft wrote "these numbers establish '
+     'pack-level safety".\n'
+     'They establish nothing of the kind.'),
+    ('a correction block quoting an unbounded cell claim',
+     '[Narrowed - 37.x] The manifest read COVERED, as if the result '
+     'generalises across cells.\n'
+     'It is now PARTIAL.'),
+]
+
+
+def _run_scope(text):
+    import importlib
+    import qc
+    importlib.reload(qc)
+    lines = text.split('\n')
+    blks = qc.blocks(lines)
+    hits = []
+    for i, ln in enumerate(lines, 1):
+        for _i, what, _why, _txt in qc.scope_hits(lines, blks, i, ln):
+            hits.append((i, what))
+    return hits
+
+
+@pytest.mark.parametrize('name,text', SCOPE_MUST_FLAG,
+                         ids=[n for n, _ in SCOPE_MUST_FLAG])
+def test_unqualified_claim_is_flagged(name, text):
+    assert _run_scope(text), (
+        f'qc let an unbounded claim stand ({name}).  A trigger that was just '
+        f'narrowed has made the scope check blind:\n{text}')
+
+
+@pytest.mark.parametrize('name,text', SCOPE_MUST_NOT_FLAG,
+                         ids=[n for n, _ in SCOPE_MUST_NOT_FLAG])
+def test_qualified_claim_is_not_flagged(name, text):
+    hits = _run_scope(text)
+    assert not hits, (
+        f'qc flagged legitimate text ({name}) as an unbounded claim: {hits}\n'
+        f'{text}')

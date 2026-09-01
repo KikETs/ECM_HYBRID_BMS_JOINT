@@ -262,8 +262,100 @@ def retraction_hits(lines, blks, line_no, line):
     return out
 
 
+# --- scope rules: a claim that needs its qualifier in the same breath -------
+#
+# RETRACTED is a blacklist, and a blacklist only catches the wording someone
+# already used.  "Pack validation" is banned, so a rewrite says "confirmed on
+# a 192-cell string" and sails through.  These rules invert it: certain
+# CLAIMS may appear only if the block carrying them also carries the fact
+# that bounds them.  The unit is the block, same as is_assertion, so the
+# qualifier has to be adjacent prose rather than a footnote three screens
+# down where a reader quoting the sentence would lose it.
+#
+# (trigger, required, what, why).  Both regexes run over the whole block.
+SCOPED = [
+    # "pack" as the SYSTEM UNDER TEST, not as a unit.  Proximity matching was
+    # the first attempt and it flagged "10-14 %p of pack peak current", which
+    # is a cell-level result quoted in pack terms and claims nothing about a
+    # pack.  The trigger is therefore a list of phrasings that put a pack on
+    # the stand: an exceedance rate FOR a pack, a result AT pack level, a
+    # string of N cells.  Paraphrase is what this is for -- the blacklist
+    # already owns the literal phrase "pack validation".
+    (r"pack(?:'s)? (?:exceedance|min\b|safe|behaviou?r)"
+     r"|(?:exceedance|usability|lambda|margin) (?:rate )?(?:on|for|at) (?:a |the )?pack"
+     r"|at pack[- ]level|on a pack\b|pack[- ]level (?:result|number|safety|"
+     r"validat|exceedance)|N *= *192|192[- ]cell",
+     r'simulat|resampl|no pack hardware|Monte Carlo|sensitivity|'
+     r'not a pack|never .{0,16}pack|no pack\b|future work|revalidat',
+     'a pack-level result stated without saying it is the resampling '
+     'simulation',
+     'there is no pack, module or HIL bench in this work; sop_pack2.py '
+     'resamples single-cell rows, so a pack sentence must carry that in the '
+     'same block'),
+
+    # Likewise, "1.06x across cells" is a measured spread, not a claim about
+    # cells in general.  Only generalisation verbs and part-number statements
+    # trigger.
+    (r'generali[sz]\w*.{0,60}\bcells?\b|\bcells?\b.{0,40}generali[sz]'
+     r'|(?:holds|works|transfers?|applies) (?:for|to|across) (?:all |any |'
+     r'other )?cells|INR21700-30T (?:cells )?(?:in general|as a part)'
+     r'|cell[- ]to[- ]cell (?:variation|spread) (?:is|was) (?:covered|'
+     r'characteri[sz]ed)',
+     r'six cells|leave-one-cell-out|one model|not a manufacturing|'
+     r'PARTIAL|one order|one external cell',
+     'a cell-generalisation claim without the population it rests on',
+     'six cells from one order of one model is not a manufacturing '
+     'population; generalization_scope.yaml holds axes.cell at PARTIAL'),
+
+    (r'\bWCET\b|worst[- ]case execution',
+     r'sum of|per-stage|not a measured|derived|budget|stage maxima',
+     'WCET stated as if measured',
+     'no integrated loop was ever timed end to end on the board; the figure '
+     'adds per-stage maxima measured separately'),
+]
+
+
+def section_preamble(lines, line_no, max_lines=18):
+    """The heading of this line's section plus what opens it.
+
+    A long section states its standing caveat once, at the top, and then
+    argues for forty paragraphs.  Block scope alone would demand the word
+    "simulation" in every one of those paragraphs, which is how a checker
+    teaches people to ignore it.  A caveat in the section's opening lines
+    counts for the whole section -- and only there, because a qualifier
+    buried in the middle is one a reader quoting the section would miss.
+    """
+    head = 0
+    for i, ln in enumerate(lines, 1):
+        if i > line_no:
+            break
+        if re.match(r'#+ ', ln):
+            head = i
+    if not head:
+        return ''
+    return '\n'.join(lines[head - 1:head - 1 + max_lines])
+
+
+def scope_hits(lines, blks, line_no, line):
+    """Claims whose bounding fact is missing from their own block."""
+    out = []
+    for trig, need, what, why in SCOPED:
+        m = re.search(trig, line, re.I)
+        if not m:
+            continue
+        btxt, boff = block_for(line_no, blks)
+        if re.search(need, btxt, re.I):
+            continue
+        if re.search(need, section_preamble(lines, line_no), re.I):
+            continue
+        if not is_assertion(line, m, btxt, boff):
+            continue
+        out.append((line_no, what, why, line.strip()[:72]))
+    return out
+
+
 def scan():
-    stale_hits, retr_hits, orph_hits = [], [], []
+    stale_hits, retr_hits, orph_hits, scope_h = [], [], [], []
     stale = stale_pairs()
     for fn, lines in docs():
         blks = blocks(lines)
@@ -284,10 +376,12 @@ def scan():
                                    section_of(fn, i, lines)))
             for i2, what, where, txt in retraction_hits(lines, blks, i, ln):
                 retr_hits.append((fn, i2, what, where, txt))
+            for i2, what, why, txt in scope_hits(lines, blks, i, ln):
+                scope_h.append((fn, i2, what, why, txt))
             for pat, what in ORPHAN_HINTS:
                 if re.search(pat, ln):
                     orph_hits.append((fn, i, what, ln.strip()[:60]))
-    return stale_hits, retr_hits, orph_hits
+    return stale_hits, retr_hits, orph_hits, scope_h
 
 
 # A document that records retractions has to be able to quote them.  The
@@ -436,7 +530,7 @@ def table_numbers():
 
 
 def main():
-    st, rt, orp = scan()
+    st, rt, orp, scp = scan()
 
     CURRENT_FROM = 34
     live = [h for h in st if not h[6] and (h[7] == 0 or h[7] >= CURRENT_FROM)]
@@ -472,7 +566,18 @@ def main():
         print('    none — the corrections are in place, or the claim is no '
               'longer written as an assertion', flush=True)
 
-    print(f"\n  == (3) numbers verify.py cannot see (not in any table)  "
+    print(f"\n  == (3) claims stated without the fact that bounds them  "
+          f"{len(scp)} places\n", flush=True)
+    for fn, i, what, why, txt in scp:
+        print(f"  {fn}:{i}", flush=True)
+        print(f"    claim: {what}", flush=True)
+        print(f"    why:   {why}", flush=True)
+        print(f"    text:  {txt}", flush=True)
+    if not scp:
+        print('    none — every such claim carries its qualifier in the same '
+              'block', flush=True)
+
+    print(f"\n  == (4) numbers verify.py cannot see (not in any table)  "
           f"{len(orp)} places\n", flush=True)
     seen = set()
     for fn, i, what, txt in orp:

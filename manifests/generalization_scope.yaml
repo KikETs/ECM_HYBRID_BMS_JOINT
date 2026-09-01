@@ -4,12 +4,23 @@
 
 axes:
   cell:
-    status: COVERED
+    status: PARTIAL
     detail: >
-      Six cells, leave-one-cell-out everywhere.  Six is the whole population,
-      so cell-to-cell uncertainty is estimated from six clusters - wide
+      Six cells, leave-one-cell-out everywhere.  Six is the whole population
+      HERE, so cell-to-cell uncertainty is estimated from six clusters - wide
       intervals, reported as a cell-cluster bootstrap in
       safety_strict_*.csv.
+    downgraded_2026_08_31: >
+      This read COVERED, which invites the wrong reading.  Six cells is enough
+      to hold one out and to bootstrap an interval, and that is what the SOP
+      and SOH numbers rest on - but six cells from one order of one model is
+      not a manufacturing population.  Nothing here estimates lot-to-lot,
+      supplier or vintage variation, and the external dataset adds ONE more
+      cell rather than a second population.
+    claim_limit: >
+      "leave-one-cell-out over six cells of one model, plus one external
+      cell".  Never "generalises across cells", and never a statement about
+      the INR21700-30T as a part number.
   protocol:
     status: COVERED
     detail: >

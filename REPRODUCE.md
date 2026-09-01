@@ -189,7 +189,7 @@ Full rebuild: about 1068 minutes (18 h). `~` marks an estimate that was never ti
 | `ext.temp.40.exceed` | 0 | `external_temp_envelope.csv` | sec 37.4 |
 | `ext.temp.25.soc_min` | 0.4 | `external_temp_envelope.csv` | sec 37.4 |
 | `mcu.cycle.median` | 227.79 | `mcu_cycle.csv` | sec 33.2 |
-| `mcu.cycle.wcet` | 339.84 | `mcu_cycle.csv` | sec 33.2 |
+| `mcu.cycle.sum_of_stage_maxima` | 339.84 | `mcu_cycle.csv` | sec 33.2 |
 | `ext.crate.0C.margin` | 1.672 | `external_crate_envelope.csv` | sec 37.12 |
 | `ext.crate.4C.margin` | 1.655 | `external_crate_envelope.csv` | sec 37.12 |
 | `ext.crate.pooled.exceed` | 0 | `external_crate_envelope.csv` | sec 37.12 |
