@@ -459,6 +459,16 @@ STAGES = [
          why='The SOC headline recomputed from the runs, after the original '
              'averaged seven rows while describing six.'),
 
+    dict(id='usable_reference', tier=5, minutes=1, measured=True,
+         cmd='{py} ../repro/run_usable_reference.py',
+         inputs=['results/eval/'],
+         outputs=['results/tables/usable_reference.csv'],
+         why='"Usable current" was a percentage of the cell own capability, '
+             'which no single-lambda policy can reach: lambda is set by the '
+             'worst row of the most demanding cell.  This adds the two '
+             'reference points that were missing - the all-cells lambda '
+             'ceiling, and a per-cell oracle lambda.'),
+
     dict(id='soc_soh_selection', tier=5, minutes=50, measured=True,
          cmd='{py} ../repro/run_soc_soh_selection.py',
          inputs=['results/soc_runs.pkl', 'results/soh_pred.npz'],

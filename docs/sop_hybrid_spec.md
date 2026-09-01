@@ -6039,3 +6039,81 @@ fold of six and nothing in the repository would have said so. In all three
 the qualitative conclusion survived and only the number moved, which is worth
 stating plainly: the defect did not change what the paper concludes. It would
 have changed what a reviewer could believe about how the numbers were chosen.
+
+### 37.19 "Usable current" was a percentage of the wrong thing
+
+`usable = median(λ · pred / meas)`, so 100 % means the system permits exactly
+what the cell can deliver. The adopted trim scores about **69 % on discharge
+and 55 % on charge**, which reads as a weak result. It is not one, and the
+denominator is why.
+
+λ is the largest factor with no exceedance on the training cells, so it is set
+by **the single worst row of the most demanding cell** — BOOST_NEGPULSE_1S in
+most conditions. Every other cell is then scored against its own true
+capability, which *no single-λ policy can reach by construction*. The metric
+was measuring the price of a fleet-wide safety margin and reporting it as
+though it were model error.
+
+Two reference points were missing. `run_usable_reference.py` adds both.
+
+**Against the all-cells ceiling — holding one of these six cells out costs nothing.**
+
+Read that at its scope: six cells of one model from one order, one cell per aging
+protocol, so this says nothing about a manufacturing population and nothing about
+a cell whose protocol is not among the six.  `generalization_scope.yaml` holds
+both axes at PARTIAL.
+
+| method | discharge τ=10 | discharge τ=2 | charge τ=10 | charge τ=2 |
+|---|---:|---:|---:|---:|
+| a8 | **100.4** | 100.4 | 102.5 | 101.0 |
+| a3 | 100.8 | 100.5 | 102.2 | 100.7 |
+| lstm | 100.3 | 102.5 | 101.9 | 100.6 |
+| gru | 100.1 | 102.4 | 100.9 | 100.4 |
+| shrink | 100.7 | 100.1 | 101.9 | 101.1 |
+| ffrls | 105.4 | 112.4 | 101.8 | 103.9 |
+
+The mechanism is plain once the binding cell is identified: whenever it is in
+the training set the leave-one-cell-out λ *equals* the all-cells λ, and when
+it is held out the remaining five are less demanding so λ comes out slightly
+larger — which is why every entry is at or above 100. **Holding a cell out
+costs nothing at all.** That is a strong result and it was not previously
+computed. FFRLS gains most from being spared its own worst rows, which is
+another way of saying it is the least stable of the six.
+
+**Against a per-cell oracle λ — field calibration is worth 5 to 19 %p.**
+
+| method | discharge τ=10 | discharge τ=2 | charge τ=10 | charge τ=2 |
+|---|---:|---:|---:|---:|
+| a8 | **95.2** | 94.6 | 81.8 | 85.3 |
+| a3 | 94.5 | 94.9 | 82.6 | 85.9 |
+| lstm | 96.0 | 95.0 | 86.2 | 88.9 |
+| gru | 95.0 | 95.0 | 88.2 | 89.3 |
+| shrink | 91.8 | 95.4 | 83.6 | 86.1 |
+| ffrls | 75.0 | 84.9 | 80.4 | 82.3 |
+
+Discharge is nearly saturated: a λ fitted on the evaluated cell itself would
+buy the adopted trim under 5 %p at
+τ = 10 s. Charge is not — 18 %p sits
+there, because the per-cell λ spread is much wider on charge
+(0.527–0.839) than on discharge (0.683–0.919), over a
+lower base.
+
+So the honest decomposition of the published 68.89 %:
+
+```
+68.89 %  =  100.4 %  of the best a single λ could ever do
+         ×   95.2 %  of what a per-cell calibrated λ would do
+         ×  (the rest is the intrinsic cost of one conservative factor)
+```
+
+None of the gap is generalisation error and almost none is prediction error —
+the median `pred/meas` is 0.946 and 95 % of rows sit within 8.6 % of truth. It
+is the price of covering the worst row of the worst cell with one number, and
+the way to reduce it is a per-cell field calibration or a weaker safety
+criterion, not a better model.
+
+**Both new columns are oracle bounds.** They use the evaluated cell's own
+labels. They may be reported and must never be used to select λ, a tolerance
+or a model — that is selection on the test set, which is the defect this
+audit exists to remove. The published `usable_pct` stays the headline; these
+two say what it is a percentage of.

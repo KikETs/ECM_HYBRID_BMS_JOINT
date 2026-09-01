@@ -84,6 +84,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `soh_ablations` | 3 | `python3 ../repro/run_soh_ablations.py` | `results/tables/soh_ablations.csv` |
 | `soc_baselines` | 4 | `python3 ../repro/run_soc_baselines.py` | `results/tables/soc_baselines.csv` |
 | `soc_headline` | 3 | `python3 ../repro/run_soc_headline.py` | `results/tables/soc_headline.csv` |
+| `usable_reference` | 1 | `python3 ../repro/run_usable_reference.py` | `results/tables/usable_reference.csv` |
 | `soc_soh_selection` | 50 | `python3 ../repro/run_soc_soh_selection.py` | `results/tables/soc_soh_selection.csv` |
 | `soc_percell` | 1 | `python3 ../repro/run_soc_percell.py` | `results/tables/soc_percell.csv` |
 | `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
@@ -104,7 +105,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv +1` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: 1210 minutes (20.2 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (41 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 709 minutes (11.8 h).
+Full rebuild: 1211 minutes (20.2 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (41 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 710 minutes (11.8 h).
 
 ## Published numbers
 
@@ -214,6 +215,10 @@ Full rebuild: 1210 minutes (20.2 h) if every stage takes the time recorded again
 | `ext.a8.surface.disc_cc` | 1.297 | `external_a8_surfaces.csv` | sec 37.18 |
 | `ext.a8.surface.chg_worst` | 0.61 | `external_a8_surfaces.csv` | sec 37.18 |
 | `ext.a8.surface.disc_exceed` | 0 | `external_a8_surfaces.csv` | sec 37.18 |
+| `usable.ref.a8.disc10.fleet` | 100.4 | `usable_reference.csv` | sec 37.19 |
+| `usable.ref.a8.disc10.oracle` | 95.2 | `usable_reference.csv` | sec 37.19 |
+| `usable.ref.a8.chg10.oracle` | 81.8 | `usable_reference.csv` | sec 37.19 |
+| `usable.ref.a8.disc10.usable` | 68.89 | `usable_reference.csv` | sec 37.19 |
 
 ## Cells and evaluation protocol
 

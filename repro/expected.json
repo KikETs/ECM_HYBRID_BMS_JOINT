@@ -1239,6 +1239,62 @@
    "value": 0,
    "source": "sec 37.18 — zero discharge exceedance on every surface, so that conclusion is surface-independent",
    "tol": 0
+  },
+  {
+   "id": "usable.ref.a8.disc10.fleet",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "cell": "(mean)"
+   },
+   "column": "vs_fleet_pct",
+   "value": 100.4,
+   "source": "sec 37.19 — the leave-one-cell-out lambda is worth as much as the lambda fitted with all six cells visible",
+   "tol": 0.2
+  },
+  {
+   "id": "usable.ref.a8.disc10.oracle",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "cell": "(mean)"
+   },
+   "column": "vs_cell_oracle_pct",
+   "value": 95.2,
+   "source": "sec 37.19 — what a per-cell field calibration would buy on discharge: about 5 %p",
+   "tol": 0.2
+  },
+  {
+   "id": "usable.ref.a8.chg10.oracle",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "charge",
+    "tau_s": "10.0",
+    "cell": "(mean)"
+   },
+   "column": "vs_cell_oracle_pct",
+   "value": 81.8,
+   "source": "sec 37.19 — and about 18 %p on charge, where the spread between cells is much wider",
+   "tol": 0.2
+  },
+  {
+   "id": "usable.ref.a8.disc10.usable",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "cell": "(mean)"
+   },
+   "column": "usable_pct",
+   "value": 68.89,
+   "source": "sec 37.19 — row-weighted, matches method_comparison_est.csv exactly; the three references share one number",
+   "tol": 0.02
   }
  ],
  "tables": {
@@ -3352,10 +3408,42 @@
     "disc_margin_min": "ratio of lambda_needed to the shipped factor, worst over the six A8 folds",
     "chg_margin_min": "same on charge; below 1 means not conservative"
    }
+  },
+  "usable_reference.csv": {
+   "producer": "python3 repro/run_usable_reference.py",
+   "stage": "usable_reference",
+   "required": true,
+   "rows": 46,
+   "columns": [
+    "direction",
+    "tau_s",
+    "method",
+    "cell",
+    "n",
+    "lambda_deployed",
+    "lambda_fleet",
+    "lambda_cell_oracle",
+    "usable_pct",
+    "vs_fleet_pct",
+    "vs_cell_oracle_pct",
+    "binding_cell"
+   ],
+   "numeric": [
+    "tau_s",
+    "n",
+    "usable_pct",
+    "vs_fleet_pct",
+    "vs_cell_oracle_pct"
+   ],
+   "units": {
+    "usable_pct": "% of the cell own measured SOP",
+    "vs_fleet_pct": "% of the all-cells lambda ceiling (ORACLE BOUND)",
+    "vs_cell_oracle_pct": "% of a lambda fitted on the evaluated cell itself (ORACLE BOUND)"
+   }
   }
  },
  "completeness": {
-  "total_checks": 102,
+  "total_checks": 106,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3389,7 +3477,8 @@
    "external_temp_surfaces.csv": 3,
    "soc_soh_selection.csv": 4,
    "method_comparison_est.csv": 2,
-   "external_a8_surfaces.csv": 4
+   "external_a8_surfaces.csv": 4,
+   "usable_reference.csv": 4
   },
   "check_ids": [
    "sop.disc.10s.lambda",
@@ -3493,7 +3582,11 @@
    "ext.a8.surface.disc_worst",
    "ext.a8.surface.disc_cc",
    "ext.a8.surface.chg_worst",
-   "ext.a8.surface.disc_exceed"
+   "ext.a8.surface.disc_exceed",
+   "usable.ref.a8.disc10.fleet",
+   "usable.ref.a8.disc10.oracle",
+   "usable.ref.a8.chg10.oracle",
+   "usable.ref.a8.disc10.usable"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

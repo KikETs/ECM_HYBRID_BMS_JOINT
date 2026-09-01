@@ -96,6 +96,26 @@ failure rate of an onboard admission filter; no such filter was implemented or
 tested. Oracle-state validation nevertheless overstates system safety, because
 it scores a row set the vehicle could not have selected.
 
+**What "usable current" is a percentage of.** The safety tables divide by the
+cell's own measured SOP, so 100 % needs a perfect predictor. λ is fitted for
+zero exceedance on the training cells, which means **the worst row of the most
+demanding cell sets it** — and every other cell is then scored against a
+capability no single-λ policy can reach. Two reference points make the 69 %
+readable (§37.19):
+
+- against the best λ fitted with **all six cells visible**, the leave-one-cell-out
+  λ scores **100.4 %**. Holding one of these six cells out costs nothing — six
+  cells of one model, one per aging protocol, so it is not a statement about a
+  manufacturing population.
+- against a λ fitted on the **evaluated cell itself**, it scores **95.2 %** on
+  discharge and **81.8 %** on charge. That is what a per-cell field calibration
+  would be worth.
+
+Both are oracle bounds — they use the evaluated cell's labels, so they are
+reported and never selected on. The gap that remains is not generalisation and
+not prediction error (median `pred/meas` = 0.946, 95 % of rows within 8.6 %);
+it is the price of one conservative factor covering the worst row.
+
 **External validation, stated at its actual scope.** RPCWBY contributes **one
 physical Samsung 30T cell**. The six "folds" are six UYPYDJ-trained models
 scored on that same external data — six models, not six cells, so their
@@ -169,7 +189,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 102 stored published values
+python3 repro/verify.py        # check the 106 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```
@@ -184,7 +204,7 @@ an uncommitted file.
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
 in [DATA.md](DATA.md) into `raw/` and run `python3 repro/run.py <stage>`.
-Full rebuild sums to 1210 minutes (20.2 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 709 minutes (11.8 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
+Full rebuild sums to 1211 minutes (20.2 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 710 minutes (11.8 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
 
 [REPRODUCE.md](REPRODUCE.md) maps every published number to the command
 that produces it.
