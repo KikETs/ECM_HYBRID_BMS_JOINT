@@ -108,6 +108,25 @@ claims:
       pair, and it alone spans 1.29x of the 1.35x total.  Say "six
       protocol-cell combinations".
 
+  - id: core.safe_claim
+    text: >
+      The sentence the repository is entitled to: "A8 provides competitive
+      safety-adjusted utility against the tested baselines with a compact
+      embedded implementation, while the experiments explicitly expose
+      limitations in state estimation, external transfer, and evaluation
+      coverage."
+    status: VERIFIED
+    ledger: reviewer, fifth round, 2026-09-01
+    note: >
+      Every word of it is backed: "competitive" by method_comparison.csv
+      (A8 ranks 3rd, 3rd, 2nd, 5th of six, 3 of 20 intervals separate and
+      all three are FFRLS), "compact" by soh_model_cost.csv and the
+      firmware build, and the three named limitations by 37.2, 35.5/37.14
+      and 37.4/37.13.  Five words may NOT be used, and qc.py now fails on
+      each rather than leaving it to a reader: superior, statistically
+      equivalent, pack-validated, generalizable across cells or protocols,
+      formal WCET.  Corpus cases pin all five in both directions.
+
   - id: ext.crate.margin
     text: >
       (new, 37.12/37.14) Test#8 at 0 C: the frozen lambda holds across prior

@@ -53,6 +53,26 @@ MUST_FLAG = [
      'Round three findings:\n'
      '> the reviewer asked for a margin\n'
      'The shipped estimator is a four-parameter model.'),
+    ('negation AFTER the phrase is still an assertion of it',
+     'A8 outperformed all baselines, not just some of them.'),
+    ('a denial in an earlier sentence does not license this one',
+     'The trim is not superior. A8 outperformed all baselines.'),
+    # The five words the fifth review named.
+    ('superior asserted, naming the baselines',
+     'A8 is superior to all baselines on safety-adjusted utility.'),
+    # Without this the first alternative of the rule is dead weight: the case
+    # above is caught by the second one, so neutering the first changed
+    # nothing and the corpus stayed green.
+    ('superior asserted without naming what it beats',
+     'On charge at both horizons the trim is superior.'),
+    ('statistical equivalence asserted',
+     'The trim is statistically equivalent to the sequence baselines.'),
+    ('pack-validated asserted',
+     'The margin is pack-validated up to 192 cells in simulation.'),
+    ('generalisation across protocols asserted',
+     'The estimator is generalizable across cells and protocols.'),
+    ('formal WCET asserted',
+     'A formal WCET analysis gives 339.84 us per cycle.'),
     ('marker word in a NEIGHBOURING block must not exempt',
      'This section was corrected in round three.\n'
      '\n'
@@ -108,6 +128,18 @@ MUST_NOT_FLAG = [
     ('narrowed claim WITH its qualifier is not a reintroduction',
      'At the lambda values set on a zero-exceedance criterion, exceedances\n'
      'are zero for every N from 1 to 192, and usable current improves.'),
+    ('the safe form of the utility claim',
+     'A8 provides competitive safety-adjusted utility against the tested '
+     'baselines with a compact embedded implementation.'),
+    ('superiority denied',
+     'A8 is not superior to all baselines; three of twenty intervals '
+     'separate.'),
+    ('equivalence denied',
+     'The trim is never statistically equivalent to the baselines without a '
+     'pre-specified margin.'),
+    ('a plain use of the word equivalent elsewhere',
+     'AdaptiveAvgPool1d(8) is equivalent to AvgPool1d(4) on length-32 '
+     'input, verified at max|delta| = 0.'),
     ('never-a phrasing',
      'Say "four effective deployed coefficients", never "a four-parameter '
      'model".'),

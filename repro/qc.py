@@ -172,6 +172,33 @@ RETRACTED = [
      'filter failure',
      '37.2 — no onboard filter was implemented or tested; the measured thing '
      'is the offline inclusion rule'),
+    # --- fifth review round, 2026-09-01 ---------------------------------
+    # The reviewer named five words that may not be used and one sentence
+    # that may.  Writing them down in a document is what the previous four
+    # rounds did; this makes the next draft fail instead.
+    (r'(?<!not )(?<!never )(?:A8|the trim|the hybrid) is superior'
+     r'|superior to (?:all|the|every) (?:other )?baselines?',
+     'calling the trim superior to the baselines',
+     '37.3 — 3 of 20 bootstrap intervals separate and all three are FFRLS; '
+     'A8 places 3rd, 3rd, 2nd and 5th of six'),
+    (r'(?<!not )(?<!never )statistically equivalent'
+     r'|equivalent to (?:all|the|every) (?:other )?baselines?',
+     'claiming equivalence with the baselines',
+     '37.3 — equivalence needs a margin fixed before the data is seen; none '
+     'was, and no noninferiority test was run'),
+    (r'pack[- ]validated',
+     'calling the resampling simulation a pack validation',
+     '34.10 / 37.14 — there is no pack, module or HIL bench'),
+    (r'generali[sz]able across (?:cells|protocols)'
+     r'|generali[sz]es across (?:cells|protocols)',
+     'claiming generalisation across cells or protocols',
+     '37.13 — six cells of one model, one cell per protocol, so the two are '
+     'confounded; generalization_scope.yaml holds both axes at PARTIAL'),
+    (r'formal WCET|WCET analysis|guaranteed WCET',
+     'calling the cycle-budget estimate a formal WCET',
+     '33.2 / 37.10 — no integrated loop was timed and no WCET tool was run; '
+     'it is a sum of per-stage observed maxima'),
+
     (r'for a production BMS|production-ready',
      'the production framing',
      '35.8 / 37.1 — withdrawn; oracle-state validation scores a row set the '
@@ -506,17 +533,32 @@ def block_for(line_no, blks):
 def is_assertion(line, match, block_text, line_offset=0):
     """False when this occurrence is a record of the claim, not a use of it.
 
-    Four ways a block can be a record, all decidable without guessing:
+    Five ways a block can be a record, all decidable without guessing:
       * it carries an audit marker such as [Corrected] or [SUPERSEDED]
       * it is a blockquote, which is how this repository writes corrections
       * it is about qc.py, which has to be able to name its own guards
       * the phrase is struck through
+      * the sentence NEGATES the claim before reaching it -- "A8 is not
+        superior to all baselines" is the correction, not the claim.  The
+        entries used to carry their own fixed-width lookbehinds for this,
+        which handled "not superior" and missed "never statistically
+        equivalent" because a word sat in between.  One rule over the text
+        before the match handles every entry and every distance.
     Failing those, a phrase in double quotes is a record only if the block
     also carries a word that discusses the claim.  A bare assertion is never
     exempt, however many marker words are nearby.
     """
     block = block_text.lower()
     if '~~' in line:
+        return False
+    # Negation anywhere in this sentence before the match.  Sentence, not
+    # block: a denial two sentences earlier does not license an assertion
+    # here, and "not" AFTER the phrase ("A8 outperformed all baselines, not
+    # just some") is still an assertion of it.
+    head = line[:match.start()]
+    head = re.split(r'(?<=[.;:])\s', head)[-1]
+    if re.search(r"\b(?:not|never|no longer|cannot|isn't|is n't|without)\b",
+                 head, re.I):
         return False
     if any(m in block for m in CORRECTION_MARKERS):
         return False
