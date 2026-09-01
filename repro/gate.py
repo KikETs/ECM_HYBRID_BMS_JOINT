@@ -110,24 +110,31 @@ def run(label, argv, cwd, advisory, quiet):
 
 
 def clean_clone_pass(quiet):
-    """Run the torch-free subset against `git archive` of HEAD.
+    """Run the torch-free subset against a fresh clone of HEAD.
 
     The working tree can pass on files that were never committed.  This is
-    the cheap version of what CI does with a fresh checkout, and it is the
-    only step here that can catch that class.
+    what CI does with actions/checkout, and it is the only step here that can
+    catch that class.
+
+    `git archive` was the first attempt, and it produced a directory with no
+    .git in it.  tests/test_producers.py asks `git ls-files` whether a stage
+    input is committed, could not answer without a repository, and reported a
+    committed file as unobtainable -- a false failure that would have taught
+    the next person to stop running --strict-clone.  A real clone it is.
     """
     tmp = tempfile.mkdtemp(prefix='gate-clone-')
     try:
-        tar = os.path.join(tmp, 'head.tar')
-        r = subprocess.run(['git', 'archive', '-o', tar, 'HEAD'], cwd=ROOT,
-                           capture_output=True, text=True)
-        if r.returncode:
-            print('  FAIL  clean clone: git archive failed')
-            print('        ' + r.stderr.strip()[:400])
-            return False
         dst = os.path.join(tmp, 'repo')
-        os.makedirs(dst)
-        subprocess.run(['tar', 'xf', tar, '-C', dst], check=True)
+        r = subprocess.run(
+            ['git', 'clone', '--quiet', '--shared', '--no-checkout',
+             ROOT, dst], capture_output=True, text=True)
+        if r.returncode == 0:
+            r = subprocess.run(['git', 'checkout', '--quiet', 'HEAD'],
+                               cwd=dst, capture_output=True, text=True)
+        if r.returncode:
+            print('  FAIL  clean clone: git clone failed')
+            print('        ' + (r.stderr or r.stdout).strip()[:400])
+            return False
         print(f'\n  -- clean clone of HEAD in {dst}')
         good = True
         for label, argv, cwd, advisory, in (

@@ -156,7 +156,15 @@ which is why running it twice and getting the same answer had not caught it.
 conda env create -f environment.yml && conda activate samsung30t
 python3 repro/verify.py        # check the 89 stored published values
 python3 repro/run.py --list    # stages, status, runtime
+python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```
+
+`gate.py` exists because four review rounds each found a defect that was
+already in the working tree — the checks for most of them existed, in four
+different places, and nothing ran all four. It fails on a missing tool rather
+than skipping it, and `--strict-clone` repeats the torch-free subset against a
+fresh clone of `HEAD`, which is the only way to catch a check that passes on
+an uncommitted file.
 
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
