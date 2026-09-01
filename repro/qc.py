@@ -1,6 +1,6 @@
 """Pre-draft QC — find stale numbers and retracted claims left in the docs.
 
-verify.py checks the 38 numbers that live in tables.  The docs carry far more
+verify.py checks the numbers that live in tables.  The docs carry far more
 numbers than that, and **some went stale this session when the adopted
 configuration changed from A3 to A8.**  This sweeps them automatically and
 produces a list for a human to judge.
@@ -28,19 +28,72 @@ DOCS = os.path.join(ROOT, 'docs')
 TABLES = os.path.join(ROOT, 'analysis', 'results', 'tables')
 
 # (stale value, current value, what, may be deliberate)
-STALE = [
-    ('0.679', '0.683', 'discharge lambda(10s)  A3 -> A8', True),
-    ('0.462', '0.470', 'discharge lambda(2s)   A3 -> A8', True),
-    ('0.567', '0.586', 'charge lambda(10s)     A3 -> A8', True),
-    ('0.544', '0.560', 'charge lambda(2s)      A3 -> A8', True),
-    ('12.42', '5.99', 'feature update us      A3 -> A8', True),
-    ('217', '214.8', 'period total us        A3 -> A8', True),
-    ('0.0128', '0.0135', 'SOH RMSE   defects included -> excluded', True),
-    ('+0.0010', '+0.0001', 'SOH bias   defects included -> excluded', True),
-    ('0.594', '0.657', 'estimated-SOH discharge lambda', True),
-    ('3.11 -> 3.35', '2.05 -> 2.17', 'SOC estimated-SOH price (circular bench)',
-     True),
+# (old value, description, where the current value lives).  The CURRENT side
+# is looked up in the tables, never written here: this list previously carried
+# it as a literal and went stale itself -- it was telling readers to replace
+# 217 with 214.8 after 214.8 had become 227.79, and 0.0128 with 0.0135 after
+# the SOH arm became ridge at 0.0094.  A checker that hands out stale numbers
+# is worse than no checker.
+STALE_SPEC = [
+    ('0.679',  'discharge lambda(10s)  A3 -> A8',
+     ('safety_strict_oracle.csv', {'direction': 'discharge', 'tau_s': '10.0',
+                                   'soh_arm': 'oracle'},
+      'lambda_pooled_shipped', 3)),
+    ('0.462',  'discharge lambda(2s)   A3 -> A8',
+     ('safety_strict_oracle.csv', {'direction': 'discharge', 'tau_s': '2.0',
+                                   'soh_arm': 'oracle'},
+      'lambda_pooled_shipped', 3)),
+    ('0.567',  'charge lambda(10s)     A3 -> A8',
+     ('safety_strict_oracle.csv', {'direction': 'charge', 'tau_s': '10.0',
+                                   'soh_arm': 'oracle'},
+      'lambda_pooled_shipped', 3)),
+    ('0.544',  'charge lambda(2s)      A3 -> A8',
+     ('safety_strict_oracle.csv', {'direction': 'charge', 'tau_s': '2.0',
+                                   'soh_arm': 'oracle'},
+      'lambda_pooled_shipped', 3)),
+    ('12.42',  'A8 feature update us',
+     ('mcu.csv', {'stage': 'FEAT_A8'}, 'median_us', 2)),
+    ('217',    'per-cycle total us',
+     ('mcu_cycle.csv', {'case': 'median'}, 'cycle_total_us', 2)),
+    ('0.0128', 'SOH RMSE',
+     ('soh.csv', {'cell': 'ALL'}, 'rmse', 4)),
+    ('+0.0010', 'SOH bias',
+     ('soh.csv', {'cell': 'ALL'}, 'bias', 4)),
+    ('0.594',  'estimated-SOH discharge lambda',
+     ('safety_strict_est.csv', {'direction': 'discharge', 'tau_s': '10.0',
+                                'soh_arm': 'est'},
+      'lambda_pooled_shipped', 3)),
 ]
+
+
+def _lookup(table, where, column, places):
+    """The current value of a published number, read from its table."""
+    p = os.path.join(TABLES, table)
+    if not os.path.exists(p):
+        return None
+    with open(p, encoding='utf-8', newline='') as f:
+        for r in csv.DictReader(f):
+            if all(r.get(k) == v for k, v in where.items()):
+                try:
+                    return f'{float(r[column]):.{places}f}'
+                except (KeyError, ValueError):
+                    return None
+    return None
+
+
+def stale_pairs():
+    """(old, current, description) with the current side resolved now."""
+    out = []
+    for old, what, spec in STALE_SPEC:
+        cur = _lookup(*spec)
+        if cur is None:
+            continue
+        if old.lstrip('+-').rstrip('0').rstrip('.') == \
+                cur.lstrip('+-').rstrip('0').rstrip('.'):
+            continue           # no longer a change; nothing to flag
+        out.append((old, cur, what, True))
+    return out
+
 
 # Claims refuted or withdrawn this session.  (regex, what, where the
 # correction is)
@@ -127,9 +180,15 @@ RETRACTED = [
 # Numbers that should come from a table but live only in the docs (invisible
 # to verify.py)
 ORPHAN_HINTS = [
-    (r'0\.19\b|0\.16\s*[-–~]\s*0\.24', 'transfer ratio alpha — not in a table (32.3)'),
-    (r'-0\.385|-0\.411|-0\.400|-0\.587|−0\.385|−0\.411|−0\.400|−0\.587',
-     "28.3's correlation — not in a table"),
+    # RESOLVED: alpha.csv now carries alpha_fast / alpha_slow per cell and
+    # verify.py checks two of them.  The pattern only fires in the design-era
+    # documents, where the value is a record rather than an unverifiable
+    # claim, so keeping it is noise.  Left as a comment, not deleted:
+    #   (r'0\.19\b|0\.16\s*[-–~]\s*0\.24',
+    #    'transfer ratio alpha — not in a table (32.3)'),
+    # RESOLVED: correlation.csv carries all four, checked by corr.disc.10s.
+    #   (r'-0\.385|-0\.411|-0\.400|-0\.587|−0\.385|−0\.411|−0\.400|−0\.587',
+    #    "28.3's correlation — not in a table"),
     # RESOLVED 2026-08-31: build_size.csv now carries both builds and
     # verify.py checks both (mcu.build.both, mcu.build.a8_only), so 142,060 is
     # table-backed.  143,932 and -1,872 B remain in the text only as the
@@ -138,8 +197,10 @@ ORPHAN_HINTS = [
     # silently dropped:
     #   (r'1,?872\s*B|142,?060|143,?932',
     #    'deployment build size — not in a table (33.6)'),
-    (r'0\.98[-–]?1\.00×|0\.98\s*[-–~]\s*1\.00\s*×|0\.98×|1\.00×',
-     "33.5's resistance ratio — not in a table"),
+    # RESOLVED: cold_ratio.csv carries both cells, checked by
+    # cold.BOOST.ratio and cold.CC.ratio.
+    #   (r'0\.98[-–]?1\.00×|0\.98\s*[-–~]\s*1\.00\s*×|0\.98×|1\.00×',
+    #    "33.5's resistance ratio — not in a table"),
 ]
 
 # A correction already sitting next to a hit.  Without these the same three
@@ -203,11 +264,15 @@ def retraction_hits(lines, blks, line_no, line):
 
 def scan():
     stale_hits, retr_hits, orph_hits = [], [], []
+    stale = stale_pairs()
     for fn, lines in docs():
         blks = blocks(lines)
         for i, ln in enumerate(lines, 1):
-            for old, new, what, ok in STALE:
-                if old not in ln:
+            for old, new, what, ok in stale:
+                # Token match, not substring: '217' otherwise fires inside
+                # the cell part number INR21700-30T, which is how three of
+                # these sat in README.md and DATA.md looking like drift.
+                if not re.search(rf'(?<![\d.]){re.escape(old)}(?![\d])', ln):
                     continue
                 blk = block_for(i, blks)[0].lower()
                 recorded = (any(c in blk for c in CORRECTION_MARKERS)
@@ -215,7 +280,8 @@ def scan():
                             or all(x.strip().startswith('>')
                                    for x in blk.split('\n') if x.strip()))
                 stale_hits.append((fn, i, old, new, what,
-                                   ln.strip()[:72], recorded))
+                                   ln.strip()[:72], recorded,
+                                   section_of(fn, i, lines)))
             for i2, what, where, txt in retraction_hits(lines, blks, i, ln):
                 retr_hits.append((fn, i2, what, where, txt))
             for pat, what in ORPHAN_HINTS:
@@ -255,6 +321,42 @@ DISCUSSION_MARKERS = (
     'wrote', 'pointed at', "section's logic is", 'never be written',
     'must not be called', 'overstates them', 'never pack validation',
 )
+
+
+def section_of(fn, line_no, lines):
+    """The numbered section a line falls in, or 0.
+
+    Reported because it decides what a hit means.  Sections 34 and up are the
+    audit's own record of current results; anything below is a dated account
+    of an earlier configuration, and an old value there is the document doing
+    its job.  Without the split, 71 historical records drowned the three that
+    were real -- and those three turned out to be '217' matching inside the
+    cell part number INR21700-30T.
+    """
+    import re as _re
+    cur = 0
+    for i, ln in enumerate(lines, 1):
+        if i > line_no:
+            break
+        m = _re.match(r'#+ (\d+)\.', ln)
+        if m:
+            cur = int(m.group(1))
+    return cur
+
+
+def _n_checks():
+    """How many values verify.py actually checks, read from expected.json.
+
+    This was the literal 38 in two places and stayed there while the file grew
+    to 80 -- the same defect as the STALE list carrying its own current
+    values.  A count in prose is a number someone has to remember to update.
+    """
+    import json
+    p = os.path.join(ROOT, 'repro', 'expected.json')
+    try:
+        return len(json.load(open(p, encoding='utf-8'))['checks'])
+    except Exception:                                      # noqa: BLE001
+        return '?'
 
 
 def blocks(lines):
@@ -336,15 +438,22 @@ def table_numbers():
 def main():
     st, rt, orp = scan()
 
-    standing = [h for h in st if not h[6]]
+    CURRENT_FROM = 34
+    live = [h for h in st if not h[6] and (h[7] == 0 or h[7] >= CURRENT_FROM)]
+    historical = [h for h in st if not h[6] and 0 < h[7] < CURRENT_FROM]
     recorded = [h for h in st if h[6]]
-    print(f"  == (1) possibly stale values  {len(standing)} standing, "
+    print(f"  == (1) possibly stale values  {len(live)} in current text, "
+          f"{len(historical)} in sections below {CURRENT_FROM}, "
           f"{len(recorded)} inside a correction block\n", flush=True)
     print(f"  {'file':<22}{'line':>6}  {'stale':>9} -> {'current':<9} what",
           flush=True)
     print('  ' + '-' * 88, flush=True)
-    for fn, i, old, new, what, txt, _rec in standing:
+    for fn, i, old, new, what, txt, _rec, sec in live:
         print(f"  {fn:<22}{i:>6}  {old:>9} -> {new:<9} {what}", flush=True)
+    if historical:
+        print(f"\n  {len(historical)} more are in sections 1-{CURRENT_FROM - 1}, "
+              f"which record what earlier configurations measured.  An old "
+              f"value there is the document working, not drift.", flush=True)
     if recorded:
         print(f"\n  {len(recorded)} more sit inside a [Corrected] block, a "
               f"blockquote or a strikethrough — those are the document doing "
@@ -375,7 +484,7 @@ def main():
 
     tv = table_numbers()
     print(f"\n  For reference: {len(tv)} distinct values live in tables.  "
-          f"verify.py checks 38 of them.", flush=True)
+          f"verify.py checks {_n_checks()} of them.", flush=True)
     print("\n  This list is 'where to look', not 'what to fix' — values left "
           "in deliberately as comparison groups also show up.", flush=True)
 

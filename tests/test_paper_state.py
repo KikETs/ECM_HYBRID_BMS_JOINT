@@ -8,6 +8,7 @@ describing a model the paper had replaced.  Neither is a YAML error; both are
 the file failing at its one job.
 """
 import os
+import sys
 
 import pytest
 import yaml
@@ -89,3 +90,43 @@ def test_statuses_come_from_a_known_set(claims):
     assert not bad, (
         f'unknown claim statuses {sorted(bad)} -- a typo here silently '
         f'changes which bucket a claim counts in')
+
+
+def test_the_stale_checker_reads_current_values_from_tables():
+    """qc's "current" column must be looked up, never written down.
+
+    It used to be a literal, and it went stale itself: it told readers to
+    replace 217 with 214.8 after 214.8 had become 227.79, and 0.0128 with
+    0.0135 after the SOH arm became ridge at 0.0094.  A checker that hands
+    out stale numbers is worse than no checker.
+    """
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    import qc
+    src = open(os.path.join(ROOT, 'repro', 'qc.py'), encoding='utf-8').read()
+    assert 'def stale_pairs' in src and 'def _lookup' in src, \
+        'qc no longer resolves the current value from the tables'
+    pairs = qc.stale_pairs()
+    assert pairs, 'stale_pairs() resolved nothing; every lookup failed'
+    for old, cur, what, _ in pairs:
+        assert old != cur, f'{what}: old and current are the same'
+    # The current side must agree with the table it claims to come from.
+    for old, what, (table, where, column, places) in qc.STALE_SPEC:
+        got = qc._lookup(table, where, column, places)
+        if got is None:
+            continue
+        hit = [c for o, c, w, _ in pairs if w == what]
+        if hit:
+            assert hit[0] == got, f'{what}: {hit[0]} != table value {got}'
+
+
+def test_no_current_value_is_hard_coded_in_the_stale_list():
+    """The spec tuples carry (old, description, lookup) and nothing else."""
+    sys.path.insert(0, os.path.join(ROOT, 'repro'))
+    import qc
+    for entry in qc.STALE_SPEC:
+        assert len(entry) == 3, (
+            f'a STALE_SPEC entry is (old, what, lookup); got {len(entry)} '
+            f'fields -- a fourth is how the literal crept back in')
+        old, what, spec = entry
+        assert isinstance(spec, tuple) and len(spec) == 4, (
+            f'{what}: the lookup is (table, where, column, places)')
