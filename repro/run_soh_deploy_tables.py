@@ -90,8 +90,8 @@ def main():
         rm_c, per_c = sizes['cnn']['rmse_pooled'], sizes['cnn']['rmse_per_cell']
 
     for name, us, rm, per, sz in (
-            ('ridge (deployed)', r_ridge, rm_r, per_r, sizes['ridge']),
-            ('1D CNN (superseded)', r_cnn, rm_c, per_c, sizes['cnn'])):
+            ('ridge (adopted)', r_ridge, rm_r, per_r, sizes['ridge']),
+            ('1D CNN (baseline)', r_cnn, rm_c, per_c, sizes['cnn'])):
         if us is None:
             print(f'  no board measurement for {name}', file=sys.stderr)
             continue

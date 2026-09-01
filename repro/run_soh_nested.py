@@ -1,6 +1,6 @@
 """Nested model-family selection for the SOH arm.
 
-Why this exists.  soh_baselines.csv shows ridge beating the shipped CNN on the
+Why this exists.  soh_baselines.csv shows ridge beating the 1D CNN on the
 leave-one-cell-out splits.  Adopting ridge on that evidence would be choosing a
 model by looking at the held-out cells -- the same selection-on-the-test-set
 defect the trim's nested check (run_nested_selection.py) was written to catch.
@@ -71,7 +71,7 @@ def fit_predict_sk(make, p, Xtr, ytr, Xte):
 
 
 def fit_predict_cnn(Xtr, ytr, Xte, seeds=CNN_SEEDS):
-    """The shipped CNN, seed-averaged, same recipe as soh_cnn.py."""
+    """The 1D CNN, seed-averaged, same recipe as soh_cnn.py."""
     import torch
     from soh_cnn import train_fold
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -144,7 +144,7 @@ def main():
     fams = sk_families()
     cand = [(n, m, g, False) for n, m, g in fams]
     if not a.no_cnn:
-        cand.append(('1D CNN (shipped)', None, [None], True))
+        cand.append(('1D CNN', None, [None], True))
 
     rows, summary_pred = [], {}
     t0 = time.time()
@@ -163,7 +163,7 @@ def main():
         wr, wp = scores[win]
 
         Xa, Xb = standardise(X[otr], X[ote])
-        if win == '1D CNN (shipped)':
+        if win == '1D CNN':
             pred = fit_predict_cnn(Xa, y[otr], Xb)
         else:
             make = [m for n, m, g in fams if n == win][0]

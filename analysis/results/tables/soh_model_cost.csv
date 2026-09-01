@@ -1,3 +1,3 @@
 model,coefficients,rmse_pooled,rmse_worst_cell,worst_cell,soh_median_us,soh_p95_us,soh_max_us,firmware_text_B,firmware_bss_B
-ridge (deployed),65,0.0094,0.0130,BOOST_REST,6.50,6.50,7.84,72700,13172
-1D CNN (superseded),32835,0.0135,0.0291,BOOST_REST,19442.25,19442.25,19442.52,144012,28276
+ridge (adopted),65,0.0094,0.0130,BOOST_REST,6.50,6.50,7.84,72700,13172
+1D CNN (baseline),32835,0.0135,0.0291,BOOST_REST,19442.25,19442.25,19442.52,144012,28276

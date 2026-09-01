@@ -629,3 +629,42 @@ def test_every_repo_path_a_document_cites_exists_or_is_annotated():
     assert not bad, (
         'documents cite repository paths that do not exist, with no '
         'explanation in the same block:\n  ' + '\n  '.join(bad))
+
+
+def test_the_same_model_has_the_same_number_in_every_table():
+    """Two tables reporting one model must agree.
+
+    soh_baselines.csv read results/soh_pred.npz for its CNN row.  That file
+    held the CNN until ridge was adopted; afterwards it held ridge, so the CNN
+    row silently reported ridge's 0.0094 under the CNN's name while
+    soh_model_cost.csv -- which reads soh_pred_cnn.npz -- still said 0.0135.
+    Neither table was obviously wrong on its own; only the disagreement was.
+    """
+    import csv
+    T = os.path.join(ROOT, 'analysis', 'results', 'tables')
+
+    def rows(n):
+        p = os.path.join(T, n)
+        if not os.path.exists(p):
+            pytest.skip(f'{n} not built')
+        return list(csv.DictReader(open(p, encoding='utf-8')))
+
+    base = {r['method']: r for r in rows('soh_baselines.csv')}
+    cost = {r['model']: r for r in rows('soh_model_cost.csv')}
+    pairs = [('ridge (adopted)', 'ridge (adopted)'),
+             ('1D CNN (3 seeds)', '1D CNN (baseline)')]
+    for bkey, ckey in pairs:
+        assert bkey in base, f'soh_baselines.csv has no {bkey!r}'
+        assert ckey in cost, f'soh_model_cost.csv has no {ckey!r}'
+        for col_b, col_c in (('rmse_pooled', 'rmse_pooled'),
+                             ('rmse_worst_cell', 'rmse_worst_cell')):
+            b, c = float(base[bkey][col_b]), float(cost[ckey][col_c])
+            assert abs(b - c) < 5e-5, (
+                f'{bkey} disagrees between tables on {col_b}: '
+                f'soh_baselines {b} vs soh_model_cost {c}')
+
+    # And the two must not be the same model by accident.
+    assert base['ridge (adopted)']['rmse_pooled'] != \
+        base['1D CNN (3 seeds)']['rmse_pooled'], (
+            'ridge and the CNN report an identical pooled RMSE, which means '
+            'one row is reading the other model\'s predictions')

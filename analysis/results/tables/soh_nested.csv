@@ -1,4 +1,4 @@
-holdout,n,chosen_family,chosen_param,inner_rmse,outer_rmse,inner_mean baseline,inner_ridge,inner_PLS,inner_SVR (RBF),inner_gradient boosting,inner_1D CNN (shipped)
+holdout,n,chosen_family,chosen_param,inner_rmse,outer_rmse,inner_mean baseline,inner_ridge,inner_PLS,inner_SVR (RBF),inner_gradient boosting,inner_1D CNN
 BOOST,51,gradient boosting,0.1,0.0102,0.0091,0.0882,0.0105,0.0107,0.0102,0.0102,0.0142
 BOOST_NEGPULSE,47,ridge,0.001,0.0103,0.0112,0.0875,0.0103,0.0111,0.0164,0.0108,0.0184
 BOOST_NEGPULSE_1S,49,ridge,0.1,0.0101,0.0060,0.0888,0.0101,0.0104,0.0110,0.0108,0.0149

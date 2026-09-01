@@ -4685,7 +4685,10 @@ cell-held-out splits, identical 64-bin features and identical target
 | PLS | 0.0096 | 0.0126 |
 | SVR (RBF) | 0.0099 | 0.0146 |
 | gradient boosting | 0.0101 | 0.0179 |
-| **1D CNN (shipped, 10,945 parameters)** | **0.0135** | **0.0293** |
+| **1D CNN (shipped at the time, 10,945 parameters)** | **0.0135** | **0.0293** |
+
+[Superseded — 36] The CNN is a comparison group now, not the arm: ridge
+was adopted, and nested selection places the CNN last on all six folds.
 | mean baseline | 0.0878 | 0.0988 |
 
 Ridge is 30 % better pooled and 2.3× better on the worst cell, with 65
@@ -5114,8 +5117,8 @@ All steps pass.
 ### 35.7 The SOH arm
 
 Ridge regression on the shipped input, with its penalty chosen by grouped
-inner selection on the five training cells only, beats the deployed CNN on
-the same leave-one-cell-out splits: pooled RMSE **0.0094 against 0.0135**, and
+inner selection on the five training cells only, beats the 1D CNN that was
+deployed at the time, on the same leave-one-cell-out splits: pooled RMSE **0.0094 against 0.0135**, and
 worst cell **0.0130 against 0.0293** — a factor of 2.25 on the cell that
 matters. [Updated — 37.5: the CNN was retrained through a deterministic pool
 and its worst cell is now 0.0291, a factor of 2.24. The earlier figure came
@@ -5191,8 +5194,8 @@ selected.
 ## 36. The SOH arm was replaced
 
 §35.7 left this as a stated decision rather than a done one: ridge beat the
-deployed CNN on the same splits, and the paper demoted the CNN instead of
-replacing it. That was the wrong call, for a reason §35.7 did not notice —
+CNN that was deployed at the time, on the same splits, and the paper demoted
+it instead of replacing it. That was the wrong call, for a reason §35.7 did not notice —
 the CNN is not merely worse, it is a model that **no honest selection procedure
 would have picked**.
 
@@ -5225,8 +5228,8 @@ ensemble does not. That is a deployability constraint, not a test score.
 
 | | pooled RMSE | worst cell | coefficients |
 |---|---:|---:|---:|
-| ridge (deployed) | **0.0094** | **0.0130** (BOOST_REST) | **65** |
-| 1D CNN (superseded) | 0.0135 | 0.0291 (BOOST_REST) | 32,835 |
+| **ridge (adopted)** | **0.0094** | **0.0130** (BOOST_REST) | **65** |
+| 1D CNN (baseline) | 0.0135 | 0.0291 (BOOST_REST) | 32,835 |
 
 The worst cell matters more than the pooled figure: the CNN was 2.2× its own
 pooled error on BOOST_REST, ridge is 1.4×. The arm that used to fail worst on
@@ -5682,3 +5685,37 @@ so is not, and a reader following the reference had no way to tell. Each now
 carries the explanation in its own block, and a test requires that — reusing
 `qc.py`'s block rule, so "this text is a record, not a claim" has one
 mechanism in this repository rather than two.
+
+### 37.11 The SOH arm is ridge; the CNN is a baseline
+
+Adopting ridge (§36) changed which model the paper reports, and the labels
+had not followed. `soh_baselines.csv` still called the CNN "shipped",
+`soh_model_cost.csv` called it "superseded" — audit language, not the name of
+a comparison group — and `soh_nested.csv` carried `inner_1D CNN (shipped)`.
+
+Worse, `paper_map.yaml` still listed **`soh.rmse` as VERIFIED with the CNN's
+0.0135**. The entry a reader would take as "the SOH result this paper stands
+on" was the model that had been replaced. `mcu.cycle_time` was VERIFIED at
+214.8 µs and 142.1 KB for the same reason.
+
+Both are `SUPERSEDED` now with the current values attached, and the tables
+read the way the paper argues:
+
+| | pooled RMSE | worst cell | coefficients |
+|---|---:|---:|---:|
+| **ridge (adopted)** | **0.0094** | **0.0130** (BOOST_REST) | **65** |
+| gradient boosting | 0.0101 | 0.0179 | — |
+| PLS | 0.0096 | 0.0126 | — |
+| SVR (RBF) | 0.0099 | 0.0146 | — |
+| 1D CNN (baseline) | 0.0135 | 0.0291 | 32,835 |
+| mean baseline | 0.0878 | 0.0988 | — |
+
+The CNN now sits with PLS, SVR and gradient boosting, which is where the
+evidence puts it: nested selection scores every family on the five training
+cells before touching the held-out one, and the CNN places **last on all six
+folds and is chosen zero times**.
+
+This one was not found by a sweep or a reviewer's file list — it was found by
+being asked whether the paper really had that many claims, and counting.
+Eleven survive, not the thirteen I reported, because two of the "verified"
+ones were describing a model the paper no longer uses.

@@ -746,7 +746,7 @@
       "id": "soh.ridge.rmse",
       "table": "soh_model_cost.csv",
       "where": {
-        "model": "ridge (deployed)"
+        "model": "ridge (adopted)"
       },
       "column": "rmse_pooled",
       "value": 0.0094,
@@ -757,18 +757,18 @@
       "id": "soh.cnn.rmse",
       "table": "soh_model_cost.csv",
       "where": {
-        "model": "1D CNN (superseded)"
+        "model": "1D CNN (baseline)"
       },
       "column": "rmse_pooled",
       "value": 0.0135,
       "tol": 0,
-      "source": "sec 36.1 — the CNN it replaced, same splits"
+      "source": "sec 36.1 — the 1D CNN baseline, same splits"
     },
     {
       "id": "soh.ridge.us",
       "table": "soh_model_cost.csv",
       "where": {
-        "model": "ridge (deployed)"
+        "model": "ridge (adopted)"
       },
       "column": "soh_median_us",
       "value": 6.5,
@@ -779,7 +779,7 @@
       "id": "soh.cnn.us",
       "table": "soh_model_cost.csv",
       "where": {
-        "model": "1D CNN (superseded)"
+        "model": "1D CNN (baseline)"
       },
       "column": "soh_median_us",
       "value": 19442.25,
@@ -803,7 +803,7 @@
       "where": {
         "holdout": "BOOST"
       },
-      "column": "inner_1D CNN (shipped)",
+      "column": "inner_1D CNN",
       "value": 0.0142,
       "tol": 0,
       "source": "sec 36.1 — the CNN's inner score, never the best on any fold",
@@ -2693,7 +2693,7 @@
         "inner_PLS",
         "inner_SVR (RBF)",
         "inner_gradient boosting",
-        "inner_1D CNN (shipped)"
+        "inner_1D CNN"
       ],
       "numeric": [
         "n",
@@ -2704,7 +2704,7 @@
         "inner_PLS",
         "inner_SVR (RBF)",
         "inner_gradient boosting",
-        "inner_1D CNN (shipped)"
+        "inner_1D CNN"
       ]
     },
     "soh_nested_summary.csv": {

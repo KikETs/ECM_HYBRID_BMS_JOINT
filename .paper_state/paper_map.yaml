@@ -55,8 +55,16 @@ claims:
     text: "SOH RMSE 0.0135, bias +0.0001"
     table: soh.csv
     producer: "python3 repro/run_soh_table.py"
-    status: VERIFIED
+    status: SUPERSEDED
     note: "Worst cell BOOST_REST is 0.0293 — 2.2x the pooled value.  Report it."
+    replacement: >
+      That is the 1D CNN's number, and it stopped being the SOH arm's result
+      when ridge was adopted (36).  The arm is dQ/dV ridge, 65 coefficients:
+      pooled RMSE 0.0094, bias -0.0005, worst cell 0.0130 - 1.4x the pooled
+      value rather than 2.2x.  The CNN is now a comparison group beside PLS,
+      SVR and gradient boosting, and nested selection does not pick it on any
+      of the six folds.  Current values: soh.csv, soh_baselines.csv,
+      soh_model_cost.csv.
 
   - id: soh.cnn_needed
     text: "a CNN is the right model for partial-charge SOH"
@@ -74,9 +82,15 @@ claims:
 
   - id: mcu.cycle_time
     text: "214.8 us per control cycle, 142.1 KB flash"
-    table: mcu.csv
+    table: mcu_cycle.csv
     producer: "python3 repro/run_mcu_table.py"
-    status: VERIFIED
+    status: SUPERSEDED
+    replacement: >
+      Both figures moved twice - the ridge SOH arm and the deterministic
+      retrain changed the image - and the manifest recording them went stale
+      with them.  Per-cycle 227.79 us median and 339.84 us worst case, 2.278 %
+      and 3.398 % of a 100 Hz budget; deployment build text 70796 B.  Derived
+      into mcu_cycle.csv now instead of typed into a manifest (37.10).
     note: >
       Re-measured on hardware with the corrected A8 firmware: median
       214.83 us, WCET 307.12 us.  Flash: deployment build text 142060 B
@@ -98,7 +112,10 @@ claims:
   - id: mcu.parameter_count
     text: "4 parameters"
     status: PARTIAL
-    replacement: "four effective deployed coefficients; the header ships a 12-input layer (50 floats)."
+    replacement: >
+      "four effective deployed coefficients"; the header ships a 12-input
+      layer (50 floats).  "A four-parameter model" is retracted and qc.py
+      fails if it reappears (37.3).
 
   - id: external.rpcwby.a8
     text: "external validation of the frozen A8 on RPCWBY"

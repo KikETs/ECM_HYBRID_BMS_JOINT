@@ -30,6 +30,11 @@ ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, 'analysis', 'cache', 'soh_charge.npz')
 OUT = os.path.join(ROOT, 'analysis', 'results', 'tables', 'soh_baselines.csv')
 PRED = os.path.join(ROOT, 'analysis', 'results', 'soh_pred.npz')
+# The CNN's own predictions.  results/soh_pred.npz used to hold them; since
+# ridge was adopted (36) it holds ridge, so reading PRED for the CNN row
+# silently reported ridge's numbers under the CNN's name -- caught by
+# cross-checking the table against soh_model_cost.csv, which reads this file.
+CNN_PRED = os.path.join(ROOT, 'analysis', 'results', 'soh_pred_cnn.npz')
 
 
 def models():
@@ -39,7 +44,7 @@ def models():
     from sklearn.ensemble import HistGradientBoostingRegressor
     return [
         ('mean baseline', lambda p: 'mean', [None]),
-        ('ridge', lambda p: Ridge(alpha=p),
+        ('ridge (adopted)', lambda p: Ridge(alpha=p),
          [1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0]),
         ('PLS', lambda p: PLSRegression(n_components=p),
          [1, 2, 3, 4, 6, 8, 12]),
@@ -123,9 +128,11 @@ def main():
                      ';'.join(f'{c}={chosen[c]}' for c in cells)]
                     + [f'{per[c]:.4f}' for c in cells])
 
-    # The shipped CNN, read from its saved predictions (same outer splits).
-    if os.path.exists(PRED):
-        zp = np.load(PRED)
+    # The 1D CNN, read from ITS OWN saved predictions (same outer splits).
+    # It is a comparison group like the rest: ridge is the adopted arm
+    # (36), and nested selection never picks the CNN on any fold.
+    if os.path.exists(CNN_PRED):
+        zp = np.load(CNN_PRED)
         per, ns = {}, {}
         for c in cells:
             if f'{c}_y' not in zp:
@@ -139,7 +146,7 @@ def main():
             pooled = float(np.sqrt(np.average(
                 [per[c] ** 2 for c in cells], weights=[ns[c] for c in cells])))
             worst = max(cells, key=lambda c: per[c])
-            rows.append(['1D CNN (shipped, 3 seeds)', f'{pooled:.4f}',
+            rows.append(['1D CNN (3 seeds)', f'{pooled:.4f}',
                          f'{np.mean([per[c] for c in cells]):.4f}',
                          f'{per[worst]:.4f}', worst,
                          'seeds=0,1,2 (fixed, not tuned)']
