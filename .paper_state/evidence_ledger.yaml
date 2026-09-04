@@ -982,3 +982,63 @@ determinism:
   enforced_by:
     - "tests/test_determinism.py - 9 tests: enable() is called, torch.manual_seed is not called directly, determinism is imported before torch (checked by AST), enable() raises without the cuBLAS variable, the flags are actually set, and the amplifier stays documented"
     - "manifests/model_provenance.yaml - SHA-256 of the training data behind each committed model, so a model cannot outlive its data again"
+
+review_round_six:
+  status: THREE_FIXED_TWO_BLOCKED
+  date: 2026-09-01
+  licence_conflict:
+    level: submission blocker
+    disposition: RECORDED_NOT_RESOLVABLE_HERE
+    detail: >
+      Only the depositor or institutional counsel can settle it.  Everything
+      this repository can do is done: BY-SA applied, both sides of the
+      conflict quoted verbatim with the evidence, the publisher mismatch
+      spelled out in LICENSE-DATA with three routes, and a test that refuses
+      to let any of it be quietly deleted.
+  holding_a_cell_out_costs_nothing:
+    level: major
+    disposition: FIXED - THE CLAIM WAS WRONG
+    detail: >
+      The reviewer is right and the measurement confirms it.  vs_fleet_pct
+      above 100 does not mean free utility - it means the leave-one-cell-out
+      lambda came out LOOSER than the all-cells lambda, which is a more
+      permissive policy carrying more risk.  Comparing usable current across
+      two points of a safety/utility trade-off is the error this audit had
+      already removed from the tolerance sweep, and I reintroduced it.
+
+      Corrected: usable_reference.csv carries exceed_deployed, exceed_fleet
+      and risk_matched, and vs_fleet_pct is averaged over risk-matched folds
+      only.  It reads 100.0, and 100.0 is an IDENTITY - for five folds of six
+      the two factors are the same number because the binding cell is in the
+      training set.  The sixth fold is where every exceedance in the safety
+      tables lives: 7 for A8, 5-25 across the six methods, against ZERO under
+      the all-cells factor for every method.  The exceedance is not a property
+      of the estimator; it is the price of calibrating lambda without having
+      seen the cell that sets it.  Section 37.19 rewritten.
+  single_external_cell_and_charge_failure:
+    level: major
+    disposition: BLOCKED - see blocked_work.additional_external_cells
+    detail: >
+      Claims are already narrowed: README states RPCWBY is ONE physical cell
+      and that the six folds are six models rather than six cells, the charge
+      failure is stated as a failure, and 37.18 shows both conclusions hold
+      across all six internal surfaces.  Narrowing further would understate
+      what was measured; the only real remedy is a second external cell.
+  pack_hil_and_integrated_loop_timing:
+    level: major/moderate
+    disposition: BLOCKED - no hardware
+    detail: >
+      Pack and HIL need hardware that does not exist here (blocked_work).
+      Integrated control-loop timing needs the NUCLEO board: what exists is
+      per-stage timing on hardware, summed, and it is labelled a derived
+      cycle-budget estimate rather than a WCET in every place it appears, with
+      a qc rule that fails if "WCET" is written without that qualifier.
+      Application validation is a genuine weakness and is stated as one.
+  windows_gate:
+    level: minor
+    disposition: DOCUMENTED
+    detail: >
+      repro/gate.py is exercised on Linux only, which is what CI runs
+      (ubuntu-latest, both jobs).  Nothing in it is deliberately Linux-only,
+      but untested is untested: the docstring and README now say so, and the
+      gate prints a warning when it runs anywhere else.

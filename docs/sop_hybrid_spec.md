@@ -6065,14 +6065,24 @@ Two reference points were missing. `run_usable_reference.py` adds both.
 **Against the all-cells ceiling — an identity for five cells, and a risk
 trade for the sixth.**
 
-| method | discharge τ=10 | discharge τ=2 | charge τ=10 | charge τ=2 |
-|---|---:|---:|---:|---:|
-| a8 | **100.4** | 100.4 | 102.5 | 101.0 |
-| a3 | 100.8 | 100.5 | 102.2 | 100.7 |
-| lstm | 100.3 | 102.5 | 101.9 | 100.6 |
-| gru | 100.1 | 102.4 | 100.9 | 100.4 |
-| shrink | 100.7 | 100.1 | 101.9 | 101.1 |
-| ffrls | 105.4 | 112.4 | 101.8 | 103.9 |
+At matched risk `vs_fleet_pct` is **100.0 for every method in every
+condition** — an identity, not a measurement. What the comparison actually
+surfaces is where the exceedances are:
+
+| method | disc τ=10 | disc τ=2 | chg τ=10 | chg τ=2 | 합계 | fleet λ 로는 |
+|---|---:|---:|---:|---:|---:|---:|
+| **a8** | 1 | 1 | 2 | 3 | **7** | 0 |
+| a3 | 1 | 1 | 2 | 3 | **7** | 0 |
+| lstm | 1 | 2 | 1 | 1 | **5** | 0 |
+| gru | 1 | 2 | 1 | 2 | **6** | 0 |
+| shrink | 2 | 1 | 2 | 3 | **8** | 0 |
+| ffrls | 3 | 2 | 11 | 9 | **25** | 0 |
+
+Every one of those sits on the fold that holds the binding cell out, and
+**under the all-cells factor there would be none at all** — for any method.
+The exceedance in this repository's safety tables is not a property of the
+estimator. It is the price of calibrating λ without having seen the cell
+that sets it.
 
 Read the per-cell rows, not the mean. For **five of six** held-out cells the
 deployed λ *equals* the all-cells λ to four decimals, so `vs_fleet` is 100.0

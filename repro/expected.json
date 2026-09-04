@@ -1241,20 +1241,6 @@
    "tol": 0
   },
   {
-   "id": "usable.ref.a8.disc10.fleet",
-   "table": "usable_reference.csv",
-   "where": {
-    "method": "a8",
-    "direction": "discharge",
-    "tau_s": "10.0",
-    "cell": "(mean)"
-   },
-   "column": "vs_fleet_pct",
-   "value": 100.4,
-   "source": "sec 37.19 — the leave-one-cell-out lambda is worth as much as the lambda fitted with all six cells visible",
-   "tol": 0.2
-  },
-  {
    "id": "usable.ref.a8.disc10.oracle",
    "table": "usable_reference.csv",
    "where": {
@@ -1370,6 +1356,48 @@
    "value": 0.782,
    "source": "sec 37.21 — largest paired overestimate",
    "tol": 0.01
+  },
+  {
+   "id": "usable.ref.a8.disc10.exceed_dep",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "cell": "(mean)"
+   },
+   "column": "exceed_deployed",
+   "value": 1,
+   "source": "sec 37.19 — the arm's only exceedance, and it is on the fold that holds out the binding cell",
+   "tol": 0
+  },
+  {
+   "id": "usable.ref.a8.disc10.exceed_fleet",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "cell": "(mean)"
+   },
+   "column": "exceed_fleet",
+   "value": 0,
+   "source": "sec 37.19 — the all-cells lambda would have had none; the LOCO gain above 100 %% is bought with that exceedance",
+   "tol": 0
+  },
+  {
+   "id": "usable.ref.a8.binding.lambda",
+   "table": "usable_reference.csv",
+   "where": {
+    "method": "a8",
+    "direction": "discharge",
+    "tau_s": "10.0",
+    "cell": "BOOST_NEGPULSE_1S"
+   },
+   "column": "usable_pct",
+   "value": 71.47,
+   "source": "sec 37.19 — the binding cell held out: looser lambda, most usable current of the six, and the one exceedance",
+   "tol": 0.02
   }
  ],
  "tables": {
@@ -3503,23 +3531,21 @@
     "vs_cell_oracle_pct",
     "exceed_deployed",
     "exceed_fleet",
+    "risk_matched",
     "binding_cell"
    ],
    "numeric": [
     "tau_s",
     "n",
     "usable_pct",
-    "vs_fleet_pct",
-    "vs_cell_oracle_pct",
-    "exceed_deployed",
-    "exceed_fleet"
+    "vs_cell_oracle_pct"
    ],
    "units": {
     "usable_pct": "% of the cell own measured SOP",
-    "vs_fleet_pct": "% of the all-cells lambda ceiling (ORACLE BOUND)",
+    "vs_fleet_pct": "% of the all-cells lambda ceiling (ORACLE BOUND).  Meaningless without exceed_deployed / exceed_fleet beside it: above 100 means the LOCO lambda is LOOSER than the fleet one, which buys utility with risk.",
     "vs_cell_oracle_pct": "% of a lambda fitted on the evaluated cell itself (ORACLE BOUND)",
     "exceed_deployed": "rows exceeding under the leave-one-cell-out lambda",
-    "exceed_fleet": "rows exceeding under the all-cells lambda; where these differ the vs_fleet comparison is NOT iso-risk"
+    "exceed_fleet": "rows exceeding under the all-cells lambda"
    }
   },
   "integration_cost.csv": {
@@ -3545,7 +3571,7 @@
   }
  },
  "completeness": {
-  "total_checks": 112,
+  "total_checks": 114,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3580,7 +3606,7 @@
    "soc_soh_selection.csv": 4,
    "method_comparison_est.csv": 2,
    "external_a8_surfaces.csv": 4,
-   "usable_reference.csv": 7,
+   "usable_reference.csv": 9,
    "integration_cost.csv": 3
   },
   "check_ids": [
@@ -3686,7 +3712,6 @@
    "ext.a8.surface.disc_cc",
    "ext.a8.surface.chg_worst",
    "ext.a8.surface.disc_exceed",
-   "usable.ref.a8.disc10.fleet",
    "usable.ref.a8.disc10.oracle",
    "usable.ref.a8.chg10.oracle",
    "usable.ref.a8.disc10.usable",
@@ -3695,7 +3720,10 @@
    "usable.ref.nonbinding.identity",
    "mcu.integration.stage_maxima",
    "mcu.integration.pointwise",
-   "mcu.integration.worst_point"
+   "mcu.integration.worst_point",
+   "usable.ref.a8.disc10.exceed_dep",
+   "usable.ref.a8.disc10.exceed_fleet",
+   "usable.ref.a8.binding.lambda"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

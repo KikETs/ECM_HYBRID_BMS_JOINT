@@ -24,6 +24,20 @@ question and only the first is currently published.
                         the ceiling for any one-lambda policy, and it answers
                         "what does holding a cell out cost?"
 
+                        READ IT WITH THE EXCEEDANCE COLUMNS.  A ratio above
+                        100 does not mean free utility: it means the
+                        leave-one-cell-out lambda came out LARGER than the
+                        all-cells one, which is a more permissive policy, and
+                        more permissive is less safe.  Comparing usable
+                        current between two policies that carry different
+                        exceedance is comparing two points on a safety/utility
+                        trade-off and calling one of them better.  The first
+                        version of this table did exactly that and concluded
+                        "holding a cell out costs nothing"; it is not true,
+                        and exceed_deployed / exceed_fleet are here so the
+                        claim cannot be made again without the risk beside
+                        it.
+
   vs_cell_oracle_pct    against a lambda fitted on the evaluated cell itself.
                         This is the ceiling for a per-cell field calibration,
                         and it answers "what would calibrating in the field
@@ -58,7 +72,7 @@ sys.path.insert(0, HERE)
 HEADER = ['direction', 'tau_s', 'method', 'cell', 'n', 'lambda_deployed',
           'lambda_fleet', 'lambda_cell_oracle', 'usable_pct', 'vs_fleet_pct',
           'vs_cell_oracle_pct', 'exceed_deployed', 'exceed_fleet',
-          'binding_cell']
+          'risk_matched', 'binding_cell']
 
 METHODS = ['a8', 'a3', 'lstm', 'gru', 'ffrls', 'shrink']
 DETAIL = 'a8'          # the adopted method gets a row per cell
@@ -115,19 +129,28 @@ def condition_rows(method, direction, tau, arm='est'):
                          f"{r['lam_or']:.4f}", f"{r['usable']:.2f}",
                          f"{100 * r['usable'] / r['u_fleet']:.1f}",
                          f"{100 * r['usable'] / r['u_oracle']:.1f}",
-                         r['k_dep'], r['k_fleet'], binding])
+                         r['k_dep'], r['k_fleet'],
+                         'yes' if r['k_dep'] == r['k_fleet'] else 'NO',
+                         binding])
     # Row-weighted, the same convention safety_strict.py uses for
     # usable_mean_pct.  A plain per-cell mean gives 67.01 where the published
     # table says 68.89 for the same quantity, and two numbers for one thing
     # is how a reader stops trusting either.
     w = np.array([r['n'] for r in per], float)
+    # vs_fleet is averaged over the RISK-MATCHED folds only.  A fold where the
+    # two factors differ in exceedance is not comparable on usable current,
+    # and averaging it in is what produced the 100.4 that read as "free".
+    mt = [r for r in per if r['k_dep'] == r['k_fleet']]
+    wm = np.array([r['n'] for r in mt], float)
+    vs_fleet = (f"{np.average([100 * r['usable'] / r['u_fleet'] for r in mt], weights=wm):.1f}"
+                if mt else '')
     rows.append([direction, f'{tau:.1f}', method, '(mean)',
                  int(w.sum()), '', f'{lam_fleet:.4f}', '',
                  f"{np.average([r['usable'] for r in per], weights=w):.2f}",
-                 f"{np.average([100 * r['usable'] / r['u_fleet'] for r in per], weights=w):.1f}",
+                 vs_fleet,
                  f"{np.average([100 * r['usable'] / r['u_oracle'] for r in per], weights=w):.1f}",
                  sum(r['k_dep'] for r in per), sum(r['k_fleet'] for r in per),
-                 binding])
+                 f'{len(mt)}/{len(per)}', binding])
     return rows
 
 

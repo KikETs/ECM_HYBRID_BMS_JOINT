@@ -21,6 +21,15 @@ them, in CI's order, and refuses to be optimistic:
   * every step's exit status is checked; nothing is `|| true` except the
     advisory lint CI itself marks advisory.
 
+PLATFORM
+    Developed and exercised on Linux, which is what CI runs (ubuntu-latest for
+    both jobs).  It has never been run on Windows or macOS and is not claimed
+    to work there.  Nothing in it is deliberately Linux-only -- paths go
+    through os.path, commands are argv lists rather than shell strings, and
+    the ruff lookup already tries Scripts/ruff.exe -- but "should port" is not
+    "was tested", and this file exists precisely to stop that kind of
+    assumption.  On Windows, run the individual CI steps or use WSL.
+
 Usage:
     python3 repro/gate.py                 # what CI will do
     python3 repro/gate.py --strict-clone  # that, plus the clean-clone pass
@@ -205,7 +214,14 @@ def main():
                        capture_output=True)
         print('  (--fix) REPRODUCE.md regenerated\n')
 
-    print('== submission gate\n')
+    import platform
+    print(f'== submission gate   ({platform.system()} '
+          f'{platform.python_version()})')
+    if platform.system() != 'Linux':
+        print('   NOTE: CI runs Linux and this gate has only been exercised '
+              'there.\n   A pass here is weaker evidence than a pass on '
+              'Linux.')
+    print()
     if not sys.platform.startswith(SUPPORTED):
         print(f'  NOTE  running on {sys.platform!r}; CI runs ubuntu-latest.  '
               f'The checks below are\n        portable, but the stage runner '

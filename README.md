@@ -192,7 +192,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 112 stored published values
+python3 repro/verify.py        # check the 114 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```
@@ -206,7 +206,10 @@ it starts on anything else rather than letting a green run imply more than it
 covers. Windows is untested; macOS is untested but has no known blocker
 outside the firmware stages.
 
-`gate.py` exists because four review rounds each found a defect that was
+`gate.py` runs on Linux, which is what CI runs (ubuntu-latest, both jobs). It
+has not been exercised on Windows or macOS — nothing in it is deliberately
+Linux-only, but that is untested, so use WSL or run the CI steps individually
+there. It exists because four review rounds each found a defect that was
 already in the working tree — the checks for most of them existed, in four
 different places, and nothing ran all four. It fails on a missing tool rather
 than skipping it, and `--strict-clone` repeats the torch-free subset against a

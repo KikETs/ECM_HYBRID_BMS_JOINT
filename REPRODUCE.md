@@ -216,7 +216,6 @@ Full rebuild: 1212 minutes (20.2 h) if every stage takes the time recorded again
 | `ext.a8.surface.disc_cc` | 1.297 | `external_a8_surfaces.csv` | sec 37.18 |
 | `ext.a8.surface.chg_worst` | 0.61 | `external_a8_surfaces.csv` | sec 37.18 |
 | `ext.a8.surface.disc_exceed` | 0 | `external_a8_surfaces.csv` | sec 37.18 |
-| `usable.ref.a8.disc10.fleet` | 100.4 | `usable_reference.csv` | sec 37.19 |
 | `usable.ref.a8.disc10.oracle` | 95.2 | `usable_reference.csv` | sec 37.19 |
 | `usable.ref.a8.chg10.oracle` | 81.8 | `usable_reference.csv` | sec 37.19 |
 | `usable.ref.a8.disc10.usable` | 68.89 | `usable_reference.csv` | sec 37.19 |
@@ -226,6 +225,9 @@ Full rebuild: 1212 minutes (20.2 h) if every stage takes the time recorded again
 | `mcu.integration.stage_maxima` | 0.321 | `integration_cost.csv` | sec 37.21 |
 | `mcu.integration.pointwise` | -0.089 | `integration_cost.csv` | sec 37.21 |
 | `mcu.integration.worst_point` | 0.782 | `integration_cost.csv` | sec 37.21 |
+| `usable.ref.a8.disc10.exceed_dep` | 1 | `usable_reference.csv` | sec 37.19 |
+| `usable.ref.a8.disc10.exceed_fleet` | 0 | `usable_reference.csv` | sec 37.19 |
+| `usable.ref.a8.binding.lambda` | 71.47 | `usable_reference.csv` | sec 37.19 |
 
 ## Cells and evaluation protocol
 
