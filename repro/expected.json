@@ -1407,7 +1407,7 @@
    },
    "column": "median_us",
    "value": 67.116,
-   "source": "sec 37.22 — four stages in one DWT window, measured, not summed",
+   "source": "sec 37.22 — feature update, SOC EKF, trim and ONE inversion back to back in one DWT window.  Sequential, not a wired dataflow; one solve, not the four a cycle runs; and not a WCET.",
    "tol": 0.05
   },
   {
@@ -1418,7 +1418,7 @@
    },
    "column": "median_us",
    "value": 1.654,
-   "source": "sec 37.22 — summing overstates the median cycle by 1.65 %, paired on the same operating points",
+   "source": "sec 37.22 — summing those same four stages overstates the median by 1.65 %, paired on the same operating points.  It does not extend to the four-solve cycle figure.",
    "tol": 0.05
   },
   {
@@ -1430,7 +1430,7 @@
    },
    "column": "median_us",
    "value": 12767.87,
-   "source": "sec 37.22 — a 192-cell pack does NOT fit a 10 ms cycle on this part",
+   "source": "sec 37.22 — repeating the one-solve cycle for 192 cells with the SAME inputs.  A compute cost, not pack validation: 12.77 ms median exceeds a 10 ms period.",
    "tol": 20.0
   },
   {
@@ -1442,8 +1442,44 @@
    },
    "column": "per_cell_us",
    "value": 66.499,
-   "source": "sec 37.22 — per-cell cost is flat from N=1 to N=192, so the scaling is linear and 24 KB of state costs nothing",
+   "source": "sec 37.22 — per-cell cost is flat from N=1 to N=192, so the compute scales linearly and 24 KB of per-cell state shows no cache penalty AT THIS SIZE on this part.  Not a general claim about state size.",
    "tol": 0.2
+  },
+  {
+   "id": "soc.loco.mean",
+   "table": "soc_loco.csv",
+   "where": {
+    "surface": "leave-one-cell-out",
+    "cell": "(mean)"
+   },
+   "column": "mean_6_pct",
+   "value": 2.325,
+   "source": "sec 37.23 — SOC on the pooled surface that excludes the evaluated cell: a genuine unseen-cell number",
+   "tol": 0.005
+  },
+  {
+   "id": "soc.percell.mean.same_run",
+   "table": "soc_loco.csv",
+   "where": {
+    "surface": "per-cell (published)",
+    "cell": "(mean)"
+   },
+   "column": "mean_6_pct",
+   "value": 2.14,
+   "source": "sec 37.23 — the published per-cell figure, reproduced in the same run so the two arms differ only in the surface",
+   "tol": 0.005
+  },
+  {
+   "id": "soc.loco.worst_cell",
+   "table": "soc_loco.csv",
+   "where": {
+    "surface": "leave-one-cell-out",
+    "cell": "BOOST_REST"
+   },
+   "column": "mean_6_pct",
+   "value": 2.751,
+   "source": "sec 37.23 — the cell that loses most when its own surface is withheld, 2.213 -> 2.751",
+   "tol": 0.005
   }
  ],
  "tables": {
@@ -3637,13 +3673,36 @@
     "pct_of_100hz_budget"
    ],
    "units": {
-    "median_us": "us, DWT on a NUCLEO-H563ZI at 250 MHz; on the \"summing error\" row the two numbers are percentages",
+    "median_us": "us, DWT on a NUCLEO-H563ZI at 250 MHz, one solve per cycle and stages not wired to each other; on the \"summing error\" row the two numbers are percentages",
     "pct_of_100hz_budget": "% of a 10 ms control period"
+   }
+  },
+  "soc_loco.csv": {
+   "producer": "python3 repro/run_soc_loco.py",
+   "stage": "soc_loco",
+   "required": true,
+   "rows": 14,
+   "columns": [
+    "surface",
+    "cell",
+    "n_runs",
+    "undisturbed_pct",
+    "mean_6_pct",
+    "worst_of_6_pct"
+   ],
+   "numeric": [
+    "n_runs",
+    "undisturbed_pct",
+    "mean_6_pct",
+    "worst_of_6_pct"
+   ],
+   "units": {
+    "mean_6_pct": "%p RMSE, mean over the six sensor disturbances; the \"leave-one-cell-out\" rows use the pooled surface built from the other five cells"
    }
   }
  },
  "completeness": {
-  "total_checks": 118,
+  "total_checks": 121,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3680,7 +3739,8 @@
    "external_a8_surfaces.csv": 4,
    "usable_reference.csv": 9,
    "integration_cost.csv": 3,
-   "mcu_integrated.csv": 4
+   "mcu_integrated.csv": 4,
+   "soc_loco.csv": 3
   },
   "check_ids": [
    "sop.disc.10s.lambda",
@@ -3800,7 +3860,10 @@
    "mcu.integrated.median",
    "mcu.integrated.summing_error",
    "mcu.pack.n192.median",
-   "mcu.pack.per_cell_192"
+   "mcu.pack.per_cell_192",
+   "soc.loco.mean",
+   "soc.percell.mean.same_run",
+   "soc.loco.worst_cell"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

@@ -87,6 +87,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `integration_cost` | 1 | `python3 ../repro/run_integration_cost.py` | `results/tables/integration_cost.csv` |
 | `usable_reference` | 1 | `python3 ../repro/run_usable_reference.py` | `results/tables/usable_reference.csv` |
 | `soc_soh_selection` | 50 | `python3 ../repro/run_soc_soh_selection.py` | `results/tables/soc_soh_selection.csv` |
+| `soc_loco` | 12 | `python3 ../repro/run_soc_loco.py` | `results/tables/soc_loco.csv` |
 | `soc_percell` | 1 | `python3 ../repro/run_soc_percell.py` | `results/tables/soc_percell.csv` |
 | `label_quality` | 2 | `python3 ../repro/run_label_quality.py` | `results/tables/label_quality.csv +1` |
 | `seq_baselines` | 45 | `python3 ../repro/run_sop_seq_baselines.py` | `runs_trim_lstm +2` |
@@ -107,7 +108,7 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `mcu_integrated` | 8 (board) | `cd ../mcu/fw_sop && make MODEL_ID=pack_bench EXTRA_CFLAGS=-DSOP_BENCH_PACK && STM32_Programmer_CLI -c port=SWD -w Build/pack_bench/sop_bench.elf -v -rst && cd ../.. && python3 repro/run_mcu_integrated.py --port /dev/ttyACM0` | `results/tables/mcu_integrated.csv` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: 1220 minutes (20.3 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (41 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 719 minutes (12.0 h).
+Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (41 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 731 minutes (12.2 h).
 
 ## Published numbers
 
@@ -233,6 +234,9 @@ Full rebuild: 1220 minutes (20.3 h) if every stage takes the time recorded again
 | `mcu.integrated.summing_error` | 1.654 | `mcu_integrated.csv` | sec 37.22 |
 | `mcu.pack.n192.median` | 12767.87 | `mcu_integrated.csv` | sec 37.22 |
 | `mcu.pack.per_cell_192` | 66.499 | `mcu_integrated.csv` | sec 37.22 |
+| `soc.loco.mean` | 2.325 | `soc_loco.csv` | sec 37.23 |
+| `soc.percell.mean.same_run` | 2.14 | `soc_loco.csv` | sec 37.23 |
+| `soc.loco.worst_cell` | 2.751 | `soc_loco.csv` | sec 37.23 |
 
 ## Cells and evaluation protocol
 

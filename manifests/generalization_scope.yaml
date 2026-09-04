@@ -28,7 +28,12 @@ axes:
   cell:
     status: PARTIAL
     detail: >
-      Six cells, leave-one-cell-out everywhere.  Six is the whole population
+      Six cells.  Leave-one-cell-out in the SOP and SOH arms; the SOC arm is
+      NOT - it reads the evaluated cell's own characterisation surface
+      (ECMSurface(cell) in build_soc_runs.py), which makes it a per-cell
+      calibrated deployment.  "Everywhere" stood here until 2026-09-01 and
+      contradicted the code; see evidence_ledger.soc_is_per_cell_calibrated.
+      Six is the whole population
       HERE, so cell-to-cell uncertainty is estimated from six clusters - wide
       intervals, reported as a cell-cluster bootstrap in
       safety_strict_*.csv.

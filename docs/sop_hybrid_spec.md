@@ -6273,3 +6273,52 @@ and that is a design constraint the paper can state, because it was measured.
 **Say it once more where the numbers are, not only at the top.** This is a
 compute cost at pack scale on one MCU. It is not pack validation, it must
 never be quoted as any, and pack behaviour remains blocked.
+
+### 37.23 The SOC arm can be leave-one-cell-out, and it costs 0.185 %p
+
+`soc_is_per_cell_calibrated` in the ledger settled that the SOC filter reads
+`ECMSurface(cell)` — the evaluated cell's own characterisation. That is a real
+limitation of the arm as published and the contract states it. It is not a
+limitation of the *method*, and nothing had measured the difference.
+
+`ecm_pool.surfaces(holdout)` is the pooled surface the SOP and SOH arms
+already use, built from the other five cells and existing precisely because
+the per-cell surface for a held-out cell "imports that cell's own R1
+trajectory". Swap it in and the SOC arm becomes leave-one-cell-out. **Exactly
+one thing changes**: the surface. Same runs, same adopted configuration, same
+seven perturbations, same R_volt schedule.
+
+| held out | per-cell (published) | leave-one-cell-out | Δ |
+|---|---:|---:|---:|
+| CC | 1.834 | 2.131 | +0.297 |
+| BOOST | 1.948 | 1.998 | +0.050 |
+| BOOST_NEGPULSE | 2.001 | 2.299 | +0.298 |
+| BOOST_REST | 2.213 | **2.751** | **+0.538** |
+| CC_CELL2 | 2.372 | 2.279 | **−0.093** |
+| BOOST_NEGPULSE_1S | 2.474 | 2.491 | +0.017 |
+| **mean of six** | **2.140** | **2.325** | **+0.185** |
+
+**A genuine unseen-cell SOC number exists and it is 2.325 %p** — 8.6 % worse
+than the per-cell calibrated figure, not a different order of magnitude. The
+worst-of-six average is unchanged (3.773 → 3.772): withholding the cell's
+surface moves the typical error, not the tail.
+
+Two cells are worth naming. BOOST_REST loses most, +0.538, and it is also the
+cell with the worst SOP usable current — the pooled surface fits it least well
+in both arms. CC_CELL2 gets *better* by 0.093: it is the second CC-protocol
+cell, so the pool that excludes it still contains a cell on the same protocol,
+and five cells' worth of averaging beats its own noisier characterisation.
+That is the one place in this dataset where the protocol confound helps rather
+than hurts.
+
+**What this changes for the paper.** The SOC arm no longer has to be reported
+only as a per-cell calibrated deployment. Both numbers exist, they were
+produced in one run so they differ only in the surface, and the honest
+headline for a transfer claim is **2.325 %p on the pooled surface**. The
+per-cell 2.140 remains the right figure for a deployment that characterises
+each cell it ships with — which is what the vehicle case actually is.
+
+Measured on true SOH. The estimated-SOH penalty (§37.16, +0.066 %p on the
+per-cell arm) has not been re-measured on the pooled surface, so a combined
+"unseen cell and estimated SOH" figure is not available and must not be
+assembled by adding the two.

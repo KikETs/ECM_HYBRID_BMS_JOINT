@@ -1,0 +1,15 @@
+surface,cell,n_runs,undisturbed_pct,mean_6_pct,worst_of_6_pct
+per-cell (published),BOOST,6,1.292,1.948,3.458
+per-cell (published),BOOST_NEGPULSE,6,1.269,2.001,3.742
+per-cell (published),BOOST_NEGPULSE_1S,6,1.910,2.474,3.599
+per-cell (published),BOOST_REST,6,1.565,2.213,4.243
+per-cell (published),CC,6,1.201,1.834,3.406
+per-cell (published),CC_CELL2,6,1.818,2.372,4.321
+per-cell (published),(mean),36,1.509,2.140,3.773
+leave-one-cell-out,BOOST,6,1.382,1.998,3.931
+leave-one-cell-out,BOOST_NEGPULSE,6,1.663,2.299,3.818
+leave-one-cell-out,BOOST_NEGPULSE_1S,6,1.934,2.491,4.603
+leave-one-cell-out,BOOST_REST,6,2.202,2.751,4.560
+leave-one-cell-out,CC,6,1.563,2.131,4.070
+leave-one-cell-out,CC_CELL2,6,1.695,2.279,3.889
+leave-one-cell-out,(mean),36,1.740,2.325,3.772

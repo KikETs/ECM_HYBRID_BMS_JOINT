@@ -488,7 +488,12 @@ mcu_deployment:
     detail: >
       Re-measured on hardware after flashing the rebuilt A8 firmware
       (ELF sha256 10a3b172..., verified by STM32_Programmer_CLI).  Full
-      control cycle: median 214.83 us, WCET 307.12 us.  Per-sample subtotal
+      control cycle: median 214.83 us, "WCET" 307.12 us.  BOTH SUPERSEDED and
+      the second was never a WCET: 37.10 relabelled that quantity a sum of
+      per-stage observed maxima, 37.22 measured the integrated window, and the
+      current figures are median 227.79 us with a 339.84 us four-solve budget
+      estimate (mcu_cycle.csv).  Kept only as the historical record of that
+      flashing session.  Per-sample subtotal
       13.09 / 13.85 us.  Stack high-water 624 B.  Load at 100 Hz: 2.15 %
       median, 3.07 % worst case.  Published per-stage medians reproduced to
       within 0.01 us.
@@ -641,7 +646,12 @@ end_to_end:
 reproduction_pipeline:
   stored_table_verification:
     status: VERIFIED
-    detail: "43/43 checks pass; verify.py now fails on absent tables, schema drift, row-count drift, non-numeric cells, truncated rows and manifest drift."
+    detail: "118/118 checks pass; verify.py fails on absent tables, schema drift, row-count drift, non-numeric cells, truncated rows and manifest drift."
+    superseded_counts: >
+      This read "43/43" until 2026-09-04 and had been stale through several
+      rounds of new checks.  The count is not a fact worth hand-copying -
+      repro/expected.json holds it and README is tied to it by
+      tests/test_verify.py.  Quote the file, not this line.
   artifact_to_result:
     status: VERIFIED_PROCESSED
     detail: >
@@ -750,7 +760,7 @@ licence:
     CC BY 4.0 to CC BY-SA 4.0 on 2026-09-01 (LICENSE-DATA).
 
     '
-  why_it_matters: 'If UYPYDJ is CC BY-SA 4.0, as the Borealis dataset record says, then
+  why_it_matters: 'NOTE: the repository ships CC BY 4.0 as the author''s working assumption (see working_assumption_2026_09_01).  If UYPYDJ is CC BY-SA 4.0, as the Borealis dataset record says, then
     ShareAlike propagates to adapted material.  What this repository redistributes
     is not summary statistics: uypydj_hppc_resistance.csv is 57,674 rows,
     uypydj_ecm.csv 27,894, uypydj_ocv.csv 11,703, plus 112 model files trained on

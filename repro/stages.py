@@ -488,6 +488,16 @@ STAGES = [
              '+-0.02 bias, so the choice can be checked against the '
              'condition it deploys in.'),
 
+    dict(id='soc_loco', tier=5, minutes=12, measured=True,
+         cmd='{py} ../repro/run_soc_loco.py',
+         inputs=['results/soc_runs.pkl', 'uypydj_ecm.csv', 'uypydj_ocv.csv'],
+         outputs=['results/tables/soc_loco.csv'],
+         why='The SOC arm reads the evaluated cell own surface, which makes '
+             'it a per-cell calibrated deployment.  This runs the identical '
+             'benchmark on the leave-one-cell-out pooled surface the SOP and '
+             'SOH arms use, so the cost of not seeing the cell is measured '
+             'rather than left as a caveat.'),
+
     dict(id='soc_percell', tier=5, minutes=1, measured=True,
          cmd='{py} ../repro/run_soc_percell.py',
          inputs=['results/tables/soc_perturb_runs.csv',

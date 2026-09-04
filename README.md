@@ -28,7 +28,7 @@ Timing measured on a NUCLEO-H563ZI (Cortex-M33, 250 MHz).
 |---|---|---|---|---|---|
 | SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | leave-one-cell-out | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
 | SOH | dQ/dV ridge | 65 coefficients | leave-one-cell-out | RMSE 0.0094, bias −0.0005 | 0.0130 (BOOST_REST) |
-| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated**, not held out | **2.21 %p** over six sensor disturbances on estimated SOH (2.14 on true SOH), per cell 1.83–2.47 | 3.78 %p (current offset −0.10 A) |
+| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated** as published; **2.325 %p** if run leave-one-cell-out (§37.23) | **2.21 %p** over six sensor disturbances on estimated SOH (2.14 on true SOH), per cell 1.83–2.47 | 3.78 %p (current offset −0.10 A) |
 
 The SOH arm was a 10,945-parameter CNN until the second audit round. Nested
 selection — every candidate scored on the five training cells before the
@@ -47,8 +47,18 @@ Per-cycle cost on the board: one SOC EKF step, one A8 feature update and four
 SOP inversions — **227.79 µs median**, and **339.84 µs** if each stage hits
 its own observed maximum at once, which is 2.278 % and 3.398 % of a 100 Hz
 budget. The second figure is a **derived cycle-budget estimate, not a measured
-WCET**: it sums per-stage maxima measured separately, and no integrated loop
-was ever timed end to end on the board. Individually: SOP
+WCET**: it sums per-stage maxima measured separately, and it assumes four
+solves per cycle.
+
+Since §37.22 the summation error is measured rather than assumed. A firmware
+command runs feature update, SOC EKF, trim and **one** inversion back to back
+in a single DWT window: **67.116 µs median, 93.484 µs observed maximum** over
+the same 200 operating points, against 68.226 and 96.108 for the same stages
+added — summing overstates by 1.65 % at the median and 2.81 % at the maximum.
+Read that narrowly. The four stages run sequentially in one window but their
+**outputs are not wired into each other**, it is one solve rather than the
+four a cycle performs, and an observed maximum over 200 points is not a WCET.
+339.84 µs remains the four-solve budget figure. Individually: SOP
 inversion 53.21 µs median and 81.09 worst, SOC EKF 8.16, A8 feature
 update 6.79, SOH 6.50 once per charge rather than per cycle. Deployment
 build text **70 796 B**. Measured on a NUCLEO-H563ZI
@@ -192,7 +202,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 118 stored published values
+python3 repro/verify.py        # check the 121 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```
@@ -219,7 +229,7 @@ an uncommitted file.
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
 in [DATA.md](DATA.md) into `raw/` and run `python3 repro/run.py <stage>`.
-Full rebuild sums to 1220 minutes (20.3 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 719 minutes (12.0 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
+Full rebuild sums to 1232 minutes (20.5 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 731 minutes (12.2 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
 
 [REPRODUCE.md](REPRODUCE.md) maps every published number to the command
 that produces it.
