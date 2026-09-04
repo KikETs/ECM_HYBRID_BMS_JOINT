@@ -229,16 +229,10 @@ than skipping it, and `--strict-clone` repeats the torch-free subset against a
 fresh clone of `HEAD`, which is the only way to catch a check that passes on
 an uncommitted file.
 
-**What `verify.py` proves, and what it does not.** It recomputes each stored
-value from the committed tables — it does not re-run the producers. CI
-additionally re-runs seven fast producers against their tables
-(`--check` on the SOH, MCU, method-comparison, deploy, SOC per-cell and both
-external C-rate scripts), so those tables are reproduced on every push. The
-slow ones are not: `soc` (55 min), `soc_soh_selection` (50 min), `soc_loco`
-(12 min), `external` (105 min, board) and everything needing `raw/` are
-verified only through their committed tables. A green CI therefore means
-"the published numbers are consistent with the committed tables, and seven
-tables regenerate identically", not "the whole pipeline was re-run".
+**Scope.** CI is a smoke test: compile, lint, tests, seven regenerated tables
+and the stored values checked against the committed ones. It does not re-run
+the pipeline — `raw/` is 24 GB and the board is physical — so the long stages
+rest on their committed tables.
 
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
