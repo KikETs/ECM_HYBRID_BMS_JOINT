@@ -6193,12 +6193,22 @@ integrated maximum. **It is not conservative pointwise.** At the single worst
 integrated point the paired sum is 0.089 % *below* it, because the two maxima
 fall at different operating points. Small here, and not a property to rely on.
 
-This bounds the summation error where it can be measured. It does not extend
-to the EKF or the feature stage, which are only ever timed alone; an
-integrated loop over all four needs firmware that cannot be built on the audit
-host (no `arm-none-eabi` toolchain); and cache and pipeline interactions over
-a longer chain are exactly what a two-stage pair cannot show. **339.84 µs is
-still not a WCET.**
+This bounds the summation error where it can be measured. **339.84 µs is still
+not a WCET.**
+
+> **[Corrected — §37.22]** This paragraph continued: *"an integrated loop over
+> all four needs firmware that cannot be built on the audit host (no
+> `arm-none-eabi` toolchain)"*. That was wrong, and it was wrong on a fact I
+> could have checked in one command. The toolchain ships inside STM32CubeIDE
+> at `/opt/st/stm32cubeide_2.2.0/plugins/…gnu-tools-for-stm32…/tools/bin`, and
+> `which arm-none-eabi-gcc` returning nothing means only that it is not on
+> `PATH` — which is exactly what the Makefile's `TOOLCHAIN` variable exists to
+> handle. The board was attached too. §37.22 built the integrated command,
+> flashed it and measured all four stages: summing overstates the cycle by
+> 1.65 % at the median and 2.81 % at the maximum, paired on the same points.
+> What genuinely remains is the longer chain — cache and pipeline behaviour
+> across a full control loop over many cycles is still not what a 200-point
+> sweep shows.
 
 ### 37.22 The cycle timed as a cycle, and what a pack costs to compute
 

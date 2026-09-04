@@ -892,6 +892,14 @@ blocked_work:
   pack_and_hil:
     asked_for: "HIL or real pack validation before any pack-level or production claim"
     blocked_by: "there is no pack hardware and no HIL rig attached to this machine"
+    partly_answered_2026_09_01: >
+      The COMPUTE half is measured now (37.22).  SOP_CMD_PACK runs the full
+      control cycle for N cells with a state each on the NUCLEO-H563ZI:
+      per-cell cost is flat near 66.5 us from N=1 to N=192, and a 192-cell
+      pack needs 12.77 ms median and 17.87 ms worst case, so it does not fit
+      a 10 ms period.  A real design constraint, and NOT pack validation -
+      every cell is handed the same current, voltage and temperature.  The
+      accuracy question below stays blocked.
     what_exists_instead: >
       sop_pack2.py resamples single-cell evaluation rows within condition
       groups.  It is a Monte Carlo sensitivity study and the documents call
@@ -913,6 +921,37 @@ blocked_work:
       noninferiority test needs the margin fixed in advance, so the honest
       move is to drop the word and report the descriptive comparison.
     replacement_artifact: "analysis/results/tables/method_comparison.csv"
+
+integrated_loop_was_never_blocked:
+  status: CORRECTION_OF_THIS_LEDGER
+  date: 2026-09-01
+  what_was_recorded: >
+    That integrated control-loop timing needed firmware "that cannot be built
+    on the audit host (no arm-none-eabi toolchain)", and more broadly that the
+    loop-timing gap was blocked on hardware.
+  why_it_was_wrong: >
+    Both halves were false and both were checkable in one command.  The
+    toolchain ships inside STM32CubeIDE - the fw_sop Makefile's TOOLCHAIN
+    variable points straight at it - and `which arm-none-eabi-gcc` returning
+    nothing means only that it is not on PATH.  The NUCLEO-H563ZI was attached
+    the whole time (lsusb: ST-LINK V3; /dev/ttyACM0).  What was actually
+    missing was about twenty lines of firmware.
+  what_it_cost: >
+    The gap sat here as blocked through two review rounds, and 37.21 built a
+    partial two-stage workaround for something that could have been measured
+    directly.
+  now: >
+    37.22.  SOP_CMD_CYCLE times all four stages in one DWT window: summing
+    overstates the cycle by 1.65 % at the median and 2.81 % at the maximum,
+    paired on the same 200 operating points.  339.84 us remains a four-solve
+    budget estimate, not a WCET, and cache behaviour over a long chain is
+    still not what a 200-point sweep shows.
+  the_general_lesson: >
+    Second time in one session that "blocked" was written without looking.
+    The first was raw/ - declared missing after checking ETRANS_AUDIT/raw
+    instead of the symlink at repo/raw, while 24 GB of it sat on disk.  Before
+    anything goes into blocked_work, the thing claimed absent has to be looked
+    for, and the command used to look recorded beside the claim.
 
 determinism:
   status: VERIFIED_MEASURED
@@ -1041,7 +1080,7 @@ review_round_six:
       what was measured; the only real remedy is a second external cell.
   pack_hil_and_integrated_loop_timing:
     level: major/moderate
-    disposition: PACK/HIL BLOCKED - SUMMATION ERROR PARTLY MEASURED (37.21)
+    disposition: PACK/HIL BLOCKED - LOOP TIMING NOW MEASURED (37.22)
     detail: >
       Pack and HIL need hardware that does not exist here (blocked_work), and
       that part is unchanged.
@@ -1056,12 +1095,12 @@ review_round_six:
       stage maxima - sits 0.32 % above the integrated maximum, so it is not
       conservative pointwise.  integration_cost.csv, three checks.
 
-      What remains genuinely blocked: the EKF and feature stages are only ever
-      timed alone, an integrated loop over all four needs firmware that cannot
-      be built on the audit host (no arm-none-eabi toolchain), and cache and
-      pipeline effects over a longer chain are what a two-stage pair cannot
-      show.  339.84 us is still not a WCET.  Application validation is a
-      genuine weakness and is stated as one.
+      SUPERSEDED 2026-09-01 by 37.22 - see integrated_loop_was_never_blocked
+      below.  This entry said an integrated loop needed firmware that "cannot
+      be built on the audit host (no arm-none-eabi toolchain)".  Both halves
+      were false.  339.84 us is still not a WCET, and application validation
+      is still a genuine weakness, but the reason given here was not the
+      reason.
   windows_gate:
     level: minor
     disposition: DOCUMENTED
