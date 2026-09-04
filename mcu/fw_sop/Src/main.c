@@ -55,6 +55,24 @@
 #define SOP_CMD_SOH_Q   0x69U   /* SOH 완전 정수 경로 (SIMD) */
 #define SOP_CMD_EKF_F64  0x6AU  /* 같은 구조 + double 산술 */
 #define SOP_CMD_EKF2     0x6BU  /* 완전 2RC + float32 */
+/* 아래 둘은 감사에서 추가.  SOP_BENCH_PACK 뒤에 둔다: 벤치 전용 명령이고,
+ * 특히 PACK 은 셀별 상태 24 KB 를 들고 있어서 기본 빌드에 넣으면
+ * build_size.csv 가 보고하는 배포 footprint 를 부풀린다.  배포 펌웨어는
+ * 이 명령들을 싣지 않으므로 기본값은 off 다.
+ *   make EXTRA_CFLAGS=-DSOP_BENCH_PACK MODEL_ID=pack_bench
+ *  37.10 이 339.84 us 를 "단계별 최대의 합" 이라고
+ * 다시 라벨했고, 37.21 이 그 합산 오차를 트림+반전 80 us 구간에서만 쟀다.
+ * 네 단계를 한 DWT 창에서 도는 명령이 없었기 때문이다. */
+#ifdef SOP_BENCH_PACK
+#define SOP_CMD_CYCLE    0x70U  /* 특징+EKF+트림+반전 = 제어 1 주기 */
+#define SOP_CMD_PACK     0x71U  /* 위를 N 셀에 돌리고 min 축약 */
+
+/* 팩 규모.  dir 바이트의 상위 비트로 색인한다: dir = 방향 | (idx << 1).
+ * 유선 형식(73 B)을 건드리지 않으려는 것이고, 방향은 0/1 뿐이라 자리가 남는다. */
+#define SOP_PACK_NMAX 192U
+static const uint16_t SOP_PACK_N[] = {1U, 12U, 48U, 96U, 192U};
+#define SOP_PACK_NSET (sizeof(SOP_PACK_N) / sizeof(SOP_PACK_N[0]))
+#endif  /* SOP_BENCH_PACK */
 #define SOP_CMD_EKF2_F64 0x6CU  /* 완전 2RC + double */
 #define SOP_CMD_FEAT_A8  0x6DU  /* 특징 갱신 1 샘플 — dR_fast 하나만 (채택) */
 
@@ -192,6 +210,12 @@ typedef struct
 
 static sop_feat_t g_feat;
 static sop_ekf_t  g_ekf;
+#ifdef SOP_BENCH_PACK
+/* 팩 명령용 셀별 상태.  192 x (60 + 64) B = 23.8 KB, H563 의 SRAM 안에서
+ * 넉넉하다.  하나를 공유해 돌리면 계산량은 재도 상태 메모리는 못 잰다. */
+static sop_feat_t g_pack_feat[SOP_PACK_NMAX];
+static sop_ekf_t  g_pack_ekf[SOP_PACK_NMAX];
+#endif
 static int        g_state_init;
 
 static void SOH_Handle(int simd)
@@ -252,8 +276,26 @@ static void SOP_Handle(uint8_t cmd)
   }
   r.magic = CEMA_PROTOCOL_MAGIC;
 
-  /* 트림은 REFF/SOLVE 측정 밖에서 미리 구한다 — 단계를 섞지 않기 위해. */
-  if (cmd != SOP_CMD_TRIM && cmd != SOP_CMD_FULL)
+#ifdef SOP_BENCH_PACK
+  /* 팩 명령은 방향 바이트에 규모 색인을 얹어 보낸다. */
+  uint8_t  dir_bits = (cmd == SOP_CMD_PACK) ? (uint8_t)(q.dir & 1U) : q.dir;
+  uint16_t n_cells  = 1U;
+  if (cmd == SOP_CMD_PACK)
+  {
+    uint8_t idx = (uint8_t)(q.dir >> 1);
+    if (idx >= SOP_PACK_NSET) { idx = (uint8_t)(SOP_PACK_NSET - 1U); }
+    n_cells = SOP_PACK_N[idx];
+  }
+#endif
+
+  /* 트림은 REFF/SOLVE 측정 밖에서 미리 구한다 — 단계를 섞지 않기 위해.
+   * CYCLE 과 PACK 은 정반대가 목적이므로 제외한다: 통합 주기를 재는 것이라
+   * 트림이 창 안에 있어야 한다. */
+  if (cmd != SOP_CMD_TRIM && cmd != SOP_CMD_FULL
+#ifdef SOP_BENCH_PACK
+      && cmd != SOP_CMD_CYCLE && cmd != SOP_CMD_PACK
+#endif
+     )
   {
     sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
   }
@@ -306,6 +348,44 @@ static void SOP_Handle(uint8_t cmd)
       ist = sop_solve((sop_dir_t)q.dir, q.soc, q.soh, q.v_pre, q.v_limit,
                       q.tau_s, kf, ks, &it);
       break;
+#ifdef SOP_BENCH_PACK
+    case SOP_CMD_CYCLE:
+    {
+      /* 배치에서 한 주기에 실제로 도는 것: 특징 갱신 -> SOC EKF ->
+       * 트림 -> 반전.  단계별 측정의 합과 비교하려고 하나의 창에 둔다. */
+      float x1[1];
+      (void)sop_feat_update_a8(&g_feat, 1.0f, q.current_a, q.v_pre,
+                               q.soc, q.soh, x1);
+      (void)sop_ekf_step(&g_ekf, 1.0f, q.current_a, q.v_pre, q.soh, 1);
+      sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
+      ist = sop_solve((sop_dir_t)q.dir, q.soc, q.soh, q.v_pre, q.v_limit,
+                      q.tau_s, kf, ks, &it);
+      break;
+    }
+    case SOP_CMD_PACK:
+    {
+      /* 직렬 팩의 한 주기: 셀마다 같은 주기를 돌고 min 을 취한다.
+       * 셀 상태를 공유하지 않고 셀당 하나씩 둔다 — 계산량뿐 아니라 상태
+       * 메모리도 실제 규모로 재기 위해서다 (셀당 124 B). */
+      float x1[1];
+      float best = 1.0e30f;
+      for (uint16_t c = 0U; c < n_cells; ++c)
+      {
+        float kfc = 1.0f, ksc = 1.0f;
+        uint32_t itc = 0U;
+        (void)sop_feat_update_a8(&g_pack_feat[c], 1.0f, q.current_a, q.v_pre,
+                                 q.soc, q.soh, x1);
+        (void)sop_ekf_step(&g_pack_ekf[c], 1.0f, q.current_a, q.v_pre,
+                           q.soh, 1);
+        sop_trim((sop_dir_t)dir_bits, q.x12, &kfc, &ksc);
+        float ic = sop_solve((sop_dir_t)dir_bits, q.soc, q.soh, q.v_pre,
+                             q.v_limit, q.tau_s, kfc, ksc, &itc);
+        if (ic < best) { best = ic; kf = kfc; ks = ksc; it = itc; }
+      }
+      ist = best;
+      break;
+    }
+#endif  /* SOP_BENCH_PACK */
     case SOP_CMD_FULL:
     default:
       sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
@@ -373,6 +453,9 @@ static void CEMA_Protocol_Loop(void)
              || command == SOP_CMD_FEAT_A8 || command == SOP_CMD_EKF
              || command == SOP_CMD_EKF_P || command == SOP_CMD_EKF_F64
              || command == SOP_CMD_EKF2 || command == SOP_CMD_EKF2_F64
+#ifdef SOP_BENCH_PACK
+             || command == SOP_CMD_CYCLE || command == SOP_CMD_PACK
+#endif
 #ifndef SOP_A8_ONLY
              || command == SOP_CMD_FEAT
 #endif

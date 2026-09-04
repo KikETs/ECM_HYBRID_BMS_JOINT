@@ -192,7 +192,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 114 stored published values
+python3 repro/verify.py        # check the 118 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```
@@ -219,7 +219,7 @@ an uncommitted file.
 `verify.py` runs without the raw data: trained weights and result tables
 are in the repository. To rebuild from the datasets, fetch the three DOIs
 in [DATA.md](DATA.md) into `raw/` and run `python3 repro/run.py <stage>`.
-Full rebuild sums to 1212 minutes (20.2 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 711 minutes (11.8 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
+Full rebuild sums to 1220 minutes (20.3 h) of recorded stage times, of which 501 minutes are estimates that were never timed — a planning figure, not a measurement. Measured stages account for 719 minutes (12.0 h). `REPRODUCE.md` derives both from `repro/stages.py`; this sentence is checked against it.
 
 [REPRODUCE.md](REPRODUCE.md) maps every published number to the command
 that produces it.

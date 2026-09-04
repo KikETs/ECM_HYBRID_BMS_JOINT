@@ -324,8 +324,13 @@ SCOPED = [
      r"|(?:exceedance|usability|lambda|margin) (?:rate )?(?:on|for|at) (?:a |the )?pack"
      r"|at pack[- ]level|on a pack\b|pack[- ]level (?:result|number|safety|"
      r"validat|exceedance)|N *= *192|192[- ]cell",
+     # A pack sentence is bounded either by naming the resampling simulation
+     # or by disclaiming validation outright -- 37.22 measures a COMPUTE cost
+     # at pack scale on real hardware, which is neither a simulation nor a
+     # validation, and the first version of this rule had no way to say so.
      r'simulat|resampl|no pack hardware|Monte Carlo|sensitivity|'
-     r'not a pack|never .{0,16}pack|no pack\b|future work|revalidat',
+     r'not a pack|never .{0,16}pack|no pack\b|future work|revalidat|'
+     r'compute cost|costs? at pack scale|no second cell|not pack validation',
      'a pack-level result stated without saying it is the resampling '
      'simulation',
      'there is no pack, module or HIL bench in this work; sop_pack2.py '

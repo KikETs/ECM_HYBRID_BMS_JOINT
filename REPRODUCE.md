@@ -104,9 +104,10 @@ Run with `python3 repro/run.py <id>`; upstream stages run first.
 | `mcu_export` | 2 | `python3 export_mcu_tables.py --rung A8 --deployment --trim runs_trim_a8_deploy --trim-chg runs_trim_a8_chg_deploy --out ../mcu/sop_tables.h && python3 export_soh_ridge.py --out ../mcu/soh_tables.h` | `../mcu/sop_tables.h +1` |
 | `soh_deploy_tables` | 1 | `python3 ../repro/run_soh_deploy_tables.py` | `results/tables/soh_model_cost.csv +1` |
 | `mcu_table` | 1 | `python3 ../repro/run_mcu_table.py` | `results/tables/mcu.csv +1` |
+| `mcu_integrated` | 8 (board) | `cd ../mcu/fw_sop && make MODEL_ID=pack_bench EXTRA_CFLAGS=-DSOP_BENCH_PACK && STM32_Programmer_CLI -c port=SWD -w Build/pack_bench/sop_bench.elf -v -rst && cd ../.. && python3 repro/run_mcu_integrated.py --port /dev/ttyACM0` | `results/tables/mcu_integrated.csv` |
 | `mcu_measure` | 25 (board) | `cd ../mcu/fw_sop && make && STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/sop_bench.elf -v -rst && cd .. && python3 bench_sop.py --n 500 && cd ../analysis && python3 ../repro/run_extras.py` | `../mcu/sop_mcu_bench.csv` |
 
-Full rebuild: 1212 minutes (20.2 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (41 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 711 minutes (11.8 h).
+Full rebuild: 1220 minutes (20.3 h) if every stage takes the time recorded against it. `~` marks an estimate that was never timed, and those account for 501 of those minutes (41 %) — so treat the total as a planning figure, not a measurement. Measured stages sum to 719 minutes (12.0 h).
 
 ## Published numbers
 
@@ -228,6 +229,10 @@ Full rebuild: 1212 minutes (20.2 h) if every stage takes the time recorded again
 | `usable.ref.a8.disc10.exceed_dep` | 1 | `usable_reference.csv` | sec 37.19 |
 | `usable.ref.a8.disc10.exceed_fleet` | 0 | `usable_reference.csv` | sec 37.19 |
 | `usable.ref.a8.binding.lambda` | 71.47 | `usable_reference.csv` | sec 37.19 |
+| `mcu.integrated.median` | 67.116 | `mcu_integrated.csv` | sec 37.22 |
+| `mcu.integrated.summing_error` | 1.654 | `mcu_integrated.csv` | sec 37.22 |
+| `mcu.pack.n192.median` | 12767.87 | `mcu_integrated.csv` | sec 37.22 |
+| `mcu.pack.per_cell_192` | 66.499 | `mcu_integrated.csv` | sec 37.22 |
 
 ## Cells and evaluation protocol
 

@@ -6199,3 +6199,67 @@ integrated loop over all four needs firmware that cannot be built on the audit
 host (no `arm-none-eabi` toolchain); and cache and pipeline interactions over
 a longer chain are exactly what a two-stage pair cannot show. **339.84 µs is
 still not a WCET.**
+
+### 37.22 The cycle timed as a cycle, and what a pack costs to compute
+
+> **Nothing here is pack validation.** There is no second cell, no pack and no
+> HIL bench; all N cells are handed the same current, voltage and temperature.
+> This measures what the embedded implementation COSTS at pack scale — a
+> compute cost on one MCU — not whether the estimate is right on a pack. Pack
+> behaviour stays blocked (`evidence_ledger.blocked_work`).
+
+§37.10 relabelled 339.84 µs a derived cycle-budget estimate rather than a
+WCET, and §37.21 could only bound the summation error over the 80 µs the
+firmware already paired, because **no command ran the four stages of a control
+cycle inside one DWT window**. That was recorded as blocked on hardware. It
+was not: the NUCLEO-H563ZI is on the bench and the toolchain ships with
+STM32CubeIDE. What was missing was twenty lines of firmware.
+
+`SOP_CMD_CYCLE` runs feature update → SOC EKF → trim → inversion in one
+window. `SOP_CMD_PACK` repeats that for N cells, each with **its own state**
+(124 B, not shared), and reduces by min — what a series pack master does.
+Both sit behind `-DSOP_BENCH_PACK` and are absent from the default build,
+because the pack arrays are 24 KB and would otherwise inflate the deployment
+footprint `build_size.csv` reports. The default build is byte-identical:
+text 72700, bss 13172.
+
+**Summing overstates the cycle, by little.** Paired on the same 200 operating
+points `sop_mcu_bench.csv` used:
+
+| | integrated | summed | Δ |
+|---|---:|---:|---:|
+| median | 67.116 µs | 68.226 µs | **+1.65 %** |
+| maximum | 93.484 µs | 96.108 µs | **+2.81 %** |
+
+Summing is the larger figure at 59.5 % of points. So the per-stage addition is
+conservative here at the median and at the maximum — the opposite sign from
+§37.21's two-stage pairing, where the sum of stage maxima sat 0.32 % above the
+integrated maximum but 0.089 % *below* it at the single worst point. Neither
+error is large. **What matters is that the size is now measured rather than
+assumed**, and 339.84 µs stays a four-solve budget estimate, not a WCET: this
+measures one solve, and cache and pipeline behaviour over a longer chain is
+still not what a 200-point sweep shows.
+
+**A pack costs exactly N times a cell, and 192 cells do not fit 100 Hz.**
+
+| N | median | maximum | per cell | % of a 10 ms period |
+|---:|---:|---:|---:|---:|
+| 1 | 67.2 µs | 93.7 µs | 67.17 | 0.7 |
+| 12 | 798.6 µs | 1.12 ms | 66.55 | 8.0 |
+| 48 | 3.19 ms | 4.47 ms | 66.51 | 31.9 |
+| 96 | 6.38 ms | 8.94 ms | 66.50 | 63.8 |
+| **192** | **12.77 ms** | **17.87 ms** | 66.50 | **127.7** |
+
+Per-cell cost is flat to four significant figures from 1 to 192 cells — it
+*falls* slightly, 67.17 → 66.50 µs — so 24 KB of per-cell state costs nothing
+in cache behaviour at this size and the scaling is linear with no surprise.
+
+The consequence is concrete. On this part a 192-cell pack runs the estimator
+at **78 Hz median and 56 Hz worst case**, not 100 Hz. At 96 cells it fits with
+36 % of the period left; at 192 it does not fit at all. A deployment at that
+size needs a 10 Hz loop, a faster part, or the cells split across modules —
+and that is a design constraint the paper can state, because it was measured.
+
+**Say it once more where the numbers are, not only at the top.** This is a
+compute cost at pack scale on one MCU. It is not pack validation, it must
+never be quoted as any, and pack behaviour remains blocked.

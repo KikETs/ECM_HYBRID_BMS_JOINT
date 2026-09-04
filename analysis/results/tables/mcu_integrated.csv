@@ -1,0 +1,9 @@
+quantity,n_cells,n_points,median_us,max_us,per_cell_us,pct_of_100hz_budget
+integrated cycle (1 solve),1,200,67.116,93.484,67.116,0.671
+"summed stages, same points",1,200,68.226,96.108,68.226,0.682
+"summing error, paired",1,200,+1.654,+2.807,,59.5
+pack min over N,1,200,67.172,93.664,67.172,0.672
+pack min over N,12,200,798.590,1117.588,66.549,7.986
+pack min over N,48,200,3192.446,4468.612,66.509,31.924
+pack min over N,96,200,6384.254,8936.644,66.503,63.843
+pack min over N,192,200,12767.870,17872.708,66.499,127.679

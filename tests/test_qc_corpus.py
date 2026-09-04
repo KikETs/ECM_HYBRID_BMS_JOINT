@@ -207,6 +207,11 @@ SCOPE_MUST_FLAG = [
      'length.'),
     ('paraphrase that dodges the banned phrase',
      'The margin was confirmed on a 192-cell string in both directions.'),
+    # Widening the rule to admit 37.22's compute-cost disclaimer must not let
+    # a safety claim through by borrowing the same vocabulary.
+    ('a safety claim dressed as a compute statement',
+     'The per-cell compute is flat and the pack exceedance is 0.0 % at every '
+     'string length.'),
     ('pack-level safety asserted',
      'These numbers establish pack-level safety at the shipped margin.'),
     ('lambda safe on a pack',
@@ -266,6 +271,10 @@ SCOPE_MUST_NOT_FLAG = [
      '\n'
      'Using a cell-calibrated lambda directly on a pack raises the discharge\n'
      'exceedance rate more than threefold.'),
+    ('a compute cost at pack scale, disclaimed',
+     'This is a compute cost at pack scale on one MCU, not pack validation: '
+     'the pack exceedance question is untouched and a 192-cell pack does not '
+     'fit 100 Hz.'),
     ('pack-master is a part class, not a claim',
      'The S32K344 is a mainstream BMS pack-master class part.'),
     # The scope rules run through is_assertion for the same reason the

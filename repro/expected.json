@@ -1398,6 +1398,52 @@
    "value": 71.47,
    "source": "sec 37.19 — the binding cell held out: looser lambda, most usable current of the six, and the one exceedance",
    "tol": 0.02
+  },
+  {
+   "id": "mcu.integrated.median",
+   "table": "mcu_integrated.csv",
+   "where": {
+    "quantity": "integrated cycle (1 solve)"
+   },
+   "column": "median_us",
+   "value": 67.116,
+   "source": "sec 37.22 — four stages in one DWT window, measured, not summed",
+   "tol": 0.05
+  },
+  {
+   "id": "mcu.integrated.summing_error",
+   "table": "mcu_integrated.csv",
+   "where": {
+    "quantity": "summing error, paired"
+   },
+   "column": "median_us",
+   "value": 1.654,
+   "source": "sec 37.22 — summing overstates the median cycle by 1.65 %, paired on the same operating points",
+   "tol": 0.05
+  },
+  {
+   "id": "mcu.pack.n192.median",
+   "table": "mcu_integrated.csv",
+   "where": {
+    "quantity": "pack min over N",
+    "n_cells": "192"
+   },
+   "column": "median_us",
+   "value": 12767.87,
+   "source": "sec 37.22 — a 192-cell pack does NOT fit a 10 ms cycle on this part",
+   "tol": 20.0
+  },
+  {
+   "id": "mcu.pack.per_cell_192",
+   "table": "mcu_integrated.csv",
+   "where": {
+    "quantity": "pack min over N",
+    "n_cells": "192"
+   },
+   "column": "per_cell_us",
+   "value": 66.499,
+   "source": "sec 37.22 — per-cell cost is flat from N=1 to N=192, so the scaling is linear and 24 KB of state costs nothing",
+   "tol": 0.2
   }
  ],
  "tables": {
@@ -3568,10 +3614,36 @@
     "summed_us": "us, SOP_CMD_TRIM + SOP_CMD_SOLVE timed separately",
     "delta_pct": "% , summed relative to integrated; positive means adding stages over-reports"
    }
+  },
+  "mcu_integrated.csv": {
+   "producer": "python3 repro/run_mcu_integrated.py --port /dev/ttyACM0",
+   "stage": "mcu_integrated",
+   "required": true,
+   "rows": 8,
+   "columns": [
+    "quantity",
+    "n_cells",
+    "n_points",
+    "median_us",
+    "max_us",
+    "per_cell_us",
+    "pct_of_100hz_budget"
+   ],
+   "numeric": [
+    "n_cells",
+    "n_points",
+    "median_us",
+    "max_us",
+    "pct_of_100hz_budget"
+   ],
+   "units": {
+    "median_us": "us, DWT on a NUCLEO-H563ZI at 250 MHz; on the \"summing error\" row the two numbers are percentages",
+    "pct_of_100hz_budget": "% of a 10 ms control period"
+   }
   }
  },
  "completeness": {
-  "total_checks": 114,
+  "total_checks": 118,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3607,7 +3679,8 @@
    "method_comparison_est.csv": 2,
    "external_a8_surfaces.csv": 4,
    "usable_reference.csv": 9,
-   "integration_cost.csv": 3
+   "integration_cost.csv": 3,
+   "mcu_integrated.csv": 4
   },
   "check_ids": [
    "sop.disc.10s.lambda",
@@ -3723,7 +3796,11 @@
    "mcu.integration.worst_point",
    "usable.ref.a8.disc10.exceed_dep",
    "usable.ref.a8.disc10.exceed_fleet",
-   "usable.ref.a8.binding.lambda"
+   "usable.ref.a8.binding.lambda",
+   "mcu.integrated.median",
+   "mcu.integrated.summing_error",
+   "mcu.pack.n192.median",
+   "mcu.pack.per_cell_192"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

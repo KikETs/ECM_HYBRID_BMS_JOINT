@@ -614,6 +614,18 @@ STAGES = [
              'results/tables/mcu.csv, so four published board numbers had '
              'no producer.'),
 
+    dict(id='mcu_integrated', tier=6, minutes=8, measured=True, board=True,
+         cmd='cd ../mcu/fw_sop && make MODEL_ID=pack_bench '
+             'EXTRA_CFLAGS=-DSOP_BENCH_PACK && STM32_Programmer_CLI -c '
+             'port=SWD -w Build/pack_bench/sop_bench.elf -v -rst && cd ../.. '
+             '&& {py} repro/run_mcu_integrated.py --port /dev/ttyACM0',
+         inputs=['../mcu/sop_mcu_bench.csv'],
+         outputs=['results/tables/mcu_integrated.csv'],
+         why='The four stages of a control cycle were only ever timed apart '
+             'and added.  SOP_CMD_CYCLE runs them in one DWT window on the '
+             'same operating points, and SOP_CMD_PACK repeats the cycle for '
+             'N cells with a state each.  Needs the NUCLEO-H563ZI.'),
+
     dict(id='mcu_measure', tier=6, minutes=25, measured=True, board=True,
          cmd='cd ../mcu/fw_sop && make && '
              'STM32_Programmer_CLI -c port=SWD -w Build/nmc_dst_cc/'
