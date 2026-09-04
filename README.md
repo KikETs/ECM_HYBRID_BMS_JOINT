@@ -306,19 +306,18 @@ redistributed.
 ## Licence
 
 Code is [MIT](LICENSE). Derived data, tables, model weights, figures and
-documentation are **[CC BY-SA 4.0](LICENSE-DATA)** — ShareAlike, because the
-UYPYDJ dataset the models are trained on is CC BY-SA 4.0 on Borealis and that
-obligation propagates to adapted material.
+documentation are **[CC BY 4.0](LICENSE-DATA)** — *provisionally*.
 
-**The UYPYDJ deposit contradicts itself.** The Borealis licence field says
-CC BY-SA 4.0; the readme inside the same deposit says CC BY 4.0. Both are the
-depositors' statements, both were verified on 2026-09-01, and this repository
-follows the more restrictive one. If you are submitting a paper from this
-work, resolve it with the depositor first — ShareAlike does not fit any of
-Elsevier's licence options, and [LICENSE-DATA](LICENSE-DATA) sets out the
-three ways out.
+**The UYPYDJ deposit states two licences.** The readme inside the deposit says
+`Licenses/restrictions: CC BY 4.0`; the Borealis dataset record says
+CC BY-SA 4.0. Both are the depositors' own statements and both were verified
+on 2026-09-01. This repository follows the readme pending the depositor's
+answer ([docs/depositor_query_uypydj.md](docs/depositor_query_uypydj.md) has
+the query). If the record governs instead, this becomes CC BY-SA 4.0 and
+ShareAlike reaches the derived data and any figure adapted from it —
+[LICENSE-DATA](LICENSE-DATA) sets out what changes.
 
-RPCWBY and Mendeley are CC BY 4.0, which combines into a BY-SA work without
-difficulty. All three attributions are in [LICENSE-DATA](LICENSE-DATA). No raw
-data is redistributed; see [DATA.md](DATA.md).
+RPCWBY and Mendeley are CC BY 4.0, both re-verified 2026-09-01. All three
+attributions are in [LICENSE-DATA](LICENSE-DATA). No raw data is
+redistributed; see [DATA.md](DATA.md).
 

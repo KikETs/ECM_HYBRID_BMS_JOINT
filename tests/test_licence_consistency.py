@@ -21,8 +21,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # The licence this repository applies to its own derived data, and the
 # upstream licence that forces it.  Change these two and the test tells you
 # every file that has to change with them.
-DERIVED = 'CC BY-SA 4.0'
-UYPYDJ = 'CC BY-SA 4.0'
+DERIVED = 'CC BY 4.0'      # provisional; see LICENSE-DATA
+UYPYDJ = 'CC BY 4.0'
 
 
 def read(name):
@@ -31,15 +31,20 @@ def read(name):
 
 def test_license_data_declares_the_derived_licence():
     head = read('LICENSE-DATA').split('\n\n', 1)[0]
-    assert 'Attribution-ShareAlike' in head and '4.0' in head, (
+    assert 'Creative Commons Attribution 4.0' in head, (
         f'LICENSE-DATA does not open by declaring {DERIVED}:\n{head}')
+    assert 'ShareAlike' not in head, (
+        'LICENSE-DATA opens with ShareAlike while the working assumption is '
+        'CC BY 4.0')
 
 
 def test_readme_agrees_with_license_data():
     r = read('README.md')
     assert DERIVED in r, f'README.md does not state {DERIVED}'
-    assert not re.search(r'documentation are\s*\n?\s*\[CC BY 4\.0\]', r), (
-        'README.md still describes the derived data as CC BY 4.0')
+    assert 'PROVISIONAL' in read('LICENSE-DATA'), (
+        'LICENSE-DATA no longer marks the CC BY 4.0 choice as provisional, '
+        'which is the only thing making it reversible when the depositor '
+        'answers')
 
 
 def test_raw_manifest_records_the_upstream_licence():

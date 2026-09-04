@@ -737,12 +737,20 @@ reproduction_pipeline:
 
 licence:
   status: CONFLICT_UNRESOLVED_UPSTREAM
+  working_assumption_2026_09_01: >
+    CC BY 4.0, the deposit readme's statement.  Author's decision, taken with
+    the conflict in front of them, pending the depositor's answer.  It is
+    PROVISIONAL and the repository is set up to flip: LICENSE-DATA says what
+    changes if the Borealis record governs, and the test suite pins the
+    current choice so a silent drift back is impossible.  Send
+    docs/depositor_query_uypydj.md.  Until it is answered, the submission
+    blocker stands - a provisional reading is not a resolved licence.
   detail: 'Chosen by the author on 2026-08-27: MIT for the source code (LICENSE).
     The derived data, tables, model weights, figures and documentation moved from
     CC BY 4.0 to CC BY-SA 4.0 on 2026-09-01 (LICENSE-DATA).
 
     '
-  why_the_change: 'UYPYDJ is CC BY-SA 4.0 in the Borealis dataset record, and
+  why_it_matters: 'If UYPYDJ is CC BY-SA 4.0, as the Borealis dataset record says, then
     ShareAlike propagates to adapted material.  What this repository redistributes
     is not summary statistics: uypydj_hppc_resistance.csv is 57,674 rows,
     uypydj_ecm.csv 27,894, uypydj_ocv.csv 11,703, plus 112 model files trained on

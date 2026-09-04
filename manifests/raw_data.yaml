@@ -40,7 +40,7 @@ UYPYDJ:
     three are pulsed methods - which is the source of the one-cell-per-protocol
     confound in generalization_scope.yaml, and of the CC / CC_CELL2 pair being
     the only same-protocol comparison.  Single temperature by design.
-  license: "CC BY-SA 4.0 (Borealis dataset record, version 2.0, last updated 2025-02-19; verified 2026-09-01 through the dataverse_json export)"
+  license: "CC BY 4.0 PROVISIONALLY, per the deposit readme line 47; the Borealis record for the same DOI says CC BY-SA 4.0.  Author decision 2026-09-01 pending the depositor's answer.  Both verified 2026-09-01."
   license_conflict: >
     THE DEPOSIT CONTRADICTS ITSELF AND THIS IS NOT RESOLVED.
 
@@ -54,12 +54,13 @@ UYPYDJ:
     one recorded below, so the CC BY line is in the file as published - the
     conflict is real and not a stale local copy.
 
-    This repository follows CC BY-SA 4.0, the more restrictive of the two,
-    because complying with the weaker one and being wrong is the expensive
-    error.  LICENSE-DATA is CC BY-SA 4.0 for that reason.  Ask the depositor
-    to reconcile the two before submission; if the readme governs, the
-    derived data can revert to CC BY 4.0 and the ShareAlike question for the
-    manuscript disappears.
+    2026-09-01, author's decision: proceed on CC BY 4.0, the readme's
+    statement, pending the depositor's answer.  It is the depositors' own
+    text, it sits inside the deposit, and the same file certifies the data is
+    free of licensing issues.  This is PROVISIONAL: if the depositor confirms
+    the Borealis record governs, LICENSE-DATA becomes CC BY-SA 4.0 and
+    ShareAlike reaches the derived tables, the trained weights and any figure
+    adapted from them.  Send docs/depositor_query_uypydj.md.
   license_history: >
     This field read "[SOURCE REQUIRED] not stated in the local readme" until
     2026-08-31, then "CC BY 4.0" on the strength of the readme alone.  Both
