@@ -1062,3 +1062,57 @@ review_round_six:
       (ubuntu-latest, both jobs).  Nothing in it is deliberately Linux-only,
       but untested is untested: the docstring and README now say so, and the
       gate prints a warning when it runs anywhere else.
+
+soc_is_per_cell_calibrated:
+  status: VERIFIED_FROM_CODE
+  date: 2026-09-01
+  question: >
+    The S02 contract says the SOC arm is per-cell calibrated rather than a
+    leave-one-cell-out transfer.  DATA.md said every evaluation holds a cell
+    out.  Both were approved, they contradict each other, and no ledger entry
+    supported the SOC exception.  Resolved by reading the code only - no
+    result CSV was opened, so nothing here depends on a number.
+  code_evidence:
+    - path: analysis/ecm_surface.py
+      symbol: "ECMSurface.__init__"
+      line_is: 'rows = [r for r in csv.DictReader(open(ecm_csv)) if r["cell"] == cell and r["direction"] == direction]'
+      means: >
+        The constructor keeps ONLY the named cell's rows.  ECMSurface(X) is X's
+        own characterisation surface, never a pool.  The class docstring says
+        the same in words: "theta(SOC, SOH, |I|) and OCV(SOC, SOH) for ONE
+        cell", and the module header says "PER CELL, NEVER AVERAGED ACROSS
+        CELLS".
+    - path: repro/build_soc_runs.py
+      symbol: "run construction"
+      line_is: "sd = ECMSurface(cell, 'discharge');  sc = ECMSurface(cell, 'charge')"
+      means: >
+        Every SOC run is built with the surfaces of the cell it drives, and
+        soc_perturb_bench._one passes them straight into ekf_soc.run as
+        r['sd'], r['sc'].  The filter therefore reads the characterisation of
+        the cell under test.  THIS IS THE SOC EXCEPTION.
+    - path: analysis/ecm_pool.py
+      symbol: "build(holdout)"
+      line_is: 'keep = [c for c in cells if c != holdout]'
+      means: >
+        The SOP and SOH arms do not use the per-cell surface.  They use a pool
+        built from the OTHER five cells, and this file exists for that reason:
+        its header states that instantiating the per-cell surface for a
+        held-out cell "imports that cell's own R1 trajectory ... every
+        held-out number computed that way would be leaked".  So the two
+        protocols are different by construction, not by accident.
+    - path: analysis/sop_end_to_end.py
+      symbol: "module docstring"
+      means: >
+        Already stated it in prose - "ekf_soc.py's driver instantiates
+        ECMSurface(cell), which is that cell's own" - and so does
+        repro/run_soc_baselines.py.  The fact was in the repository; what was
+        missing was an entry that a manuscript could cite.
+  verdict: >
+    THE CONTRACT IS RIGHT AND DATA.MD WAS WRONG.  The SOC arm is per-cell
+    calibrated.  DATA.md now carries the per-arm table instead of "every
+    evaluation holds one cell out"; README and the generated REPRODUCE.md
+    already did.
+  what_may_be_claimed: >
+    SOC numbers describe a filter reading the characterisation of the cell it
+    is driving.  They may not be quoted as transfer to an unseen cell, and
+    they are not comparable to the SOP and SOH held-out figures.

@@ -2,6 +2,28 @@
 # What the six-cell UYPYDJ evidence does and does not cover.
 # Status vocabulary: COVERED / PARTIAL / NOT COVERED / EVIDENCE REQUIRED
 
+# WHAT MAY BE CITED FROM THIS FILE
+#
+# Every field outside `model_dependent` is a fact about the DATA - how many
+# cells, which protocols, which temperatures were run, what a fold holds out.
+# Those are true whatever estimator is used, and a contract or a manuscript
+# scope statement may cite them.
+#
+# Everything a particular model measured lives under `model_dependent`, with
+# the table it came from.  Those numbers move when the estimator changes, so
+# citing them as scope confuses "what the data covers" with "how well this
+# model did on it" - which is how a scope claim quietly becomes a performance
+# claim.  The two were mixed in this file until 2026-09-01.
+#
+# tests/test_scope_manifest_fields.py enforces the split.
+field_policy:
+  citable_for_scope: [status, detail, claim_limit, confounded_with_cell,
+                      downgraded_2026_08_31, gap, note]
+  not_citable_for_scope: [model_dependent]
+  rule: >
+    A measured model result may appear ONLY under an axis's model_dependent
+    key, and that key must name the table it came from.
+
 axes:
   cell:
     status: PARTIAL
@@ -33,11 +55,16 @@ axes:
       no result here can say which of the two moved.  CC and CC_CELL2 are the
       single exception - same protocol, different cell - and they are the
       only clean read on cell-to-cell variation in the whole set.
-      soc_percell.csv puts a number on it: the per-cell mean-of-six spans
-      1.834 to 2.474 %p across all six, a 1.35x spread, while the CC /
-      CC_CELL2 pair alone spans 1.834 to 2.372, a 1.29x spread.  Nearly all
-      of the apparent protocol spread is available from two cells running the
-      same protocol.
+    model_dependent:
+      note: >
+        Measured with a particular estimator.  It illustrates the confound; it
+        is not part of the data-design scope and a contract must not cite it.
+      soc_percell_spread: >
+        The per-cell mean-of-six spans 1.834 to 2.474 %p across all six, a
+        1.35x spread, while the CC / CC_CELL2 pair alone spans 1.834 to
+        2.372, a 1.29x spread - nearly all of the apparent protocol spread is
+        available from two cells running the same protocol.
+      table: analysis/results/tables/soc_percell.csv
     claim_limit: >
       "six protocol-cell combinations", never "generalises across charge
       protocols" - the design cannot separate the two.
@@ -46,13 +73,18 @@ axes:
     detail: "SOH 1.00 down to ~0.68, ~1400-1900 cycles per cell."
   temperature:
     status: NOT COVERED
-    measured_consequence: >
-      Quantified on 2026-08-27.  Running Chen 2026's constant-power search
-      with this project's pooled ECM on RPCWBY Test#3 (tau = 10 s) gives an
-      SOP RMSE of 1.7-4.2 W at 0, 10, 25 and 40 C but 17.5 W at -10 C and
-      36.2 W at -20 C, with a +29.2 W optimistic bias against a 30.8 W
-      measured mean.  The model predicts roughly double the available power
-      at -20 C.  See analysis/results/tables/chen2026_baseline.csv.
+    model_dependent:
+      note: >
+        A measured consequence of one estimator on one external cell, kept
+        because it sizes the risk, but not a data-design fact.
+      table: analysis/results/tables/chen2026_baseline.csv
+      measured_consequence: >
+        Quantified on 2026-08-27.  Running Chen 2026's constant-power search
+        with this project's pooled ECM on RPCWBY Test#3 (tau = 10 s) gives an
+        SOP RMSE of 1.7-4.2 W at 0, 10, 25 and 40 C but 17.5 W at -10 C and
+        36.2 W at -20 C, with a +29.2 W optimistic bias against a 30.8 W
+        measured mean.  The model predicts roughly double the available power
+        at -20 C.
     detail: >
       UYPYDJ is 25 C throughout.  The 28 files logging ~0 C are a sensor
       fault, not a cold test - HPPC resistance in those cycles sits on the
@@ -65,29 +97,36 @@ axes:
   laboratory:
     status: PARTIAL
     detail: >
-      The physics-only model is now scored on RPCWBY Test#3 across six
-      temperatures under Chen 2026's search framework (see
-      chen2026_baseline.csv), which is a real cross-laboratory result for
-      the ECM.
-      [UPDATED 2026-08-31]  The frozen A8 trim HAS since been scored outside
-      UYPYDJ.  repro/run_external_a8.py carries all six leave-one-cell-out A8
-      folds to RPCWBY Test#2 without refitting anything, including lambda.
-      Result, and the scope matters more than the headline:
-        - RPCWBY contributes ONE physical Samsung 30T cell.  The six "folds"
-          are six UYPYDJ models on that same data - six models, not six cells
-          - so their exceedance counts are correlated.  "External multi-cell
-          validation" is forbidden.
-        - discharge: the frozen lambda stays conservative, margin 1.30-1.43,
-          zero exceedance across all six folds.
-        - charge: it does NOT transfer.  It would need 0.3969 against the
-          shipped 0.5860 and overshoots on 9-11 of 248 in-hull rows per fold.
-        - coverage: 54.2 % of discharge calls and 70.3 % of charge calls are
-          in hull.  The pooled surface hull never reaches below SOC 0.30 at
-          any temperature, so nothing below that is shown.
-      Artifacts: external_a8.csv, external_a8_coverage.csv,
-      external_a8_safety.csv.  Test#3 still carries no paired drive cycle, so
-      the temperature sweep bounds the nominal 2RC layer only, not the trim
-      (external_temp_envelope.csv, spec 37.4).
+      RPCWBY is a second laboratory and a second cell of the same part, but it
+      contributes ONE physical cell.  The six "folds" carried to it are six
+      UYPYDJ models scored on that same data - six models, not six cells - so
+      their outcomes are correlated and "external multi-cell validation" is
+      forbidden regardless of what any of them measures.  That is a fact about
+      the data, and it does not depend on which estimator is carried across.
+    model_dependent:
+      note: >
+        What the carried models actually did.  Reported, but not part of the
+        data-design scope: change the estimator and every number here moves.
+      tables:
+        - analysis/results/tables/chen2026_baseline.csv
+        - analysis/results/tables/external_a8_safety.csv
+        - analysis/results/tables/external_a8_surfaces.csv
+      physics_layer: >
+        The physics-only model is scored on RPCWBY Test#3 across six
+        temperatures under Chen 2026's search framework, a real
+        cross-laboratory result for the ECM.
+      frozen_trim: >
+        [UPDATED 2026-08-31]  repro/run_external_a8.py carries all six
+        leave-one-cell-out A8 folds to RPCWBY Test#2 without refitting
+        anything, including lambda.  Discharge: the frozen lambda stays
+        conservative, zero exceedance across all six folds, worst margin 1.125
+        over the six internal surfaces (37.18).  Charge: it does NOT transfer
+        - it would need 0.3969 against the shipped 0.5860, and it overshoots
+        on 9-11 of 248 in-hull rows per fold.  Coverage: 54.2 % of discharge
+        calls and 70.3 % of charge calls are in hull, and the pooled surface
+        hull never reaches below SOC 0.30 at any temperature, so nothing below
+        that is shown.
+
   drive_profile:
     status: PARTIAL
     detail: >
