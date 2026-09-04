@@ -14,7 +14,8 @@ matters more than the headline numbers:
   separately. CC and CC_CELL2 are the only same-protocol pair.
 * **SOC** is too, since 2026-09-04. It reads the same pooled surface, built
   from the other five cells. It used to read the evaluated cell's own
-  characterisation, which made it a per-cell calibrated deployment and forced
+  characterisation until 2026-09-04, which made it per-cell calibrated and
+  forced
   an exception into every scope statement; §37.23 measured what the switch
   costs (2.140 → 2.325 %p on true SOH) and §37.24 adopted it.
 * **What ships** is neither: the header on the board holds an all-cell fit

@@ -238,7 +238,7 @@ Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded again
 | `soc.percell.mean.same_run` | 2.14 | `soc_loco.csv` | sec 37.23 |
 | `soc.loco.worst_cell` | 2.751 | `soc_loco.csv` | sec 37.23 |
 | `soc.headline.loco.oracle` | 2.325 | `soc_headline.csv` | sec 37.24 |
-| `soc.loco.paired_mean` | 0.184 | `soc_loco.csv` | sec 37.23 |
+| `soc.loco.paired_mean` | 0.185 | `soc_loco.csv` | sec 37.23 |
 
 ## Cells and evaluation protocol
 

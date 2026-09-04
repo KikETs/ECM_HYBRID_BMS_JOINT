@@ -56,8 +56,9 @@ keeps `r["cell"] == cell`, so it is one cell's characterisation;
 precisely because instantiating the per-cell surface for a held-out cell
 "imports that cell's own R1 trajectory … every held-out number computed that
 way would be leaked" (`analysis/ecm_pool.py`). `repro/build_soc_runs.py`
-attaches `ECMSurface(cell)` to every SOC run, so the EKF reads the surface of
-the cell it is driving.
+attached `ECMSurface(cell)` to every SOC run until 2026-09-04; it now attaches
+`ecm_pool.surfaces(cell)`, so the EKF reads a surface built without the cell
+it is driving.
 
 Until 2026-09-04 the SOC arm read `ECMSurface(cell)` — the evaluated cell's
 own rows — which made it a per-cell calibrated deployment and not comparable

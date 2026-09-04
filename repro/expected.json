@@ -1031,7 +1031,7 @@
    },
    "column": "mean_6_pct",
    "value": 2.751,
-   "source": "sec 37.24 — worst cell of six under LOCO; BOOST_REST loses most when its own surface is withheld",
+   "source": "sec 37.24 — the cell with the largest mean-of-six under LOCO.  mean_6_pct averages six per-condition means; it is not a tail statistic",
    "tol": 0.01
   },
   {
@@ -1131,7 +1131,7 @@
    },
    "column": "mean_6_pct",
    "value": 2.337,
-   "source": "sec 37.24 — the adopted SOC headline: unseen cell AND estimated SOH, the full deployment condition",
+   "source": "sec 37.24 — the adopted SOC headline: pooled surface and estimated SOH.  Fixed configuration, cell and protocol held out together, n=6",
    "tol": 0.005
   },
   {
@@ -1143,7 +1143,7 @@
    },
    "column": "mean_6_pct",
    "value": 2.325,
-   "source": "sec 37.24 — the same filter on true SOH; the estimated-SOH penalty is only +0.012 %p on the pooled surface, against +0.068 on the per-cell one",
+   "source": "sec 37.24 — same filter on true SOH; the estimated-SOH penalty is only +0.012 %p on the pooled surface against +0.068 on the per-cell one",
    "tol": 0.005
   },
   {
@@ -1454,7 +1454,7 @@
    },
    "column": "mean_6_pct",
    "value": 2.325,
-   "source": "sec 37.23 — SOC on the pooled surface that excludes the evaluated cell: a genuine unseen-cell number",
+   "source": "sec 37.23 — SOC on the pooled surface that excludes the evaluated cell.  The SURFACE is held out; the EKF configuration is not re-selected per fold, so this is leave-one-cell-out evaluation, not nested selection",
    "tol": 0.005
   },
   {
@@ -1489,7 +1489,7 @@
    },
    "column": "mean_6_disturbances_pct",
    "value": 2.325,
-   "source": "sec 37.24 — the adopted SOC headline: unseen cell (pooled surface), true SOH",
+   "source": "sec 37.24 — the adopted SOC headline on true SOH, pooled surface",
    "tol": 0.005
   },
   {
@@ -1500,8 +1500,8 @@
     "cell": "mean_6_pct"
    },
    "column": "mean_6_pct",
-   "value": 0.184,
-   "source": "sec 37.23 — paired over six cells; 95 % [+0.020, +0.353], excludes zero barely",
+   "value": 0.185,
+   "source": "sec 37.23 — paired over six cells on unrounded per-cell values; 95 % [+0.020, +0.353], excludes zero barely at n=6",
    "tol": 0.005
   }
  ],
@@ -3447,7 +3447,7 @@
     "n_runs": "count",
     "undisturbed_pct": "%p RMSE",
     "mean_6_pct": "%p RMSE, mean over the six disturbances",
-    "worst_of_6_pct": "%p RMSE, worst single disturbance"
+    "worst_of_6_pct": "largest of the six per-condition means -- which disturbance hurts most.  NOT a tail statistic of the error distribution"
    }
   },
   "external_crate_surfaces.csv": {
@@ -3718,7 +3718,7 @@
    ],
    "units": {
     "mean_6_pct": "%p RMSE, mean over the six sensor disturbances; on the \"paired difference\" rows this column is the difference and worst_of_6_pct holds its 95 % cell-cluster interval",
-    "worst_of_6_pct": "largest of the six per-condition means -- which disturbance hurts most, NOT a tail statistic of the error distribution"
+    "worst_of_6_pct": "largest of the six per-condition means -- which disturbance hurts most.  NOT a tail statistic of the error distribution"
    }
   }
  },

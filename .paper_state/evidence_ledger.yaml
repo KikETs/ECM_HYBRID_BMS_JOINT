@@ -1183,3 +1183,28 @@ soc_is_per_cell_calibrated:
     SOC numbers describe a filter reading the characterisation of the cell it
     is driving.  They may not be quoted as transfer to an unseen cell, and
     they are not comparable to the SOP and SOH held-out figures.
+
+what_a_green_ci_proves:
+  status: SCOPE_OF_VERIFICATION
+  date: 2026-09-04
+  detail: >
+    verify.py recomputes every stored value FROM THE COMMITTED TABLES.  It
+    does not re-run the producers, so "123/123 PASS" is committed-table
+    consistency, not a reproduction.
+  ci_reruns_these_producers: >
+    run_soh_table, run_mcu_table, run_method_comparison,
+    run_soh_deploy_tables, run_soc_percell, run_external_crate and
+    run_external_crate --all-surfaces.  Those seven tables are regenerated
+    and diffed on every push.
+  ci_does_not_rerun: >
+    soc (55 min), soc_soh_selection (50 min), soc_loco (12 min), external
+    (105 min and needs the board), and every stage that reads raw/.  Those
+    tables are verified only through their committed contents.  The pooled
+    surfaces they depend on now carry a provenance sidecar (holdout, member
+    cells, source SHA-256) so a stale or wrong-membership pool is rejected
+    rather than trusted, but that is a guard inside a local run and CI does
+    not exercise it either.
+  what_would_close_it: >
+    A scheduled job with raw/ mounted that runs repro/run.py end to end and
+    diffs every table.  Not possible on a hosted runner: raw/ is 24 GB and
+    the board is physical.

@@ -1,11 +1,12 @@
 """What does the SOC arm cost if it does NOT get to see its own cell?
 
-The SOC numbers are a per-cell calibrated deployment: build_soc_runs.py hands
-every run `ECMSurface(cell)`, that cell's own characterisation, so the filter
-reads the surface of the cell it is driving (evidence_ledger,
-soc_is_per_cell_calibrated).  That is a real limitation of the arm and the
-contract states it.  It is not a limitation of the METHOD, and nothing had
-measured the difference.
+Until 2026-09-04 the SOC numbers were a per-cell calibrated deployment:
+build_soc_runs.py handed every run `ECMSurface(cell)`, that cell's own
+characterisation.  This script measured what the alternative costs, and 37.24
+then adopted it -- build_soc_runs.py now hands out pooled surfaces, so the
+ARM is leave-one-cell-out and this script is the A/B behind that decision.
+Both arms therefore build their own surfaces here rather than reading the run
+records, which now hold pooled ones.
 
 This does.  ecm_pool.surfaces(holdout) is the leave-one-cell-out pooled
 surface the SOP and SOH arms already use -- built from the other five cells,
@@ -110,6 +111,7 @@ def main():
     print(f"\n  {'surface':<22}{'cell':<20}{'undist':>9}{'mean6':>9}"
           f"{'worst6':>9}")
     print('  ' + '-' * 70)
+    raw = {}          # (arm, cell) -> (mean_of_six, worst_of_six), unrounded
     for arm, name in ((0, 'per-cell (published)'), (1, 'leave-one-cell-out')):
         means = []
         for c in cells + ['(mean)']:
@@ -117,6 +119,7 @@ def main():
             und = res[(0, arm)][m].mean() * 100
             per = [res[(p, arm)][m].mean() * 100
                    for p in range(1, len(B.PERTURB))]
+            raw[(arm, c)] = (float(np.mean(per)), float(max(per)))
             rows.append([name, c, int(m.sum()), f'{und:.3f}',
                          f'{np.mean(per):.3f}', f'{max(per):.3f}'])
             if c == '(mean)':
@@ -128,15 +131,14 @@ def main():
     # Paired over the six cells, because the two arms are the same runs and
     # the unpaired means hide the sign pattern.  Six clusters is few and the
     # interval says so.
-    cells_l = [c for c in cells]
-    d_mean = np.array([
-        float([r[4] for r in rows if r[0].startswith('leave') and r[1] == c][0])
-        - float([r[4] for r in rows if r[0].startswith('per-cell') and r[1] == c][0])
-        for c in cells_l])
-    d_worst = np.array([
-        float([r[5] for r in rows if r[0].startswith('leave') and r[1] == c][0])
-        - float([r[5] for r in rows if r[0].startswith('per-cell') and r[1] == c][0])
-        for c in cells_l])
+    #
+    # On the UNROUNDED per-cell values.  The first version re-parsed the
+    # formatted table rows, so the interval was computed from numbers already
+    # truncated to three decimals -- a rounding of up to 0.0005 %p per cell
+    # entering a difference whose lower bound is +0.020.  Small, and not a
+    # thing a confidence interval should be built on.
+    d_mean = np.array([raw[(1, c)][0] - raw[(0, c)][0] for c in cells])
+    d_worst = np.array([raw[(1, c)][1] - raw[(0, c)][1] for c in cells])
     rng = np.random.default_rng(BOOT_SEED)
 
     def ci(v):

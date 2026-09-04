@@ -450,7 +450,7 @@ STAGES = [
          inputs=['results/soc_runs.pkl'],
          outputs=['results/tables/soc_baselines.csv'],
          why='Coulomb counting, 1RC-EKF, adaptive-R, dual EKF and a UKF on the '
-             'same six disturbances.  Per-cell calibrated, not held out.'),
+             'same six disturbances.  Leave-one-cell-out since 37.24.'),
 
     dict(id='soc_headline', tier=5, minutes=3, measured=True,
          cmd='{py} ../repro/run_soc_headline.py',
@@ -493,7 +493,8 @@ STAGES = [
          inputs=['results/soc_runs.pkl', 'uypydj_ecm.csv', 'uypydj_ocv.csv'],
          outputs=['results/tables/soc_loco.csv'],
          why='The SOC arm reads the evaluated cell own surface, which makes '
-             'it a per-cell calibrated deployment.  This runs the identical '
+             'it a per-cell calibrated deployment until 37.24.  This runs '
+             'the identical '
              'benchmark on the leave-one-cell-out pooled surface the SOP and '
              'SOH arms use, so the cost of not seeing the cell is measured '
              'rather than left as a caveat.'),

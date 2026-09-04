@@ -28,7 +28,8 @@ printed so the difference stays visible.
 Per-cell calibration, stated plainly: build_soc_runs.py constructs
 ecm_pool.surfaces(cell) — the pool built from the OTHER five — so no filter
 here reads
-its own cell's characterisation surface.  That is per-cell calibrated
+the pooled surface built without its own cell (since 2026-09-04).  Before
+that it read the cell's own surface, which was per-cell calibrated
 deployment.  It is not leave-one-cell-out and must not be described as such.
 """
 import argparse
@@ -264,7 +265,7 @@ def main():
         print(f"  {kind:<26}{d['no distortion']:>9.3f}{np.mean(dist):>9.3f}"
               f"{np.mean(list(d.values())):>9.3f}{max(dist):>9.3f}")
     print('\n  mean6 is the headline: the mean over the six disturbances.')
-    print('  Every filter reads its own cell\'s characterisation surface — '
+    print('  Every filter reads the pool built without its own cell — '
           'leave-one-cell-out: the pool excludes the driven cell.')
     return 0
 

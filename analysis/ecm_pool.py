@@ -263,19 +263,70 @@ def build(holdout, outdir=POOL_DIR, ecm_csv=ECM_CSV, ocv_csv=OCV_CSV,
     return pe, po, len(er), len(orr)
 
 
-def _stale(pool_path, *sources):
-    """True when a pooled file predates any source it was built from.
+def _sha(path, n=1 << 20):
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for b in iter(lambda: f.read(n), b""):
+            h.update(b)
+    return h.hexdigest()
 
-    The cache only checked EXISTENCE.  That was survivable while nothing
-    upstream moved, and stopped being survivable when the SOC arm started
-    reading these surfaces too (37.24): a stale pool would silently put an old
-    ECM behind every SOC number with nothing to notice it.  mtime is coarse
-    but it is the same test make uses, and rebuilding is cheap.
+
+def _provenance(outdir, holdout):
+    return os.path.join(outdir, f"pool_{holdout}.provenance.json")
+
+
+def _write_provenance(outdir, holdout, members, sources):
+    import json
+    with open(_provenance(outdir, holdout), "w", encoding="utf-8") as f:
+        json.dump(dict(holdout=holdout, members=sorted(members),
+                       sources={os.path.basename(x): _sha(x)
+                                for x in sources if os.path.exists(x)}),
+                  f, indent=1)
+
+
+def _stale(pool_path, holdout, outdir, sources):
+    """True when a pooled file cannot be shown to match its inputs.
+
+    The cache first checked EXISTENCE only.  Then mtime, which is what make
+    uses and is enough to catch an edited source -- but mtime cannot say WHICH
+    cells went into the pool, and that is the property the whole
+    leave-one-cell-out claim rests on.  A pool built for the wrong holdout, or
+    with a member list from an older CELLS, has the right timestamp and leaks.
+
+    So each pool carries a provenance sidecar: the holdout, the member cells
+    and the SHA-256 of every source.  Any mismatch rebuilds.  mtime is kept as
+    a cheap first test.
     """
+    import json
     if not os.path.exists(pool_path):
         return True
     t = os.path.getmtime(pool_path)
-    return any(os.path.exists(x) and os.path.getmtime(x) > t for x in sources)
+    if any(os.path.exists(x) and os.path.getmtime(x) > t for x in sources):
+        return True
+    pv = _provenance(outdir, holdout)
+    if not os.path.exists(pv):
+        return True
+    try:
+        rec = json.load(open(pv, encoding="utf-8"))
+    except Exception:
+        return True
+    if rec.get("holdout") != holdout:
+        return True
+    # The member list is derived the same way build() derives it -- from the
+    # source itself -- so a cell appearing or disappearing upstream shows up
+    # here rather than silently changing what "the other five" means.
+    src_cells = sorted({r["cell"] for r in _rows(sources[0])})
+    want = sorted(c for c in src_cells if c != holdout) \
+        if holdout != "ALL" else src_cells
+    if rec.get("members") != want:
+        return True
+    for x in sources:
+        if not os.path.exists(x):
+            continue
+        if rec.get("sources", {}).get(os.path.basename(x)) != _sha(x):
+            return True
+    return False
 
 
 def surfaces(holdout, outdir=POOL_DIR, key_mode="rank", extra_csv=None,
@@ -283,9 +334,13 @@ def surfaces(holdout, outdir=POOL_DIR, key_mode="rank", extra_csv=None,
     pe = os.path.join(outdir, f"ecm_pool_{holdout}.csv")
     po = os.path.join(outdir, f"ocv_pool_{holdout}.csv")
     srcs = [ecm_csv, ocv_csv] + ([extra_csv] if extra_csv else [])
-    if _stale(pe, *srcs) or _stale(po, *srcs):
+    if _stale(pe, holdout, outdir, srcs) or _stale(po, holdout, outdir, srcs):
         build(holdout, outdir, key_mode=key_mode, extra_csv=extra_csv,
               align=align)
+        src_cells = sorted({r["cell"] for r in _rows(ecm_csv)})
+        members = [c for c in src_cells if c != holdout] \
+            if holdout != "ALL" else src_cells
+        _write_provenance(outdir, holdout, members, srcs)
     return (ECMSurface("POOL", "discharge", ecm_csv=pe, ocv_csv=po),
             ECMSurface("POOL", "charge", ecm_csv=pe, ocv_csv=po))
 
