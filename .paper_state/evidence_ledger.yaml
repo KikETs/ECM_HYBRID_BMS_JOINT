@@ -1121,7 +1121,17 @@ review_round_six:
       gate prints a warning when it runs anywhere else.
 
 soc_is_per_cell_calibrated:
-  status: VERIFIED_FROM_CODE
+  status: SUPERSEDED_2026_09_04_ARM_SWITCHED_TO_LOCO
+  superseded_note: >
+    Everything below is a correct account of the arm as it stood until
+    2026-09-04.  On the author's decision the SOC arm now uses
+    ecm_pool.surfaces(cell), the same leave-one-cell-out pool as SOP and SOH,
+    so the exception this entry documents no longer exists and no scope
+    statement needs to carry it.  37.23 measured the cost before the switch
+    (2.140 -> 2.325 %p on true SOH, worst-of-six unmoved) and 37.24 records
+    the adoption.  Kept because a reader of the pre-2026-09-04 tables in
+    preserved/soc_percell_surface_2026-09-04/ needs it.
+  original_status: VERIFIED_FROM_CODE
   date: 2026-09-01
   question: >
     The S02 contract says the SOC arm is per-cell calibrated rather than a

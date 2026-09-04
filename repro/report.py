@@ -82,17 +82,18 @@ def main():
 
     w('## Cells and evaluation protocol\n')
     w(', '.join(f'`{c}`' for c in CELLS) + '\n')
-    w('The three arms are NOT evaluated the same way, and a single sentence '
-      'about all three would be wrong about one of them.\n')
+    w('All three arms are evaluated the same way since 2026-09-04: the '
+      'evaluated cell trains no model, calibrates no safety factor and '
+      'supplies no ECM surface.\n')
     w('| arm | protocol | what a number from it means |')
     w('|---|---|---|')
     w('| SOP | leave-one-cell-out | the evaluated cell trains no model and '
       'calibrates no safety factor |')
     w('| SOH | leave-one-cell-out | same, over the same six folds |')
-    w('| SOC | **per-cell calibrated, not held out** | every filter reads '
-      'its own cell\'s characterisation surface, so the spread is over '
-      'operating conditions within a cell and says nothing about transfer '
-      'to an unseen cell |')
+    w('| SOC | leave-one-cell-out | reads the same pooled surface as the '
+      'other two, built from the other five cells.  It read the evaluated '
+      'cell\'s own characterisation until 2026-09-04; sections 37.23 and '
+      '37.24 measured and adopted the switch |')
     w('')
     w('One more thing the fold names hide: the dataset runs one physical '
       'cell per aging protocol, so holding out a cell holds out its '

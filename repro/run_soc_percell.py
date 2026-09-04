@@ -20,11 +20,10 @@ anyone to recompute it.
 
 Two things the pooled number hides, and they belong next to it:
 
-  * Every filter reads its OWN cell's characterisation surface.  This is a
-    per-cell calibrated deployment, not a leave-one-cell-out transfer like
-    the SOP and SOH arms, so the spread below is over operating conditions
-    within a cell -- it is not evidence that the filter transfers to a cell
-    it has never seen.
+  * Since 2026-09-04 the filter reads the POOLED surface built from the other
+    five cells, the same one the SOP and SOH arms use, so the spread below is
+    over unseen cells.  It read the evaluated cell's own surface before that;
+    37.23 measured the switch and 37.24 adopted it.
   * The six cells each carry a different aging protocol (DATA.md), so a
     per-cell spread here is a cell-and-protocol spread.  Only CC and
     CC_CELL2 share a protocol, which makes that pair the one honest read on
@@ -171,11 +170,10 @@ def main():
     print(f'  worst cell            {names[w_i]} at {means[w_i]:.3f} %p, '
           f'{means[w_i] / means.min():.2f}x the best ({names[int(np.argmin(means))]})')
     print(f'  cell-cluster 95 % CI  [{lo:.3f}, {hi:.3f}] %p over 6 clusters')
-    print('\n  Read it as a per-cell calibrated deployment: every filter uses '
-          'its own\n  cell\'s surface, so this is a spread over conditions '
-          'within a cell, not\n  evidence of transfer to an unseen cell.  '
-          'The six cells also differ by\n  aging protocol, so cell and '
-          'protocol are confounded except for the\n  CC / CC_CELL2 pair.')
+    print('\n  Leave-one-cell-out: each filter reads the pool built from the '
+          'other five\n  cells, so this is a spread over UNSEEN cells.  They '
+          'also differ by aging\n  protocol -- one cell each -- so cell and '
+          'protocol are confounded except\n  for the CC / CC_CELL2 pair.')
     return 0
 
 

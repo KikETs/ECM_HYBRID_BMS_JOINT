@@ -28,11 +28,11 @@ axes:
   cell:
     status: PARTIAL
     detail: >
-      Six cells.  Leave-one-cell-out in the SOP and SOH arms; the SOC arm is
-      NOT - it reads the evaluated cell's own characterisation surface
-      (ECMSurface(cell) in build_soc_runs.py), which makes it a per-cell
-      calibrated deployment.  "Everywhere" stood here until 2026-09-01 and
-      contradicted the code; see evidence_ledger.soc_is_per_cell_calibrated.
+      Six cells, leave-one-cell-out in all three arms.  The SOC arm read the
+      evaluated cell's own surface until 2026-09-04, which made it a per-cell
+      calibrated deployment and forced an exception into every scope
+      statement; build_soc_runs.py now uses ecm_pool.surfaces(cell) like the
+      other two.  37.23 measured the switch, 37.24 adopted it.
       Six is the whole population
       HERE, so cell-to-cell uncertainty is estimated from six clusters - wide
       intervals, reported as a cell-cluster bootstrap in

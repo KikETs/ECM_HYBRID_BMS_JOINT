@@ -1,7 +1,7 @@
 cell,n_runs,undisturbed_pct,mean_6_pct,worst_of_6_pct,worst_perturbation
-BOOST,6,1.292,1.948,3.458,current offset -0.10 A
-BOOST_NEGPULSE,6,1.269,2.001,3.742,current offset -0.10 A
-BOOST_NEGPULSE_1S,6,1.910,2.474,3.599,current offset +0.10 A
-BOOST_REST,6,1.565,2.213,4.243,current offset -0.10 A
-CC,6,1.201,1.834,3.406,current offset -0.10 A
-CC_CELL2,6,1.818,2.372,4.321,current offset -0.10 A
+BOOST,6,1.382,1.998,3.931,current offset -0.10 A
+BOOST_NEGPULSE,6,1.663,2.299,3.818,current offset +0.10 A
+BOOST_NEGPULSE_1S,6,1.934,2.491,4.603,current offset -0.10 A
+BOOST_REST,6,2.202,2.751,4.560,current offset +0.10 A
+CC,6,1.563,2.131,4.070,current offset -0.10 A
+CC_CELL2,6,1.695,2.279,3.889,current offset -0.10 A

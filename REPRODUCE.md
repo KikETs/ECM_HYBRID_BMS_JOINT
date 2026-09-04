@@ -134,10 +134,10 @@ Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded again
 | `pack.disc.10s.exceed.N192` | 0.0 | `pack.csv` | sec 31.2 |
 | `pack.disc.10s.exceed.est.N192` | 0.0 | `pack.csv` | sec 31.2 |
 | `pack.chg.10s.worst.N192` | 0.09 | `pack.csv` | sec 31.2 |
-| `soc.adopted.no_perturb` | 1.51 | `soc_perturb.csv` | sec 30.1 |
+| `soc.adopted.no_perturb` | 1.74 | `soc_perturb.csv` | sec 30.1 / 37.24 |
 | `soc.open_loop.no_perturb` | 0.12 | `soc_perturb.csv` | sec 30.1 |
 | `soc.open_loop.ibias` | 10.32 | `soc_perturb.csv` | sec 30.4 |
-| `soc.adopted.ibias` | 2.86 | `soc_perturb.csv` | sec 30.4 |
+| `soc.adopted.ibias` | 3.067 | `soc_perturb.csv` | sec 30.4 / 37.24 |
 | `volt.disc.A0` | 85.36 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.disc.direct` | 134.57 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.disc.shrink` | 69.23 | `voltage.csv` | sec 32.2 / 32.6 |
@@ -159,9 +159,9 @@ Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded again
 | `corr.disc.10s` | -0.608 | `correlation.csv` | sec 31.4 |
 | `cold.BOOST.ratio` | 0.98 | `cold_ratio.csv` | sec 33.5 |
 | `cold.CC.ratio` | 0.98 | `cold_ratio.csv` | sec 33.5 |
-| `soc.base.adopted.ibias` | 2.864 | `soc_baselines.csv` | sec 30.4 cross-check |
+| `soc.base.adopted.ibias` | 3.067 | `soc_baselines.csv` | sec 30.4 cross-check |
 | `soc.base.dual.mean_ibias` | 2.353 | `soc_baselines.csv` | audit |
-| `soc.base.ukf.undist` | 1.425 | `soc_baselines.csv` | audit |
+| `soc.base.ukf.undist` | 1.763 | `soc_baselines.csv` | audit |
 | `soh.abl.dqdv` | 0.0094 | `soh_ablations.csv` | audit |
 | `soh.abl.time_only` | 0.0096 | `soh_ablations.csv` | audit |
 | `e2e.disch.oracle.usable` | 69.61 | `end_to_end.csv` | audit |
@@ -199,18 +199,18 @@ Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded again
 | `ext.crate.0C.margin` | 1.672 | `external_crate_envelope.csv` | sec 37.12 |
 | `ext.crate.4C.margin` | 1.655 | `external_crate_envelope.csv` | sec 37.12 |
 | `ext.crate.pooled.exceed` | 0 | `external_crate_envelope.csv` | sec 37.12 |
-| `soc.percell.worst` | 2.474 | `soc_percell.csv` | sec 37.13 |
-| `soc.percell.best` | 1.834 | `soc_percell.csv` | sec 37.13 |
-| `soc.percell.cc2` | 2.372 | `soc_percell.csv` | sec 37.13 |
+| `soc.percell.worst` | 2.751 | `soc_percell.csv` | sec 37.24 |
+| `soc.percell.best` | 1.998 | `soc_percell.csv` | sec 37.24 |
+| `soc.percell.cc2` | 2.279 | `soc_percell.csv` | sec 37.24 |
 | `ext.crate.surface.margin_min` | 1.351 | `external_crate_surfaces.csv` | sec 37.14 |
 | `ext.crate.surface.margin_max` | 1.655 | `external_crate_surfaces.csv` | sec 37.14 |
 | `ext.crate.surface.boost` | 1.448 | `external_crate_surfaces.csv` | sec 37.14 |
 | `ext.temp.surface.warm_worst` | 1.156 | `external_temp_surfaces.csv` | sec 37.15 |
 | `ext.temp.surface.warm_best` | 1.394 | `external_temp_surfaces.csv` | sec 37.15 |
 | `ext.temp.surface.m20_exceed` | 3 | `external_temp_surfaces.csv` | sec 37.15 |
-| `soc.soh.adopted.est` | 2.206 | `soc_soh_selection.csv` | sec 37.16 |
-| `soc.soh.adopted.oracle` | 2.14 | `soc_soh_selection.csv` | sec 37.16 |
-| `soc.soh.adopted.bias_up` | 2.405 | `soc_soh_selection.csv` | sec 37.16 |
+| `soc.soh.adopted.est` | 2.337 | `soc_soh_selection.csv` | sec 37.24 |
+| `soc.soh.adopted.oracle` | 2.325 | `soc_soh_selection.csv` | sec 37.24 |
+| `soc.soh.adopted.bias_up` | 2.582 | `soc_soh_selection.csv` | sec 37.24 |
 | `soc.soh.adopted.rank` | 1 | `soc_soh_selection.csv` | sec 37.16 |
 | `method.a8.rank.disc10.est` | 1 | `method_comparison_est.csv` | sec 37.17 |
 | `method.a8.rank.chg10.est` | 4 | `method_comparison_est.csv` | sec 37.17 |
@@ -237,18 +237,19 @@ Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded again
 | `soc.loco.mean` | 2.325 | `soc_loco.csv` | sec 37.23 |
 | `soc.percell.mean.same_run` | 2.14 | `soc_loco.csv` | sec 37.23 |
 | `soc.loco.worst_cell` | 2.751 | `soc_loco.csv` | sec 37.23 |
+| `soc.headline.loco.oracle` | 2.325 | `soc_headline.csv` | sec 37.24 |
 
 ## Cells and evaluation protocol
 
 `BOOST`, `BOOST_NEGPULSE`, `BOOST_NEGPULSE_1S`, `BOOST_REST`, `CC`, `CC_CELL2`
 
-The three arms are NOT evaluated the same way, and a single sentence about all three would be wrong about one of them.
+All three arms are evaluated the same way since 2026-09-04: the evaluated cell trains no model, calibrates no safety factor and supplies no ECM surface.
 
 | arm | protocol | what a number from it means |
 |---|---|---|
 | SOP | leave-one-cell-out | the evaluated cell trains no model and calibrates no safety factor |
 | SOH | leave-one-cell-out | same, over the same six folds |
-| SOC | **per-cell calibrated, not held out** | every filter reads its own cell's characterisation surface, so the spread is over operating conditions within a cell and says nothing about transfer to an unseen cell |
+| SOC | leave-one-cell-out | reads the same pooled surface as the other two, built from the other five cells.  It read the evaluated cell's own characterisation until 2026-09-04; sections 37.23 and 37.24 measured and adopted the switch |
 
 One more thing the fold names hide: the dataset runs one physical cell per aging protocol, so holding out a cell holds out its protocol too. That makes the held-out test harder than cell variation alone, and it means no result here can attribute a difference to cell or to protocol separately. `CC` and `CC_CELL2` are the only same-protocol pair. `manifests/generalization_scope.yaml` holds both axes at PARTIAL for this reason.
 

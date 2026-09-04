@@ -12,9 +12,11 @@ matters more than the headline numbers:
   out its protocol as well — a harder held-out test than cell variation
   alone, and one whose result cannot be attributed to either factor
   separately. CC and CC_CELL2 are the only same-protocol pair.
-* **SOC** is *not*. Every filter reads its own cell's characterisation
-  surface, so the EKF numbers describe a per-cell-calibrated deployment, not
-  a transfer to an unseen cell.
+* **SOC** is too, since 2026-09-04. It reads the same pooled surface, built
+  from the other five cells. It used to read the evaluated cell's own
+  characterisation, which made it a per-cell calibrated deployment and forced
+  an exception into every scope statement; §37.23 measured what the switch
+  costs (2.140 → 2.325 %p on true SOH) and §37.24 adopted it.
 * **What ships** is neither: the header on the board holds an all-cell fit
   (`--deployment`), because a product must not be a model trained without one
   of its own six cells. Leave-one-cell-out is how the cost of generalising is
@@ -28,7 +30,7 @@ Timing measured on a NUCLEO-H563ZI (Cortex-M33, 250 MHz).
 |---|---|---|---|---|---|
 | SOP | 2RC table + trim (A8) | 4 effective coefficients, 2 EW states | leave-one-cell-out | usable current 69.6 % discharge, 59.5 % charge (τ = 10 s) | 59.9 % / 53.5 % (BOOST_REST) |
 | SOH | dQ/dV ridge | 65 coefficients | leave-one-cell-out | RMSE 0.0094, bias −0.0005 | 0.0130 (BOOST_REST) |
-| SOC | 2RC EKF, low-current gate | 3 states | **per-cell calibrated** as published; **2.325 %p** if run leave-one-cell-out (§37.23) | **2.21 %p** over six sensor disturbances on estimated SOH (2.14 on true SOH), per cell 1.83–2.47 | 3.78 %p (current offset −0.10 A) |
+| SOC | 2RC EKF, low-current gate | 3 states | leave-one-cell-out | **2.34 %p** over six sensor disturbances on estimated SOH (2.325 on true SOH), per cell 2.00–2.75 | 4.60 %p (BOOST_NEGPULSE_1S, current offset −0.10 A) |
 
 The SOH arm was a 10,945-parameter CNN until the second audit round. Nested
 selection — every candidate scored on the five training cells before the
@@ -202,7 +204,7 @@ which is why running it twice and getting the same answer had not caught it.
 
 ```bash
 conda env create -f environment.yml && conda activate samsung30t
-python3 repro/verify.py        # check the 121 stored published values
+python3 repro/verify.py        # check the 122 stored published values
 python3 repro/run.py --list    # stages, status, runtime
 python3 repro/gate.py          # everything CI runs, locally, before pushing
 ```

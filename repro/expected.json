@@ -242,8 +242,8 @@
     "perturbation": "no distortion"
    },
    "column": "rmse_full_pct",
-   "value": 1.51,
-   "source": "sec 30.1 — circular benchmark, not the headline number",
+   "value": 1.74,
+   "source": "sec 30.1 / 37.24 — undisturbed, LOCO surface.  A circular benchmark, not the headline",
    "tol": 0.01
   },
   {
@@ -278,8 +278,8 @@
     "perturbation": "current offset +0.10 A"
    },
    "column": "rmse_full_pct",
-   "value": 2.86,
-   "source": "sec 30.4 — the only weakness of the adopted filter",
+   "value": 3.067,
+   "source": "sec 30.4 / 37.24 — current offset, the only weakness of the adopted filter",
    "tol": 0.02
   },
   {
@@ -548,7 +548,7 @@
     "perturbation": "current offset +0.10 A"
    },
    "column": "rmse_mean_pct",
-   "value": 2.864,
+   "value": 3.067,
    "tol": 0.01,
    "source": "sec 30.4 cross-check — the same number soc_perturb.csv reports, via a different producer"
   },
@@ -572,7 +572,7 @@
     "perturbation": "no distortion"
    },
    "column": "rmse_mean_pct",
-   "value": 1.425,
+   "value": 1.763,
    "tol": 0.05,
    "source": "audit — the UKF does not pay for itself on this model"
   },
@@ -1027,22 +1027,22 @@
    "id": "soc.percell.worst",
    "table": "soc_percell.csv",
    "where": {
-    "cell": "BOOST_NEGPULSE_1S"
+    "cell": "BOOST_REST"
    },
    "column": "mean_6_pct",
-   "value": 2.474,
-   "source": "sec 37.13 — worst cell of six, 1.35x the best",
+   "value": 2.751,
+   "source": "sec 37.24 — worst cell of six under LOCO; BOOST_REST loses most when its own surface is withheld",
    "tol": 0.01
   },
   {
    "id": "soc.percell.best",
    "table": "soc_percell.csv",
    "where": {
-    "cell": "CC"
+    "cell": "BOOST"
    },
    "column": "mean_6_pct",
-   "value": 1.834,
-   "source": "sec 37.13 — best cell; the pooled 2.140 sits between",
+   "value": 1.998,
+   "source": "sec 37.24 — best cell under LOCO",
    "tol": 0.01
   },
   {
@@ -1052,8 +1052,8 @@
     "cell": "CC_CELL2"
    },
    "column": "mean_6_pct",
-   "value": 2.372,
-   "source": "sec 37.13 — same protocol as CC, different cell: the one contrast where cell and protocol are not confounded",
+   "value": 2.279,
+   "source": "sec 37.24 — CC_CELL2 IMPROVES under LOCO (2.372 -> 2.279): the pool that excludes it still holds the other CC-protocol cell",
    "tol": 0.01
   },
   {
@@ -1130,8 +1130,8 @@
     "config": "EKF adopted (gate)"
    },
    "column": "mean_6_pct",
-   "value": 2.206,
-   "source": "sec 37.16 — the SOC headline under the SOH the estimator actually produces; the deployment condition",
+   "value": 2.337,
+   "source": "sec 37.24 — the adopted SOC headline: unseen cell AND estimated SOH, the full deployment condition",
    "tol": 0.005
   },
   {
@@ -1142,8 +1142,8 @@
     "config": "EKF adopted (gate)"
    },
    "column": "mean_6_pct",
-   "value": 2.14,
-   "source": "sec 37.16 — the same filter on true SOH, which is what the selection saw and what the headline used to quote",
+   "value": 2.325,
+   "source": "sec 37.24 — the same filter on true SOH; the estimated-SOH penalty is only +0.012 %p on the pooled surface, against +0.068 on the per-cell one",
    "tol": 0.005
   },
   {
@@ -1154,8 +1154,8 @@
     "config": "EKF adopted (gate)"
    },
    "column": "mean_6_pct",
-   "value": 2.405,
-   "source": "sec 37.16 — overestimating SOH costs 3x what underestimating it does (+0.264 against +0.091)",
+   "value": 2.582,
+   "source": "sec 37.24 — a deliberate +0.02 SOH offset still costs more than the estimator does",
    "tol": 0.005
   },
   {
@@ -1479,6 +1479,17 @@
    "column": "mean_6_pct",
    "value": 2.751,
    "source": "sec 37.23 — the cell that loses most when its own surface is withheld, 2.213 -> 2.751",
+   "tol": 0.005
+  },
+  {
+   "id": "soc.headline.loco.oracle",
+   "table": "soc_headline.csv",
+   "where": {
+    "config": "EKF adopted (gate)"
+   },
+   "column": "mean_6_disturbances_pct",
+   "value": 2.325,
+   "source": "sec 37.24 — the adopted SOC headline: unseen cell (pooled surface), true SOH",
    "tol": 0.005
   }
  ],
@@ -3702,7 +3713,7 @@
   }
  },
  "completeness": {
-  "total_checks": 121,
+  "total_checks": 122,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3740,7 +3751,8 @@
    "usable_reference.csv": 9,
    "integration_cost.csv": 3,
    "mcu_integrated.csv": 4,
-   "soc_loco.csv": 3
+   "soc_loco.csv": 3,
+   "soc_headline.csv": 1
   },
   "check_ids": [
    "sop.disc.10s.lambda",
@@ -3863,7 +3875,8 @@
    "mcu.pack.per_cell_192",
    "soc.loco.mean",
    "soc.percell.mean.same_run",
-   "soc.loco.worst_cell"
+   "soc.loco.worst_cell",
+   "soc.headline.loco.oracle"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }

@@ -26,7 +26,8 @@ over the SIX disturbance conditions, not over all seven rows.  Both are
 printed so the difference stays visible.
 
 Per-cell calibration, stated plainly: build_soc_runs.py constructs
-ECMSurface(cell, ...) for the cell being driven, so every filter here reads
+ecm_pool.surfaces(cell) — the pool built from the OTHER five — so no filter
+here reads
 its own cell's characterisation surface.  That is per-cell calibrated
 deployment.  It is not leave-one-cell-out and must not be described as such.
 """
@@ -264,7 +265,7 @@ def main():
               f"{np.mean(list(d.values())):>9.3f}{max(dist):>9.3f}")
     print('\n  mean6 is the headline: the mean over the six disturbances.')
     print('  Every filter reads its own cell\'s characterisation surface — '
-          'per-cell calibrated deployment, not leave-one-cell-out.')
+          'leave-one-cell-out: the pool excludes the driven cell.')
     return 0
 
 

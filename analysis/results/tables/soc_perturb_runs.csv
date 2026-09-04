@@ -1,7 +1,7 @@
 config,perturbation,run_index,cell,soh,rmse_full_pct,rmse_tail_pct
 pure current integration,no distortion,0,CC,1.0000,0.1012,0.1728
 pure current integration,no distortion,1,CC,0.9468,0.0446,0.0361
-pure current integration,no distortion,2,CC,0.9024,0.0642,0.1134
+pure current integration,no distortion,2,CC,0.9024,0.0641,0.1134
 pure current integration,no distortion,3,CC,0.8622,0.0319,0.0309
 pure current integration,no distortion,4,CC,0.7986,0.1213,0.1765
 pure current integration,no distortion,5,CC,0.6957,0.4662,0.7599
@@ -20,9 +20,9 @@ pure current integration,no distortion,17,BOOST_NEGPULSE,0.6821,0.1964,0.3276
 pure current integration,no distortion,18,BOOST_REST,1.0000,0.0263,0.0408
 pure current integration,no distortion,19,BOOST_REST,0.9384,0.1398,0.2186
 pure current integration,no distortion,20,BOOST_REST,0.8642,0.0306,0.0351
-pure current integration,no distortion,21,BOOST_REST,0.7854,0.1714,0.3287
+pure current integration,no distortion,21,BOOST_REST,0.7854,0.1715,0.3287
 pure current integration,no distortion,22,BOOST_REST,0.7398,0.0514,0.0575
-pure current integration,no distortion,23,BOOST_REST,0.6915,0.0751,0.1023
+pure current integration,no distortion,23,BOOST_REST,0.6915,0.0750,0.1023
 pure current integration,no distortion,24,CC_CELL2,1.0000,0.0577,0.0830
 pure current integration,no distortion,25,CC_CELL2,0.9320,0.0714,0.1039
 pure current integration,no distortion,26,CC_CELL2,0.8829,0.0400,0.0673
@@ -46,7 +46,7 @@ pure current integration,initial SOC +10 %p,7,BOOST,0.9438,9.8667,9.7433
 pure current integration,initial SOC +10 %p,8,BOOST,0.8960,9.9164,9.8294
 pure current integration,initial SOC +10 %p,9,BOOST,0.8507,9.9513,9.9107
 pure current integration,initial SOC +10 %p,10,BOOST,0.7809,9.8981,9.8273
-pure current integration,initial SOC +10 %p,11,BOOST,0.6921,9.7659,9.5496
+pure current integration,initial SOC +10 %p,11,BOOST,0.6921,9.7659,9.5495
 pure current integration,initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,9.8426,9.7193
 pure current integration,initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,10.0275,10.0352
 pure current integration,initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,10.1095,10.1633
@@ -74,39 +74,39 @@ pure current integration,initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,9.6494,9
 pure current integration,initial SOC -10 %p,0,CC,1.0000,9.8603,9.6385
 pure current integration,initial SOC -10 %p,1,CC,0.9468,9.9837,10.0158
 pure current integration,initial SOC -10 %p,2,CC,0.9024,9.9826,9.9444
-pure current integration,initial SOC -10 %p,3,CC,0.8622,9.9977,9.9884
-pure current integration,initial SOC -10 %p,4,CC,0.7986,10.0969,10.1739
+pure current integration,initial SOC -10 %p,3,CC,0.8622,9.9977,9.9885
+pure current integration,initial SOC -10 %p,4,CC,0.7986,10.0970,10.1739
 pure current integration,initial SOC -10 %p,5,CC,0.6957,10.3697,10.7347
-pure current integration,initial SOC -10 %p,6,BOOST,1.0000,9.8582,9.7660
+pure current integration,initial SOC -10 %p,6,BOOST,1.0000,9.5943,9.0578
 pure current integration,initial SOC -10 %p,7,BOOST,0.9438,10.1345,10.2567
 pure current integration,initial SOC -10 %p,8,BOOST,0.8960,10.0842,10.1706
 pure current integration,initial SOC -10 %p,9,BOOST,0.8507,10.0488,10.0892
 pure current integration,initial SOC -10 %p,10,BOOST,0.7809,10.1024,10.1729
 pure current integration,initial SOC -10 %p,11,BOOST,0.6921,10.2376,10.4536
-pure current integration,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,9.7327,9.1400
+pure current integration,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,10.1102,10.1400
 pure current integration,initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,9.9726,9.9648
 pure current integration,initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,9.8910,9.8368
 pure current integration,initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,9.9083,9.8474
-pure current integration,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,10.1265,10.2777
+pure current integration,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,10.1264,10.2777
 pure current integration,initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,10.1507,10.3166
-pure current integration,initial SOC -10 %p,18,BOOST_REST,1.0000,10.0078,9.9876
+pure current integration,initial SOC -10 %p,18,BOOST_REST,1.0000,10.0079,9.9877
 pure current integration,initial SOC -10 %p,19,BOOST_REST,0.9384,9.8877,9.7864
 pure current integration,initial SOC -10 %p,20,BOOST_REST,0.8642,10.0069,9.9764
-pure current integration,initial SOC -10 %p,21,BOOST_REST,0.7854,9.8912,9.6794
-pure current integration,initial SOC -10 %p,22,BOOST_REST,0.7398,10.0401,10.0472
-pure current integration,initial SOC -10 %p,23,BOOST_REST,0.6915,10.0593,10.0877
+pure current integration,initial SOC -10 %p,21,BOOST_REST,0.7854,9.8912,9.6793
+pure current integration,initial SOC -10 %p,22,BOOST_REST,0.7398,10.0401,10.0471
+pure current integration,initial SOC -10 %p,23,BOOST_REST,0.6915,10.0593,10.0876
 pure current integration,initial SOC -10 %p,24,CC_CELL2,1.0000,9.8786,9.7185
 pure current integration,initial SOC -10 %p,25,CC_CELL2,0.9320,9.9436,9.9001
 pure current integration,initial SOC -10 %p,26,CC_CELL2,0.8829,10.0295,10.0616
 pure current integration,initial SOC -10 %p,27,CC_CELL2,0.8282,10.0392,10.0637
-pure current integration,initial SOC -10 %p,28,CC_CELL2,0.7679,10.0751,10.1323
+pure current integration,initial SOC -10 %p,28,CC_CELL2,0.7679,10.0750,10.1323
 pure current integration,initial SOC -10 %p,29,CC_CELL2,0.6870,10.1726,10.3429
 pure current integration,initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,10.0474,10.0890
 pure current integration,initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,10.0436,10.0829
 pure current integration,initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,9.9692,9.9563
 pure current integration,initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,10.0477,10.1039
-pure current integration,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,10.1067,10.2023
-pure current integration,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,10.3612,10.8506
+pure current integration,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,10.1067,10.2024
+pure current integration,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,10.3612,10.8507
 pure current integration,current offset +0.10 A,0,CC,1.0000,10.7838,16.4310
 pure current integration,current offset +0.10 A,1,CC,0.9468,10.6777,16.1722
 pure current integration,current offset +0.10 A,2,CC,0.9024,10.5703,15.9337
@@ -146,39 +146,39 @@ pure current integration,current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,9.74
 pure current integration,current offset -0.10 A,0,CC,1.0000,8.6590,11.6496
 pure current integration,current offset -0.10 A,1,CC,0.9468,10.2636,15.1666
 pure current integration,current offset -0.10 A,2,CC,0.9024,10.6674,16.1978
-pure current integration,current offset -0.10 A,3,CC,0.8622,10.6914,16.2455
+pure current integration,current offset -0.10 A,3,CC,0.8622,10.6915,16.2456
 pure current integration,current offset -0.10 A,4,CC,0.7986,10.8102,16.4341
-pure current integration,current offset -0.10 A,5,CC,0.6957,11.1463,17.0063
-pure current integration,current offset -0.10 A,6,BOOST,1.0000,8.7973,11.9861
-pure current integration,current offset -0.10 A,7,BOOST,0.9438,10.5746,15.7546
+pure current integration,current offset -0.10 A,5,CC,0.6957,11.1464,17.0063
+pure current integration,current offset -0.10 A,6,BOOST,1.0000,8.2895,10.9931
+pure current integration,current offset -0.10 A,7,BOOST,0.9438,10.3587,15.1699
 pure current integration,current offset -0.10 A,8,BOOST,0.8960,10.8009,16.4301
 pure current integration,current offset -0.10 A,9,BOOST,0.8507,10.7505,16.3482
 pure current integration,current offset -0.10 A,10,BOOST,0.7809,10.8144,16.4344
 pure current integration,current offset -0.10 A,11,BOOST,0.6921,10.9832,16.7246
-pure current integration,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,8.4273,11.0663
-pure current integration,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,10.4064,15.5529
+pure current integration,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,8.9329,12.0593
+pure current integration,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,10.6309,16.1488
 pure current integration,current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,10.5707,16.0976
 pure current integration,current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,10.5885,16.1069
 pure current integration,current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,10.8544,16.5392
 pure current integration,current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,10.8830,16.5811
 pure current integration,current offset -0.10 A,18,BOOST_REST,1.0000,8.8828,12.0181
 pure current integration,current offset -0.10 A,19,BOOST_REST,0.9384,10.3214,15.3958
-pure current integration,current offset -0.10 A,20,BOOST_REST,0.8642,10.6923,16.2346
+pure current integration,current offset -0.10 A,20,BOOST_REST,0.8642,10.6923,16.2345
 pure current integration,current offset -0.10 A,21,BOOST_REST,0.7854,10.5422,15.9352
-pure current integration,current offset -0.10 A,22,BOOST_REST,0.7398,10.7351,16.3080
+pure current integration,current offset -0.10 A,22,BOOST_REST,0.7398,10.7351,16.3079
 pure current integration,current offset -0.10 A,23,BOOST_REST,0.6915,10.7607,16.3505
 pure current integration,current offset -0.10 A,24,CC_CELL2,1.0000,8.6966,11.7545
 pure current integration,current offset -0.10 A,25,CC_CELL2,0.9320,10.5531,15.9701
 pure current integration,current offset -0.10 A,26,CC_CELL2,0.8829,10.7290,16.3214
 pure current integration,current offset -0.10 A,27,CC_CELL2,0.8282,10.7375,16.3226
 pure current integration,current offset -0.10 A,28,CC_CELL2,0.7679,10.7827,16.3937
-pure current integration,current offset -0.10 A,29,CC_CELL2,0.6870,10.9072,16.6111
+pure current integration,current offset -0.10 A,29,CC_CELL2,0.6870,10.9071,16.6111
 pure current integration,current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,9.1232,12.4868
 pure current integration,current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,10.5095,15.7188
-pure current integration,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,10.6560,16.2178
+pure current integration,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,10.6559,16.2178
 pure current integration,current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,10.7527,16.3645
 pure current integration,current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,10.8249,16.4624
-pure current integration,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,11.1562,17.1182
+pure current integration,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,11.1562,17.1183
 pure current integration,current gain +1 %,0,CC,1.0000,0.3082,0.2929
 pure current integration,current gain +1 %,1,CC,0.9468,0.3341,0.4033
 pure current integration,current gain +1 %,2,CC,0.9024,0.3261,0.3632
@@ -220,7 +220,7 @@ pure current integration,current gain -1 %,1,CC,0.9468,0.3565,0.3785
 pure current integration,current gain -1 %,2,CC,0.9024,0.3277,0.3977
 pure current integration,current gain -1 %,3,CC,0.8622,0.2953,0.3421
 pure current integration,current gain -1 %,4,CC,0.7986,0.2052,0.1690
-pure current integration,current gain -1 %,5,CC,0.6957,0.2804,0.4763
+pure current integration,current gain -1 %,5,CC,0.6957,0.2804,0.4764
 pure current integration,current gain -1 %,6,BOOST,1.0000,0.5126,0.6136
 pure current integration,current gain -1 %,7,BOOST,0.9438,0.2408,0.2476
 pure current integration,current gain -1 %,8,BOOST,0.8960,0.2477,0.2600
@@ -238,7 +238,7 @@ pure current integration,current gain -1 %,19,BOOST_REST,0.9384,0.4371,0.5488
 pure current integration,current gain -1 %,20,BOOST_REST,0.8642,0.2802,0.3332
 pure current integration,current gain -1 %,21,BOOST_REST,0.7854,0.3789,0.5332
 pure current integration,current gain -1 %,22,BOOST_REST,0.7398,0.2114,0.1765
-pure current integration,current gain -1 %,23,BOOST_REST,0.6915,0.1837,0.1266
+pure current integration,current gain -1 %,23,BOOST_REST,0.6915,0.1838,0.1266
 pure current integration,current gain -1 %,24,CC_CELL2,1.0000,0.4043,0.4809
 pure current integration,current gain -1 %,25,CC_CELL2,0.9320,0.3935,0.4565
 pure current integration,current gain -1 %,26,CC_CELL2,0.8829,0.2821,0.3068
@@ -250,1012 +250,1012 @@ pure current integration,current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,0.2990,0.
 pure current integration,current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,0.3408,0.3800
 pure current integration,current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,0.2502,0.2145
 pure current integration,current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,0.2018,0.1825
-pure current integration,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,0.3469,0.6211
-EKF no gate,no distortion,0,CC,1.0000,1.3048,1.2711
-EKF no gate,no distortion,1,CC,0.9468,1.7464,1.8142
-EKF no gate,no distortion,2,CC,0.9024,2.3103,2.4381
-EKF no gate,no distortion,3,CC,0.8622,2.5664,2.6715
-EKF no gate,no distortion,4,CC,0.7986,3.8837,2.6987
-EKF no gate,no distortion,5,CC,0.6957,5.3823,3.4802
-EKF no gate,no distortion,6,BOOST,1.0000,1.4288,1.4816
-EKF no gate,no distortion,7,BOOST,0.9438,1.8461,1.8542
-EKF no gate,no distortion,8,BOOST,0.8960,2.4042,2.4986
-EKF no gate,no distortion,9,BOOST,0.8507,2.8015,2.8025
-EKF no gate,no distortion,10,BOOST,0.7809,3.5005,2.1855
-EKF no gate,no distortion,11,BOOST,0.6921,5.7303,4.1471
-EKF no gate,no distortion,12,BOOST_NEGPULSE,1.0000,0.8379,0.9967
-EKF no gate,no distortion,13,BOOST_NEGPULSE,0.9330,1.7450,1.6355
-EKF no gate,no distortion,14,BOOST_NEGPULSE,0.8672,2.2680,2.2384
-EKF no gate,no distortion,15,BOOST_NEGPULSE,0.7944,2.1877,2.2679
-EKF no gate,no distortion,16,BOOST_NEGPULSE,0.7612,3.6821,3.0608
-EKF no gate,no distortion,17,BOOST_NEGPULSE,0.6821,7.0935,6.2677
-EKF no gate,no distortion,18,BOOST_REST,1.0000,1.1019,1.0042
-EKF no gate,no distortion,19,BOOST_REST,0.9384,1.7112,1.5488
-EKF no gate,no distortion,20,BOOST_REST,0.8642,2.2038,2.1370
-EKF no gate,no distortion,21,BOOST_REST,0.7854,3.1330,3.0059
-EKF no gate,no distortion,22,BOOST_REST,0.7398,2.9419,2.6313
-EKF no gate,no distortion,23,BOOST_REST,0.6915,6.9541,6.7870
-EKF no gate,no distortion,24,CC_CELL2,1.0000,1.1800,1.3044
-EKF no gate,no distortion,25,CC_CELL2,0.9320,2.3645,2.3719
-EKF no gate,no distortion,26,CC_CELL2,0.8829,3.2332,3.2977
-EKF no gate,no distortion,27,CC_CELL2,0.8282,4.2117,4.4609
-EKF no gate,no distortion,28,CC_CELL2,0.7679,5.0356,4.5821
-EKF no gate,no distortion,29,CC_CELL2,0.6870,6.8179,5.6687
-EKF no gate,no distortion,30,BOOST_NEGPULSE_1S,0.9909,1.4496,1.3967
-EKF no gate,no distortion,31,BOOST_NEGPULSE_1S,0.9339,1.5744,1.6075
-EKF no gate,no distortion,32,BOOST_NEGPULSE_1S,0.8724,1.5951,1.3823
-EKF no gate,no distortion,33,BOOST_NEGPULSE_1S,0.8251,2.2028,1.5255
-EKF no gate,no distortion,34,BOOST_NEGPULSE_1S,0.8251,7.7738,8.0169
-EKF no gate,no distortion,35,BOOST_NEGPULSE_1S,0.6925,3.5808,1.6358
-EKF no gate,initial SOC +10 %p,0,CC,1.0000,1.3052,1.2711
-EKF no gate,initial SOC +10 %p,1,CC,0.9468,1.7464,1.8142
-EKF no gate,initial SOC +10 %p,2,CC,0.9024,2.3104,2.4381
-EKF no gate,initial SOC +10 %p,3,CC,0.8622,2.5667,2.6715
-EKF no gate,initial SOC +10 %p,4,CC,0.7986,3.8865,2.6987
-EKF no gate,initial SOC +10 %p,5,CC,0.6957,5.4115,3.4803
-EKF no gate,initial SOC +10 %p,6,BOOST,1.0000,1.4290,1.4816
-EKF no gate,initial SOC +10 %p,7,BOOST,0.9438,1.8461,1.8542
-EKF no gate,initial SOC +10 %p,8,BOOST,0.8960,2.4044,2.4986
-EKF no gate,initial SOC +10 %p,9,BOOST,0.8507,2.8024,2.8025
-EKF no gate,initial SOC +10 %p,10,BOOST,0.7809,3.5052,2.1855
-EKF no gate,initial SOC +10 %p,11,BOOST,0.6921,5.7317,4.1476
-EKF no gate,initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,0.8380,0.9967
-EKF no gate,initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,1.7450,1.6355
-EKF no gate,initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,2.2684,2.2384
-EKF no gate,initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,2.1890,2.2679
-EKF no gate,initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,3.6857,3.0608
-EKF no gate,initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,7.0938,6.2677
-EKF no gate,initial SOC +10 %p,18,BOOST_REST,1.0000,1.0818,1.0044
-EKF no gate,initial SOC +10 %p,19,BOOST_REST,0.9384,1.7111,1.5488
-EKF no gate,initial SOC +10 %p,20,BOOST_REST,0.8642,2.2044,2.1370
-EKF no gate,initial SOC +10 %p,21,BOOST_REST,0.7854,3.1385,3.0059
-EKF no gate,initial SOC +10 %p,22,BOOST_REST,0.7398,2.9454,2.6313
-EKF no gate,initial SOC +10 %p,23,BOOST_REST,0.6915,6.9534,6.7863
-EKF no gate,initial SOC +10 %p,24,CC_CELL2,1.0000,1.1804,1.3044
-EKF no gate,initial SOC +10 %p,25,CC_CELL2,0.9320,2.3644,2.3719
-EKF no gate,initial SOC +10 %p,26,CC_CELL2,0.8829,3.2332,3.2977
-EKF no gate,initial SOC +10 %p,27,CC_CELL2,0.8282,4.2119,4.4609
-EKF no gate,initial SOC +10 %p,28,CC_CELL2,0.7679,5.0377,4.5820
-EKF no gate,initial SOC +10 %p,29,CC_CELL2,0.6870,6.8171,5.6672
-EKF no gate,initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.4497,1.3966
-EKF no gate,initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,1.5745,1.6075
-EKF no gate,initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,1.5976,1.3823
-EKF no gate,initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,2.2087,1.5255
-EKF no gate,initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,7.7750,8.0169
-EKF no gate,initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.5884,1.6357
-EKF no gate,initial SOC -10 %p,0,CC,1.0000,1.3048,1.2711
-EKF no gate,initial SOC -10 %p,1,CC,0.9468,1.7465,1.8142
-EKF no gate,initial SOC -10 %p,2,CC,0.9024,2.3103,2.4381
-EKF no gate,initial SOC -10 %p,3,CC,0.8622,2.5662,2.6715
-EKF no gate,initial SOC -10 %p,4,CC,0.7986,3.8814,2.6987
-EKF no gate,initial SOC -10 %p,5,CC,0.6957,5.3789,3.4802
-EKF no gate,initial SOC -10 %p,6,BOOST,1.0000,1.4294,1.4814
-EKF no gate,initial SOC -10 %p,7,BOOST,0.9438,1.8462,1.8542
-EKF no gate,initial SOC -10 %p,8,BOOST,0.8960,2.4043,2.4986
-EKF no gate,initial SOC -10 %p,9,BOOST,0.8507,2.8012,2.8025
-EKF no gate,initial SOC -10 %p,10,BOOST,0.7809,3.4975,2.1855
-EKF no gate,initial SOC -10 %p,11,BOOST,0.6921,5.7301,4.1471
-EKF no gate,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,0.8381,0.9968
-EKF no gate,initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,1.7450,1.6355
-EKF no gate,initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,2.2679,2.2384
-EKF no gate,initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,2.1873,2.2679
-EKF no gate,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,3.6801,3.0608
-EKF no gate,initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,7.0935,6.2679
-EKF no gate,initial SOC -10 %p,18,BOOST_REST,1.0000,1.1051,1.0043
-EKF no gate,initial SOC -10 %p,19,BOOST_REST,0.9384,1.7113,1.5488
-EKF no gate,initial SOC -10 %p,20,BOOST_REST,0.8642,2.2038,2.1370
-EKF no gate,initial SOC -10 %p,21,BOOST_REST,0.7854,3.1308,3.0059
-EKF no gate,initial SOC -10 %p,22,BOOST_REST,0.7398,2.9400,2.6313
-EKF no gate,initial SOC -10 %p,23,BOOST_REST,0.6915,6.9535,6.7869
-EKF no gate,initial SOC -10 %p,24,CC_CELL2,1.0000,1.1803,1.3044
-EKF no gate,initial SOC -10 %p,25,CC_CELL2,0.9320,2.3645,2.3719
-EKF no gate,initial SOC -10 %p,26,CC_CELL2,0.8829,3.2332,3.2977
-EKF no gate,initial SOC -10 %p,27,CC_CELL2,0.8282,4.2117,4.4609
-EKF no gate,initial SOC -10 %p,28,CC_CELL2,0.7679,5.0343,4.5820
-EKF no gate,initial SOC -10 %p,29,CC_CELL2,0.6870,6.8182,5.6702
-EKF no gate,initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.4493,1.3964
-EKF no gate,initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,1.5745,1.6075
-EKF no gate,initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,1.5945,1.3823
-EKF no gate,initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,2.2002,1.5255
-EKF no gate,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,7.7732,8.0169
-EKF no gate,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.5766,1.6358
-EKF no gate,current offset +0.10 A,0,CC,1.0000,1.0925,1.0568
-EKF no gate,current offset +0.10 A,1,CC,0.9468,1.3404,1.4629
-EKF no gate,current offset +0.10 A,2,CC,0.9024,1.7813,2.0128
-EKF no gate,current offset +0.10 A,3,CC,0.8622,1.9589,2.2098
-EKF no gate,current offset +0.10 A,4,CC,0.7986,3.1699,1.9611
-EKF no gate,current offset +0.10 A,5,CC,0.6957,4.4058,2.1576
-EKF no gate,current offset +0.10 A,6,BOOST,1.0000,1.1979,1.2836
-EKF no gate,current offset +0.10 A,7,BOOST,0.9438,1.4847,1.5653
-EKF no gate,current offset +0.10 A,8,BOOST,0.8960,1.8987,2.1133
-EKF no gate,current offset +0.10 A,9,BOOST,0.8507,2.1148,2.2755
-EKF no gate,current offset +0.10 A,10,BOOST,0.7809,2.8458,1.7471
-EKF no gate,current offset +0.10 A,11,BOOST,0.6921,4.4869,2.6477
-EKF no gate,current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,0.8220,1.1187
-EKF no gate,current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,1.3736,1.5070
-EKF no gate,current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,1.6073,1.8267
-EKF no gate,current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,1.5032,1.8081
-EKF no gate,current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,2.6369,1.7544
-EKF no gate,current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,5.4373,3.7680
-EKF no gate,current offset +0.10 A,18,BOOST_REST,1.0000,0.9136,0.8748
-EKF no gate,current offset +0.10 A,19,BOOST_REST,0.9384,1.2995,1.2909
-EKF no gate,current offset +0.10 A,20,BOOST_REST,0.8642,1.4375,1.5446
-EKF no gate,current offset +0.10 A,21,BOOST_REST,0.7854,1.9769,1.8008
-EKF no gate,current offset +0.10 A,22,BOOST_REST,0.7398,1.8801,1.2935
-EKF no gate,current offset +0.10 A,23,BOOST_REST,0.6915,5.1993,4.2925
-EKF no gate,current offset +0.10 A,24,CC_CELL2,1.0000,0.9921,1.1436
-EKF no gate,current offset +0.10 A,25,CC_CELL2,0.9320,1.8240,1.8991
-EKF no gate,current offset +0.10 A,26,CC_CELL2,0.8829,2.4559,2.5954
-EKF no gate,current offset +0.10 A,27,CC_CELL2,0.8282,3.1027,3.3924
-EKF no gate,current offset +0.10 A,28,CC_CELL2,0.7679,3.7193,2.7090
-EKF no gate,current offset +0.10 A,29,CC_CELL2,0.6870,5.3019,3.6830
-EKF no gate,current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,1.1827,1.1468
-EKF no gate,current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,1.1976,1.3215
-EKF no gate,current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,1.3533,1.3453
-EKF no gate,current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,1.8597,1.3906
-EKF no gate,current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,6.7956,6.7842
-EKF no gate,current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,3.2480,1.6727
-EKF no gate,current offset -0.10 A,0,CC,1.0000,1.5598,1.5761
-EKF no gate,current offset -0.10 A,1,CC,0.9468,2.2116,2.2343
-EKF no gate,current offset -0.10 A,2,CC,0.9024,2.9116,2.9320
-EKF no gate,current offset -0.10 A,3,CC,0.8622,3.3294,3.3523
-EKF no gate,current offset -0.10 A,4,CC,0.7986,4.7739,3.7361
-EKF no gate,current offset -0.10 A,5,CC,0.6957,6.5189,5.0263
-EKF no gate,current offset -0.10 A,6,BOOST,1.0000,1.7312,1.7200
-EKF no gate,current offset -0.10 A,7,BOOST,0.9438,2.3295,2.2909
-EKF no gate,current offset -0.10 A,8,BOOST,0.8960,3.0573,3.0666
-EKF no gate,current offset -0.10 A,9,BOOST,0.8507,3.6279,3.4657
-EKF no gate,current offset -0.10 A,10,BOOST,0.7809,4.4088,3.2908
-EKF no gate,current offset -0.10 A,11,BOOST,0.6921,7.0033,5.9038
-EKF no gate,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,0.9381,0.9579
-EKF no gate,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,2.2392,2.0041
-EKF no gate,current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,3.1287,2.9965
-EKF no gate,current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,3.3674,3.4307
-EKF no gate,current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,5.1076,5.1576
-EKF no gate,current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,8.8180,9.1363
-EKF no gate,current offset -0.10 A,18,BOOST_REST,1.0000,1.3241,1.2449
-EKF no gate,current offset -0.10 A,19,BOOST_REST,0.9384,2.2000,1.9516
-EKF no gate,current offset -0.10 A,20,BOOST_REST,0.8642,3.1341,3.0249
-EKF no gate,current offset -0.10 A,21,BOOST_REST,0.7854,4.4364,4.4844
-EKF no gate,current offset -0.10 A,22,BOOST_REST,0.7398,4.4279,4.6604
-EKF no gate,current offset -0.10 A,23,BOOST_REST,0.6915,9.0145,10.0413
-EKF no gate,current offset -0.10 A,24,CC_CELL2,1.0000,1.4074,1.5113
-EKF no gate,current offset -0.10 A,25,CC_CELL2,0.9320,2.9248,2.8818
-EKF no gate,current offset -0.10 A,26,CC_CELL2,0.8829,4.0448,4.0673
-EKF no gate,current offset -0.10 A,27,CC_CELL2,0.8282,5.3634,5.6102
-EKF no gate,current offset -0.10 A,28,CC_CELL2,0.7679,6.4571,6.6303
-EKF no gate,current offset -0.10 A,29,CC_CELL2,0.6870,8.4665,8.2626
-EKF no gate,current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,1.7200,1.6174
-EKF no gate,current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,2.0648,2.0379
-EKF no gate,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,2.2432,1.9678
-EKF no gate,current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,2.9946,2.4314
-EKF no gate,current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,8.7780,9.3155
-EKF no gate,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,4.3538,3.1589
-EKF no gate,current gain +1 %,0,CC,1.0000,1.3356,1.3398
-EKF no gate,current gain +1 %,1,CC,0.9468,1.7907,1.8814
-EKF no gate,current gain +1 %,2,CC,0.9024,2.3591,2.4968
-EKF no gate,current gain +1 %,3,CC,0.8622,2.6099,2.6946
-EKF no gate,current gain +1 %,4,CC,0.7986,3.9063,2.6540
-EKF no gate,current gain +1 %,5,CC,0.6957,5.4107,3.5533
-EKF no gate,current gain +1 %,6,BOOST,1.0000,1.4562,1.5276
-EKF no gate,current gain +1 %,7,BOOST,0.9438,1.8879,1.9155
-EKF no gate,current gain +1 %,8,BOOST,0.8960,2.4513,2.5534
-EKF no gate,current gain +1 %,9,BOOST,0.8507,2.8415,2.8128
-EKF no gate,current gain +1 %,10,BOOST,0.7809,3.5338,2.1732
-EKF no gate,current gain +1 %,11,BOOST,0.6921,5.7452,4.1221
-EKF no gate,current gain +1 %,12,BOOST_NEGPULSE,1.0000,0.8869,1.0642
-EKF no gate,current gain +1 %,13,BOOST_NEGPULSE,0.9330,1.8049,1.7411
-EKF no gate,current gain +1 %,14,BOOST_NEGPULSE,0.8672,2.3305,2.3126
-EKF no gate,current gain +1 %,15,BOOST_NEGPULSE,0.7944,2.2248,2.2604
-EKF no gate,current gain +1 %,16,BOOST_NEGPULSE,0.7612,3.7099,3.0215
-EKF no gate,current gain +1 %,17,BOOST_NEGPULSE,0.6821,7.0753,6.1823
-EKF no gate,current gain +1 %,18,BOOST_REST,1.0000,1.1399,1.0829
-EKF no gate,current gain +1 %,19,BOOST_REST,0.9384,1.7613,1.6312
-EKF no gate,current gain +1 %,20,BOOST_REST,0.8642,2.2533,2.1795
-EKF no gate,current gain +1 %,21,BOOST_REST,0.7854,3.1596,2.9624
-EKF no gate,current gain +1 %,22,BOOST_REST,0.7398,2.9411,2.5303
-EKF no gate,current gain +1 %,23,BOOST_REST,0.6915,6.9246,6.6798
-EKF no gate,current gain +1 %,24,CC_CELL2,1.0000,1.2131,1.3595
-EKF no gate,current gain +1 %,25,CC_CELL2,0.9320,2.4033,2.4266
-EKF no gate,current gain +1 %,26,CC_CELL2,0.8829,3.2729,3.3291
-EKF no gate,current gain +1 %,27,CC_CELL2,0.8282,4.2288,4.4136
-EKF no gate,current gain +1 %,28,CC_CELL2,0.7679,5.0291,4.4778
-EKF no gate,current gain +1 %,29,CC_CELL2,0.6870,6.8134,5.6560
-EKF no gate,current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,1.4864,1.4421
-EKF no gate,current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,1.6269,1.6868
-EKF no gate,current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,1.6639,1.4592
-EKF no gate,current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,2.2522,1.5507
-EKF no gate,current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,7.7679,7.9724
-EKF no gate,current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,3.5987,1.6731
-EKF no gate,current gain -1 %,0,CC,1.0000,1.2805,1.2185
-EKF no gate,current gain -1 %,1,CC,0.9468,1.7071,1.7557
-EKF no gate,current gain -1 %,2,CC,0.9024,2.2643,2.3812
-EKF no gate,current gain -1 %,3,CC,0.8622,2.5274,2.6510
-EKF no gate,current gain -1 %,4,CC,0.7986,3.8674,2.7568
-EKF no gate,current gain -1 %,5,CC,0.6957,5.3583,3.4091
-EKF no gate,current gain -1 %,6,BOOST,1.0000,1.4059,1.4437
-EKF no gate,current gain -1 %,7,BOOST,0.9438,1.8099,1.8037
-EKF no gate,current gain -1 %,8,BOOST,0.8960,2.3617,2.4514
-EKF no gate,current gain -1 %,9,BOOST,0.8507,2.7677,2.8028
-EKF no gate,current gain -1 %,10,BOOST,0.7809,3.4739,2.2154
-EKF no gate,current gain -1 %,11,BOOST,0.6921,5.7247,4.1825
-EKF no gate,current gain -1 %,12,BOOST_NEGPULSE,1.0000,0.7810,0.9048
-EKF no gate,current gain -1 %,13,BOOST_NEGPULSE,0.9330,1.6911,1.5412
-EKF no gate,current gain -1 %,14,BOOST_NEGPULSE,0.8672,2.2108,2.1727
-EKF no gate,current gain -1 %,15,BOOST_NEGPULSE,0.7944,2.1614,2.2919
-EKF no gate,current gain -1 %,16,BOOST_NEGPULSE,0.7612,3.6620,3.1130
-EKF no gate,current gain -1 %,17,BOOST_NEGPULSE,0.6821,7.1075,6.3515
-EKF no gate,current gain -1 %,18,BOOST_REST,1.0000,1.0678,0.9244
-EKF no gate,current gain -1 %,19,BOOST_REST,0.9384,1.6672,1.4789
-EKF no gate,current gain -1 %,20,BOOST_REST,0.8642,2.1608,2.1053
-EKF no gate,current gain -1 %,21,BOOST_REST,0.7854,3.1098,3.0506
-EKF no gate,current gain -1 %,22,BOOST_REST,0.7398,2.9524,2.7415
-EKF no gate,current gain -1 %,23,BOOST_REST,0.6915,6.9742,6.8863
-EKF no gate,current gain -1 %,24,CC_CELL2,1.0000,1.1507,1.2552
-EKF no gate,current gain -1 %,25,CC_CELL2,0.9320,2.3297,2.3245
-EKF no gate,current gain -1 %,26,CC_CELL2,0.8829,3.1961,3.2678
-EKF no gate,current gain -1 %,27,CC_CELL2,0.8282,4.1999,4.5181
-EKF no gate,current gain -1 %,28,CC_CELL2,0.7679,5.0449,4.6948
-EKF no gate,current gain -1 %,29,CC_CELL2,0.6870,6.8091,5.6637
-EKF no gate,current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,1.4215,1.3604
-EKF no gate,current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,1.5279,1.5391
-EKF no gate,current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,1.5356,1.3292
-EKF no gate,current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,2.1622,1.5224
-EKF no gate,current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,7.7841,8.0714
-EKF no gate,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,3.5688,1.6103
-EKF adopted (gate),no distortion,0,CC,1.0000,0.8536,0.7833
-EKF adopted (gate),no distortion,1,CC,0.9468,0.9877,1.1711
-EKF adopted (gate),no distortion,2,CC,0.9024,1.0586,1.2754
-EKF adopted (gate),no distortion,3,CC,0.8622,0.9890,1.2388
-EKF adopted (gate),no distortion,4,CC,0.7986,1.6325,1.2760
-EKF adopted (gate),no distortion,5,CC,0.6957,1.6847,1.2401
-EKF adopted (gate),no distortion,6,BOOST,1.0000,0.8327,0.8870
-EKF adopted (gate),no distortion,7,BOOST,0.9438,1.1362,1.2759
-EKF adopted (gate),no distortion,8,BOOST,0.8960,1.1318,1.3635
-EKF adopted (gate),no distortion,9,BOOST,0.8507,1.0721,1.3592
-EKF adopted (gate),no distortion,10,BOOST,0.7809,1.9200,1.2036
-EKF adopted (gate),no distortion,11,BOOST,0.6921,1.6564,1.2506
-EKF adopted (gate),no distortion,12,BOOST_NEGPULSE,1.0000,0.3654,0.4356
-EKF adopted (gate),no distortion,13,BOOST_NEGPULSE,0.9330,0.8818,0.7907
-EKF adopted (gate),no distortion,14,BOOST_NEGPULSE,0.8672,0.8686,1.0394
-EKF adopted (gate),no distortion,15,BOOST_NEGPULSE,0.7944,0.9228,1.2170
-EKF adopted (gate),no distortion,16,BOOST_NEGPULSE,0.7612,1.6380,1.5877
-EKF adopted (gate),no distortion,17,BOOST_NEGPULSE,0.6821,2.9388,3.2206
-EKF adopted (gate),no distortion,18,BOOST_REST,1.0000,0.8260,0.3658
-EKF adopted (gate),no distortion,19,BOOST_REST,0.9384,0.9156,0.8953
-EKF adopted (gate),no distortion,20,BOOST_REST,0.8642,1.1035,1.3786
-EKF adopted (gate),no distortion,21,BOOST_REST,0.7854,1.3705,2.0266
-EKF adopted (gate),no distortion,22,BOOST_REST,0.7398,1.4334,1.6463
-EKF adopted (gate),no distortion,23,BOOST_REST,0.6915,3.7409,4.7243
-EKF adopted (gate),no distortion,24,CC_CELL2,1.0000,0.6017,0.6372
-EKF adopted (gate),no distortion,25,CC_CELL2,0.9320,1.4815,1.5865
-EKF adopted (gate),no distortion,26,CC_CELL2,0.8829,1.7707,1.9602
-EKF adopted (gate),no distortion,27,CC_CELL2,0.8282,2.1449,2.6967
-EKF adopted (gate),no distortion,28,CC_CELL2,0.7679,2.1675,2.4837
-EKF adopted (gate),no distortion,29,CC_CELL2,0.6870,2.7439,2.3993
-EKF adopted (gate),no distortion,30,BOOST_NEGPULSE_1S,0.9909,1.1857,1.0681
-EKF adopted (gate),no distortion,31,BOOST_NEGPULSE_1S,0.9339,0.7098,0.8780
-EKF adopted (gate),no distortion,32,BOOST_NEGPULSE_1S,0.8724,0.8780,0.7525
-EKF adopted (gate),no distortion,33,BOOST_NEGPULSE_1S,0.8251,1.6500,0.8419
-EKF adopted (gate),no distortion,34,BOOST_NEGPULSE_1S,0.8251,3.1817,3.8365
-EKF adopted (gate),no distortion,35,BOOST_NEGPULSE_1S,0.6925,3.8551,2.4365
-EKF adopted (gate),initial SOC +10 %p,0,CC,1.0000,0.9364,0.7834
-EKF adopted (gate),initial SOC +10 %p,1,CC,0.9468,1.0586,1.1711
-EKF adopted (gate),initial SOC +10 %p,2,CC,0.9024,1.1252,1.2754
-EKF adopted (gate),initial SOC +10 %p,3,CC,0.8622,1.0604,1.2388
-EKF adopted (gate),initial SOC +10 %p,4,CC,0.7986,1.6846,1.2759
-EKF adopted (gate),initial SOC +10 %p,5,CC,0.6957,1.8003,1.2406
-EKF adopted (gate),initial SOC +10 %p,6,BOOST,1.0000,0.9168,0.8870
-EKF adopted (gate),initial SOC +10 %p,7,BOOST,0.9438,1.1983,1.2759
-EKF adopted (gate),initial SOC +10 %p,8,BOOST,0.8960,1.1943,1.3635
-EKF adopted (gate),initial SOC +10 %p,9,BOOST,0.8507,1.1396,1.3592
-EKF adopted (gate),initial SOC +10 %p,10,BOOST,0.7809,1.9676,1.2036
-EKF adopted (gate),initial SOC +10 %p,11,BOOST,0.6921,1.7047,1.2505
-EKF adopted (gate),initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,0.5282,0.4356
-EKF adopted (gate),initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,0.9605,0.7907
-EKF adopted (gate),initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,0.9494,1.0394
-EKF adopted (gate),initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,1.0008,1.2170
-EKF adopted (gate),initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,1.6893,1.5877
-EKF adopted (gate),initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,2.9647,3.2204
-EKF adopted (gate),initial SOC +10 %p,18,BOOST_REST,1.0000,0.9174,0.3658
-EKF adopted (gate),initial SOC +10 %p,19,BOOST_REST,0.9384,0.9916,0.8953
-EKF adopted (gate),initial SOC +10 %p,20,BOOST_REST,0.8642,1.1684,1.3786
-EKF adopted (gate),initial SOC +10 %p,21,BOOST_REST,0.7854,1.4331,2.0270
-EKF adopted (gate),initial SOC +10 %p,22,BOOST_REST,0.7398,1.4900,1.6462
-EKF adopted (gate),initial SOC +10 %p,23,BOOST_REST,0.6915,3.7605,4.7223
-EKF adopted (gate),initial SOC +10 %p,24,CC_CELL2,1.0000,0.7129,0.6372
-EKF adopted (gate),initial SOC +10 %p,25,CC_CELL2,0.9320,1.5297,1.5865
-EKF adopted (gate),initial SOC +10 %p,26,CC_CELL2,0.8829,1.8112,1.9602
-EKF adopted (gate),initial SOC +10 %p,27,CC_CELL2,0.8282,2.1788,2.6967
-EKF adopted (gate),initial SOC +10 %p,28,CC_CELL2,0.7679,2.2056,2.4837
-EKF adopted (gate),initial SOC +10 %p,29,CC_CELL2,0.6870,2.8092,2.3922
-EKF adopted (gate),initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.2457,1.0682
-EKF adopted (gate),initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.8056,0.8780
-EKF adopted (gate),initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.9609,0.7524
-EKF adopted (gate),initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.7004,0.8419
-EKF adopted (gate),initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,3.2071,3.8366
-EKF adopted (gate),initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.8839,2.4373
-EKF adopted (gate),initial SOC -10 %p,0,CC,1.0000,0.9347,0.7833
-EKF adopted (gate),initial SOC -10 %p,1,CC,0.9468,1.0586,1.1711
-EKF adopted (gate),initial SOC -10 %p,2,CC,0.9024,1.1251,1.2754
-EKF adopted (gate),initial SOC -10 %p,3,CC,0.8622,1.0594,1.2388
-EKF adopted (gate),initial SOC -10 %p,4,CC,0.7986,1.6697,1.2761
-EKF adopted (gate),initial SOC -10 %p,5,CC,0.6957,1.7231,1.2399
-EKF adopted (gate),initial SOC -10 %p,6,BOOST,1.0000,0.9161,0.8871
-EKF adopted (gate),initial SOC -10 %p,7,BOOST,0.9438,1.1983,1.2759
-EKF adopted (gate),initial SOC -10 %p,8,BOOST,0.8960,1.1942,1.3635
-EKF adopted (gate),initial SOC -10 %p,9,BOOST,0.8507,1.1370,1.3592
-EKF adopted (gate),initial SOC -10 %p,10,BOOST,0.7809,1.9509,1.2036
-EKF adopted (gate),initial SOC -10 %p,11,BOOST,0.6921,1.6990,1.2508
-EKF adopted (gate),initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,0.5284,0.4353
-EKF adopted (gate),initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,0.9603,0.7907
-EKF adopted (gate),initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,0.9484,1.0394
-EKF adopted (gate),initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,0.9975,1.2170
-EKF adopted (gate),initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,1.6776,1.5877
-EKF adopted (gate),initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,2.9620,3.2202
-EKF adopted (gate),initial SOC -10 %p,18,BOOST_REST,1.0000,0.9069,0.3658
-EKF adopted (gate),initial SOC -10 %p,19,BOOST_REST,0.9384,0.9915,0.8953
-EKF adopted (gate),initial SOC -10 %p,20,BOOST_REST,0.8642,1.1674,1.3786
-EKF adopted (gate),initial SOC -10 %p,21,BOOST_REST,0.7854,1.4186,2.0263
-EKF adopted (gate),initial SOC -10 %p,22,BOOST_REST,0.7398,1.4794,1.6463
-EKF adopted (gate),initial SOC -10 %p,23,BOOST_REST,0.6915,3.7600,4.7321
-EKF adopted (gate),initial SOC -10 %p,24,CC_CELL2,1.0000,0.7127,0.6372
-EKF adopted (gate),initial SOC -10 %p,25,CC_CELL2,0.9320,1.5295,1.5865
-EKF adopted (gate),initial SOC -10 %p,26,CC_CELL2,0.8829,1.8111,1.9602
-EKF adopted (gate),initial SOC -10 %p,27,CC_CELL2,0.8282,2.1785,2.6967
-EKF adopted (gate),initial SOC -10 %p,28,CC_CELL2,0.7679,2.1981,2.4837
-EKF adopted (gate),initial SOC -10 %p,29,CC_CELL2,0.6870,2.7576,2.4011
-EKF adopted (gate),initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.2448,1.0676
-EKF adopted (gate),initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.8057,0.8780
-EKF adopted (gate),initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.9565,0.7525
-EKF adopted (gate),initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.6903,0.8419
-EKF adopted (gate),initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,3.2032,3.8364
-EKF adopted (gate),initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.8686,2.4361
-EKF adopted (gate),current offset +0.10 A,0,CC,1.0000,1.5388,0.9333
-EKF adopted (gate),current offset +0.10 A,1,CC,0.9468,2.3347,1.3926
-EKF adopted (gate),current offset +0.10 A,2,CC,0.9024,2.5710,1.8063
-EKF adopted (gate),current offset +0.10 A,3,CC,0.8622,3.0169,2.3385
-EKF adopted (gate),current offset +0.10 A,4,CC,0.7986,3.7522,2.6236
-EKF adopted (gate),current offset +0.10 A,5,CC,0.6957,2.3994,2.5147
-EKF adopted (gate),current offset +0.10 A,6,BOOST,1.0000,1.6949,1.0124
-EKF adopted (gate),current offset +0.10 A,7,BOOST,0.9438,2.7702,1.5940
-EKF adopted (gate),current offset +0.10 A,8,BOOST,0.8960,2.8012,1.6773
-EKF adopted (gate),current offset +0.10 A,9,BOOST,0.8507,3.2299,2.3456
-EKF adopted (gate),current offset +0.10 A,10,BOOST,0.7809,4.3905,3.5793
-EKF adopted (gate),current offset +0.10 A,11,BOOST,0.6921,2.4618,2.6100
-EKF adopted (gate),current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,2.0989,2.0474
-EKF adopted (gate),current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,2.4888,1.8139
-EKF adopted (gate),current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,2.9515,2.4331
-EKF adopted (gate),current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,3.5854,3.0368
-EKF adopted (gate),current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,3.7844,2.9640
-EKF adopted (gate),current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,2.9165,2.1420
-EKF adopted (gate),current offset +0.10 A,18,BOOST_REST,1.0000,1.7099,1.3440
-EKF adopted (gate),current offset +0.10 A,19,BOOST_REST,0.9384,2.3453,1.4630
-EKF adopted (gate),current offset +0.10 A,20,BOOST_REST,0.8642,2.7178,2.0139
-EKF adopted (gate),current offset +0.10 A,21,BOOST_REST,0.7854,3.4224,2.6409
-EKF adopted (gate),current offset +0.10 A,22,BOOST_REST,0.7398,3.2114,2.3372
-EKF adopted (gate),current offset +0.10 A,23,BOOST_REST,0.6915,2.3220,1.7092
-EKF adopted (gate),current offset +0.10 A,24,CC_CELL2,1.0000,2.0045,1.4657
-EKF adopted (gate),current offset +0.10 A,25,CC_CELL2,0.9320,2.1150,1.1957
-EKF adopted (gate),current offset +0.10 A,26,CC_CELL2,0.8829,2.0625,1.3393
-EKF adopted (gate),current offset +0.10 A,27,CC_CELL2,0.8282,2.1720,1.6000
-EKF adopted (gate),current offset +0.10 A,28,CC_CELL2,0.7679,2.8249,2.2129
-EKF adopted (gate),current offset +0.10 A,29,CC_CELL2,0.6870,3.7968,2.5252
-EKF adopted (gate),current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,1.6246,1.2873
-EKF adopted (gate),current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,2.6784,1.6761
-EKF adopted (gate),current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,3.7817,3.0016
-EKF adopted (gate),current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,4.6422,3.8288
-EKF adopted (gate),current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,2.5839,1.7392
-EKF adopted (gate),current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,6.2859,6.1913
-EKF adopted (gate),current offset -0.10 A,0,CC,1.0000,3.0409,2.0419
-EKF adopted (gate),current offset -0.10 A,1,CC,0.9468,3.5401,2.5730
-EKF adopted (gate),current offset -0.10 A,2,CC,0.9024,3.6861,2.9101
-EKF adopted (gate),current offset -0.10 A,3,CC,0.8622,3.3917,2.9622
-EKF adopted (gate),current offset -0.10 A,4,CC,0.7986,2.9618,2.9440
-EKF adopted (gate),current offset -0.10 A,5,CC,0.6957,3.8151,4.0735
-EKF adopted (gate),current offset -0.10 A,6,BOOST,1.0000,3.2398,2.2392
-EKF adopted (gate),current offset -0.10 A,7,BOOST,0.9438,3.6891,2.6654
-EKF adopted (gate),current offset -0.10 A,8,BOOST,0.8960,3.8289,3.0808
-EKF adopted (gate),current offset -0.10 A,9,BOOST,0.8507,3.4309,3.1636
-EKF adopted (gate),current offset -0.10 A,10,BOOST,0.7809,2.7147,2.2515
-EKF adopted (gate),current offset -0.10 A,11,BOOST,0.6921,3.8449,3.8203
-EKF adopted (gate),current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,2.4222,1.3155
-EKF adopted (gate),current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,3.5994,2.2107
-EKF adopted (gate),current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,3.6861,2.9684
-EKF adopted (gate),current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,3.4487,3.3368
-EKF adopted (gate),current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,3.6482,4.1791
-EKF adopted (gate),current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,5.6475,6.8366
-EKF adopted (gate),current offset -0.10 A,18,BOOST_REST,1.0000,2.9747,1.8902
-EKF adopted (gate),current offset -0.10 A,19,BOOST_REST,0.9384,3.5452,2.2120
-EKF adopted (gate),current offset -0.10 A,20,BOOST_REST,0.8642,4.0138,3.4470
-EKF adopted (gate),current offset -0.10 A,21,BOOST_REST,0.7854,4.2501,4.9215
-EKF adopted (gate),current offset -0.10 A,22,BOOST_REST,0.7398,4.0263,4.6943
-EKF adopted (gate),current offset -0.10 A,23,BOOST_REST,0.6915,6.6501,8.4393
-EKF adopted (gate),current offset -0.10 A,24,CC_CELL2,1.0000,2.6970,1.7062
-EKF adopted (gate),current offset -0.10 A,25,CC_CELL2,0.9320,4.1195,3.1317
-EKF adopted (gate),current offset -0.10 A,26,CC_CELL2,0.8829,4.5394,3.9114
-EKF adopted (gate),current offset -0.10 A,27,CC_CELL2,0.8282,5.0161,5.1922
-EKF adopted (gate),current offset -0.10 A,28,CC_CELL2,0.7679,4.8166,5.5092
-EKF adopted (gate),current offset -0.10 A,29,CC_CELL2,0.6870,4.7385,5.6976
-EKF adopted (gate),current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,3.2333,2.2633
-EKF adopted (gate),current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,3.3534,2.3118
-EKF adopted (gate),current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,2.7555,2.0890
-EKF adopted (gate),current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,2.6881,2.5640
-EKF adopted (gate),current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,5.7138,7.2340
-EKF adopted (gate),current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,3.0457,1.9074
-EKF adopted (gate),current gain +1 %,0,CC,1.0000,1.0040,0.8813
-EKF adopted (gate),current gain +1 %,1,CC,0.9468,1.0925,1.2027
-EKF adopted (gate),current gain +1 %,2,CC,0.9024,1.1399,1.2872
-EKF adopted (gate),current gain +1 %,3,CC,0.8622,1.0130,1.2387
-EKF adopted (gate),current gain +1 %,4,CC,0.7986,1.5669,1.2459
-EKF adopted (gate),current gain +1 %,5,CC,0.6957,1.7124,1.3366
-EKF adopted (gate),current gain +1 %,6,BOOST,1.0000,0.9591,0.9215
-EKF adopted (gate),current gain +1 %,7,BOOST,0.9438,1.2371,1.2893
-EKF adopted (gate),current gain +1 %,8,BOOST,0.8960,1.2133,1.3679
-EKF adopted (gate),current gain +1 %,9,BOOST,0.8507,1.0653,1.3373
-EKF adopted (gate),current gain +1 %,10,BOOST,0.7809,1.8553,1.2214
-EKF adopted (gate),current gain +1 %,11,BOOST,0.6921,1.6816,1.1495
-EKF adopted (gate),current gain +1 %,12,BOOST_NEGPULSE,1.0000,0.5558,0.5062
-EKF adopted (gate),current gain +1 %,13,BOOST_NEGPULSE,0.9330,0.9985,0.7893
-EKF adopted (gate),current gain +1 %,14,BOOST_NEGPULSE,0.8672,0.9329,1.0271
-EKF adopted (gate),current gain +1 %,15,BOOST_NEGPULSE,0.7944,0.9142,1.2110
-EKF adopted (gate),current gain +1 %,16,BOOST_NEGPULSE,0.7612,1.5793,1.4793
-EKF adopted (gate),current gain +1 %,17,BOOST_NEGPULSE,0.6821,2.9428,3.1631
-EKF adopted (gate),current gain +1 %,18,BOOST_REST,1.0000,0.9785,0.3499
-EKF adopted (gate),current gain +1 %,19,BOOST_REST,0.9384,1.0289,0.8843
-EKF adopted (gate),current gain +1 %,20,BOOST_REST,0.8642,1.1748,1.3546
-EKF adopted (gate),current gain +1 %,21,BOOST_REST,0.7854,1.3660,1.9879
-EKF adopted (gate),current gain +1 %,22,BOOST_REST,0.7398,1.3886,1.5057
-EKF adopted (gate),current gain +1 %,23,BOOST_REST,0.6915,3.7361,4.6478
-EKF adopted (gate),current gain +1 %,24,CC_CELL2,1.0000,0.7022,0.6408
-EKF adopted (gate),current gain +1 %,25,CC_CELL2,0.9320,1.5967,1.6280
-EKF adopted (gate),current gain +1 %,26,CC_CELL2,0.8829,1.8734,1.9901
-EKF adopted (gate),current gain +1 %,27,CC_CELL2,0.8282,2.2134,2.7090
-EKF adopted (gate),current gain +1 %,28,CC_CELL2,0.7679,2.1402,2.3435
-EKF adopted (gate),current gain +1 %,29,CC_CELL2,0.6870,2.7176,2.3699
-EKF adopted (gate),current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,1.2935,1.2413
-EKF adopted (gate),current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,0.7866,0.8551
-EKF adopted (gate),current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,0.8446,0.8069
-EKF adopted (gate),current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,1.5644,0.8743
-EKF adopted (gate),current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,3.1924,3.8344
-EKF adopted (gate),current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,3.7802,2.3818
-EKF adopted (gate),current gain -1 %,0,CC,1.0000,0.7982,0.8402
-EKF adopted (gate),current gain -1 %,1,CC,0.9468,0.9493,1.2043
-EKF adopted (gate),current gain -1 %,2,CC,0.9024,1.0347,1.3143
-EKF adopted (gate),current gain -1 %,3,CC,0.8622,1.0243,1.2822
-EKF adopted (gate),current gain -1 %,4,CC,0.7986,1.7274,1.3344
-EKF adopted (gate),current gain -1 %,5,CC,0.6957,1.6821,1.1530
-EKF adopted (gate),current gain -1 %,6,BOOST,1.0000,0.8149,0.9236
-EKF adopted (gate),current gain -1 %,7,BOOST,0.9438,1.0950,1.3211
-EKF adopted (gate),current gain -1 %,8,BOOST,0.8960,1.1066,1.4082
-EKF adopted (gate),current gain -1 %,9,BOOST,0.8507,1.1330,1.4191
-EKF adopted (gate),current gain -1 %,10,BOOST,0.7809,2.0096,1.2224
-EKF adopted (gate),current gain -1 %,11,BOOST,0.6921,1.6462,1.3193
-EKF adopted (gate),current gain -1 %,12,BOOST_NEGPULSE,1.0000,0.2947,0.4308
-EKF adopted (gate),current gain -1 %,13,BOOST_NEGPULSE,0.9330,0.8394,0.8821
-EKF adopted (gate),current gain -1 %,14,BOOST_NEGPULSE,0.8672,0.8736,1.1054
-EKF adopted (gate),current gain -1 %,15,BOOST_NEGPULSE,0.7944,0.9890,1.2604
-EKF adopted (gate),current gain -1 %,16,BOOST_NEGPULSE,0.7612,1.7192,1.7019
-EKF adopted (gate),current gain -1 %,17,BOOST_NEGPULSE,0.6821,2.9596,3.3087
-EKF adopted (gate),current gain -1 %,18,BOOST_REST,1.0000,0.7449,0.5635
-EKF adopted (gate),current gain -1 %,19,BOOST_REST,0.9384,0.8756,0.9899
-EKF adopted (gate),current gain -1 %,20,BOOST_REST,0.8642,1.0820,1.4314
-EKF adopted (gate),current gain -1 %,21,BOOST_REST,0.7854,1.4037,2.0652
-EKF adopted (gate),current gain -1 %,22,BOOST_REST,0.7398,1.5056,1.8008
-EKF adopted (gate),current gain -1 %,23,BOOST_REST,0.6915,3.7074,4.7414
-EKF adopted (gate),current gain -1 %,24,CC_CELL2,1.0000,0.6098,0.7956
-EKF adopted (gate),current gain -1 %,25,CC_CELL2,0.9320,1.4071,1.5882
-EKF adopted (gate),current gain -1 %,26,CC_CELL2,0.8829,1.6964,1.9542
-EKF adopted (gate),current gain -1 %,27,CC_CELL2,0.8282,2.0907,2.6883
-EKF adopted (gate),current gain -1 %,28,CC_CELL2,0.7679,2.2161,2.6339
-EKF adopted (gate),current gain -1 %,29,CC_CELL2,0.6870,2.7857,2.4388
-EKF adopted (gate),current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,1.0364,0.9493
-EKF adopted (gate),current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,0.7312,0.9790
-EKF adopted (gate),current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,0.9759,0.7654
-EKF adopted (gate),current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,1.7639,0.8530
-EKF adopted (gate),current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,3.1821,3.8421
-EKF adopted (gate),current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,3.9392,2.5043
-EKF gate + spread k=20,no distortion,0,CC,1.0000,0.5663,0.5557
-EKF gate + spread k=20,no distortion,1,CC,0.9468,0.5286,0.6772
-EKF gate + spread k=20,no distortion,2,CC,0.9024,0.4137,0.4869
-EKF gate + spread k=20,no distortion,3,CC,0.8622,0.2778,0.0654
-EKF gate + spread k=20,no distortion,4,CC,0.7986,1.1686,0.5176
-EKF gate + spread k=20,no distortion,5,CC,0.6957,0.9352,0.9365
-EKF gate + spread k=20,no distortion,6,BOOST,1.0000,0.4847,0.4756
-EKF gate + spread k=20,no distortion,7,BOOST,0.9438,0.7849,0.9637
-EKF gate + spread k=20,no distortion,8,BOOST,0.8960,0.5771,0.7424
-EKF gate + spread k=20,no distortion,9,BOOST,0.8507,0.4063,0.1089
-EKF gate + spread k=20,no distortion,10,BOOST,0.7809,1.7527,1.2659
-EKF gate + spread k=20,no distortion,11,BOOST,0.6921,0.7648,0.7467
-EKF gate + spread k=20,no distortion,12,BOOST_NEGPULSE,1.0000,0.1355,0.1136
-EKF gate + spread k=20,no distortion,13,BOOST_NEGPULSE,0.9330,0.6824,0.7557
-EKF gate + spread k=20,no distortion,14,BOOST_NEGPULSE,0.8672,0.3614,0.3839
-EKF gate + spread k=20,no distortion,15,BOOST_NEGPULSE,0.7944,0.3551,0.2396
-EKF gate + spread k=20,no distortion,16,BOOST_NEGPULSE,0.7612,1.0464,0.4406
-EKF gate + spread k=20,no distortion,17,BOOST_NEGPULSE,0.6821,0.7606,0.2363
-EKF gate + spread k=20,no distortion,18,BOOST_REST,1.0000,0.7269,0.3490
-EKF gate + spread k=20,no distortion,19,BOOST_REST,0.9384,0.7134,0.7595
-EKF gate + spread k=20,no distortion,20,BOOST_REST,0.8642,0.7033,0.8066
-EKF gate + spread k=20,no distortion,21,BOOST_REST,0.7854,0.3940,0.1805
-EKF gate + spread k=20,no distortion,22,BOOST_REST,0.7398,0.5715,0.0811
-EKF gate + spread k=20,no distortion,23,BOOST_REST,0.6915,0.4035,0.2743
-EKF gate + spread k=20,no distortion,24,CC_CELL2,1.0000,0.1673,0.2160
-EKF gate + spread k=20,no distortion,25,CC_CELL2,0.9320,1.1723,1.2680
-EKF gate + spread k=20,no distortion,26,CC_CELL2,0.8829,1.3922,1.5271
-EKF gate + spread k=20,no distortion,27,CC_CELL2,0.8282,1.2404,1.3539
-EKF gate + spread k=20,no distortion,28,CC_CELL2,0.7679,0.7012,0.4408
-EKF gate + spread k=20,no distortion,29,CC_CELL2,0.6870,1.4704,0.5842
-EKF gate + spread k=20,no distortion,30,BOOST_NEGPULSE_1S,0.9909,0.9128,0.9346
-EKF gate + spread k=20,no distortion,31,BOOST_NEGPULSE_1S,0.9339,0.2761,0.4007
-EKF gate + spread k=20,no distortion,32,BOOST_NEGPULSE_1S,0.8724,0.8540,0.5771
-EKF gate + spread k=20,no distortion,33,BOOST_NEGPULSE_1S,0.8251,1.7075,1.3096
-EKF gate + spread k=20,no distortion,34,BOOST_NEGPULSE_1S,0.8251,0.8814,0.6790
-EKF gate + spread k=20,no distortion,35,BOOST_NEGPULSE_1S,0.6925,3.8163,2.8748
-EKF gate + spread k=20,initial SOC +10 %p,0,CC,1.0000,0.8763,0.5566
-EKF gate + spread k=20,initial SOC +10 %p,1,CC,0.9468,0.6547,0.6804
-EKF gate + spread k=20,initial SOC +10 %p,2,CC,0.9024,0.5841,0.5093
-EKF gate + spread k=20,initial SOC +10 %p,3,CC,0.8622,0.4863,0.0886
-EKF gate + spread k=20,initial SOC +10 %p,4,CC,0.7986,1.2451,0.4223
-EKF gate + spread k=20,initial SOC +10 %p,5,CC,0.6957,1.3227,1.2378
-EKF gate + spread k=20,initial SOC +10 %p,6,BOOST,1.0000,1.4277,1.3021
-EKF gate + spread k=20,initial SOC +10 %p,7,BOOST,0.9438,0.8750,0.9663
-EKF gate + spread k=20,initial SOC +10 %p,8,BOOST,0.8960,0.7180,0.7687
-EKF gate + spread k=20,initial SOC +10 %p,9,BOOST,0.8507,0.5855,0.0725
-EKF gate + spread k=20,initial SOC +10 %p,10,BOOST,0.7809,1.8265,1.2390
-EKF gate + spread k=20,initial SOC +10 %p,11,BOOST,0.6921,1.0901,1.0282
-EKF gate + spread k=20,initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,0.4457,0.1152
-EKF gate + spread k=20,initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,0.7856,0.7601
-EKF gate + spread k=20,initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,0.5726,0.4329
-EKF gate + spread k=20,initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,0.5387,0.1640
-EKF gate + spread k=20,initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,1.1512,0.3768
-EKF gate + spread k=20,initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,0.9531,0.5400
-EKF gate + spread k=20,initial SOC +10 %p,18,BOOST_REST,1.0000,0.8577,0.3450
-EKF gate + spread k=20,initial SOC +10 %p,19,BOOST_REST,0.9384,0.8123,0.7620
-EKF gate + spread k=20,initial SOC +10 %p,20,BOOST_REST,0.8642,0.8757,0.8776
-EKF gate + spread k=20,initial SOC +10 %p,21,BOOST_REST,0.7854,0.6856,0.0803
-EKF gate + spread k=20,initial SOC +10 %p,22,BOOST_REST,0.7398,0.7337,0.0789
-EKF gate + spread k=20,initial SOC +10 %p,23,BOOST_REST,0.6915,0.7851,0.6715
-EKF gate + spread k=20,initial SOC +10 %p,24,CC_CELL2,1.0000,0.4951,0.2143
-EKF gate + spread k=20,initial SOC +10 %p,25,CC_CELL2,0.9320,1.2348,1.2717
-EKF gate + spread k=20,initial SOC +10 %p,26,CC_CELL2,0.8829,1.4750,1.5590
-EKF gate + spread k=20,initial SOC +10 %p,27,CC_CELL2,0.8282,1.4609,1.5132
-EKF gate + spread k=20,initial SOC +10 %p,28,CC_CELL2,0.7679,0.9391,0.5551
-EKF gate + spread k=20,initial SOC +10 %p,29,CC_CELL2,0.6870,1.5941,0.5531
-EKF gate + spread k=20,initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.0041,0.9349
-EKF gate + spread k=20,initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.4756,0.4063
-EKF gate + spread k=20,initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.9496,0.5525
-EKF gate + spread k=20,initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.7890,1.3039
-EKF gate + spread k=20,initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,1.0128,0.6905
-EKF gate + spread k=20,initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,4.2601,3.3421
-EKF gate + spread k=20,initial SOC -10 %p,0,CC,1.0000,0.8764,0.5552
-EKF gate + spread k=20,initial SOC -10 %p,1,CC,0.9468,0.7393,0.6872
-EKF gate + spread k=20,initial SOC -10 %p,2,CC,0.9024,0.6202,0.5227
-EKF gate + spread k=20,initial SOC -10 %p,3,CC,0.8622,0.4300,0.1087
-EKF gate + spread k=20,initial SOC -10 %p,4,CC,0.7986,0.8057,0.2312
-EKF gate + spread k=20,initial SOC -10 %p,5,CC,0.6957,1.0824,1.2750
-EKF gate + spread k=20,initial SOC -10 %p,6,BOOST,1.0000,0.7242,0.4786
-EKF gate + spread k=20,initial SOC -10 %p,7,BOOST,0.9438,0.9202,0.9723
-EKF gate + spread k=20,initial SOC -10 %p,8,BOOST,0.8960,0.7427,0.7834
-EKF gate + spread k=20,initial SOC -10 %p,9,BOOST,0.8507,0.4625,0.0708
-EKF gate + spread k=20,initial SOC -10 %p,10,BOOST,0.7809,1.3732,0.9862
-EKF gate + spread k=20,initial SOC -10 %p,11,BOOST,0.6921,1.0764,1.1398
-EKF gate + spread k=20,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,0.5520,0.1176
-EKF gate + spread k=20,initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,0.7916,0.7673
-EKF gate + spread k=20,initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,0.5820,0.4546
-EKF gate + spread k=20,initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,0.4352,0.1314
-EKF gate + spread k=20,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,0.8190,0.2268
-EKF gate + spread k=20,initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,0.7203,0.5803
-EKF gate + spread k=20,initial SOC -10 %p,18,BOOST_REST,1.0000,1.0823,0.4151
-EKF gate + spread k=20,initial SOC -10 %p,19,BOOST_REST,0.9384,0.8395,0.7688
-EKF gate + spread k=20,initial SOC -10 %p,20,BOOST_REST,0.8642,0.8964,0.9058
-EKF gate + spread k=20,initial SOC -10 %p,21,BOOST_REST,0.7854,0.4524,0.1521
-EKF gate + spread k=20,initial SOC -10 %p,22,BOOST_REST,0.7398,0.5239,0.1916
-EKF gate + spread k=20,initial SOC -10 %p,23,BOOST_REST,0.6915,0.7002,0.6814
-EKF gate + spread k=20,initial SOC -10 %p,24,CC_CELL2,1.0000,0.9295,0.2233
-EKF gate + spread k=20,initial SOC -10 %p,25,CC_CELL2,0.9320,1.2183,1.2766
-EKF gate + spread k=20,initial SOC -10 %p,26,CC_CELL2,0.8829,1.4840,1.5708
-EKF gate + spread k=20,initial SOC -10 %p,27,CC_CELL2,0.8282,1.4959,1.5458
-EKF gate + spread k=20,initial SOC -10 %p,28,CC_CELL2,0.7679,0.7877,0.6991
-EKF gate + spread k=20,initial SOC -10 %p,29,CC_CELL2,0.6870,1.0604,0.1269
-EKF gate + spread k=20,initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.1566,0.9347
-EKF gate + spread k=20,initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.6056,0.4156
-EKF gate + spread k=20,initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.8589,0.5140
-EKF gate + spread k=20,initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.5058,1.1769
-EKF gate + spread k=20,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,0.9373,0.8962
-EKF gate + spread k=20,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.5213,2.6821
-EKF gate + spread k=20,current offset +0.10 A,0,CC,1.0000,7.3220,11.9911
-EKF gate + spread k=20,current offset +0.10 A,1,CC,0.9468,7.8328,12.6664
-EKF gate + spread k=20,current offset +0.10 A,2,CC,0.9024,8.0497,12.9921
-EKF gate + spread k=20,current offset +0.10 A,3,CC,0.8622,8.2910,13.1673
-EKF gate + spread k=20,current offset +0.10 A,4,CC,0.7986,8.7456,13.5944
-EKF gate + spread k=20,current offset +0.10 A,5,CC,0.6957,7.5721,12.1430
-EKF gate + spread k=20,current offset +0.10 A,6,BOOST,1.0000,7.5782,12.3259
-EKF gate + spread k=20,current offset +0.10 A,7,BOOST,0.9438,8.6789,13.6857
-EKF gate + spread k=20,current offset +0.10 A,8,BOOST,0.8960,8.7844,13.7811
-EKF gate + spread k=20,current offset +0.10 A,9,BOOST,0.8507,8.4814,13.3052
-EKF gate + spread k=20,current offset +0.10 A,10,BOOST,0.7809,9.3408,14.3401
-EKF gate + spread k=20,current offset +0.10 A,11,BOOST,0.6921,7.3833,11.9109
-EKF gate + spread k=20,current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,7.4888,12.1518
-EKF gate + spread k=20,current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,7.7855,12.6330
-EKF gate + spread k=20,current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,8.2389,13.1605
-EKF gate + spread k=20,current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,8.4917,13.3637
-EKF gate + spread k=20,current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,8.8328,13.7897
-EKF gate + spread k=20,current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,7.9362,12.2605
-EKF gate + spread k=20,current offset +0.10 A,18,BOOST_REST,1.0000,7.2568,11.9369
-EKF gate + spread k=20,current offset +0.10 A,19,BOOST_REST,0.9384,7.7457,12.6422
-EKF gate + spread k=20,current offset +0.10 A,20,BOOST_REST,0.8642,8.0430,12.9043
-EKF gate + spread k=20,current offset +0.10 A,21,BOOST_REST,0.7854,8.6392,13.6279
-EKF gate + spread k=20,current offset +0.10 A,22,BOOST_REST,0.7398,8.5512,13.4151
-EKF gate + spread k=20,current offset +0.10 A,23,BOOST_REST,0.6915,7.7652,12.1077
-EKF gate + spread k=20,current offset +0.10 A,24,CC_CELL2,1.0000,7.9220,12.7676
-EKF gate + spread k=20,current offset +0.10 A,25,CC_CELL2,0.9320,7.3622,12.1041
-EKF gate + spread k=20,current offset +0.10 A,26,CC_CELL2,0.8829,7.2672,11.9381
-EKF gate + spread k=20,current offset +0.10 A,27,CC_CELL2,0.8282,7.4529,12.1448
-EKF gate + spread k=20,current offset +0.10 A,28,CC_CELL2,0.7679,8.0694,12.9025
-EKF gate + spread k=20,current offset +0.10 A,29,CC_CELL2,0.6870,8.9139,13.6454
-EKF gate + spread k=20,current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,7.0139,11.5895
-EKF gate + spread k=20,current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,8.1121,13.0260
-EKF gate + spread k=20,current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,9.0206,14.1369
-EKF gate + spread k=20,current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,9.5107,14.6483
-EKF gate + spread k=20,current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,7.8757,12.7480
-EKF gate + spread k=20,current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,10.1750,14.1008
-EKF gate + spread k=20,current offset -0.10 A,0,CC,1.0000,7.4332,11.1205
-EKF gate + spread k=20,current offset -0.10 A,1,CC,0.9468,8.0256,12.7186
-EKF gate + spread k=20,current offset -0.10 A,2,CC,0.9024,7.9847,12.5143
-EKF gate + spread k=20,current offset -0.10 A,3,CC,0.8622,7.3045,11.2980
-EKF gate + spread k=20,current offset -0.10 A,4,CC,0.7986,5.7528,7.9049
-EKF gate + spread k=20,current offset -0.10 A,5,CC,0.6957,7.9814,12.4301
-EKF gate + spread k=20,current offset -0.10 A,6,BOOST,1.0000,8.2324,11.8977
-EKF gate + spread k=20,current offset -0.10 A,7,BOOST,0.9438,8.4254,13.3687
-EKF gate + spread k=20,current offset -0.10 A,8,BOOST,0.8960,8.2394,12.9399
-EKF gate + spread k=20,current offset -0.10 A,9,BOOST,0.8507,7.0996,10.7720
-EKF gate + spread k=20,current offset -0.10 A,10,BOOST,0.7809,5.6341,7.9538
-EKF gate + spread k=20,current offset -0.10 A,11,BOOST,0.6921,7.5613,11.2007
-EKF gate + spread k=20,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,7.0244,10.6502
-EKF gate + spread k=20,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,8.1428,12.7383
-EKF gate + spread k=20,current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,7.7510,11.8042
-EKF gate + spread k=20,current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,6.9194,10.2827
-EKF gate + spread k=20,current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,6.2587,8.8144
-EKF gate + spread k=20,current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,8.1017,12.5472
-EKF gate + spread k=20,current offset -0.10 A,18,BOOST_REST,1.0000,7.5676,11.3527
-EKF gate + spread k=20,current offset -0.10 A,19,BOOST_REST,0.9384,8.1965,12.8725
-EKF gate + spread k=20,current offset -0.10 A,20,BOOST_REST,0.8642,8.2186,12.4799
-EKF gate + spread k=20,current offset -0.10 A,21,BOOST_REST,0.7854,6.4034,8.4279
-EKF gate + spread k=20,current offset -0.10 A,22,BOOST_REST,0.7398,6.9356,10.4047
-EKF gate + spread k=20,current offset -0.10 A,23,BOOST_REST,0.6915,8.4605,12.8976
-EKF gate + spread k=20,current offset -0.10 A,24,CC_CELL2,1.0000,7.0145,10.7816
-EKF gate + spread k=20,current offset -0.10 A,25,CC_CELL2,0.9320,8.6765,13.5868
-EKF gate + spread k=20,current offset -0.10 A,26,CC_CELL2,0.8829,9.0468,13.9409
-EKF gate + spread k=20,current offset -0.10 A,27,CC_CELL2,0.8282,8.6836,12.9187
-EKF gate + spread k=20,current offset -0.10 A,28,CC_CELL2,0.7679,7.3719,10.5174
-EKF gate + spread k=20,current offset -0.10 A,29,CC_CELL2,0.6870,7.5937,12.1012
-EKF gate + spread k=20,current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,7.7132,11.6446
-EKF gate + spread k=20,current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,7.9451,12.7039
-EKF gate + spread k=20,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,7.5479,12.3868
-EKF gate + spread k=20,current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,6.4247,10.2548
-EKF gate + spread k=20,current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,8.6359,13.5777
-EKF gate + spread k=20,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,5.8909,9.2594
-EKF gate + spread k=20,current gain +1 %,0,CC,1.0000,0.8324,0.8789
-EKF gate + spread k=20,current gain +1 %,1,CC,0.9468,0.8245,1.0016
-EKF gate + spread k=20,current gain +1 %,2,CC,0.9024,0.7015,0.8079
-EKF gate + spread k=20,current gain +1 %,3,CC,0.8622,0.4071,0.3713
-EKF gate + spread k=20,current gain +1 %,4,CC,0.7986,1.0776,0.3856
-EKF gate + spread k=20,current gain +1 %,5,CC,0.6957,1.0911,1.1888
-EKF gate + spread k=20,current gain +1 %,6,BOOST,1.0000,0.8089,0.9078
-EKF gate + spread k=20,current gain +1 %,7,BOOST,0.9438,1.0668,1.2577
-EKF gate + spread k=20,current gain +1 %,8,BOOST,0.8960,0.8510,1.0377
-EKF gate + spread k=20,current gain +1 %,9,BOOST,0.8507,0.4176,0.2867
-EKF gate + spread k=20,current gain +1 %,10,BOOST,0.7809,1.6206,1.1257
-EKF gate + spread k=20,current gain +1 %,11,BOOST,0.6921,0.9416,0.9516
-EKF gate + spread k=20,current gain +1 %,12,BOOST_NEGPULSE,1.0000,0.4222,0.3693
-EKF gate + spread k=20,current gain +1 %,13,BOOST_NEGPULSE,0.9330,0.9479,1.0360
-EKF gate + spread k=20,current gain +1 %,14,BOOST_NEGPULSE,0.8672,0.6088,0.6552
-EKF gate + spread k=20,current gain +1 %,15,BOOST_NEGPULSE,0.7944,0.3694,0.2440
-EKF gate + spread k=20,current gain +1 %,16,BOOST_NEGPULSE,0.7612,0.9676,0.3096
-EKF gate + spread k=20,current gain +1 %,17,BOOST_NEGPULSE,0.6821,0.8168,0.4221
-EKF gate + spread k=20,current gain +1 %,18,BOOST_REST,1.0000,0.9767,0.5504
-EKF gate + spread k=20,current gain +1 %,19,BOOST_REST,0.9384,0.9470,0.9668
-EKF gate + spread k=20,current gain +1 %,20,BOOST_REST,0.8642,0.9604,1.0772
-EKF gate + spread k=20,current gain +1 %,21,BOOST_REST,0.7854,0.4667,0.2538
-EKF gate + spread k=20,current gain +1 %,22,BOOST_REST,0.7398,0.5981,0.2128
-EKF gate + spread k=20,current gain +1 %,23,BOOST_REST,0.6915,0.5492,0.4783
-EKF gate + spread k=20,current gain +1 %,24,CC_CELL2,1.0000,0.4700,0.5331
-EKF gate + spread k=20,current gain +1 %,25,CC_CELL2,0.9320,1.4441,1.5762
-EKF gate + spread k=20,current gain +1 %,26,CC_CELL2,0.8829,1.6432,1.8057
-EKF gate + spread k=20,current gain +1 %,27,CC_CELL2,0.8282,1.4727,1.5966
-EKF gate + spread k=20,current gain +1 %,28,CC_CELL2,0.7679,0.8498,0.6521
-EKF gate + spread k=20,current gain +1 %,29,CC_CELL2,0.6870,1.3978,0.4791
-EKF gate + spread k=20,current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,1.1839,1.2360
-EKF gate + spread k=20,current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,0.5666,0.7147
-EKF gate + spread k=20,current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,0.7424,0.5559
-EKF gate + spread k=20,current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,1.5357,1.0908
-EKF gate + spread k=20,current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,1.0588,0.9579
-EKF gate + spread k=20,current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,3.6594,2.6191
-EKF gate + spread k=20,current gain -1 %,0,CC,1.0000,0.4113,0.4002
-EKF gate + spread k=20,current gain -1 %,1,CC,0.9468,0.3437,0.4537
-EKF gate + spread k=20,current gain -1 %,2,CC,0.9024,0.2491,0.3045
-EKF gate + spread k=20,current gain -1 %,3,CC,0.8622,0.4141,0.3270
-EKF gate + spread k=20,current gain -1 %,4,CC,0.7986,1.3158,0.7272
-EKF gate + spread k=20,current gain -1 %,5,CC,0.6957,0.8171,0.6396
-EKF gate + spread k=20,current gain -1 %,6,BOOST,1.0000,0.4035,0.4418
-EKF gate + spread k=20,current gain -1 %,7,BOOST,0.9438,0.5618,0.7193
-EKF gate + spread k=20,current gain -1 %,8,BOOST,0.8960,0.3852,0.5336
-EKF gate + spread k=20,current gain -1 %,9,BOOST,0.8507,0.5811,0.4246
-EKF gate + spread k=20,current gain -1 %,10,BOOST,0.7809,1.9160,1.4369
-EKF gate + spread k=20,current gain -1 %,11,BOOST,0.6921,0.6631,0.6294
-EKF gate + spread k=20,current gain -1 %,12,BOOST_NEGPULSE,1.0000,0.2617,0.3721
-EKF gate + spread k=20,current gain -1 %,13,BOOST_NEGPULSE,0.9330,0.4870,0.5301
-EKF gate + spread k=20,current gain -1 %,14,BOOST_NEGPULSE,0.8672,0.2662,0.2863
-EKF gate + spread k=20,current gain -1 %,15,BOOST_NEGPULSE,0.7944,0.5159,0.4755
-EKF gate + spread k=20,current gain -1 %,16,BOOST_NEGPULSE,0.7612,1.1788,0.6228
-EKF gate + spread k=20,current gain -1 %,17,BOOST_NEGPULSE,0.6821,0.7804,0.1319
-EKF gate + spread k=20,current gain -1 %,18,BOOST_REST,1.0000,0.6497,0.5361
-EKF gate + spread k=20,current gain -1 %,19,BOOST_REST,0.9384,0.5077,0.5225
-EKF gate + spread k=20,current gain -1 %,20,BOOST_REST,0.8642,0.4973,0.5908
-EKF gate + spread k=20,current gain -1 %,21,BOOST_REST,0.7854,0.4994,0.3984
-EKF gate + spread k=20,current gain -1 %,22,BOOST_REST,0.7398,0.6593,0.2705
-EKF gate + spread k=20,current gain -1 %,23,BOOST_REST,0.6915,0.3852,0.1505
-EKF gate + spread k=20,current gain -1 %,24,CC_CELL2,1.0000,0.2795,0.2909
-EKF gate + spread k=20,current gain -1 %,25,CC_CELL2,0.9320,0.9425,0.9960
-EKF gate + spread k=20,current gain -1 %,26,CC_CELL2,0.8829,1.1744,1.2899
-EKF gate + spread k=20,current gain -1 %,27,CC_CELL2,0.8282,1.0379,1.1505
-EKF gate + spread k=20,current gain -1 %,28,CC_CELL2,0.7679,0.6433,0.2898
-EKF gate + spread k=20,current gain -1 %,29,CC_CELL2,0.6870,1.5825,0.7670
-EKF gate + spread k=20,current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,0.7066,0.6461
-EKF gate + spread k=20,current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,0.2442,0.2809
-EKF gate + spread k=20,current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,1.0846,0.8753
-EKF gate + spread k=20,current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,1.9110,1.5575
-EKF gate + spread k=20,current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,0.7766,0.4546
-EKF gate + spread k=20,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,3.9839,3.1411
-EKF gate + spread k=200,no distortion,0,CC,1.0000,0.5193,0.5101
-EKF gate + spread k=200,no distortion,1,CC,0.9468,0.3946,0.4420
-EKF gate + spread k=200,no distortion,2,CC,0.9024,0.3230,0.3184
-EKF gate + spread k=200,no distortion,3,CC,0.8622,0.2729,0.0310
-EKF gate + spread k=200,no distortion,4,CC,0.7986,0.9136,0.3388
-EKF gate + spread k=200,no distortion,5,CC,0.6957,1.0971,1.1189
-EKF gate + spread k=200,no distortion,6,BOOST,1.0000,0.7542,0.6665
-EKF gate + spread k=200,no distortion,7,BOOST,0.9438,0.6623,0.7882
-EKF gate + spread k=200,no distortion,8,BOOST,0.8960,0.4852,0.5876
-EKF gate + spread k=200,no distortion,9,BOOST,0.8507,0.3728,0.1293
-EKF gate + spread k=200,no distortion,10,BOOST,0.7809,1.3964,0.9798
-EKF gate + spread k=200,no distortion,11,BOOST,0.6921,1.0161,1.1464
-EKF gate + spread k=200,no distortion,12,BOOST_NEGPULSE,1.0000,0.2131,0.2409
-EKF gate + spread k=200,no distortion,13,BOOST_NEGPULSE,0.9330,0.5596,0.5670
-EKF gate + spread k=200,no distortion,14,BOOST_NEGPULSE,0.8672,0.3291,0.3057
-EKF gate + spread k=200,no distortion,15,BOOST_NEGPULSE,0.7944,0.3183,0.0717
-EKF gate + spread k=200,no distortion,16,BOOST_NEGPULSE,0.7612,0.8254,0.2002
-EKF gate + spread k=200,no distortion,17,BOOST_NEGPULSE,0.6821,0.7002,0.4657
-EKF gate + spread k=200,no distortion,18,BOOST_REST,1.0000,0.8318,0.8245
-EKF gate + spread k=200,no distortion,19,BOOST_REST,0.9384,0.5639,0.4830
-EKF gate + spread k=200,no distortion,20,BOOST_REST,0.8642,0.6263,0.6358
-EKF gate + spread k=200,no distortion,21,BOOST_REST,0.7854,0.4028,0.1148
-EKF gate + spread k=200,no distortion,22,BOOST_REST,0.7398,0.5193,0.1434
-EKF gate + spread k=200,no distortion,23,BOOST_REST,0.6915,0.5330,0.5129
-EKF gate + spread k=200,no distortion,24,CC_CELL2,1.0000,0.0424,0.0543
-EKF gate + spread k=200,no distortion,25,CC_CELL2,0.9320,1.0454,1.0248
-EKF gate + spread k=200,no distortion,26,CC_CELL2,0.8829,1.3401,1.4131
-EKF gate + spread k=200,no distortion,27,CC_CELL2,0.8282,1.0372,1.1351
-EKF gate + spread k=200,no distortion,28,CC_CELL2,0.7679,0.8169,0.6873
-EKF gate + spread k=200,no distortion,29,CC_CELL2,0.6870,1.1731,0.3518
-EKF gate + spread k=200,no distortion,30,BOOST_NEGPULSE_1S,0.9909,0.8990,0.9367
-EKF gate + spread k=200,no distortion,31,BOOST_NEGPULSE_1S,0.9339,0.1154,0.1491
-EKF gate + spread k=200,no distortion,32,BOOST_NEGPULSE_1S,0.8724,0.9215,0.8545
-EKF gate + spread k=200,no distortion,33,BOOST_NEGPULSE_1S,0.8251,1.6058,1.3655
-EKF gate + spread k=200,no distortion,34,BOOST_NEGPULSE_1S,0.8251,0.9289,0.7669
-EKF gate + spread k=200,no distortion,35,BOOST_NEGPULSE_1S,0.6925,3.3359,2.5897
-EKF gate + spread k=200,initial SOC +10 %p,0,CC,1.0000,2.7701,1.4504
-EKF gate + spread k=200,initial SOC +10 %p,1,CC,0.9468,0.5686,0.4581
-EKF gate + spread k=200,initial SOC +10 %p,2,CC,0.9024,0.7114,0.3189
-EKF gate + spread k=200,initial SOC +10 %p,3,CC,0.8622,0.8683,0.0620
-EKF gate + spread k=200,initial SOC +10 %p,4,CC,0.7986,1.8948,0.8554
-EKF gate + spread k=200,initial SOC +10 %p,5,CC,0.6957,1.6455,1.0566
-EKF gate + spread k=200,initial SOC +10 %p,6,BOOST,1.0000,2.8880,1.4004
-EKF gate + spread k=200,initial SOC +10 %p,7,BOOST,0.9438,0.7752,0.8012
-EKF gate + spread k=200,initial SOC +10 %p,8,BOOST,0.8960,0.8265,0.5884
-EKF gate + spread k=200,initial SOC +10 %p,9,BOOST,0.8507,1.2226,0.2444
-EKF gate + spread k=200,initial SOC +10 %p,10,BOOST,0.7809,2.3501,1.4627
-EKF gate + spread k=200,initial SOC +10 %p,11,BOOST,0.6921,1.4430,0.7186
-EKF gate + spread k=200,initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,1.1542,0.3660
-EKF gate + spread k=200,initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,0.7295,0.5707
-EKF gate + spread k=200,initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,0.9699,0.2595
-EKF gate + spread k=200,initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,1.2057,0.2211
-EKF gate + spread k=200,initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,1.7925,0.5509
-EKF gate + spread k=200,initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,1.5248,0.4876
-EKF gate + spread k=200,initial SOC +10 %p,18,BOOST_REST,1.0000,1.8510,0.9097
-EKF gate + spread k=200,initial SOC +10 %p,19,BOOST_REST,0.9384,0.6728,0.4997
-EKF gate + spread k=200,initial SOC +10 %p,20,BOOST_REST,0.8642,1.1102,0.5753
-EKF gate + spread k=200,initial SOC +10 %p,21,BOOST_REST,0.7854,1.6693,0.5172
-EKF gate + spread k=200,initial SOC +10 %p,22,BOOST_REST,0.7398,1.4311,0.1481
-EKF gate + spread k=200,initial SOC +10 %p,23,BOOST_REST,0.6915,1.4580,0.5628
-EKF gate + spread k=200,initial SOC +10 %p,24,CC_CELL2,1.0000,1.7841,0.6443
-EKF gate + spread k=200,initial SOC +10 %p,25,CC_CELL2,0.9320,1.0791,1.0346
-EKF gate + spread k=200,initial SOC +10 %p,26,CC_CELL2,0.8829,1.3811,1.3807
-EKF gate + spread k=200,initial SOC +10 %p,27,CC_CELL2,0.8282,1.5182,1.3283
-EKF gate + spread k=200,initial SOC +10 %p,28,CC_CELL2,0.7679,1.5221,0.2392
-EKF gate + spread k=200,initial SOC +10 %p,29,CC_CELL2,0.6870,2.1364,0.9533
-EKF gate + spread k=200,initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.3794,0.9056
-EKF gate + spread k=200,initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.5501,0.1653
-EKF gate + spread k=200,initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,1.5959,0.9251
-EKF gate + spread k=200,initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,2.3035,1.5632
-EKF gate + spread k=200,initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,1.5270,0.5393
-EKF gate + spread k=200,initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.9195,2.8614
-EKF gate + spread k=200,initial SOC -10 %p,0,CC,1.0000,1.3949,0.3883
-EKF gate + spread k=200,initial SOC -10 %p,1,CC,0.9468,0.8422,0.0518
-EKF gate + spread k=200,initial SOC -10 %p,2,CC,0.9024,0.6260,0.2127
-EKF gate + spread k=200,initial SOC -10 %p,3,CC,0.8622,0.3923,0.0452
-EKF gate + spread k=200,initial SOC -10 %p,4,CC,0.7986,0.5016,0.1497
-EKF gate + spread k=200,initial SOC -10 %p,5,CC,0.6957,1.3419,1.5293
-EKF gate + spread k=200,initial SOC -10 %p,6,BOOST,1.0000,1.1121,0.3103
-EKF gate + spread k=200,initial SOC -10 %p,7,BOOST,0.9438,0.7985,0.3757
-EKF gate + spread k=200,initial SOC -10 %p,8,BOOST,0.8960,0.6700,0.5200
-EKF gate + spread k=200,initial SOC -10 %p,9,BOOST,0.8507,0.4064,0.0701
-EKF gate + spread k=200,initial SOC -10 %p,10,BOOST,0.7809,0.8852,0.7692
-EKF gate + spread k=200,initial SOC -10 %p,11,BOOST,0.6921,1.3896,1.3233
-EKF gate + spread k=200,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,0.8901,0.3269
-EKF gate + spread k=200,initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,0.5993,0.4042
-EKF gate + spread k=200,initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,0.5213,0.3489
-EKF gate + spread k=200,initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,0.5663,0.0265
-EKF gate + spread k=200,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,0.5629,0.0360
-EKF gate + spread k=200,initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,1.4984,1.4081
-EKF gate + spread k=200,initial SOC -10 %p,18,BOOST_REST,1.0000,1.9269,1.0035
-EKF gate + spread k=200,initial SOC -10 %p,19,BOOST_REST,0.9384,0.7149,0.1862
-EKF gate + spread k=200,initial SOC -10 %p,20,BOOST_REST,0.8642,0.8087,0.7153
-EKF gate + spread k=200,initial SOC -10 %p,21,BOOST_REST,0.7854,0.8930,0.2236
-EKF gate + spread k=200,initial SOC -10 %p,22,BOOST_REST,0.7398,0.8439,0.3375
-EKF gate + spread k=200,initial SOC -10 %p,23,BOOST_REST,0.6915,1.8232,1.5518
-EKF gate + spread k=200,initial SOC -10 %p,24,CC_CELL2,1.0000,1.9809,1.0095
-EKF gate + spread k=200,initial SOC -10 %p,25,CC_CELL2,0.9320,0.8628,0.8204
-EKF gate + spread k=200,initial SOC -10 %p,26,CC_CELL2,0.8829,1.3516,1.4178
-EKF gate + spread k=200,initial SOC -10 %p,27,CC_CELL2,0.8282,1.5943,1.5857
-EKF gate + spread k=200,initial SOC -10 %p,28,CC_CELL2,0.7679,0.9035,0.8182
-EKF gate + spread k=200,initial SOC -10 %p,29,CC_CELL2,0.6870,0.6800,0.3762
-EKF gate + spread k=200,initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.4608,0.4130
-EKF gate + spread k=200,initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.8805,0.1257
-EKF gate + spread k=200,initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.9335,0.8162
-EKF gate + spread k=200,initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.3281,1.2558
-EKF gate + spread k=200,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,0.9073,0.9667
-EKF gate + spread k=200,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,2.6020,2.2373
-EKF gate + spread k=200,current offset +0.10 A,0,CC,1.0000,7.6189,12.5735
-EKF gate + spread k=200,current offset +0.10 A,1,CC,0.9468,9.4626,14.7787
-EKF gate + spread k=200,current offset +0.10 A,2,CC,0.9024,10.3232,15.7343
-EKF gate + spread k=200,current offset +0.10 A,3,CC,0.8622,8.3137,13.4025
-EKF gate + spread k=200,current offset +0.10 A,4,CC,0.7986,8.4577,13.4766
-EKF gate + spread k=200,current offset +0.10 A,5,CC,0.6957,7.2196,11.7991
-EKF gate + spread k=200,current offset +0.10 A,6,BOOST,1.0000,7.8148,12.7916
-EKF gate + spread k=200,current offset +0.10 A,7,BOOST,0.9438,9.1376,14.3700
-EKF gate + spread k=200,current offset +0.10 A,8,BOOST,0.8960,9.6884,15.0286
-EKF gate + spread k=200,current offset +0.10 A,9,BOOST,0.8507,8.3008,13.3532
-EKF gate + spread k=200,current offset +0.10 A,10,BOOST,0.7809,8.9676,14.0887
-EKF gate + spread k=200,current offset +0.10 A,11,BOOST,0.6921,7.6169,12.2987
-EKF gate + spread k=200,current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,7.7604,12.6547
-EKF gate + spread k=200,current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,8.2491,13.3216
-EKF gate + spread k=200,current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,10.2348,15.4454
-EKF gate + spread k=200,current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,8.2862,13.3758
-EKF gate + spread k=200,current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,8.4282,13.4062
-EKF gate + spread k=200,current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,8.0087,12.3182
-EKF gate + spread k=200,current offset +0.10 A,18,BOOST_REST,1.0000,9.6797,15.0904
-EKF gate + spread k=200,current offset +0.10 A,19,BOOST_REST,0.9384,8.1493,13.2619
-EKF gate + spread k=200,current offset +0.10 A,20,BOOST_REST,0.8642,10.0275,15.2388
-EKF gate + spread k=200,current offset +0.10 A,21,BOOST_REST,0.7854,8.1861,13.3498
-EKF gate + spread k=200,current offset +0.10 A,22,BOOST_REST,0.7398,8.1146,13.1207
-EKF gate + spread k=200,current offset +0.10 A,23,BOOST_REST,0.6915,7.8267,12.1534
-EKF gate + spread k=200,current offset +0.10 A,24,CC_CELL2,1.0000,10.4841,16.0301
-EKF gate + spread k=200,current offset +0.10 A,25,CC_CELL2,0.9320,7.3644,12.2047
-EKF gate + spread k=200,current offset +0.10 A,26,CC_CELL2,0.8829,7.5359,12.3963
-EKF gate + spread k=200,current offset +0.10 A,27,CC_CELL2,0.8282,9.7678,15.1067
-EKF gate + spread k=200,current offset +0.10 A,28,CC_CELL2,0.7679,7.7746,12.6555
-EKF gate + spread k=200,current offset +0.10 A,29,CC_CELL2,0.6870,8.6440,13.5952
-EKF gate + spread k=200,current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,7.2877,12.0811
-EKF gate + spread k=200,current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,10.4248,15.9149
-EKF gate + spread k=200,current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,8.8607,14.0514
-EKF gate + spread k=200,current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,9.2972,14.4973
-EKF gate + spread k=200,current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,7.8131,12.6771
-EKF gate + spread k=200,current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,9.9154,14.0728
-EKF gate + spread k=200,current offset -0.10 A,0,CC,1.0000,8.0579,11.6495
-EKF gate + spread k=200,current offset -0.10 A,1,CC,0.9468,10.1128,15.0704
-EKF gate + spread k=200,current offset -0.10 A,2,CC,0.9024,9.5514,14.8845
-EKF gate + spread k=200,current offset -0.10 A,3,CC,0.8622,8.3232,13.3996
-EKF gate + spread k=200,current offset -0.10 A,4,CC,0.7986,7.6012,12.4306
-EKF gate + spread k=200,current offset -0.10 A,5,CC,0.6957,8.7031,13.9657
-EKF gate + spread k=200,current offset -0.10 A,6,BOOST,1.0000,8.0071,11.7981
-EKF gate + spread k=200,current offset -0.10 A,7,BOOST,0.9438,10.4109,15.6465
-EKF gate + spread k=200,current offset -0.10 A,8,BOOST,0.8960,9.7213,15.1566
-EKF gate + spread k=200,current offset -0.10 A,9,BOOST,0.8507,8.1435,13.1951
-EKF gate + spread k=200,current offset -0.10 A,10,BOOST,0.7809,7.0917,11.7127
-EKF gate + spread k=200,current offset -0.10 A,11,BOOST,0.6921,8.7657,13.8853
-EKF gate + spread k=200,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,7.4544,11.0662
-EKF gate + spread k=200,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,10.0302,15.3136
-EKF gate + spread k=200,current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,9.2744,14.5655
-EKF gate + spread k=200,current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,8.2619,13.3088
-EKF gate + spread k=200,current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,7.7881,12.7482
-EKF gate + spread k=200,current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,8.6331,13.7924
-EKF gate + spread k=200,current offset -0.10 A,18,BOOST_REST,1.0000,8.7493,12.0180
-EKF gate + spread k=200,current offset -0.10 A,19,BOOST_REST,0.9384,9.8851,15.1104
-EKF gate + spread k=200,current offset -0.10 A,20,BOOST_REST,0.8642,9.6111,14.9583
-EKF gate + spread k=200,current offset -0.10 A,21,BOOST_REST,0.7854,8.2344,13.1519
-EKF gate + spread k=200,current offset -0.10 A,22,BOOST_REST,0.7398,8.2709,13.3336
-EKF gate + spread k=200,current offset -0.10 A,23,BOOST_REST,0.6915,8.9995,14.2118
-EKF gate + spread k=200,current offset -0.10 A,24,CC_CELL2,1.0000,8.3077,11.7540
-EKF gate + spread k=200,current offset -0.10 A,25,CC_CELL2,0.9320,9.0300,14.2514
-EKF gate + spread k=200,current offset -0.10 A,26,CC_CELL2,0.8829,9.3903,14.7239
-EKF gate + spread k=200,current offset -0.10 A,27,CC_CELL2,0.8282,10.0481,15.5065
-EKF gate + spread k=200,current offset -0.10 A,28,CC_CELL2,0.7679,8.6106,13.7554
-EKF gate + spread k=200,current offset -0.10 A,29,CC_CELL2,0.6870,7.9770,12.9444
-EKF gate + spread k=200,current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,9.3699,12.4867
-EKF gate + spread k=200,current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,9.4954,14.8705
-EKF gate + spread k=200,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,7.4455,12.2950
-EKF gate + spread k=200,current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,6.8937,11.5194
-EKF gate + spread k=200,current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,8.7326,13.9391
-EKF gate + spread k=200,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,6.0179,10.0460
-EKF gate + spread k=200,current gain +1 %,0,CC,1.0000,0.8173,0.8766
-EKF gate + spread k=200,current gain +1 %,1,CC,0.9468,0.6908,0.7846
-EKF gate + spread k=200,current gain +1 %,2,CC,0.9024,0.6102,0.6451
-EKF gate + spread k=200,current gain +1 %,3,CC,0.8622,0.4106,0.3486
-EKF gate + spread k=200,current gain +1 %,4,CC,0.7986,0.8713,0.2460
-EKF gate + spread k=200,current gain +1 %,5,CC,0.6957,1.2803,1.4091
-EKF gate + spread k=200,current gain +1 %,6,BOOST,1.0000,1.0337,1.0266
-EKF gate + spread k=200,current gain +1 %,7,BOOST,0.9438,0.9514,1.1130
-EKF gate + spread k=200,current gain +1 %,8,BOOST,0.8960,0.7606,0.8868
-EKF gate + spread k=200,current gain +1 %,9,BOOST,0.8507,0.4028,0.2667
-EKF gate + spread k=200,current gain +1 %,10,BOOST,0.7809,1.2765,0.8274
-EKF gate + spread k=200,current gain +1 %,11,BOOST,0.6921,1.2182,1.3487
-EKF gate + spread k=200,current gain +1 %,12,BOOST_NEGPULSE,1.0000,0.4889,0.5132
-EKF gate + spread k=200,current gain +1 %,13,BOOST_NEGPULSE,0.9330,0.8330,0.8855
-EKF gate + spread k=200,current gain +1 %,14,BOOST_NEGPULSE,0.8672,0.5723,0.5823
-EKF gate + spread k=200,current gain +1 %,15,BOOST_NEGPULSE,0.7944,0.4008,0.2519
-EKF gate + spread k=200,current gain +1 %,16,BOOST_NEGPULSE,0.7612,0.7920,0.1767
-EKF gate + spread k=200,current gain +1 %,17,BOOST_NEGPULSE,0.6821,0.8198,0.6577
-EKF gate + spread k=200,current gain +1 %,18,BOOST_REST,1.0000,1.1275,1.1769
-EKF gate + spread k=200,current gain +1 %,19,BOOST_REST,0.9384,0.8414,0.8152
-EKF gate + spread k=200,current gain +1 %,20,BOOST_REST,0.8642,0.8801,0.9106
-EKF gate + spread k=200,current gain +1 %,21,BOOST_REST,0.7854,0.5372,0.2679
-EKF gate + spread k=200,current gain +1 %,22,BOOST_REST,0.7398,0.6310,0.3605
-EKF gate + spread k=200,current gain +1 %,23,BOOST_REST,0.6915,0.7287,0.7047
-EKF gate + spread k=200,current gain +1 %,24,CC_CELL2,1.0000,0.3447,0.3869
-EKF gate + spread k=200,current gain +1 %,25,CC_CELL2,0.9320,1.3119,1.3430
-EKF gate + spread k=200,current gain +1 %,26,CC_CELL2,0.8829,1.5861,1.6910
-EKF gate + spread k=200,current gain +1 %,27,CC_CELL2,0.8282,1.2733,1.3834
-EKF gate + spread k=200,current gain +1 %,28,CC_CELL2,0.7679,1.0021,0.8877
-EKF gate + spread k=200,current gain +1 %,29,CC_CELL2,0.6870,1.1330,0.3330
-EKF gate + spread k=200,current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,1.1788,1.2566
-EKF gate + spread k=200,current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,0.4295,0.4973
-EKF gate + spread k=200,current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,0.7466,0.6345
-EKF gate + spread k=200,current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,1.4313,1.1543
-EKF gate + spread k=200,current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,1.1212,1.0421
-EKF gate + spread k=200,current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,3.1734,2.3304
-EKF gate + spread k=200,current gain -1 %,0,CC,1.0000,0.3644,0.3180
-EKF gate + spread k=200,current gain -1 %,1,CC,0.9468,0.2629,0.2808
-EKF gate + spread k=200,current gain -1 %,2,CC,0.9024,0.2048,0.2261
-EKF gate + spread k=200,current gain -1 %,3,CC,0.8622,0.4009,0.3419
-EKF gate + spread k=200,current gain -1 %,4,CC,0.7986,1.0354,0.5613
-EKF gate + spread k=200,current gain -1 %,5,CC,0.6957,0.9586,0.8440
-EKF gate + spread k=200,current gain -1 %,6,BOOST,1.0000,0.5707,0.4178
-EKF gate + spread k=200,current gain -1 %,7,BOOST,0.9438,0.4514,0.5470
-EKF gate + spread k=200,current gain -1 %,8,BOOST,0.8960,0.3059,0.4005
-EKF gate + spread k=200,current gain -1 %,9,BOOST,0.8507,0.5383,0.4315
-EKF gate + spread k=200,current gain -1 %,10,BOOST,0.7809,1.5557,1.1641
-EKF gate + spread k=200,current gain -1 %,11,BOOST,0.6921,0.8488,0.9681
-EKF gate + spread k=200,current gain -1 %,12,BOOST_NEGPULSE,1.0000,0.2784,0.2724
-EKF gate + spread k=200,current gain -1 %,13,BOOST_NEGPULSE,0.9330,0.3953,0.3725
-EKF gate + spread k=200,current gain -1 %,14,BOOST_NEGPULSE,0.8672,0.2597,0.2644
-EKF gate + spread k=200,current gain -1 %,15,BOOST_NEGPULSE,0.7944,0.4382,0.3491
-EKF gate + spread k=200,current gain -1 %,16,BOOST_NEGPULSE,0.7612,0.9365,0.4014
-EKF gate + spread k=200,current gain -1 %,17,BOOST_NEGPULSE,0.6821,0.6564,0.3105
-EKF gate + spread k=200,current gain -1 %,18,BOOST_REST,1.0000,0.6066,0.5553
-EKF gate + spread k=200,current gain -1 %,19,BOOST_REST,0.9384,0.3909,0.2891
-EKF gate + spread k=200,current gain -1 %,20,BOOST_REST,0.8642,0.4343,0.4451
-EKF gate + spread k=200,current gain -1 %,21,BOOST_REST,0.7854,0.4312,0.3169
-EKF gate + spread k=200,current gain -1 %,22,BOOST_REST,0.7398,0.5265,0.1297
-EKF gate + spread k=200,current gain -1 %,23,BOOST_REST,0.6915,0.4017,0.3612
-EKF gate + spread k=200,current gain -1 %,24,CC_CELL2,1.0000,0.3840,0.4555
-EKF gate + spread k=200,current gain -1 %,25,CC_CELL2,0.9320,0.8317,0.7658
-EKF gate + spread k=200,current gain -1 %,26,CC_CELL2,0.8829,1.1265,1.1755
-EKF gate + spread k=200,current gain -1 %,27,CC_CELL2,0.8282,0.8338,0.9291
-EKF gate + spread k=200,current gain -1 %,28,CC_CELL2,0.7679,0.6922,0.5206
-EKF gate + spread k=200,current gain -1 %,29,CC_CELL2,0.6870,1.2669,0.5232
-EKF gate + spread k=200,current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,0.6755,0.6597
-EKF gate + spread k=200,current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,0.2624,0.2854
-EKF gate + spread k=200,current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,1.1537,1.1347
-EKF gate + spread k=200,current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,1.8111,1.6020
-EKF gate + spread k=200,current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,0.7990,0.5397
-EKF gate + spread k=200,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,3.5099,2.8597
+pure current integration,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,0.3469,0.6212
+EKF no gate,no distortion,0,CC,1.0000,1.3726,1.3751
+EKF no gate,no distortion,1,CC,0.9468,2.0020,2.1154
+EKF no gate,no distortion,2,CC,0.9024,2.9084,3.0310
+EKF no gate,no distortion,3,CC,0.8622,3.8411,4.0117
+EKF no gate,no distortion,4,CC,0.7986,5.8089,4.8473
+EKF no gate,no distortion,5,CC,0.6957,7.4879,6.3090
+EKF no gate,no distortion,6,BOOST,1.0000,1.2090,1.2092
+EKF no gate,no distortion,7,BOOST,0.9438,1.7605,1.8311
+EKF no gate,no distortion,8,BOOST,0.8960,2.6729,2.7232
+EKF no gate,no distortion,9,BOOST,0.8507,3.6112,3.6060
+EKF no gate,no distortion,10,BOOST,0.7809,5.9299,5.0527
+EKF no gate,no distortion,11,BOOST,0.6921,6.5265,5.6941
+EKF no gate,no distortion,12,BOOST_NEGPULSE,1.0000,1.2172,1.0951
+EKF no gate,no distortion,13,BOOST_NEGPULSE,0.9330,1.5710,1.4952
+EKF no gate,no distortion,14,BOOST_NEGPULSE,0.8672,1.6848,1.6817
+EKF no gate,no distortion,15,BOOST_NEGPULSE,0.7944,1.6262,1.6223
+EKF no gate,no distortion,16,BOOST_NEGPULSE,0.7612,2.4880,1.4730
+EKF no gate,no distortion,17,BOOST_NEGPULSE,0.6821,5.3328,4.0550
+EKF no gate,no distortion,18,BOOST_REST,1.0000,1.3943,1.2946
+EKF no gate,no distortion,19,BOOST_REST,0.9384,1.6201,1.5341
+EKF no gate,no distortion,20,BOOST_REST,0.8642,1.2507,1.2319
+EKF no gate,no distortion,21,BOOST_REST,0.7854,2.3576,2.2564
+EKF no gate,no distortion,22,BOOST_REST,0.7398,3.7990,3.1957
+EKF no gate,no distortion,23,BOOST_REST,0.6915,3.2832,1.4474
+EKF no gate,no distortion,24,CC_CELL2,1.0000,1.3467,1.3850
+EKF no gate,no distortion,25,CC_CELL2,0.9320,2.0212,1.9242
+EKF no gate,no distortion,26,CC_CELL2,0.8829,2.6869,2.7313
+EKF no gate,no distortion,27,CC_CELL2,0.8282,3.2119,3.2316
+EKF no gate,no distortion,28,CC_CELL2,0.7679,4.0215,3.5159
+EKF no gate,no distortion,29,CC_CELL2,0.6870,4.6995,3.2108
+EKF no gate,no distortion,30,BOOST_NEGPULSE_1S,0.9909,1.1536,1.1203
+EKF no gate,no distortion,31,BOOST_NEGPULSE_1S,0.9339,1.7042,1.7152
+EKF no gate,no distortion,32,BOOST_NEGPULSE_1S,0.8724,2.3476,2.3728
+EKF no gate,no distortion,33,BOOST_NEGPULSE_1S,0.8251,3.4829,3.1895
+EKF no gate,no distortion,34,BOOST_NEGPULSE_1S,0.8251,9.3316,9.9287
+EKF no gate,no distortion,35,BOOST_NEGPULSE_1S,0.6925,8.5213,8.4764
+EKF no gate,initial SOC +10 %p,0,CC,1.0000,1.3726,1.3751
+EKF no gate,initial SOC +10 %p,1,CC,0.9468,2.0020,2.1154
+EKF no gate,initial SOC +10 %p,2,CC,0.9024,2.9084,3.0310
+EKF no gate,initial SOC +10 %p,3,CC,0.8622,3.8412,4.0117
+EKF no gate,initial SOC +10 %p,4,CC,0.7986,5.8106,4.8473
+EKF no gate,initial SOC +10 %p,5,CC,0.6957,7.4960,6.3089
+EKF no gate,initial SOC +10 %p,6,BOOST,1.0000,1.2092,1.2092
+EKF no gate,initial SOC +10 %p,7,BOOST,0.9438,1.7604,1.8311
+EKF no gate,initial SOC +10 %p,8,BOOST,0.8960,2.6730,2.7232
+EKF no gate,initial SOC +10 %p,9,BOOST,0.8507,3.6116,3.6060
+EKF no gate,initial SOC +10 %p,10,BOOST,0.7809,5.9310,5.0527
+EKF no gate,initial SOC +10 %p,11,BOOST,0.6921,6.5324,5.6942
+EKF no gate,initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,1.2171,1.0951
+EKF no gate,initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,1.5710,1.4952
+EKF no gate,initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,1.6859,1.6817
+EKF no gate,initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,1.6327,1.6223
+EKF no gate,initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,2.4971,1.4730
+EKF no gate,initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,5.3382,4.0550
+EKF no gate,initial SOC +10 %p,18,BOOST_REST,1.0000,1.3942,1.2946
+EKF no gate,initial SOC +10 %p,19,BOOST_REST,0.9384,1.6200,1.5341
+EKF no gate,initial SOC +10 %p,20,BOOST_REST,0.8642,1.2524,1.2319
+EKF no gate,initial SOC +10 %p,21,BOOST_REST,0.7854,2.3638,2.2564
+EKF no gate,initial SOC +10 %p,22,BOOST_REST,0.7398,3.8061,3.1957
+EKF no gate,initial SOC +10 %p,23,BOOST_REST,0.6915,3.2857,1.4474
+EKF no gate,initial SOC +10 %p,24,CC_CELL2,1.0000,1.3468,1.3850
+EKF no gate,initial SOC +10 %p,25,CC_CELL2,0.9320,2.0211,1.9242
+EKF no gate,initial SOC +10 %p,26,CC_CELL2,0.8829,2.6869,2.7313
+EKF no gate,initial SOC +10 %p,27,CC_CELL2,0.8282,3.2123,3.2316
+EKF no gate,initial SOC +10 %p,28,CC_CELL2,0.7679,4.0242,3.5159
+EKF no gate,initial SOC +10 %p,29,CC_CELL2,0.6870,4.7020,3.2108
+EKF no gate,initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.1535,1.1203
+EKF no gate,initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,1.7043,1.7152
+EKF no gate,initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,2.3481,2.3728
+EKF no gate,initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,3.4845,3.1896
+EKF no gate,initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,9.3321,9.9287
+EKF no gate,initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,8.5150,8.4764
+EKF no gate,initial SOC -10 %p,0,CC,1.0000,1.3729,1.3751
+EKF no gate,initial SOC -10 %p,1,CC,0.9468,2.0021,2.1154
+EKF no gate,initial SOC -10 %p,2,CC,0.9024,2.9084,3.0310
+EKF no gate,initial SOC -10 %p,3,CC,0.8622,3.8411,4.0117
+EKF no gate,initial SOC -10 %p,4,CC,0.7986,5.8077,4.8473
+EKF no gate,initial SOC -10 %p,5,CC,0.6957,7.4876,6.3092
+EKF no gate,initial SOC -10 %p,6,BOOST,1.0000,1.2094,1.2092
+EKF no gate,initial SOC -10 %p,7,BOOST,0.9438,1.7605,1.8311
+EKF no gate,initial SOC -10 %p,8,BOOST,0.8960,2.6729,2.7232
+EKF no gate,initial SOC -10 %p,9,BOOST,0.8507,3.6112,3.6060
+EKF no gate,initial SOC -10 %p,10,BOOST,0.7809,5.9295,5.0527
+EKF no gate,initial SOC -10 %p,11,BOOST,0.6921,6.5263,5.6942
+EKF no gate,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,1.2175,1.0951
+EKF no gate,initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,1.5711,1.4952
+EKF no gate,initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,1.6847,1.6817
+EKF no gate,initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,1.6227,1.6223
+EKF no gate,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,2.4823,1.4730
+EKF no gate,initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,5.3324,4.0550
+EKF no gate,initial SOC -10 %p,18,BOOST_REST,1.0000,1.3945,1.2946
+EKF no gate,initial SOC -10 %p,19,BOOST_REST,0.9384,1.6202,1.5341
+EKF no gate,initial SOC -10 %p,20,BOOST_REST,0.8642,1.2504,1.2319
+EKF no gate,initial SOC -10 %p,21,BOOST_REST,0.7854,2.3527,2.2564
+EKF no gate,initial SOC -10 %p,22,BOOST_REST,0.7398,3.7942,3.1957
+EKF no gate,initial SOC -10 %p,23,BOOST_REST,0.6915,3.2814,1.4474
+EKF no gate,initial SOC -10 %p,24,CC_CELL2,1.0000,1.3470,1.3850
+EKF no gate,initial SOC -10 %p,25,CC_CELL2,0.9320,2.0212,1.9242
+EKF no gate,initial SOC -10 %p,26,CC_CELL2,0.8829,2.6869,2.7313
+EKF no gate,initial SOC -10 %p,27,CC_CELL2,0.8282,3.2118,3.2316
+EKF no gate,initial SOC -10 %p,28,CC_CELL2,0.7679,4.0201,3.5158
+EKF no gate,initial SOC -10 %p,29,CC_CELL2,0.6870,4.6698,3.2106
+EKF no gate,initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.1538,1.1203
+EKF no gate,initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,1.7043,1.7152
+EKF no gate,initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,2.3475,2.3728
+EKF no gate,initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,3.4823,3.1895
+EKF no gate,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,9.3313,9.9287
+EKF no gate,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,8.5219,8.4763
+EKF no gate,current offset +0.10 A,0,CC,1.0000,1.1197,1.1457
+EKF no gate,current offset +0.10 A,1,CC,0.9468,1.5716,1.7359
+EKF no gate,current offset +0.10 A,2,CC,0.9024,2.3113,2.5360
+EKF no gate,current offset +0.10 A,3,CC,0.8622,3.0252,3.3050
+EKF no gate,current offset +0.10 A,4,CC,0.7986,4.8025,3.5714
+EKF no gate,current offset +0.10 A,5,CC,0.6957,5.8922,4.3392
+EKF no gate,current offset +0.10 A,6,BOOST,1.0000,0.9795,1.0251
+EKF no gate,current offset +0.10 A,7,BOOST,0.9438,1.3500,1.4990
+EKF no gate,current offset +0.10 A,8,BOOST,0.8960,2.0676,2.2501
+EKF no gate,current offset +0.10 A,9,BOOST,0.8507,2.7500,2.8906
+EKF no gate,current offset +0.10 A,10,BOOST,0.7809,4.7618,3.5931
+EKF no gate,current offset +0.10 A,11,BOOST,0.6921,5.2774,3.7188
+EKF no gate,current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,1.0201,0.9999
+EKF no gate,current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,1.3069,1.5422
+EKF no gate,current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,1.4114,1.7546
+EKF no gate,current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,2.5781,2.9129
+EKF no gate,current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,2.9306,2.6940
+EKF no gate,current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,4.0808,2.2362
+EKF no gate,current offset +0.10 A,18,BOOST_REST,1.0000,1.1698,1.1213
+EKF no gate,current offset +0.10 A,19,BOOST_REST,0.9384,1.2374,1.3148
+EKF no gate,current offset +0.10 A,20,BOOST_REST,0.8642,1.2718,1.6050
+EKF no gate,current offset +0.10 A,21,BOOST_REST,0.7854,3.5998,4.0804
+EKF no gate,current offset +0.10 A,22,BOOST_REST,0.7398,5.0514,5.0517
+EKF no gate,current offset +0.10 A,23,BOOST_REST,0.6915,3.6440,2.9006
+EKF no gate,current offset +0.10 A,24,CC_CELL2,1.0000,1.1113,1.1772
+EKF no gate,current offset +0.10 A,25,CC_CELL2,0.9320,1.5086,1.4850
+EKF no gate,current offset +0.10 A,26,CC_CELL2,0.8829,1.9580,2.0934
+EKF no gate,current offset +0.10 A,27,CC_CELL2,0.8282,2.2436,2.3986
+EKF no gate,current offset +0.10 A,28,CC_CELL2,0.7679,2.9847,2.1807
+EKF no gate,current offset +0.10 A,29,CC_CELL2,0.6870,3.9192,2.1505
+EKF no gate,current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,0.9098,0.9474
+EKF no gate,current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,1.2871,1.3718
+EKF no gate,current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,1.6527,1.7147
+EKF no gate,current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,2.5176,2.1693
+EKF no gate,current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,8.3077,8.6365
+EKF no gate,current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,7.2697,6.7299
+EKF no gate,current offset -0.10 A,0,CC,1.0000,1.6341,1.6225
+EKF no gate,current offset -0.10 A,1,CC,0.9468,2.4751,2.5476
+EKF no gate,current offset -0.10 A,2,CC,0.9024,3.5454,3.6023
+EKF no gate,current offset -0.10 A,3,CC,0.8622,4.7129,4.8083
+EKF no gate,current offset -0.10 A,4,CC,0.7986,6.9007,6.2256
+EKF no gate,current offset -0.10 A,5,CC,0.6957,10.4250,10.5203
+EKF no gate,current offset -0.10 A,6,BOOST,1.0000,1.4563,1.4297
+EKF no gate,current offset -0.10 A,7,BOOST,0.9438,2.2371,2.2533
+EKF no gate,current offset -0.10 A,8,BOOST,0.8960,3.3291,3.3029
+EKF no gate,current offset -0.10 A,9,BOOST,0.8507,4.5475,4.4127
+EKF no gate,current offset -0.10 A,10,BOOST,0.7809,7.1986,6.7134
+EKF no gate,current offset -0.10 A,11,BOOST,0.6921,7.7540,7.4965
+EKF no gate,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,1.4477,1.2676
+EKF no gate,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,2.0202,1.7614
+EKF no gate,current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,2.4053,2.2161
+EKF no gate,current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,1.6373,1.3214
+EKF no gate,current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,2.8082,1.6639
+EKF no gate,current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,6.6596,6.0928
+EKF no gate,current offset -0.10 A,18,BOOST_REST,1.0000,1.6385,1.5125
+EKF no gate,current offset -0.10 A,19,BOOST_REST,0.9384,2.1042,1.9315
+EKF no gate,current offset -0.10 A,20,BOOST_REST,0.8642,1.9419,1.7522
+EKF no gate,current offset -0.10 A,21,BOOST_REST,0.7854,1.8329,1.0124
+EKF no gate,current offset -0.10 A,22,BOOST_REST,0.7398,2.8710,1.4869
+EKF no gate,current offset -0.10 A,23,BOOST_REST,0.6915,3.8071,2.4310
+EKF no gate,current offset -0.10 A,24,CC_CELL2,1.0000,1.5977,1.6186
+EKF no gate,current offset -0.10 A,25,CC_CELL2,0.9320,2.5726,2.4403
+EKF no gate,current offset -0.10 A,26,CC_CELL2,0.8829,3.4614,3.4362
+EKF no gate,current offset -0.10 A,27,CC_CELL2,0.8282,4.2589,4.2154
+EKF no gate,current offset -0.10 A,28,CC_CELL2,0.7679,5.1740,5.0245
+EKF no gate,current offset -0.10 A,29,CC_CELL2,0.6870,5.6531,5.0159
+EKF no gate,current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,1.4361,1.3617
+EKF no gate,current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,2.2155,2.1906
+EKF no gate,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,3.1714,3.1670
+EKF no gate,current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,4.5592,4.3562
+EKF no gate,current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,10.3826,11.2329
+EKF no gate,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,9.6932,10.1156
+EKF no gate,current gain +1 %,0,CC,1.0000,1.4007,1.4251
+EKF no gate,current gain +1 %,1,CC,0.9468,2.0408,2.1717
+EKF no gate,current gain +1 %,2,CC,0.9024,2.9465,3.0720
+EKF no gate,current gain +1 %,3,CC,0.8622,3.8679,4.0035
+EKF no gate,current gain +1 %,4,CC,0.7986,5.8087,4.7475
+EKF no gate,current gain +1 %,5,CC,0.6957,7.4909,6.2522
+EKF no gate,current gain +1 %,6,BOOST,1.0000,1.2426,1.2698
+EKF no gate,current gain +1 %,7,BOOST,0.9438,1.8074,1.8996
+EKF no gate,current gain +1 %,8,BOOST,0.8960,2.7135,2.7645
+EKF no gate,current gain +1 %,9,BOOST,0.8507,3.6411,3.5905
+EKF no gate,current gain +1 %,10,BOOST,0.7809,5.9272,4.9409
+EKF no gate,current gain +1 %,11,BOOST,0.6921,6.5090,5.6031
+EKF no gate,current gain +1 %,12,BOOST_NEGPULSE,1.0000,1.2560,1.1723
+EKF no gate,current gain +1 %,13,BOOST_NEGPULSE,0.9330,1.6418,1.6204
+EKF no gate,current gain +1 %,14,BOOST_NEGPULSE,0.8672,1.7615,1.7846
+EKF no gate,current gain +1 %,15,BOOST_NEGPULSE,0.7944,1.6757,1.7301
+EKF no gate,current gain +1 %,16,BOOST_NEGPULSE,0.7612,2.5101,1.5065
+EKF no gate,current gain +1 %,17,BOOST_NEGPULSE,0.6821,5.3246,3.9717
+EKF no gate,current gain +1 %,18,BOOST_REST,1.0000,1.4268,1.3585
+EKF no gate,current gain +1 %,19,BOOST_REST,0.9384,1.6773,1.6291
+EKF no gate,current gain +1 %,20,BOOST_REST,0.8642,1.3300,1.3450
+EKF no gate,current gain +1 %,21,BOOST_REST,0.7854,2.3852,2.3545
+EKF no gate,current gain +1 %,22,BOOST_REST,0.7398,3.8003,3.2838
+EKF no gate,current gain +1 %,23,BOOST_REST,0.6915,3.2690,1.4175
+EKF no gate,current gain +1 %,24,CC_CELL2,1.0000,1.3798,1.4450
+EKF no gate,current gain +1 %,25,CC_CELL2,0.9320,2.0634,1.9906
+EKF no gate,current gain +1 %,26,CC_CELL2,0.8829,2.7265,2.7607
+EKF no gate,current gain +1 %,27,CC_CELL2,0.8282,3.2360,3.1958
+EKF no gate,current gain +1 %,28,CC_CELL2,0.7679,4.0088,3.4013
+EKF no gate,current gain +1 %,29,CC_CELL2,0.6870,4.6857,3.2065
+EKF no gate,current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,1.1875,1.1798
+EKF no gate,current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,1.7471,1.7790
+EKF no gate,current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,2.3915,2.3981
+EKF no gate,current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,3.5120,3.1410
+EKF no gate,current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,9.3071,9.8427
+EKF no gate,current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,8.4895,8.4278
+EKF no gate,current gain -1 %,0,CC,1.0000,1.3477,1.3313
+EKF no gate,current gain -1 %,1,CC,0.9468,1.9677,2.0672
+EKF no gate,current gain -1 %,2,CC,0.9024,2.8739,2.9967
+EKF no gate,current gain -1 %,3,CC,0.8622,3.8194,4.0278
+EKF no gate,current gain -1 %,4,CC,0.7986,5.8134,4.9530
+EKF no gate,current gain -1 %,5,CC,0.6957,7.4694,6.3469
+EKF no gate,current gain -1 %,6,BOOST,1.0000,1.1792,1.1556
+EKF no gate,current gain -1 %,7,BOOST,0.9438,1.7189,1.7723
+EKF no gate,current gain -1 %,8,BOOST,0.8960,2.6377,2.6929
+EKF no gate,current gain -1 %,9,BOOST,0.8507,3.5863,3.6283
+EKF no gate,current gain -1 %,10,BOOST,0.7809,5.9411,5.1773
+EKF no gate,current gain -1 %,11,BOOST,0.6921,6.5464,5.7747
+EKF no gate,current gain -1 %,12,BOOST_NEGPULSE,1.0000,1.1819,1.0238
+EKF no gate,current gain -1 %,13,BOOST_NEGPULSE,0.9330,1.5063,1.3792
+EKF no gate,current gain -1 %,14,BOOST_NEGPULSE,0.8672,1.6144,1.5873
+EKF no gate,current gain -1 %,15,BOOST_NEGPULSE,0.7944,1.5889,1.5291
+EKF no gate,current gain -1 %,16,BOOST_NEGPULSE,0.7612,2.4738,1.4592
+EKF no gate,current gain -1 %,17,BOOST_NEGPULSE,0.6821,5.3501,4.1464
+EKF no gate,current gain -1 %,18,BOOST_REST,1.0000,1.3649,1.2368
+EKF no gate,current gain -1 %,19,BOOST_REST,0.9384,1.5683,1.4483
+EKF no gate,current gain -1 %,20,BOOST_REST,0.8642,1.1808,1.1339
+EKF no gate,current gain -1 %,21,BOOST_REST,0.7854,2.3403,2.1708
+EKF no gate,current gain -1 %,22,BOOST_REST,0.7398,3.8043,3.1173
+EKF no gate,current gain -1 %,23,BOOST_REST,0.6915,3.3063,1.4940
+EKF no gate,current gain -1 %,24,CC_CELL2,1.0000,1.3169,1.3307
+EKF no gate,current gain -1 %,25,CC_CELL2,0.9320,1.9834,1.8663
+EKF no gate,current gain -1 %,26,CC_CELL2,0.8829,2.6518,2.7097
+EKF no gate,current gain -1 %,27,CC_CELL2,0.8282,3.1945,3.2809
+EKF no gate,current gain -1 %,28,CC_CELL2,0.7679,4.0425,3.6442
+EKF no gate,current gain -1 %,29,CC_CELL2,0.6870,4.7166,3.2353
+EKF no gate,current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,1.1242,1.0696
+EKF no gate,current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,1.6675,1.6629
+EKF no gate,current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,2.3095,2.3568
+EKF no gate,current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,3.4600,3.2475
+EKF no gate,current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,9.3621,10.0233
+EKF no gate,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,8.5575,8.5468
+EKF adopted (gate),no distortion,0,CC,1.0000,1.0127,0.9177
+EKF adopted (gate),no distortion,1,CC,0.9468,1.1761,1.4183
+EKF adopted (gate),no distortion,2,CC,0.9024,1.5635,1.8855
+EKF adopted (gate),no distortion,3,CC,0.8622,1.7929,2.2701
+EKF adopted (gate),no distortion,4,CC,0.7986,2.0048,2.6457
+EKF adopted (gate),no distortion,5,CC,0.6957,1.8302,1.5779
+EKF adopted (gate),no distortion,6,BOOST,1.0000,0.8440,0.7570
+EKF adopted (gate),no distortion,7,BOOST,0.9438,1.0302,1.1486
+EKF adopted (gate),no distortion,8,BOOST,0.8960,1.3486,1.6125
+EKF adopted (gate),no distortion,9,BOOST,0.8507,1.4695,1.9813
+EKF adopted (gate),no distortion,10,BOOST,0.7809,2.1681,2.7930
+EKF adopted (gate),no distortion,11,BOOST,0.6921,1.4303,0.9238
+EKF adopted (gate),no distortion,12,BOOST_NEGPULSE,1.0000,0.8464,0.3929
+EKF adopted (gate),no distortion,13,BOOST_NEGPULSE,0.9330,0.6737,0.6733
+EKF adopted (gate),no distortion,14,BOOST_NEGPULSE,0.8672,0.7521,1.0063
+EKF adopted (gate),no distortion,15,BOOST_NEGPULSE,0.7944,2.0549,1.9051
+EKF adopted (gate),no distortion,16,BOOST_NEGPULSE,0.7612,3.0089,1.6811
+EKF adopted (gate),no distortion,17,BOOST_NEGPULSE,0.6821,2.6442,2.2007
+EKF adopted (gate),no distortion,18,BOOST_REST,1.0000,0.9369,0.6094
+EKF adopted (gate),no distortion,19,BOOST_REST,0.9384,0.8122,0.8063
+EKF adopted (gate),no distortion,20,BOOST_REST,0.8642,0.6873,0.8477
+EKF adopted (gate),no distortion,21,BOOST_REST,0.7854,2.9658,2.2655
+EKF adopted (gate),no distortion,22,BOOST_REST,0.7398,4.2423,3.0735
+EKF adopted (gate),no distortion,23,BOOST_REST,0.6915,3.5674,1.7671
+EKF adopted (gate),no distortion,24,CC_CELL2,1.0000,0.8787,0.7348
+EKF adopted (gate),no distortion,25,CC_CELL2,0.9320,1.2029,1.2969
+EKF adopted (gate),no distortion,26,CC_CELL2,0.8829,1.3173,1.4716
+EKF adopted (gate),no distortion,27,CC_CELL2,0.8282,1.4629,1.8477
+EKF adopted (gate),no distortion,28,CC_CELL2,0.7679,1.9789,2.1667
+EKF adopted (gate),no distortion,29,CC_CELL2,0.6870,3.3286,1.6349
+EKF adopted (gate),no distortion,30,BOOST_NEGPULSE_1S,0.9909,0.7573,0.6180
+EKF adopted (gate),no distortion,31,BOOST_NEGPULSE_1S,0.9339,0.8996,1.1241
+EKF adopted (gate),no distortion,32,BOOST_NEGPULSE_1S,0.8724,0.9833,1.3506
+EKF adopted (gate),no distortion,33,BOOST_NEGPULSE_1S,0.8251,1.1968,1.5163
+EKF adopted (gate),no distortion,34,BOOST_NEGPULSE_1S,0.8251,4.4408,5.6704
+EKF adopted (gate),no distortion,35,BOOST_NEGPULSE_1S,0.6925,3.3261,4.2393
+EKF adopted (gate),initial SOC +10 %p,0,CC,1.0000,1.0827,0.9177
+EKF adopted (gate),initial SOC +10 %p,1,CC,0.9468,1.2362,1.4183
+EKF adopted (gate),initial SOC +10 %p,2,CC,0.9024,1.6093,1.8855
+EKF adopted (gate),initial SOC +10 %p,3,CC,0.8622,1.8331,2.2701
+EKF adopted (gate),initial SOC +10 %p,4,CC,0.7986,2.0453,2.6456
+EKF adopted (gate),initial SOC +10 %p,5,CC,0.6957,1.8928,1.5784
+EKF adopted (gate),initial SOC +10 %p,6,BOOST,1.0000,0.9270,0.7570
+EKF adopted (gate),initial SOC +10 %p,7,BOOST,0.9438,1.0983,1.1486
+EKF adopted (gate),initial SOC +10 %p,8,BOOST,0.8960,1.4015,1.6125
+EKF adopted (gate),initial SOC +10 %p,9,BOOST,0.8507,1.5188,1.9814
+EKF adopted (gate),initial SOC +10 %p,10,BOOST,0.7809,2.2037,2.7931
+EKF adopted (gate),initial SOC +10 %p,11,BOOST,0.6921,1.5006,0.9236
+EKF adopted (gate),initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,0.9286,0.3929
+EKF adopted (gate),initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,0.7740,0.6733
+EKF adopted (gate),initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,0.8449,1.0063
+EKF adopted (gate),initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,2.0946,1.9051
+EKF adopted (gate),initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,3.0421,1.6813
+EKF adopted (gate),initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,2.6772,2.2006
+EKF adopted (gate),initial SOC +10 %p,18,BOOST_REST,1.0000,1.0119,0.6094
+EKF adopted (gate),initial SOC +10 %p,19,BOOST_REST,0.9384,0.8970,0.8063
+EKF adopted (gate),initial SOC +10 %p,20,BOOST_REST,0.8642,0.7881,0.8477
+EKF adopted (gate),initial SOC +10 %p,21,BOOST_REST,0.7854,2.9958,2.2657
+EKF adopted (gate),initial SOC +10 %p,22,BOOST_REST,0.7398,4.2671,3.0738
+EKF adopted (gate),initial SOC +10 %p,23,BOOST_REST,0.6915,3.5896,1.7674
+EKF adopted (gate),initial SOC +10 %p,24,CC_CELL2,1.0000,0.9583,0.7348
+EKF adopted (gate),initial SOC +10 %p,25,CC_CELL2,0.9320,1.2617,1.2969
+EKF adopted (gate),initial SOC +10 %p,26,CC_CELL2,0.8829,1.3714,1.4716
+EKF adopted (gate),initial SOC +10 %p,27,CC_CELL2,0.8282,1.5125,1.8478
+EKF adopted (gate),initial SOC +10 %p,28,CC_CELL2,0.7679,2.0202,2.1669
+EKF adopted (gate),initial SOC +10 %p,29,CC_CELL2,0.6870,3.3845,1.6372
+EKF adopted (gate),initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,0.8481,0.6180
+EKF adopted (gate),initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.9770,1.1241
+EKF adopted (gate),initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,1.0555,1.3506
+EKF adopted (gate),initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.2597,1.5164
+EKF adopted (gate),initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,4.4583,5.6706
+EKF adopted (gate),initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.3454,4.2378
+EKF adopted (gate),initial SOC -10 %p,0,CC,1.0000,1.0819,0.9177
+EKF adopted (gate),initial SOC -10 %p,1,CC,0.9468,1.2362,1.4183
+EKF adopted (gate),initial SOC -10 %p,2,CC,0.9024,1.6092,1.8855
+EKF adopted (gate),initial SOC -10 %p,3,CC,0.8622,1.8329,2.2701
+EKF adopted (gate),initial SOC -10 %p,4,CC,0.7986,2.0376,2.6457
+EKF adopted (gate),initial SOC -10 %p,5,CC,0.6957,1.8683,1.5780
+EKF adopted (gate),initial SOC -10 %p,6,BOOST,1.0000,0.9259,0.7570
+EKF adopted (gate),initial SOC -10 %p,7,BOOST,0.9438,1.0983,1.1486
+EKF adopted (gate),initial SOC -10 %p,8,BOOST,0.8960,1.4013,1.6125
+EKF adopted (gate),initial SOC -10 %p,9,BOOST,0.8507,1.5180,1.9813
+EKF adopted (gate),initial SOC -10 %p,10,BOOST,0.7809,2.2003,2.7931
+EKF adopted (gate),initial SOC -10 %p,11,BOOST,0.6921,1.4795,0.9238
+EKF adopted (gate),initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,0.9281,0.3929
+EKF adopted (gate),initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,0.7739,0.6733
+EKF adopted (gate),initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,0.8429,1.0063
+EKF adopted (gate),initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,2.0874,1.9052
+EKF adopted (gate),initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,3.0274,1.6809
+EKF adopted (gate),initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,2.6704,2.2009
+EKF adopted (gate),initial SOC -10 %p,18,BOOST_REST,1.0000,1.0113,0.6094
+EKF adopted (gate),initial SOC -10 %p,19,BOOST_REST,0.9384,0.8971,0.8063
+EKF adopted (gate),initial SOC -10 %p,20,BOOST_REST,0.8642,0.7854,0.8477
+EKF adopted (gate),initial SOC -10 %p,21,BOOST_REST,0.7854,2.9857,2.2653
+EKF adopted (gate),initial SOC -10 %p,22,BOOST_REST,0.7398,4.2543,3.0733
+EKF adopted (gate),initial SOC -10 %p,23,BOOST_REST,0.6915,3.5864,1.7674
+EKF adopted (gate),initial SOC -10 %p,24,CC_CELL2,1.0000,0.9577,0.7348
+EKF adopted (gate),initial SOC -10 %p,25,CC_CELL2,0.9320,1.2616,1.2969
+EKF adopted (gate),initial SOC -10 %p,26,CC_CELL2,0.8829,1.3712,1.4716
+EKF adopted (gate),initial SOC -10 %p,27,CC_CELL2,0.8282,1.5115,1.8477
+EKF adopted (gate),initial SOC -10 %p,28,CC_CELL2,0.7679,2.0125,2.1666
+EKF adopted (gate),initial SOC -10 %p,29,CC_CELL2,0.6870,3.3149,1.6333
+EKF adopted (gate),initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,0.8478,0.6180
+EKF adopted (gate),initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.9771,1.1241
+EKF adopted (gate),initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,1.0545,1.3506
+EKF adopted (gate),initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.2547,1.5163
+EKF adopted (gate),initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,4.4567,5.6703
+EKF adopted (gate),initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.3481,4.2389
+EKF adopted (gate),current offset +0.10 A,0,CC,1.0000,1.5740,1.0168
+EKF adopted (gate),current offset +0.10 A,1,CC,0.9468,2.3079,1.3782
+EKF adopted (gate),current offset +0.10 A,2,CC,0.9024,2.2846,1.5672
+EKF adopted (gate),current offset +0.10 A,3,CC,0.8622,2.2448,1.6142
+EKF adopted (gate),current offset +0.10 A,4,CC,0.7986,2.8418,1.9325
+EKF adopted (gate),current offset +0.10 A,5,CC,0.6957,2.6916,2.9060
+EKF adopted (gate),current offset +0.10 A,6,BOOST,1.0000,1.6969,1.0185
+EKF adopted (gate),current offset +0.10 A,7,BOOST,0.9438,2.2986,1.3802
+EKF adopted (gate),current offset +0.10 A,8,BOOST,0.8960,2.3331,1.5254
+EKF adopted (gate),current offset +0.10 A,9,BOOST,0.8507,2.5572,1.7779
+EKF adopted (gate),current offset +0.10 A,10,BOOST,0.7809,2.4983,1.9544
+EKF adopted (gate),current offset +0.10 A,11,BOOST,0.6921,2.8596,3.3175
+EKF adopted (gate),current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,1.6282,1.3669
+EKF adopted (gate),current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,2.6782,2.0554
+EKF adopted (gate),current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,3.5379,3.0965
+EKF adopted (gate),current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,5.1905,4.8750
+EKF adopted (gate),current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,5.9375,5.2175
+EKF adopted (gate),current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,3.9369,3.4652
+EKF adopted (gate),current offset +0.10 A,18,BOOST_REST,1.0000,1.5563,1.1952
+EKF adopted (gate),current offset +0.10 A,19,BOOST_REST,0.9384,2.4714,1.5985
+EKF adopted (gate),current offset +0.10 A,20,BOOST_REST,0.8642,3.5607,2.9959
+EKF adopted (gate),current offset +0.10 A,21,BOOST_REST,0.7854,6.3833,5.9887
+EKF adopted (gate),current offset +0.10 A,22,BOOST_REST,0.7398,7.1409,6.4591
+EKF adopted (gate),current offset +0.10 A,23,BOOST_REST,0.6915,6.2452,5.5321
+EKF adopted (gate),current offset +0.10 A,24,CC_CELL2,1.0000,1.6007,1.0547
+EKF adopted (gate),current offset +0.10 A,25,CC_CELL2,0.9320,2.2583,1.3068
+EKF adopted (gate),current offset +0.10 A,26,CC_CELL2,0.8829,2.3290,1.5728
+EKF adopted (gate),current offset +0.10 A,27,CC_CELL2,0.8282,2.4823,1.8754
+EKF adopted (gate),current offset +0.10 A,28,CC_CELL2,0.7679,2.8610,2.4243
+EKF adopted (gate),current offset +0.10 A,29,CC_CELL2,0.6870,5.6959,5.4002
+EKF adopted (gate),current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,1.8775,1.3105
+EKF adopted (gate),current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,2.6089,1.5590
+EKF adopted (gate),current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,3.0656,2.0478
+EKF adopted (gate),current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,3.3244,2.4275
+EKF adopted (gate),current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,2.4677,2.0252
+EKF adopted (gate),current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,1.3738,1.1315
+EKF adopted (gate),current offset -0.10 A,0,CC,1.0000,3.1488,2.1716
+EKF adopted (gate),current offset -0.10 A,1,CC,0.9468,3.6820,2.7821
+EKF adopted (gate),current offset -0.10 A,2,CC,0.9024,4.1454,3.4901
+EKF adopted (gate),current offset -0.10 A,3,CC,0.8622,4.3622,4.1451
+EKF adopted (gate),current offset -0.10 A,4,CC,0.7986,4.4099,5.1417
+EKF adopted (gate),current offset -0.10 A,5,CC,0.6957,4.6741,5.7132
+EKF adopted (gate),current offset -0.10 A,6,BOOST,1.0000,2.9912,2.0646
+EKF adopted (gate),current offset -0.10 A,7,BOOST,0.9438,3.6085,2.5533
+EKF adopted (gate),current offset -0.10 A,8,BOOST,0.8960,4.0230,3.2516
+EKF adopted (gate),current offset -0.10 A,9,BOOST,0.8507,4.0994,3.8656
+EKF adopted (gate),current offset -0.10 A,10,BOOST,0.7809,4.7119,5.1583
+EKF adopted (gate),current offset -0.10 A,11,BOOST,0.6921,4.1507,4.7927
+EKF adopted (gate),current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,3.0142,1.6886
+EKF adopted (gate),current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,3.3805,1.9118
+EKF adopted (gate),current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,3.0731,2.1885
+EKF adopted (gate),current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,2.1661,1.4537
+EKF adopted (gate),current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,2.6047,1.9407
+EKF adopted (gate),current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,4.6577,5.4923
+EKF adopted (gate),current offset -0.10 A,18,BOOST_REST,1.0000,3.0944,1.8868
+EKF adopted (gate),current offset -0.10 A,19,BOOST_REST,0.9384,3.4620,2.2343
+EKF adopted (gate),current offset -0.10 A,20,BOOST_REST,0.8642,3.1272,2.3729
+EKF adopted (gate),current offset -0.10 A,21,BOOST_REST,0.7854,2.1616,1.3623
+EKF adopted (gate),current offset -0.10 A,22,BOOST_REST,0.7398,2.7033,0.8071
+EKF adopted (gate),current offset -0.10 A,23,BOOST_REST,0.6915,3.3752,2.8378
+EKF adopted (gate),current offset -0.10 A,24,CC_CELL2,1.0000,3.0296,2.0277
+EKF adopted (gate),current offset -0.10 A,25,CC_CELL2,0.9320,3.8659,2.8346
+EKF adopted (gate),current offset -0.10 A,26,CC_CELL2,0.8829,4.1236,3.5180
+EKF adopted (gate),current offset -0.10 A,27,CC_CELL2,0.8282,4.2201,4.0136
+EKF adopted (gate),current offset -0.10 A,28,CC_CELL2,0.7679,4.5689,5.2330
+EKF adopted (gate),current offset -0.10 A,29,CC_CELL2,0.6870,3.5247,3.3110
+EKF adopted (gate),current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,3.0400,1.8907
+EKF adopted (gate),current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,3.4668,2.4907
+EKF adopted (gate),current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,3.6603,3.5563
+EKF adopted (gate),current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,3.8125,4.1800
+EKF adopted (gate),current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,7.4040,9.6637
+EKF adopted (gate),current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,6.2337,8.0915
+EKF adopted (gate),current gain +1 %,0,CC,1.0000,1.1518,1.0318
+EKF adopted (gate),current gain +1 %,1,CC,0.9468,1.2714,1.4450
+EKF adopted (gate),current gain +1 %,2,CC,0.9024,1.6454,1.8921
+EKF adopted (gate),current gain +1 %,3,CC,0.8622,1.8490,2.2599
+EKF adopted (gate),current gain +1 %,4,CC,0.7986,1.9851,2.5598
+EKF adopted (gate),current gain +1 %,5,CC,0.6957,1.8379,1.6021
+EKF adopted (gate),current gain +1 %,6,BOOST,1.0000,0.9829,0.8821
+EKF adopted (gate),current gain +1 %,7,BOOST,0.9438,1.1360,1.1619
+EKF adopted (gate),current gain +1 %,8,BOOST,0.8960,1.4342,1.6063
+EKF adopted (gate),current gain +1 %,9,BOOST,0.8507,1.5133,1.9543
+EKF adopted (gate),current gain +1 %,10,BOOST,0.7809,2.1582,2.6606
+EKF adopted (gate),current gain +1 %,11,BOOST,0.6921,1.4234,0.8542
+EKF adopted (gate),current gain +1 %,12,BOOST_NEGPULSE,1.0000,0.9990,0.4959
+EKF adopted (gate),current gain +1 %,13,BOOST_NEGPULSE,0.9330,0.7924,0.6572
+EKF adopted (gate),current gain +1 %,14,BOOST_NEGPULSE,0.8672,0.7362,0.9749
+EKF adopted (gate),current gain +1 %,15,BOOST_NEGPULSE,0.7944,1.9705,1.9073
+EKF adopted (gate),current gain +1 %,16,BOOST_NEGPULSE,0.7612,2.9114,1.6733
+EKF adopted (gate),current gain +1 %,17,BOOST_NEGPULSE,0.6821,2.6161,2.1449
+EKF adopted (gate),current gain +1 %,18,BOOST_REST,1.0000,1.0825,0.7051
+EKF adopted (gate),current gain +1 %,19,BOOST_REST,0.9384,0.9210,0.8227
+EKF adopted (gate),current gain +1 %,20,BOOST_REST,0.8642,0.6832,0.8356
+EKF adopted (gate),current gain +1 %,21,BOOST_REST,0.7854,2.8724,2.3122
+EKF adopted (gate),current gain +1 %,22,BOOST_REST,0.7398,4.1745,3.1817
+EKF adopted (gate),current gain +1 %,23,BOOST_REST,0.6915,3.4718,1.7034
+EKF adopted (gate),current gain +1 %,24,CC_CELL2,1.0000,1.0312,0.8706
+EKF adopted (gate),current gain +1 %,25,CC_CELL2,0.9320,1.3172,1.3302
+EKF adopted (gate),current gain +1 %,26,CC_CELL2,0.8829,1.4272,1.5148
+EKF adopted (gate),current gain +1 %,27,CC_CELL2,0.8282,1.5229,1.8353
+EKF adopted (gate),current gain +1 %,28,CC_CELL2,0.7679,1.9811,2.0793
+EKF adopted (gate),current gain +1 %,29,CC_CELL2,0.6870,3.2491,1.5894
+EKF adopted (gate),current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,0.8938,0.6741
+EKF adopted (gate),current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,0.9660,1.1082
+EKF adopted (gate),current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,0.9868,1.3151
+EKF adopted (gate),current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,1.1703,1.4557
+EKF adopted (gate),current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,4.4420,5.6072
+EKF adopted (gate),current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,3.3262,4.2141
+EKF adopted (gate),current gain -1 %,0,CC,1.0000,0.9293,0.9200
+EKF adopted (gate),current gain -1 %,1,CC,0.9468,1.1392,1.4511
+EKF adopted (gate),current gain -1 %,2,CC,0.9024,1.5215,1.9093
+EKF adopted (gate),current gain -1 %,3,CC,0.8622,1.7665,2.2965
+EKF adopted (gate),current gain -1 %,4,CC,0.7986,2.0483,2.7407
+EKF adopted (gate),current gain -1 %,5,CC,0.6957,1.8515,1.5668
+EKF adopted (gate),current gain -1 %,6,BOOST,1.0000,0.7759,0.7740
+EKF adopted (gate),current gain -1 %,7,BOOST,0.9438,0.9898,1.2037
+EKF adopted (gate),current gain -1 %,8,BOOST,0.8960,1.3102,1.6580
+EKF adopted (gate),current gain -1 %,9,BOOST,0.8507,1.4687,2.0405
+EKF adopted (gate),current gain -1 %,10,BOOST,0.7809,2.1981,2.9308
+EKF adopted (gate),current gain -1 %,11,BOOST,0.6921,1.4532,1.0333
+EKF adopted (gate),current gain -1 %,12,BOOST_NEGPULSE,1.0000,0.7592,0.5395
+EKF adopted (gate),current gain -1 %,13,BOOST_NEGPULSE,0.9330,0.6549,0.7959
+EKF adopted (gate),current gain -1 %,14,BOOST_NEGPULSE,0.8672,0.8475,1.0938
+EKF adopted (gate),current gain -1 %,15,BOOST_NEGPULSE,0.7944,2.1633,1.9314
+EKF adopted (gate),current gain -1 %,16,BOOST_NEGPULSE,0.7612,3.1217,1.7167
+EKF adopted (gate),current gain -1 %,17,BOOST_NEGPULSE,0.6821,2.6834,2.2707
+EKF adopted (gate),current gain -1 %,18,BOOST_REST,1.0000,0.8495,0.6785
+EKF adopted (gate),current gain -1 %,19,BOOST_REST,0.9384,0.7825,0.8884
+EKF adopted (gate),current gain -1 %,20,BOOST_REST,0.8642,0.7778,0.9233
+EKF adopted (gate),current gain -1 %,21,BOOST_REST,0.7854,3.0778,2.2483
+EKF adopted (gate),current gain -1 %,22,BOOST_REST,0.7398,4.3215,2.9774
+EKF adopted (gate),current gain -1 %,23,BOOST_REST,0.6915,3.6708,1.8377
+EKF adopted (gate),current gain -1 %,24,CC_CELL2,1.0000,0.7874,0.7452
+EKF adopted (gate),current gain -1 %,25,CC_CELL2,0.9320,1.1402,1.3191
+EKF adopted (gate),current gain -1 %,26,CC_CELL2,0.8829,1.2496,1.4689
+EKF adopted (gate),current gain -1 %,27,CC_CELL2,0.8282,1.4360,1.8743
+EKF adopted (gate),current gain -1 %,28,CC_CELL2,0.7679,1.9996,2.2617
+EKF adopted (gate),current gain -1 %,29,CC_CELL2,0.6870,3.4202,1.6935
+EKF adopted (gate),current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,0.7005,0.7266
+EKF adopted (gate),current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,0.9084,1.1935
+EKF adopted (gate),current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,1.0321,1.4022
+EKF adopted (gate),current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,1.2587,1.5775
+EKF adopted (gate),current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,4.4442,5.7366
+EKF adopted (gate),current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,3.3237,4.2728
+EKF gate + spread k=20,no distortion,0,CC,1.0000,0.9335,0.9209
+EKF gate + spread k=20,no distortion,1,CC,0.9468,0.6427,0.8180
+EKF gate + spread k=20,no distortion,2,CC,0.9024,0.8697,0.9735
+EKF gate + spread k=20,no distortion,3,CC,0.8622,0.9944,1.1283
+EKF gate + spread k=20,no distortion,4,CC,0.7986,0.6831,0.5820
+EKF gate + spread k=20,no distortion,5,CC,0.6957,0.9022,0.8943
+EKF gate + spread k=20,no distortion,6,BOOST,1.0000,0.7763,0.7822
+EKF gate + spread k=20,no distortion,7,BOOST,0.9438,0.7597,0.9356
+EKF gate + spread k=20,no distortion,8,BOOST,0.8960,0.8919,1.0950
+EKF gate + spread k=20,no distortion,9,BOOST,0.8507,0.6022,0.7340
+EKF gate + spread k=20,no distortion,10,BOOST,0.7809,0.7764,0.8479
+EKF gate + spread k=20,no distortion,11,BOOST,0.6921,0.6338,0.3496
+EKF gate + spread k=20,no distortion,12,BOOST_NEGPULSE,1.0000,0.7896,0.6764
+EKF gate + spread k=20,no distortion,13,BOOST_NEGPULSE,0.9330,0.4276,0.4731
+EKF gate + spread k=20,no distortion,14,BOOST_NEGPULSE,0.8672,0.3777,0.3186
+EKF gate + spread k=20,no distortion,15,BOOST_NEGPULSE,0.7944,1.9353,1.8995
+EKF gate + spread k=20,no distortion,16,BOOST_NEGPULSE,0.7612,3.1151,2.6552
+EKF gate + spread k=20,no distortion,17,BOOST_NEGPULSE,0.6821,1.8355,1.3617
+EKF gate + spread k=20,no distortion,18,BOOST_REST,1.0000,0.7382,0.6807
+EKF gate + spread k=20,no distortion,19,BOOST_REST,0.9384,0.4857,0.4781
+EKF gate + spread k=20,no distortion,20,BOOST_REST,0.8642,0.3855,0.2519
+EKF gate + spread k=20,no distortion,21,BOOST_REST,0.7854,3.1783,3.1988
+EKF gate + spread k=20,no distortion,22,BOOST_REST,0.7398,4.5678,4.3399
+EKF gate + spread k=20,no distortion,23,BOOST_REST,0.6915,4.5005,4.3179
+EKF gate + spread k=20,no distortion,24,CC_CELL2,1.0000,0.6894,0.7027
+EKF gate + spread k=20,no distortion,25,CC_CELL2,0.9320,0.8777,0.9692
+EKF gate + spread k=20,no distortion,26,CC_CELL2,0.8829,0.9023,1.0254
+EKF gate + spread k=20,no distortion,27,CC_CELL2,0.8282,0.7594,0.8354
+EKF gate + spread k=20,no distortion,28,CC_CELL2,0.7679,0.6925,0.3414
+EKF gate + spread k=20,no distortion,29,CC_CELL2,0.6870,3.3690,2.7597
+EKF gate + spread k=20,no distortion,30,BOOST_NEGPULSE_1S,0.9909,0.6428,0.6913
+EKF gate + spread k=20,no distortion,31,BOOST_NEGPULSE_1S,0.9339,0.3522,0.4955
+EKF gate + spread k=20,no distortion,32,BOOST_NEGPULSE_1S,0.8724,0.2363,0.1144
+EKF gate + spread k=20,no distortion,33,BOOST_NEGPULSE_1S,0.8251,0.5359,0.0381
+EKF gate + spread k=20,no distortion,34,BOOST_NEGPULSE_1S,0.8251,1.5993,1.7935
+EKF gate + spread k=20,no distortion,35,BOOST_NEGPULSE_1S,0.6925,2.2820,2.8834
+EKF gate + spread k=20,initial SOC +10 %p,0,CC,1.0000,1.1037,0.9162
+EKF gate + spread k=20,initial SOC +10 %p,1,CC,0.9468,0.7497,0.8213
+EKF gate + spread k=20,initial SOC +10 %p,2,CC,0.9024,0.9729,0.9971
+EKF gate + spread k=20,initial SOC +10 %p,3,CC,0.8622,1.1518,1.2104
+EKF gate + spread k=20,initial SOC +10 %p,4,CC,0.7986,0.9426,0.7222
+EKF gate + spread k=20,initial SOC +10 %p,5,CC,0.6957,1.1912,1.1585
+EKF gate + spread k=20,initial SOC +10 %p,6,BOOST,1.0000,1.0182,0.7796
+EKF gate + spread k=20,initial SOC +10 %p,7,BOOST,0.9438,0.8527,0.9378
+EKF gate + spread k=20,initial SOC +10 %p,8,BOOST,0.8960,0.9976,1.1221
+EKF gate + spread k=20,initial SOC +10 %p,9,BOOST,0.8507,0.8118,0.8333
+EKF gate + spread k=20,initial SOC +10 %p,10,BOOST,0.7809,1.0394,1.0226
+EKF gate + spread k=20,initial SOC +10 %p,11,BOOST,0.6921,0.8663,0.3881
+EKF gate + spread k=20,initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,0.9140,0.6755
+EKF gate + spread k=20,initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,0.5762,0.4760
+EKF gate + spread k=20,initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,0.5452,0.2851
+EKF gate + spread k=20,initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,1.9860,1.8684
+EKF gate + spread k=20,initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,3.2435,2.7475
+EKF gate + spread k=20,initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,1.8667,1.3044
+EKF gate + spread k=20,initial SOC +10 %p,18,BOOST_REST,1.0000,0.8865,0.6798
+EKF gate + spread k=20,initial SOC +10 %p,19,BOOST_REST,0.9384,0.6212,0.4806
+EKF gate + spread k=20,initial SOC +10 %p,20,BOOST_REST,0.8642,0.5578,0.2200
+EKF gate + spread k=20,initial SOC +10 %p,21,BOOST_REST,0.7854,3.2220,3.1953
+EKF gate + spread k=20,initial SOC +10 %p,22,BOOST_REST,0.7398,4.7122,4.4572
+EKF gate + spread k=20,initial SOC +10 %p,23,BOOST_REST,0.6915,4.5269,4.3232
+EKF gate + spread k=20,initial SOC +10 %p,24,CC_CELL2,1.0000,0.8634,0.7019
+EKF gate + spread k=20,initial SOC +10 %p,25,CC_CELL2,0.9320,0.9608,0.9740
+EKF gate + spread k=20,initial SOC +10 %p,26,CC_CELL2,0.8829,1.0170,1.0607
+EKF gate + spread k=20,initial SOC +10 %p,27,CC_CELL2,0.8282,0.9941,0.9727
+EKF gate + spread k=20,initial SOC +10 %p,28,CC_CELL2,0.7679,0.8976,0.4253
+EKF gate + spread k=20,initial SOC +10 %p,29,CC_CELL2,0.6870,3.8161,3.2155
+EKF gate + spread k=20,initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,0.7665,0.6893
+EKF gate + spread k=20,initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.5244,0.5015
+EKF gate + spread k=20,initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.4683,0.1528
+EKF gate + spread k=20,initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,0.6988,0.0316
+EKF gate + spread k=20,initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,1.7617,1.9047
+EKF gate + spread k=20,initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,2.5855,3.1424
+EKF gate + spread k=20,initial SOC -10 %p,0,CC,1.0000,1.0916,0.9070
+EKF gate + spread k=20,initial SOC -10 %p,1,CC,0.9468,0.7980,0.8284
+EKF gate + spread k=20,initial SOC -10 %p,2,CC,0.9024,0.9796,1.0102
+EKF gate + spread k=20,initial SOC -10 %p,3,CC,0.8622,1.1748,1.2349
+EKF gate + spread k=20,initial SOC -10 %p,4,CC,0.7986,0.7772,0.8455
+EKF gate + spread k=20,initial SOC -10 %p,5,CC,0.6957,1.0716,1.2549
+EKF gate + spread k=20,initial SOC -10 %p,6,BOOST,1.0000,0.9857,0.7794
+EKF gate + spread k=20,initial SOC -10 %p,7,BOOST,0.9438,0.8797,0.9429
+EKF gate + spread k=20,initial SOC -10 %p,8,BOOST,0.8960,1.0074,1.1361
+EKF gate + spread k=20,initial SOC -10 %p,9,BOOST,0.8507,0.8296,0.8656
+EKF gate + spread k=20,initial SOC -10 %p,10,BOOST,0.7809,1.0637,1.1511
+EKF gate + spread k=20,initial SOC -10 %p,11,BOOST,0.6921,0.6074,0.4044
+EKF gate + spread k=20,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,0.9950,0.6649
+EKF gate + spread k=20,initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,0.6364,0.4824
+EKF gate + spread k=20,initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,0.4913,0.2645
+EKF gate + spread k=20,initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,1.7878,1.8005
+EKF gate + spread k=20,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,2.7373,2.3897
+EKF gate + spread k=20,initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,1.6218,1.2008
+EKF gate + spread k=20,initial SOC -10 %p,18,BOOST_REST,1.0000,0.9671,0.6772
+EKF gate + spread k=20,initial SOC -10 %p,19,BOOST_REST,0.9384,0.6811,0.4864
+EKF gate + spread k=20,initial SOC -10 %p,20,BOOST_REST,0.8642,0.4851,0.1997
+EKF gate + spread k=20,initial SOC -10 %p,21,BOOST_REST,0.7854,2.9704,3.0638
+EKF gate + spread k=20,initial SOC -10 %p,22,BOOST_REST,0.7398,4.2947,4.1720
+EKF gate + spread k=20,initial SOC -10 %p,23,BOOST_REST,0.6915,4.3201,4.2260
+EKF gate + spread k=20,initial SOC -10 %p,24,CC_CELL2,1.0000,0.9575,0.7019
+EKF gate + spread k=20,initial SOC -10 %p,25,CC_CELL2,0.9320,0.9607,0.9797
+EKF gate + spread k=20,initial SOC -10 %p,26,CC_CELL2,0.8829,1.0268,1.0725
+EKF gate + spread k=20,initial SOC -10 %p,27,CC_CELL2,0.8282,1.0103,1.0033
+EKF gate + spread k=20,initial SOC -10 %p,28,CC_CELL2,0.7679,0.7388,0.5872
+EKF gate + spread k=20,initial SOC -10 %p,29,CC_CELL2,0.6870,3.1257,2.6157
+EKF gate + spread k=20,initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,0.9311,0.6867
+EKF gate + spread k=20,initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.6200,0.5099
+EKF gate + spread k=20,initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.4487,0.1826
+EKF gate + spread k=20,initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,0.5246,0.1063
+EKF gate + spread k=20,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,1.8720,2.0626
+EKF gate + spread k=20,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,2.5959,3.2303
+EKF gate + spread k=20,current offset +0.10 A,0,CC,1.0000,7.2779,11.9599
+EKF gate + spread k=20,current offset +0.10 A,1,CC,0.9468,7.7674,12.5926
+EKF gate + spread k=20,current offset +0.10 A,2,CC,0.9024,7.7023,12.5668
+EKF gate + spread k=20,current offset +0.10 A,3,CC,0.8622,7.6118,12.3786
+EKF gate + spread k=20,current offset +0.10 A,4,CC,0.7986,7.9834,12.6803
+EKF gate + spread k=20,current offset +0.10 A,5,CC,0.6957,7.7097,12.2301
+EKF gate + spread k=20,current offset +0.10 A,6,BOOST,1.0000,7.3825,12.0701
+EKF gate + spread k=20,current offset +0.10 A,7,BOOST,0.9438,7.6010,12.3606
+EKF gate + spread k=20,current offset +0.10 A,8,BOOST,0.8960,7.6589,12.4395
+EKF gate + spread k=20,current offset +0.10 A,9,BOOST,0.8507,7.9761,12.7494
+EKF gate + spread k=20,current offset +0.10 A,10,BOOST,0.7809,7.8150,12.5587
+EKF gate + spread k=20,current offset +0.10 A,11,BOOST,0.6921,7.6730,11.9520
+EKF gate + spread k=20,current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,7.1939,11.8003
+EKF gate + spread k=20,current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,7.9809,12.8798
+EKF gate + spread k=20,current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,8.6774,13.6428
+EKF gate + spread k=20,current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,9.4694,14.3078
+EKF gate + spread k=20,current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,9.9546,14.2102
+EKF gate + spread k=20,current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,8.4360,12.2892
+EKF gate + spread k=20,current offset +0.10 A,18,BOOST_REST,1.0000,7.3702,12.1012
+EKF gate + spread k=20,current offset +0.10 A,19,BOOST_REST,0.9384,7.8770,12.8006
+EKF gate + spread k=20,current offset +0.10 A,20,BOOST_REST,0.8642,8.6147,13.5289
+EKF gate + spread k=20,current offset +0.10 A,21,BOOST_REST,0.7854,10.1495,14.3813
+EKF gate + spread k=20,current offset +0.10 A,22,BOOST_REST,0.7398,11.2398,15.7099
+EKF gate + spread k=20,current offset +0.10 A,23,BOOST_REST,0.6915,9.8346,12.3124
+EKF gate + spread k=20,current offset +0.10 A,24,CC_CELL2,1.0000,7.3936,12.0572
+EKF gate + spread k=20,current offset +0.10 A,25,CC_CELL2,0.9320,7.6043,12.4168
+EKF gate + spread k=20,current offset +0.10 A,26,CC_CELL2,0.8829,7.6536,12.4275
+EKF gate + spread k=20,current offset +0.10 A,27,CC_CELL2,0.8282,7.7824,12.5235
+EKF gate + spread k=20,current offset +0.10 A,28,CC_CELL2,0.7679,8.0582,12.8903
+EKF gate + spread k=20,current offset +0.10 A,29,CC_CELL2,0.6870,9.6963,13.7582
+EKF gate + spread k=20,current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,7.5134,12.2571
+EKF gate + spread k=20,current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,8.0415,12.9462
+EKF gate + spread k=20,current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,8.5509,13.6018
+EKF gate + spread k=20,current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,8.5741,13.5885
+EKF gate + spread k=20,current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,7.1038,11.7899
+EKF gate + spread k=20,current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,6.5300,10.7734
+EKF gate + spread k=20,current offset -0.10 A,0,CC,1.0000,7.5936,11.2619
+EKF gate + spread k=20,current offset -0.10 A,1,CC,0.9468,8.0174,12.6251
+EKF gate + spread k=20,current offset -0.10 A,2,CC,0.9024,8.3321,12.8216
+EKF gate + spread k=20,current offset -0.10 A,3,CC,0.8622,8.4810,12.9311
+EKF gate + spread k=20,current offset -0.10 A,4,CC,0.7986,6.8843,9.4613
+EKF gate + spread k=20,current offset -0.10 A,5,CC,0.6957,7.4172,11.2610
+EKF gate + spread k=20,current offset -0.10 A,6,BOOST,1.0000,7.3959,10.9098
+EKF gate + spread k=20,current offset -0.10 A,7,BOOST,0.9438,8.4005,13.3149
+EKF gate + spread k=20,current offset -0.10 A,8,BOOST,0.8960,8.4946,13.2442
+EKF gate + spread k=20,current offset -0.10 A,9,BOOST,0.8507,8.2530,12.6968
+EKF gate + spread k=20,current offset -0.10 A,10,BOOST,0.7809,7.2496,9.7495
+EKF gate + spread k=20,current offset -0.10 A,11,BOOST,0.6921,6.5324,9.4612
+EKF gate + spread k=20,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,7.7024,11.5280
+EKF gate + spread k=20,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,7.9514,12.5063
+EKF gate + spread k=20,current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,7.1770,11.1557
+EKF gate + spread k=20,current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,4.5472,5.8449
+EKF gate + spread k=20,current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,5.7290,9.0566
+EKF gate + spread k=20,current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,6.9096,11.1415
+EKF gate + spread k=20,current offset -0.10 A,18,BOOST_REST,1.0000,7.5633,11.3716
+EKF gate + spread k=20,current offset -0.10 A,19,BOOST_REST,0.9384,8.1162,12.8139
+EKF gate + spread k=20,current offset -0.10 A,20,BOOST_REST,0.8642,7.2171,11.1989
+EKF gate + spread k=20,current offset -0.10 A,21,BOOST_REST,0.7854,4.5265,6.5630
+EKF gate + spread k=20,current offset -0.10 A,22,BOOST_REST,0.7398,4.4709,6.2076
+EKF gate + spread k=20,current offset -0.10 A,23,BOOST_REST,0.6915,5.2855,8.2172
+EKF gate + spread k=20,current offset -0.10 A,24,CC_CELL2,1.0000,7.4359,11.1763
+EKF gate + spread k=20,current offset -0.10 A,25,CC_CELL2,0.9320,8.4821,13.3551
+EKF gate + spread k=20,current offset -0.10 A,26,CC_CELL2,0.8829,8.6652,13.4934
+EKF gate + spread k=20,current offset -0.10 A,27,CC_CELL2,0.8282,8.2803,12.5876
+EKF gate + spread k=20,current offset -0.10 A,28,CC_CELL2,0.7679,6.9951,9.8266
+EKF gate + spread k=20,current offset -0.10 A,29,CC_CELL2,0.6870,5.7920,9.0482
+EKF gate + spread k=20,current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,7.5989,11.5769
+EKF gate + spread k=20,current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,7.9149,12.5944
+EKF gate + spread k=20,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,7.7844,12.3211
+EKF gate + spread k=20,current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,7.6571,12.0535
+EKF gate + spread k=20,current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,9.7015,14.9152
+EKF gate + spread k=20,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,9.8108,15.0189
+EKF gate + spread k=20,current gain +1 %,0,CC,1.0000,1.1153,1.0222
+EKF gate + spread k=20,current gain +1 %,1,CC,0.9468,0.9336,1.1398
+EKF gate + spread k=20,current gain +1 %,2,CC,0.9024,1.1394,1.2763
+EKF gate + spread k=20,current gain +1 %,3,CC,0.8622,1.2426,1.4044
+EKF gate + spread k=20,current gain +1 %,4,CC,0.7986,0.8415,0.7990
+EKF gate + spread k=20,current gain +1 %,5,CC,0.6957,1.0635,1.1747
+EKF gate + spread k=20,current gain +1 %,6,BOOST,1.0000,0.9323,0.8546
+EKF gate + spread k=20,current gain +1 %,7,BOOST,0.9438,1.0327,1.2086
+EKF gate + spread k=20,current gain +1 %,8,BOOST,0.8960,1.1641,1.3962
+EKF gate + spread k=20,current gain +1 %,9,BOOST,0.8507,0.8505,0.9960
+EKF gate + spread k=20,current gain +1 %,10,BOOST,0.7809,0.9935,1.0507
+EKF gate + spread k=20,current gain +1 %,11,BOOST,0.6921,0.7360,0.5010
+EKF gate + spread k=20,current gain +1 %,12,BOOST_NEGPULSE,1.0000,0.9654,0.6376
+EKF gate + spread k=20,current gain +1 %,13,BOOST_NEGPULSE,0.9330,0.6824,0.7203
+EKF gate + spread k=20,current gain +1 %,14,BOOST_NEGPULSE,0.8672,0.3087,0.2750
+EKF gate + spread k=20,current gain +1 %,15,BOOST_NEGPULSE,0.7944,1.7737,1.7353
+EKF gate + spread k=20,current gain +1 %,16,BOOST_NEGPULSE,0.7612,2.9473,2.4861
+EKF gate + spread k=20,current gain +1 %,17,BOOST_NEGPULSE,0.6821,1.7047,1.2245
+EKF gate + spread k=20,current gain +1 %,18,BOOST_REST,1.0000,0.9380,0.7654
+EKF gate + spread k=20,current gain +1 %,19,BOOST_REST,0.9384,0.7649,0.7844
+EKF gate + spread k=20,current gain +1 %,20,BOOST_REST,0.8642,0.3805,0.3058
+EKF gate + spread k=20,current gain +1 %,21,BOOST_REST,0.7854,2.9935,3.0157
+EKF gate + spread k=20,current gain +1 %,22,BOOST_REST,0.7398,4.3982,4.1972
+EKF gate + spread k=20,current gain +1 %,23,BOOST_REST,0.6915,4.3334,4.1693
+EKF gate + spread k=20,current gain +1 %,24,CC_CELL2,1.0000,0.9063,0.8732
+EKF gate + spread k=20,current gain +1 %,25,CC_CELL2,0.9320,1.1540,1.2824
+EKF gate + spread k=20,current gain +1 %,26,CC_CELL2,0.8829,1.1578,1.3020
+EKF gate + spread k=20,current gain +1 %,27,CC_CELL2,0.8282,0.9954,1.0750
+EKF gate + spread k=20,current gain +1 %,28,CC_CELL2,0.7679,0.8186,0.5446
+EKF gate + spread k=20,current gain +1 %,29,CC_CELL2,0.6870,3.2170,2.5924
+EKF gate + spread k=20,current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,0.8405,0.7636
+EKF gate + spread k=20,current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,0.6493,0.8179
+EKF gate + spread k=20,current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,0.3800,0.4178
+EKF gate + spread k=20,current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,0.5532,0.2785
+EKF gate + spread k=20,current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,1.8425,2.0606
+EKF gate + spread k=20,current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,2.4922,3.1532
+EKF gate + spread k=20,current gain -1 %,0,CC,1.0000,0.7211,0.7145
+EKF gate + spread k=20,current gain -1 %,1,CC,0.9468,0.4392,0.5750
+EKF gate + spread k=20,current gain -1 %,2,CC,0.9024,0.6512,0.7282
+EKF gate + spread k=20,current gain -1 %,3,CC,0.8622,0.7786,0.8830
+EKF gate + spread k=20,current gain -1 %,4,CC,0.7986,0.6224,0.4275
+EKF gate + spread k=20,current gain -1 %,5,CC,0.6957,0.7920,0.5980
+EKF gate + spread k=20,current gain -1 %,6,BOOST,1.0000,0.6347,0.6592
+EKF gate + spread k=20,current gain -1 %,7,BOOST,0.9438,0.5387,0.6972
+EKF gate + spread k=20,current gain -1 %,8,BOOST,0.8960,0.6677,0.8437
+EKF gate + spread k=20,current gain -1 %,9,BOOST,0.8507,0.4200,0.5509
+EKF gate + spread k=20,current gain -1 %,10,BOOST,0.7809,0.6094,0.6756
+EKF gate + spread k=20,current gain -1 %,11,BOOST,0.6921,0.6136,0.1921
+EKF gate + spread k=20,current gain -1 %,12,BOOST_NEGPULSE,1.0000,0.6712,0.7094
+EKF gate + spread k=20,current gain -1 %,13,BOOST_NEGPULSE,0.9330,0.2900,0.3037
+EKF gate + spread k=20,current gain -1 %,14,BOOST_NEGPULSE,0.8672,0.6085,0.5884
+EKF gate + spread k=20,current gain -1 %,15,BOOST_NEGPULSE,0.7944,2.1217,2.0961
+EKF gate + spread k=20,current gain -1 %,16,BOOST_NEGPULSE,0.7612,3.2963,2.8353
+EKF gate + spread k=20,current gain -1 %,17,BOOST_NEGPULSE,0.6821,1.9870,1.5146
+EKF gate + spread k=20,current gain -1 %,18,BOOST_REST,1.0000,0.5613,0.5478
+EKF gate + spread k=20,current gain -1 %,19,BOOST_REST,0.9384,0.3191,0.2933
+EKF gate + spread k=20,current gain -1 %,20,BOOST_REST,0.8642,0.5758,0.4940
+EKF gate + spread k=20,current gain -1 %,21,BOOST_REST,0.7854,3.3762,3.3960
+EKF gate + spread k=20,current gain -1 %,22,BOOST_REST,0.7398,4.7475,4.4957
+EKF gate + spread k=20,current gain -1 %,23,BOOST_REST,0.6915,4.6816,4.4938
+EKF gate + spread k=20,current gain -1 %,24,CC_CELL2,1.0000,0.5057,0.5160
+EKF gate + spread k=20,current gain -1 %,25,CC_CELL2,0.9320,0.6659,0.7241
+EKF gate + spread k=20,current gain -1 %,26,CC_CELL2,0.8829,0.6940,0.8047
+EKF gate + spread k=20,current gain -1 %,27,CC_CELL2,0.8282,0.5670,0.6481
+EKF gate + spread k=20,current gain -1 %,28,CC_CELL2,0.7679,0.6604,0.2084
+EKF gate + spread k=20,current gain -1 %,29,CC_CELL2,0.6870,3.5364,2.9534
+EKF gate + spread k=20,current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,0.4560,0.5279
+EKF gate + spread k=20,current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,0.2475,0.3319
+EKF gate + spread k=20,current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,0.4023,0.2974
+EKF gate + spread k=20,current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,0.6661,0.3180
+EKF gate + spread k=20,current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,1.3755,1.5460
+EKF gate + spread k=20,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,2.0869,2.6261
+EKF gate + spread k=200,no distortion,0,CC,1.0000,0.7755,0.6903
+EKF gate + spread k=200,no distortion,1,CC,0.9468,0.4982,0.5466
+EKF gate + spread k=200,no distortion,2,CC,0.9024,0.7731,0.7696
+EKF gate + spread k=200,no distortion,3,CC,0.8622,0.7689,0.8191
+EKF gate + spread k=200,no distortion,4,CC,0.7986,0.8000,0.7187
+EKF gate + spread k=200,no distortion,5,CC,0.6957,1.0707,1.1154
+EKF gate + spread k=200,no distortion,6,BOOST,1.0000,0.6696,0.5927
+EKF gate + spread k=200,no distortion,7,BOOST,0.9438,0.6268,0.7519
+EKF gate + spread k=200,no distortion,8,BOOST,0.8960,0.7754,0.8852
+EKF gate + spread k=200,no distortion,9,BOOST,0.8507,0.6477,0.7222
+EKF gate + spread k=200,no distortion,10,BOOST,0.7809,1.0499,1.1201
+EKF gate + spread k=200,no distortion,11,BOOST,0.6921,0.6554,0.4092
+EKF gate + spread k=200,no distortion,12,BOOST_NEGPULSE,1.0000,0.8189,0.9377
+EKF gate + spread k=200,no distortion,13,BOOST_NEGPULSE,0.9330,0.3107,0.3154
+EKF gate + spread k=200,no distortion,14,BOOST_NEGPULSE,0.8672,0.3934,0.3716
+EKF gate + spread k=200,no distortion,15,BOOST_NEGPULSE,0.7944,1.7734,1.7257
+EKF gate + spread k=200,no distortion,16,BOOST_NEGPULSE,0.7612,2.6914,2.3620
+EKF gate + spread k=200,no distortion,17,BOOST_NEGPULSE,0.6821,1.6772,1.2869
+EKF gate + spread k=200,no distortion,18,BOOST_REST,1.0000,0.6779,0.6676
+EKF gate + spread k=200,no distortion,19,BOOST_REST,0.9384,0.3701,0.2856
+EKF gate + spread k=200,no distortion,20,BOOST_REST,0.8642,0.4011,0.3346
+EKF gate + spread k=200,no distortion,21,BOOST_REST,0.7854,3.0441,3.2175
+EKF gate + spread k=200,no distortion,22,BOOST_REST,0.7398,4.2323,4.1910
+EKF gate + spread k=200,no distortion,23,BOOST_REST,0.6915,4.2577,4.2320
+EKF gate + spread k=200,no distortion,24,CC_CELL2,1.0000,0.5865,0.5646
+EKF gate + spread k=200,no distortion,25,CC_CELL2,0.9320,0.7560,0.7340
+EKF gate + spread k=200,no distortion,26,CC_CELL2,0.8829,0.8300,0.8945
+EKF gate + spread k=200,no distortion,27,CC_CELL2,0.8282,0.8886,0.9652
+EKF gate + spread k=200,no distortion,28,CC_CELL2,0.7679,0.7709,0.5915
+EKF gate + spread k=200,no distortion,29,CC_CELL2,0.6870,3.1061,2.7236
+EKF gate + spread k=200,no distortion,30,BOOST_NEGPULSE_1S,0.9909,0.5179,0.5686
+EKF gate + spread k=200,no distortion,31,BOOST_NEGPULSE_1S,0.9339,0.1960,0.2422
+EKF gate + spread k=200,no distortion,32,BOOST_NEGPULSE_1S,0.8724,0.2410,0.0876
+EKF gate + spread k=200,no distortion,33,BOOST_NEGPULSE_1S,0.8251,0.4974,0.0547
+EKF gate + spread k=200,no distortion,34,BOOST_NEGPULSE_1S,0.8251,1.7340,1.9150
+EKF gate + spread k=200,no distortion,35,BOOST_NEGPULSE_1S,0.6925,2.2623,2.8112
+EKF gate + spread k=200,initial SOC +10 %p,0,CC,1.0000,2.5286,1.3026
+EKF gate + spread k=200,initial SOC +10 %p,1,CC,0.9468,0.6392,0.5622
+EKF gate + spread k=200,initial SOC +10 %p,2,CC,0.9024,0.9457,0.7669
+EKF gate + spread k=200,initial SOC +10 %p,3,CC,0.8622,1.1900,1.0255
+EKF gate + spread k=200,initial SOC +10 %p,4,CC,0.7986,1.5068,0.2218
+EKF gate + spread k=200,initial SOC +10 %p,5,CC,0.6957,1.6012,0.9898
+EKF gate + spread k=200,initial SOC +10 %p,6,BOOST,1.0000,2.7961,1.3063
+EKF gate + spread k=200,initial SOC +10 %p,7,BOOST,0.9438,0.7515,0.7665
+EKF gate + spread k=200,initial SOC +10 %p,8,BOOST,0.8960,1.0059,0.8899
+EKF gate + spread k=200,initial SOC +10 %p,9,BOOST,0.8507,1.1442,0.6512
+EKF gate + spread k=200,initial SOC +10 %p,10,BOOST,0.7809,1.4792,0.7799
+EKF gate + spread k=200,initial SOC +10 %p,11,BOOST,0.6921,1.6087,0.1682
+EKF gate + spread k=200,initial SOC +10 %p,12,BOOST_NEGPULSE,1.0000,1.6373,1.0794
+EKF gate + spread k=200,initial SOC +10 %p,13,BOOST_NEGPULSE,0.9330,0.6019,0.3250
+EKF gate + spread k=200,initial SOC +10 %p,14,BOOST_NEGPULSE,0.8672,1.2059,0.4528
+EKF gate + spread k=200,initial SOC +10 %p,15,BOOST_NEGPULSE,0.7944,2.4472,1.9532
+EKF gate + spread k=200,initial SOC +10 %p,16,BOOST_NEGPULSE,0.7612,3.4240,2.7292
+EKF gate + spread k=200,initial SOC +10 %p,17,BOOST_NEGPULSE,0.6821,2.2430,1.4095
+EKF gate + spread k=200,initial SOC +10 %p,18,BOOST_REST,1.0000,1.8339,1.0578
+EKF gate + spread k=200,initial SOC +10 %p,19,BOOST_REST,0.9384,0.5310,0.3020
+EKF gate + spread k=200,initial SOC +10 %p,20,BOOST_REST,0.8642,1.2517,0.4244
+EKF gate + spread k=200,initial SOC +10 %p,21,BOOST_REST,0.7854,3.5869,3.4055
+EKF gate + spread k=200,initial SOC +10 %p,22,BOOST_REST,0.7398,4.7411,4.3962
+EKF gate + spread k=200,initial SOC +10 %p,23,BOOST_REST,0.6915,4.6113,4.3273
+EKF gate + spread k=200,initial SOC +10 %p,24,CC_CELL2,1.0000,2.0236,0.9909
+EKF gate + spread k=200,initial SOC +10 %p,25,CC_CELL2,0.9320,0.8300,0.7466
+EKF gate + spread k=200,initial SOC +10 %p,26,CC_CELL2,0.8829,1.0158,0.9135
+EKF gate + spread k=200,initial SOC +10 %p,27,CC_CELL2,0.8282,1.2201,0.8367
+EKF gate + spread k=200,initial SOC +10 %p,28,CC_CELL2,0.7679,1.5361,0.2469
+EKF gate + spread k=200,initial SOC +10 %p,29,CC_CELL2,0.6870,3.9865,3.3173
+EKF gate + spread k=200,initial SOC +10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.2434,0.7551
+EKF gate + spread k=200,initial SOC +10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.5415,0.2594
+EKF gate + spread k=200,initial SOC +10 %p,32,BOOST_NEGPULSE_1S,0.8724,1.0285,0.1294
+EKF gate + spread k=200,initial SOC +10 %p,33,BOOST_NEGPULSE_1S,0.8251,1.3661,0.1961
+EKF gate + spread k=200,initial SOC +10 %p,34,BOOST_NEGPULSE_1S,0.8251,1.9294,1.7653
+EKF gate + spread k=200,initial SOC +10 %p,35,BOOST_NEGPULSE_1S,0.6925,2.2038,2.3101
+EKF gate + spread k=200,initial SOC -10 %p,0,CC,1.0000,1.2071,0.1627
+EKF gate + spread k=200,initial SOC -10 %p,1,CC,0.9468,0.7340,0.1464
+EKF gate + spread k=200,initial SOC -10 %p,2,CC,0.9024,0.8066,0.7477
+EKF gate + spread k=200,initial SOC -10 %p,3,CC,0.8622,1.1024,1.1008
+EKF gate + spread k=200,initial SOC -10 %p,4,CC,0.7986,0.9152,0.8427
+EKF gate + spread k=200,initial SOC -10 %p,5,CC,0.6957,1.3267,1.4475
+EKF gate + spread k=200,initial SOC -10 %p,6,BOOST,1.0000,1.2994,0.2622
+EKF gate + spread k=200,initial SOC -10 %p,7,BOOST,0.9438,0.7057,0.4679
+EKF gate + spread k=200,initial SOC -10 %p,8,BOOST,0.8960,0.8480,0.8943
+EKF gate + spread k=200,initial SOC -10 %p,9,BOOST,0.8507,0.8177,0.7905
+EKF gate + spread k=200,initial SOC -10 %p,10,BOOST,0.7809,1.2591,1.2378
+EKF gate + spread k=200,initial SOC -10 %p,11,BOOST,0.6921,1.3500,1.2953
+EKF gate + spread k=200,initial SOC -10 %p,12,BOOST_NEGPULSE,1.0000,1.1212,0.2481
+EKF gate + spread k=200,initial SOC -10 %p,13,BOOST_NEGPULSE,0.9330,0.7103,0.0818
+EKF gate + spread k=200,initial SOC -10 %p,14,BOOST_NEGPULSE,0.8672,0.5127,0.3425
+EKF gate + spread k=200,initial SOC -10 %p,15,BOOST_NEGPULSE,0.7944,1.4590,1.5649
+EKF gate + spread k=200,initial SOC -10 %p,16,BOOST_NEGPULSE,0.7612,2.0139,1.9565
+EKF gate + spread k=200,initial SOC -10 %p,17,BOOST_NEGPULSE,0.6821,0.9207,0.5517
+EKF gate + spread k=200,initial SOC -10 %p,18,BOOST_REST,1.0000,1.2253,0.4262
+EKF gate + spread k=200,initial SOC -10 %p,19,BOOST_REST,0.9384,0.8026,0.0457
+EKF gate + spread k=200,initial SOC -10 %p,20,BOOST_REST,0.8642,0.4852,0.3004
+EKF gate + spread k=200,initial SOC -10 %p,21,BOOST_REST,0.7854,2.3562,2.6679
+EKF gate + spread k=200,initial SOC -10 %p,22,BOOST_REST,0.7398,3.2767,3.4803
+EKF gate + spread k=200,initial SOC -10 %p,23,BOOST_REST,0.6915,2.7533,2.8778
+EKF gate + spread k=200,initial SOC -10 %p,24,CC_CELL2,1.0000,1.3360,0.2366
+EKF gate + spread k=200,initial SOC -10 %p,25,CC_CELL2,0.9320,0.7024,0.4710
+EKF gate + spread k=200,initial SOC -10 %p,26,CC_CELL2,0.8829,0.9266,0.9416
+EKF gate + spread k=200,initial SOC -10 %p,27,CC_CELL2,0.8282,1.1180,1.0551
+EKF gate + spread k=200,initial SOC -10 %p,28,CC_CELL2,0.7679,0.7767,0.7051
+EKF gate + spread k=200,initial SOC -10 %p,29,CC_CELL2,0.6870,1.8406,1.7439
+EKF gate + spread k=200,initial SOC -10 %p,30,BOOST_NEGPULSE_1S,0.9909,1.2801,0.3285
+EKF gate + spread k=200,initial SOC -10 %p,31,BOOST_NEGPULSE_1S,0.9339,0.7971,0.0527
+EKF gate + spread k=200,initial SOC -10 %p,32,BOOST_NEGPULSE_1S,0.8724,0.4656,0.0684
+EKF gate + spread k=200,initial SOC -10 %p,33,BOOST_NEGPULSE_1S,0.8251,0.3907,0.0282
+EKF gate + spread k=200,initial SOC -10 %p,34,BOOST_NEGPULSE_1S,0.8251,1.9139,2.0983
+EKF gate + spread k=200,initial SOC -10 %p,35,BOOST_NEGPULSE_1S,0.6925,3.1973,3.6837
+EKF gate + spread k=200,current offset +0.10 A,0,CC,1.0000,7.7061,12.6878
+EKF gate + spread k=200,current offset +0.10 A,1,CC,0.9468,9.1551,14.4111
+EKF gate + spread k=200,current offset +0.10 A,2,CC,0.9024,7.8344,12.8329
+EKF gate + spread k=200,current offset +0.10 A,3,CC,0.8622,9.9741,15.4249
+EKF gate + spread k=200,current offset +0.10 A,4,CC,0.7986,7.7032,12.5626
+EKF gate + spread k=200,current offset +0.10 A,5,CC,0.6957,7.8758,12.4738
+EKF gate + spread k=200,current offset +0.10 A,6,BOOST,1.0000,7.8146,12.7939
+EKF gate + spread k=200,current offset +0.10 A,7,BOOST,0.9438,9.0601,14.2760
+EKF gate + spread k=200,current offset +0.10 A,8,BOOST,0.8960,9.1524,14.3962
+EKF gate + spread k=200,current offset +0.10 A,9,BOOST,0.8507,9.1429,14.3751
+EKF gate + spread k=200,current offset +0.10 A,10,BOOST,0.7809,7.4730,12.2916
+EKF gate + spread k=200,current offset +0.10 A,11,BOOST,0.6921,7.6390,12.3115
+EKF gate + spread k=200,current offset +0.10 A,12,BOOST_NEGPULSE,1.0000,7.5237,12.3554
+EKF gate + spread k=200,current offset +0.10 A,13,BOOST_NEGPULSE,0.9330,9.5107,14.8623
+EKF gate + spread k=200,current offset +0.10 A,14,BOOST_NEGPULSE,0.8672,8.5279,13.6725
+EKF gate + spread k=200,current offset +0.10 A,15,BOOST_NEGPULSE,0.7944,9.4634,14.7651
+EKF gate + spread k=200,current offset +0.10 A,16,BOOST_NEGPULSE,0.7612,9.6478,14.1733
+EKF gate + spread k=200,current offset +0.10 A,17,BOOST_NEGPULSE,0.6821,8.5231,12.3733
+EKF gate + spread k=200,current offset +0.10 A,18,BOOST_REST,1.0000,7.7045,12.6558
+EKF gate + spread k=200,current offset +0.10 A,19,BOOST_REST,0.9384,9.4435,14.8517
+EKF gate + spread k=200,current offset +0.10 A,20,BOOST_REST,0.8642,8.4843,13.6234
+EKF gate + spread k=200,current offset +0.10 A,21,BOOST_REST,0.7854,9.8807,14.3659
+EKF gate + spread k=200,current offset +0.10 A,22,BOOST_REST,0.7398,10.9423,15.7495
+EKF gate + spread k=200,current offset +0.10 A,23,BOOST_REST,0.6915,9.8225,12.3388
+EKF gate + spread k=200,current offset +0.10 A,24,CC_CELL2,1.0000,7.8054,12.7767
+EKF gate + spread k=200,current offset +0.10 A,25,CC_CELL2,0.9320,7.9315,12.9411
+EKF gate + spread k=200,current offset +0.10 A,26,CC_CELL2,0.8829,9.0886,14.3395
+EKF gate + spread k=200,current offset +0.10 A,27,CC_CELL2,0.8282,8.6315,13.7647
+EKF gate + spread k=200,current offset +0.10 A,28,CC_CELL2,0.7679,7.7729,12.6551
+EKF gate + spread k=200,current offset +0.10 A,29,CC_CELL2,0.6870,9.7191,13.7833
+EKF gate + spread k=200,current offset +0.10 A,30,BOOST_NEGPULSE_1S,0.9909,9.1273,14.3872
+EKF gate + spread k=200,current offset +0.10 A,31,BOOST_NEGPULSE_1S,0.9339,10.1706,15.6256
+EKF gate + spread k=200,current offset +0.10 A,32,BOOST_NEGPULSE_1S,0.8724,8.3975,13.4947
+EKF gate + spread k=200,current offset +0.10 A,33,BOOST_NEGPULSE_1S,0.8251,8.2891,13.3139
+EKF gate + spread k=200,current offset +0.10 A,34,BOOST_NEGPULSE_1S,0.8251,7.0675,11.7543
+EKF gate + spread k=200,current offset +0.10 A,35,BOOST_NEGPULSE_1S,0.6925,6.1100,10.2588
+EKF gate + spread k=200,current offset -0.10 A,0,CC,1.0000,8.0993,11.6494
+EKF gate + spread k=200,current offset -0.10 A,1,CC,0.9468,10.1157,15.0689
+EKF gate + spread k=200,current offset -0.10 A,2,CC,0.9024,10.4941,15.9896
+EKF gate + spread k=200,current offset -0.10 A,3,CC,0.8622,9.9390,15.3612
+EKF gate + spread k=200,current offset -0.10 A,4,CC,0.7986,8.6360,13.7872
+EKF gate + spread k=200,current offset -0.10 A,5,CC,0.6957,8.4354,13.3000
+EKF gate + spread k=200,current offset -0.10 A,6,BOOST,1.0000,7.7147,10.9930
+EKF gate + spread k=200,current offset -0.10 A,7,BOOST,0.9438,10.2179,15.0772
+EKF gate + spread k=200,current offset -0.10 A,8,BOOST,0.8960,10.4122,15.9730
+EKF gate + spread k=200,current offset -0.10 A,9,BOOST,0.8507,9.3422,14.6839
+EKF gate + spread k=200,current offset -0.10 A,10,BOOST,0.7809,9.0198,14.2817
+EKF gate + spread k=200,current offset -0.10 A,11,BOOST,0.6921,8.3991,13.4411
+EKF gate + spread k=200,current offset -0.10 A,12,BOOST_NEGPULSE,1.0000,8.4435,12.0591
+EKF gate + spread k=200,current offset -0.10 A,13,BOOST_NEGPULSE,0.9330,10.3546,15.8647
+EKF gate + spread k=200,current offset -0.10 A,14,BOOST_NEGPULSE,0.8672,8.1771,13.2169
+EKF gate + spread k=200,current offset -0.10 A,15,BOOST_NEGPULSE,0.7944,6.6636,11.1535
+EKF gate + spread k=200,current offset -0.10 A,16,BOOST_NEGPULSE,0.7612,6.1335,10.3033
+EKF gate + spread k=200,current offset -0.10 A,17,BOOST_NEGPULSE,0.6821,7.1673,11.8625
+EKF gate + spread k=200,current offset -0.10 A,18,BOOST_REST,1.0000,8.3448,12.0178
+EKF gate + spread k=200,current offset -0.10 A,19,BOOST_REST,0.9384,10.2173,15.3285
+EKF gate + spread k=200,current offset -0.10 A,20,BOOST_REST,0.8642,8.1556,13.1790
+EKF gate + spread k=200,current offset -0.10 A,21,BOOST_REST,0.7854,5.6755,9.5124
+EKF gate + spread k=200,current offset -0.10 A,22,BOOST_REST,0.7398,5.1152,8.3029
+EKF gate + spread k=200,current offset -0.10 A,23,BOOST_REST,0.6915,5.2776,8.6920
+EKF gate + spread k=200,current offset -0.10 A,24,CC_CELL2,1.0000,8.1996,11.7542
+EKF gate + spread k=200,current offset -0.10 A,25,CC_CELL2,0.9320,9.5077,14.8244
+EKF gate + spread k=200,current offset -0.10 A,26,CC_CELL2,0.8829,10.4964,16.0484
+EKF gate + spread k=200,current offset -0.10 A,27,CC_CELL2,0.8282,9.3803,14.7165
+EKF gate + spread k=200,current offset -0.10 A,28,CC_CELL2,0.7679,8.4934,13.6225
+EKF gate + spread k=200,current offset -0.10 A,29,CC_CELL2,0.6870,6.0751,10.0508
+EKF gate + spread k=200,current offset -0.10 A,30,BOOST_NEGPULSE_1S,0.9909,9.0037,12.4866
+EKF gate + spread k=200,current offset -0.10 A,31,BOOST_NEGPULSE_1S,0.9339,9.7895,15.2177
+EKF gate + spread k=200,current offset -0.10 A,32,BOOST_NEGPULSE_1S,0.8724,8.3654,13.4735
+EKF gate + spread k=200,current offset -0.10 A,33,BOOST_NEGPULSE_1S,0.8251,8.1154,13.1710
+EKF gate + spread k=200,current offset -0.10 A,34,BOOST_NEGPULSE_1S,0.8251,9.7940,15.2426
+EKF gate + spread k=200,current offset -0.10 A,35,BOOST_NEGPULSE_1S,0.6925,10.4365,16.2098
+EKF gate + spread k=200,current gain +1 %,0,CC,1.0000,1.0663,1.0442
+EKF gate + spread k=200,current gain +1 %,1,CC,0.9468,0.7887,0.8847
+EKF gate + spread k=200,current gain +1 %,2,CC,0.9024,1.0386,1.0761
+EKF gate + spread k=200,current gain +1 %,3,CC,0.8622,1.0198,1.1009
+EKF gate + spread k=200,current gain +1 %,4,CC,0.7986,0.9975,0.9386
+EKF gate + spread k=200,current gain +1 %,5,CC,0.6957,1.2587,1.4092
+EKF gate + spread k=200,current gain +1 %,6,BOOST,1.0000,0.9456,0.9357
+EKF gate + spread k=200,current gain +1 %,7,BOOST,0.9438,0.9172,1.0773
+EKF gate + spread k=200,current gain +1 %,8,BOOST,0.8960,1.0394,1.1768
+EKF gate + spread k=200,current gain +1 %,9,BOOST,0.8507,0.8936,0.9887
+EKF gate + spread k=200,current gain +1 %,10,BOOST,0.7809,1.2692,1.3153
+EKF gate + spread k=200,current gain +1 %,11,BOOST,0.6921,0.7703,0.6325
+EKF gate + spread k=200,current gain +1 %,12,BOOST_NEGPULSE,1.0000,1.1086,1.2604
+EKF gate + spread k=200,current gain +1 %,13,BOOST_NEGPULSE,0.9330,0.5958,0.6451
+EKF gate + spread k=200,current gain +1 %,14,BOOST_NEGPULSE,0.8672,0.2950,0.2390
+EKF gate + spread k=200,current gain +1 %,15,BOOST_NEGPULSE,0.7944,1.6012,1.5312
+EKF gate + spread k=200,current gain +1 %,16,BOOST_NEGPULSE,0.7612,2.5200,2.1894
+EKF gate + spread k=200,current gain +1 %,17,BOOST_NEGPULSE,0.6821,1.5413,1.1525
+EKF gate + spread k=200,current gain +1 %,18,BOOST_REST,1.0000,0.9728,1.0150
+EKF gate + spread k=200,current gain +1 %,19,BOOST_REST,0.9384,0.6563,0.6305
+EKF gate + spread k=200,current gain +1 %,20,BOOST_REST,0.8642,0.3591,0.2697
+EKF gate + spread k=200,current gain +1 %,21,BOOST_REST,0.7854,2.8563,3.0337
+EKF gate + spread k=200,current gain +1 %,22,BOOST_REST,0.7398,4.0509,4.0255
+EKF gate + spread k=200,current gain +1 %,23,BOOST_REST,0.6915,4.0833,4.0746
+EKF gate + spread k=200,current gain +1 %,24,CC_CELL2,1.0000,0.8844,0.9264
+EKF gate + spread k=200,current gain +1 %,25,CC_CELL2,0.9320,1.0280,1.0588
+EKF gate + spread k=200,current gain +1 %,26,CC_CELL2,0.8829,1.0846,1.1798
+EKF gate + spread k=200,current gain +1 %,27,CC_CELL2,0.8282,1.1249,1.2159
+EKF gate + spread k=200,current gain +1 %,28,CC_CELL2,0.7679,0.9450,0.7937
+EKF gate + spread k=200,current gain +1 %,29,CC_CELL2,0.6870,2.9413,2.5455
+EKF gate + spread k=200,current gain +1 %,30,BOOST_NEGPULSE_1S,0.9909,0.8188,0.9130
+EKF gate + spread k=200,current gain +1 %,31,BOOST_NEGPULSE_1S,0.9339,0.5054,0.5814
+EKF gate + spread k=200,current gain +1 %,32,BOOST_NEGPULSE_1S,0.8724,0.3409,0.2737
+EKF gate + spread k=200,current gain +1 %,33,BOOST_NEGPULSE_1S,0.8251,0.5408,0.2614
+EKF gate + spread k=200,current gain +1 %,34,BOOST_NEGPULSE_1S,0.8251,1.9761,2.1796
+EKF gate + spread k=200,current gain +1 %,35,BOOST_NEGPULSE_1S,0.6925,2.4709,3.0829
+EKF gate + spread k=200,current gain -1 %,0,CC,1.0000,0.5657,0.4325
+EKF gate + spread k=200,current gain -1 %,1,CC,0.9468,0.3307,0.3441
+EKF gate + spread k=200,current gain -1 %,2,CC,0.9024,0.5676,0.5392
+EKF gate + spread k=200,current gain -1 %,3,CC,0.8622,0.5684,0.6054
+EKF gate + spread k=200,current gain -1 %,4,CC,0.7986,0.6684,0.5460
+EKF gate + spread k=200,current gain -1 %,5,CC,0.6957,0.9290,0.8404
+EKF gate + spread k=200,current gain -1 %,6,BOOST,1.0000,0.4968,0.3590
+EKF gate + spread k=200,current gain -1 %,7,BOOST,0.9438,0.4194,0.5147
+EKF gate + spread k=200,current gain -1 %,8,BOOST,0.8960,0.5687,0.6628
+EKF gate + spread k=200,current gain -1 %,9,BOOST,0.8507,0.4629,0.5379
+EKF gate + spread k=200,current gain -1 %,10,BOOST,0.7809,0.8624,0.9482
+EKF gate + spread k=200,current gain -1 %,11,BOOST,0.6921,0.6316,0.2016
+EKF gate + spread k=200,current gain -1 %,12,BOOST_NEGPULSE,1.0000,0.5946,0.6730
+EKF gate + spread k=200,current gain -1 %,13,BOOST_NEGPULSE,0.9330,0.2487,0.2490
+EKF gate + spread k=200,current gain -1 %,14,BOOST_NEGPULSE,0.8672,0.6331,0.6643
+EKF gate + spread k=200,current gain -1 %,15,BOOST_NEGPULSE,0.7944,1.9689,1.9460
+EKF gate + spread k=200,current gain -1 %,16,BOOST_NEGPULSE,0.7612,2.8774,2.5450
+EKF gate + spread k=200,current gain -1 %,17,BOOST_NEGPULSE,0.6821,1.8362,1.4416
+EKF gate + spread k=200,current gain -1 %,18,BOOST_REST,1.0000,0.4679,0.4077
+EKF gate + spread k=200,current gain -1 %,19,BOOST_REST,0.9384,0.2611,0.2178
+EKF gate + spread k=200,current gain -1 %,20,BOOST_REST,0.8642,0.6093,0.6081
+EKF gate + spread k=200,current gain -1 %,21,BOOST_REST,0.7854,3.2442,3.4127
+EKF gate + spread k=200,current gain -1 %,22,BOOST_REST,0.7398,4.4217,4.3627
+EKF gate + spread k=200,current gain -1 %,23,BOOST_REST,0.6915,4.4394,4.3964
+EKF gate + spread k=200,current gain -1 %,24,CC_CELL2,1.0000,0.4008,0.3248
+EKF gate + spread k=200,current gain -1 %,25,CC_CELL2,0.9320,0.5596,0.4963
+EKF gate + spread k=200,current gain -1 %,26,CC_CELL2,0.8829,0.6279,0.6750
+EKF gate + spread k=200,current gain -1 %,27,CC_CELL2,0.8282,0.6918,0.7646
+EKF gate + spread k=200,current gain -1 %,28,CC_CELL2,0.7679,0.6665,0.4283
+EKF gate + spread k=200,current gain -1 %,29,CC_CELL2,0.6870,3.2837,2.9161
+EKF gate + spread k=200,current gain -1 %,30,BOOST_NEGPULSE_1S,0.9909,0.3317,0.3454
+EKF gate + spread k=200,current gain -1 %,31,BOOST_NEGPULSE_1S,0.9339,0.2195,0.2519
+EKF gate + spread k=200,current gain -1 %,32,BOOST_NEGPULSE_1S,0.8724,0.4343,0.4085
+EKF gate + spread k=200,current gain -1 %,33,BOOST_NEGPULSE_1S,0.8251,0.6113,0.3273
+EKF gate + spread k=200,current gain -1 %,34,BOOST_NEGPULSE_1S,0.8251,1.5094,1.6688
+EKF gate + spread k=200,current gain -1 %,35,BOOST_NEGPULSE_1S,0.6925,2.0655,2.5493

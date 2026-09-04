@@ -85,7 +85,7 @@ claims:
     table: soc_headline.csv
     producer: "python3 repro/run_soc_headline.py"
     status: CONTRADICTED
-    replacement: "2.21 %p over the six disturbances on ESTIMATED SOH, which is the deployment condition; 2.14 %p on true SOH; 2.05 %p only if the undisturbed row is included; worst condition 3.78 %p."
+    replacement: "2.337 %p over the six disturbances, leave-one-cell-out on estimated SOH - the full deployment condition (37.24).  2.325 on true SOH.  The pre-2026-09-04 per-cell figures were 2.206 and 2.140."
     note: >
       Since 37.13 the pooled number no longer travels alone: soc_percell.csv
       breaks it into six cells, 1.834 (CC) to 2.474 (BOOST_NEGPULSE_1S), a
@@ -102,7 +102,8 @@ claims:
     note: >
       Two limits travel with every SOC number.  Each filter reads its own
       cell's characterisation surface, so unlike the SOP and SOH arms this is
-      not a leave-one-cell-out transfer and says nothing about an unseen cell.
+      SUPERSEDED 2026-09-04: the arm is leave-one-cell-out now (37.24), so
+      this no longer applies.  It described the arm until that date.
       And the dataset runs one physical cell per protocol, so holding out a
       cell holds out a protocol too; CC / CC_CELL2 is the only same-protocol
       pair, and it alone spans 1.29x of the 1.35x total.  Say "six

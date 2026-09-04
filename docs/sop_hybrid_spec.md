@@ -6322,3 +6322,53 @@ Measured on true SOH. The estimated-SOH penalty (§37.16, +0.066 %p on the
 per-cell arm) has not been re-measured on the pooled surface, so a combined
 "unseen cell and estimated SOH" figure is not available and must not be
 assembled by adding the two.
+
+### 37.24 The SOC arm is leave-one-cell-out from here
+
+§37.23 measured what it costs; this adopts it. `build_soc_runs.py` now calls
+`ecm_pool.surfaces(cell)` — the pool built from the other five cells, the same
+surface the SOP and SOH arms use — instead of `ECMSurface(cell)`.
+`--surface percell` reproduces the previous behaviour, and the tables as they
+stood are in `preserved/soc_percell_surface_2026-09-04/`.
+
+The reason is not that the per-cell numbers were wrong. They were right about
+a per-cell calibrated deployment, which is what a vehicle that characterises
+each cell it ships with actually is. The reason is that the exception had to
+be restated in every scope sentence, in the contract, in DATA.md, in
+`generalization_scope.yaml`, in the Introduction — and an exception repeated
+in six places is a revision risk in six places. One protocol for three arms
+removes it.
+
+**The adopted headline, on the full deployment condition:**
+
+| SOH given to the filter | mean of six | rank of the adopted config |
+|---|---:|---:|
+| true | 2.325 %p | 1 of 5 |
+| **estimated (ships)** | **2.337 %p** | **1 of 5** |
+| bias +0.02 | 2.582 %p | 1 of 5 |
+| bias −0.02 | 2.354 %p | 1 of 5 |
+
+Two things fall out that were not available before.
+
+**The estimated-SOH penalty nearly vanishes: +0.012 %p, against +0.068 on the
+per-cell surface.** The mechanism is straightforward — the pooled surface is
+already imperfect for the evaluated cell, so an SOH error of RMSE 0.0099 adds
+proportionally less on top. A combined "unseen cell and estimated SOH" figure
+no longer has to be refused as unmeasurable (§37.23 refused it); it is
+2.337 %p, measured directly.
+
+**The configuration choice survives the switch.** The adopted gate places
+first under all four SOH inputs on the pooled surface, as it did on the
+per-cell one (§37.16). Three placements below first still move under a +0.02
+bias. Per cell the spread is 1.998 (BOOST) to 2.751 (BOOST_REST), and
+CC_CELL2 *improves* — 2.372 → 2.279 — because the pool that excludes it still
+contains the other CC-protocol cell.
+
+**One thing is left as it was, deliberately.** `R_volt` is scheduled from the
+open-loop error of the *per-cell* model (110 mV at SOH 0.70, 15 mV at 1.00).
+The pooled surface is a worse model, so the filter is being told to trust it
+more than it should, and 2.337 %p is therefore **pessimistic by an unmeasured
+amount**. Re-fitting the schedule now would be tuning on the condition being
+reported. Doing it honestly means re-selecting inside a leave-one-cell-out
+loop, which `soc_final_loco.py` already has the machinery for, and it is a
+separate experiment rather than an adjustment to this one.

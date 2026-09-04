@@ -1,36 +1,36 @@
 config,perturbation,rmse_full_pct,rmse_tail_pct,worst_pct
 pure current integration,no distortion,0.125,0.194,0.483
 pure current integration,initial SOC +10 %p,9.953,9.906,10.143
-pure current integration,initial SOC -10 %p,10.032,10.052,10.370
+pure current integration,initial SOC -10 %p,10.035,10.060,10.370
 pure current integration,current offset +0.10 A,10.319,15.311,10.862
-pure current integration,current offset -0.10 A,10.390,15.508,11.156
+pure current integration,current offset -0.10 A,10.391,15.509,11.156
 pure current integration,current gain +1 %,0.368,0.440,0.713
 pure current integration,current gain -1 %,0.293,0.335,0.513
-EKF no gate,no distortion,3.105,2.783,7.774
-EKF no gate,initial SOC +10 %p,3.107,2.783,7.775
-EKF no gate,initial SOC -10 %p,3.105,2.783,7.773
-EKF no gate,current offset +0.10 A,2.414,2.068,6.796
-EKF no gate,current offset -0.10 A,3.956,3.810,9.015
-EKF no gate,current gain +1 %,3.136,2.801,7.768
-EKF no gate,current gain -1 %,3.078,2.772,7.784
-EKF adopted (gate),no distortion,1.509,1.534,3.855
-EKF adopted (gate),initial SOC +10 %p,1.575,1.534,3.884
-EKF adopted (gate),initial SOC -10 %p,1.567,1.534,3.869
-EKF adopted (gate),current offset +0.10 A,2.864,2.179,6.286
-EKF adopted (gate),current offset -0.10 A,3.773,3.464,6.650
-EKF adopted (gate),current gain +1 %,1.551,1.529,3.780
-EKF adopted (gate),current gain -1 %,1.513,1.584,3.939
-EKF gate + spread k=20,no distortion,0.836,0.676,3.816
-EKF gate + spread k=20,initial SOC +10 %p,1.044,0.749,4.260
-EKF gate + spread k=20,initial SOC -10 %p,0.939,0.702,3.521
-EKF gate + spread k=20,current offset +0.10 A,8.154,12.935,10.175
-EKF gate + spread k=20,current offset -0.10 A,7.561,11.530,9.047
-EKF gate + spread k=20,current gain +1 %,0.980,0.850,3.659
-EKF gate + spread k=20,current gain -1 %,0.809,0.657,3.984
-EKF gate + spread k=200,no distortion,0.775,0.638,3.336
-EKF gate + spread k=200,initial SOC +10 %p,1.506,0.767,3.920
-EKF gate + spread k=200,initial SOC -10 %p,1.042,0.671,2.602
-EKF gate + spread k=200,current offset +0.10 A,8.640,13.659,10.484
-EKF gate + spread k=200,current offset -0.10 A,8.639,13.457,10.411
-EKF gate + spread k=200,current gain +1 %,0.936,0.834,3.173
-EKF gate + spread k=200,current gain -1 %,0.739,0.612,3.510
+EKF no gate,no distortion,3.258,2.972,9.332
+EKF no gate,initial SOC +10 %p,3.260,2.972,9.332
+EKF no gate,initial SOC -10 %p,3.256,2.972,9.331
+EKF no gate,current offset +0.10 A,2.802,2.580,8.308
+EKF no gate,current offset -0.10 A,3.932,3.710,10.425
+EKF no gate,current gain +1 %,3.283,2.991,9.307
+EKF no gate,current gain -1 %,3.238,2.962,9.362
+EKF adopted (gate),no distortion,1.740,1.690,4.441
+EKF adopted (gate),initial SOC +10 %p,1.798,1.690,4.458
+EKF adopted (gate),initial SOC -10 %p,1.792,1.690,4.457
+EKF adopted (gate),current offset +0.10 A,3.067,2.483,7.141
+EKF adopted (gate),current offset -0.10 A,3.772,3.392,7.404
+EKF adopted (gate),current gain +1 %,1.776,1.692,4.442
+EKF adopted (gate),current gain -1 %,1.746,1.742,4.444
+EKF gate + spread k=20,no distortion,1.243,1.205,4.568
+EKF gate + spread k=20,initial SOC +10 %p,1.409,1.261,4.712
+EKF gate + spread k=20,initial SOC -10 %p,1.335,1.242,4.320
+EKF gate + spread k=20,current offset +0.10 A,8.152,12.765,11.240
+EKF gate + spread k=20,current offset -0.10 A,7.399,11.259,9.811
+EKF gate + spread k=20,current gain +1 %,1.368,1.342,4.398
+EKF gate + spread k=20,current gain -1 %,1.183,1.134,4.747
+EKF gate + spread k=200,no distortion,1.171,1.145,4.258
+EKF gate + spread k=200,initial SOC +10 %p,1.784,1.216,4.741
+EKF gate + spread k=200,initial SOC -10 %p,1.243,0.982,3.277
+EKF gate + spread k=200,current offset +0.10 A,8.614,13.492,10.942
+EKF gate + spread k=200,current offset -0.10 A,8.561,13.275,10.496
+EKF gate + spread k=200,current gain +1 %,1.314,1.324,4.083
+EKF gate + spread k=200,current gain -1 %,1.113,1.073,4.439

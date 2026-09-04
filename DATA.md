@@ -41,14 +41,14 @@ Samsung INR21700-30T, 3.0 Ah rated. Same cell, different aging protocol.
 | BOOST_NEGPULSE_1S | 100 | 44–1899 | boost + 1 s negative pulse |
 | BOOST_REST | 74 | 7–1368 | boost + rest |
 
-Six cells, one chemistry. **Two of the three arms hold a cell out; the SOC arm
-does not**, and a single sentence about all three is wrong about one of them.
+Six cells, one chemistry. **All three arms hold a cell out**, and all three
+read the same pooled surface.
 
 | arm | ECM surface it reads | protocol |
 |---|---|---|
 | SOP | `ecm_pool.build(holdout)` — pooled over the **other five** cells | leave-one-cell-out |
 | SOH | same folds | leave-one-cell-out |
-| SOC | `ECMSurface(cell)` — **that cell's own** rows | per-cell calibrated |
+| SOC | `ecm_pool.surfaces(cell)` — the same pool | leave-one-cell-out |
 
 The difference is in the code, not in interpretation. `ECMSurface.__init__`
 keeps `r["cell"] == cell`, so it is one cell's characterisation;
@@ -59,10 +59,11 @@ way would be leaked" (`analysis/ecm_pool.py`). `repro/build_soc_runs.py`
 attaches `ECMSurface(cell)` to every SOC run, so the EKF reads the surface of
 the cell it is driving.
 
-That makes the SOC numbers a **per-cell calibrated deployment**: they say what
-the filter does on a cell it has been characterised on, and nothing about a
-cell it has never seen. They are not comparable to the SOP and SOH held-out
-numbers, and must never be quoted as evidence of transfer.
+Until 2026-09-04 the SOC arm read `ECMSurface(cell)` — the evaluated cell's
+own rows — which made it a per-cell calibrated deployment and not comparable
+to the SOP and SOH held-out numbers. §37.23 measured the switch (2.140 →
+2.325 %p on true SOH, worst-of-six unmoved) and §37.24 adopted it, so the
+exception is gone and the three arms are one protocol.
 
 ## SOC axis
 

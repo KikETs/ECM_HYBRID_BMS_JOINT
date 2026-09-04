@@ -1,21 +1,21 @@
 soh_input,config,undisturbed_pct,mean_6_pct,worst_of_6_pct,rank_by_mean6,delta_vs_oracle_pct
-oracle,pure current integration,0.125,6.892,10.390,5,0.000
-oracle,EKF no gate,3.105,3.133,3.956,2,0.000
-oracle,EKF adopted (gate),1.509,2.140,3.773,1,0.000
-oracle,EKF gate + spread k=20,0.836,3.248,8.154,3,0.000
-oracle,EKF gate + spread k=200,0.775,3.584,8.640,4,0.000
-estimated,pure current integration,0.125,6.892,10.390,5,-0.000
-estimated,EKF no gate,3.116,3.147,3.934,2,+0.015
-estimated,EKF adopted (gate),1.592,2.206,3.780,1,+0.066
-estimated,EKF gate + spread k=20,0.971,3.332,8.149,3,+0.084
-estimated,EKF gate + spread k=200,0.909,3.619,8.644,4,+0.036
-bias +0.02,pure current integration,0.125,6.892,10.390,5,+0.000
-bias +0.02,EKF no gate,3.924,3.935,4.752,4,+0.802
-bias +0.02,EKF adopted (gate),1.900,2.405,4.329,1,+0.264
-bias +0.02,EKF gate + spread k=20,0.998,3.356,8.045,2,+0.108
-bias +0.02,EKF gate + spread k=200,0.991,3.644,9.074,3,+0.060
-bias -0.02,pure current integration,0.125,6.892,10.390,5,-0.000
-bias -0.02,EKF no gate,2.468,2.539,3.199,2,-0.594
-bias -0.02,EKF adopted (gate),1.538,2.231,3.703,1,+0.091
-bias -0.02,EKF gate + spread k=20,1.175,3.472,8.674,3,+0.224
-bias -0.02,EKF gate + spread k=200,1.087,3.664,8.844,4,+0.080
+oracle,pure current integration,0.125,6.893,10.391,5,0.000
+oracle,EKF no gate,3.258,3.295,3.932,2,0.000
+oracle,EKF adopted (gate),1.740,2.325,3.772,1,0.000
+oracle,EKF gate + spread k=20,1.243,3.474,8.152,3,0.000
+oracle,EKF gate + spread k=200,1.171,3.772,8.614,4,0.000
+estimated,pure current integration,0.125,6.893,10.391,5,+0.000
+estimated,EKF no gate,3.407,3.439,4.106,2,+0.144
+estimated,EKF adopted (gate),1.747,2.337,3.893,1,+0.012
+estimated,EKF gate + spread k=20,1.201,3.450,8.089,3,-0.025
+estimated,EKF gate + spread k=200,1.129,3.757,8.649,4,-0.014
+bias +0.02,pure current integration,0.125,6.893,10.391,5,+0.000
+bias +0.02,EKF no gate,3.984,4.006,4.703,4,+0.710
+bias +0.02,EKF adopted (gate),2.114,2.582,4.406,1,+0.257
+bias +0.02,EKF gate + spread k=20,1.413,3.604,7.966,2,+0.129
+bias +0.02,EKF gate + spread k=200,1.353,3.880,9.007,3,+0.108
+bias -0.02,pure current integration,0.125,6.893,10.391,5,-0.000
+bias -0.02,EKF no gate,2.809,2.863,3.332,2,-0.433
+bias -0.02,EKF adopted (gate),1.686,2.354,3.849,1,+0.030
+bias -0.02,EKF gate + spread k=20,1.403,3.597,8.672,3,+0.123
+bias -0.02,EKF gate + spread k=200,1.329,3.791,8.966,4,+0.019

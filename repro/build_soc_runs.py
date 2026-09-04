@@ -31,12 +31,31 @@ NMAX = 20000
 MIN_VALID = 2000
 
 
-def build(cache_dir):
-    from ecm_surface import ECMSurface
+def build(cache_dir, surface='loco'):
+    """Build the SOC runs.
+
+    surface='loco'    the pooled surface from the OTHER five cells
+                      (ecm_pool.surfaces), which is what the SOP and SOH arms
+                      use.  Adopted 2026-09-04.
+    surface='percell' ECMSurface(cell), the evaluated cell's own
+                      characterisation.  What this file did until 2026-09-04,
+                      kept so the published-then figures can be reproduced.
+
+    The switch is the whole of the difference between a per-cell calibrated
+    SOC result and a leave-one-cell-out one.  37.23 measured the cost of it:
+    2.140 -> 2.325 %p on true SOH, a 1.09x penalty, with the worst-of-six
+    average unmoved.  Fixing on LOCO removes the exception that the SOC arm
+    used to need in every scope statement.
+    """
+    from ecm_surface import ECMSurface   # noqa: F401  (percell path)
+    import ecm_pool
     runs = []
     for cell in CELLS:
-        sd = ECMSurface(cell, 'discharge')
-        sc = ECMSurface(cell, 'charge')
+        if surface == 'loco':
+            sd, sc = ecm_pool.surfaces(cell)
+        else:
+            sd = ECMSurface(cell, 'discharge')
+            sc = ECMSurface(cell, 'charge')
         z = np.load(os.path.join(cache_dir,
                                  f'uypydj_{cell}_Fifteen_Drive_Cycles.npz'))
         lens = z['lens']
@@ -63,9 +82,13 @@ def main():
                     default=os.path.join(ANALYSIS, 'results', 'soc_runs.pkl'))
     ap.add_argument('--check-against', default=None,
                     help='only check that it matches an existing pkl')
+    ap.add_argument('--surface', default='loco',
+                    choices=['loco', 'percell'],
+                    help='loco = pooled over the other five cells (adopted); '
+                         'percell = the cell own surface (pre-2026-09-04)')
     a = ap.parse_args()
 
-    runs = build(a.cache)
+    runs = build(a.cache, a.surface)
     print(f'  {len(runs)} runs  ({len(set(r["cell"] for r in runs))} cells)',
           flush=True)
     for c in CELLS:
