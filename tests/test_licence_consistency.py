@@ -12,7 +12,6 @@ licence is CORRECT -- only the depositor can settle that, and the deposit
 currently contradicts itself -- it checks that the repository says one thing.
 """
 import os
-import re
 
 import yaml
 
