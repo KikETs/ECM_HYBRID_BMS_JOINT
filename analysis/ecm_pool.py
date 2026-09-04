@@ -263,11 +263,27 @@ def build(holdout, outdir=POOL_DIR, ecm_csv=ECM_CSV, ocv_csv=OCV_CSV,
     return pe, po, len(er), len(orr)
 
 
+def _stale(pool_path, *sources):
+    """True when a pooled file predates any source it was built from.
+
+    The cache only checked EXISTENCE.  That was survivable while nothing
+    upstream moved, and stopped being survivable when the SOC arm started
+    reading these surfaces too (37.24): a stale pool would silently put an old
+    ECM behind every SOC number with nothing to notice it.  mtime is coarse
+    but it is the same test make uses, and rebuilding is cheap.
+    """
+    if not os.path.exists(pool_path):
+        return True
+    t = os.path.getmtime(pool_path)
+    return any(os.path.exists(x) and os.path.getmtime(x) > t for x in sources)
+
+
 def surfaces(holdout, outdir=POOL_DIR, key_mode="rank", extra_csv=None,
-             align=False):
+             align=False, ecm_csv=ECM_CSV, ocv_csv=OCV_CSV):
     pe = os.path.join(outdir, f"ecm_pool_{holdout}.csv")
     po = os.path.join(outdir, f"ocv_pool_{holdout}.csv")
-    if not (os.path.exists(pe) and os.path.exists(po)):
+    srcs = [ecm_csv, ocv_csv] + ([extra_csv] if extra_csv else [])
+    if _stale(pe, *srcs) or _stale(po, *srcs):
         build(holdout, outdir, key_mode=key_mode, extra_csv=extra_csv,
               align=align)
     return (ECMSurface("POOL", "discharge", ecm_csv=pe, ocv_csv=po),

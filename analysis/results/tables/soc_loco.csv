@@ -13,3 +13,5 @@ leave-one-cell-out,BOOST_REST,6,2.202,2.751,4.560
 leave-one-cell-out,CC,6,1.563,2.131,4.070
 leave-one-cell-out,CC_CELL2,6,1.695,2.279,3.889
 leave-one-cell-out,(mean),36,1.740,2.325,3.772
+paired difference (LOCO - per-cell),mean_6_pct,6,,+0.184,"[+0.020, +0.353]"
+paired difference (LOCO - per-cell),worst_of_6_pct,6,,+0.350,"[-0.014, +0.689]"

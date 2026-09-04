@@ -6299,17 +6299,36 @@ seven perturbations, same R_volt schedule.
 | **mean of six** | **2.140** | **2.325** | **+0.185** |
 
 **A genuine unseen-cell SOC number exists and it is 2.325 %p** — 8.6 % worse
-than the per-cell calibrated figure, not a different order of magnitude. The
-worst-of-six average is unchanged (3.773 → 3.772): withholding the cell's
-surface moves the typical error, not the tail.
+than the per-cell calibrated figure, not a different order of magnitude.
+Paired over the six cells, because the two arms are the same runs:
 
-Two cells are worth naming. BOOST_REST loses most, +0.538, and it is also the
-cell with the worst SOP usable current — the pooled surface fits it least well
-in both arms. CC_CELL2 gets *better* by 0.093: it is the second CC-protocol
-cell, so the pool that excludes it still contains a cell on the same protocol,
-and five cells' worth of averaging beats its own noisier characterisation.
-That is the one place in this dataset where the protocol confound helps rather
-than hurts.
+| quantity | difference | 95 % cell-cluster interval | cells worse |
+|---|---:|---|---:|
+| `mean_6_pct` | **+0.184 %p** | [+0.020, +0.353] | 5 of 6 |
+| `worst_of_6_pct` | +0.350 %p | **[−0.014, +0.689]** | 5 of 6 |
+
+So the penalty on the headline is resolved at this sample size, barely. **The
+one on `worst_of_6_pct` is not** — that interval spans zero and also spans
++0.69, so the data is equally consistent with no change and with a
+substantial one.
+
+An earlier draft of this section said "the worst-of-six average is unchanged
+(3.773 → 3.772): withholding the cell's surface moves the typical error, not
+the tail." That was wrong twice. The two arm *means* of `worst_of_6_pct`
+happen to coincide while the paired per-cell differences average +0.350 —
+an artefact of aggregation, not a finding. And `worst_of_6_pct` is not a tail
+statistic at all: it is the largest of six per-condition means, so it says
+which disturbance hurts most, not what the error distribution does at its
+extreme.
+
+Two cells are worth naming, as observations rather than explanations.
+BOOST_REST loses most, +0.538, and is also the cell with the worst SOP usable
+current. CC_CELL2 is the only one that improves, by 0.093, and it is also the
+only cell whose protocol is represented twice — the pool that excludes it
+still contains CC. Those two facts are consistent with the pool fitting a
+cell better when a same-protocol sibling remains in it, and this dataset
+cannot test that: it has exactly one such pair, so the mechanism is a
+hypothesis the design cannot separate from cell-level noise.
 
 **What this changes for the paper.** The SOC arm no longer has to be reported
 only as a per-cell calibrated deployment. Both numbers exist, they were
@@ -6318,10 +6337,11 @@ headline for a transfer claim is **2.325 %p on the pooled surface**. The
 per-cell 2.140 remains the right figure for a deployment that characterises
 each cell it ships with — which is what the vehicle case actually is.
 
-Measured on true SOH. The estimated-SOH penalty (§37.16, +0.066 %p on the
-per-cell arm) has not been re-measured on the pooled surface, so a combined
-"unseen cell and estimated SOH" figure is not available and must not be
-assembled by adding the two.
+Measured on true SOH, and with the EKF configuration held fixed rather than
+re-selected per fold — so this is not a nested leave-one-cell-out result, and
+"unseen-cell deployment generalisation" would overstate it. §37.24 adopts the
+switch, measures the estimated-SOH condition directly (2.337 %p) and carries
+these limits forward.
 
 ### 37.24 The SOC arm is leave-one-cell-out from here
 
@@ -6363,6 +6383,26 @@ per-cell one (§37.16). Three placements below first still move under a +0.02
 bias. Per cell the spread is 1.998 (BOOST) to 2.751 (BOOST_REST), and
 CC_CELL2 *improves* — 2.372 → 2.279 — because the pool that excludes it still
 contains the other CC-protocol cell.
+
+**What this is not.** Four limits travel with the number and none of them is
+removed by the switch.
+
+- **The EKF configuration is fixed, not re-selected per fold.** The gate and
+  rest hold were chosen with all six cells visible, and §37.16's selection
+  sweep scores configurations over all runs rather than inside each fold. So
+  the surface is held out and the configuration is not: this is
+  leave-one-cell-out *evaluation*, not a nested selection, and
+  "unseen-cell deployment generalisation" overstates it.
+  `soc_final_loco.py` is the machinery for the nested version and has not
+  been run on the pooled surface.
+- **Cell and protocol are held out together**, one cell per protocol, so the
+  penalty cannot be attributed to either. CC / CC_CELL2 is the only pair
+  that separates them.
+- **n = 6.** The paired interval on the headline difference is
+  [+0.020, +0.353] %p — it excludes zero, barely. On `worst_of_6_pct` it does
+  not (§37.23).
+- **`worst_of_6_pct` is the largest of six per-condition means**, not a tail
+  statistic of the error distribution.
 
 **One thing is left as it was, deliberately.** `R_volt` is scheduled from the
 open-loop error of the *per-cell* model (110 mV at SOH 0.70, 15 mV at 1.00).

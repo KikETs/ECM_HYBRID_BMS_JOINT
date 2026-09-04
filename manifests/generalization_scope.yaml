@@ -65,10 +65,12 @@ axes:
         Measured with a particular estimator.  It illustrates the confound; it
         is not part of the data-design scope and a contract must not cite it.
       soc_percell_spread: >
-        The per-cell mean-of-six spans 1.834 to 2.474 %p across all six, a
-        1.35x spread, while the CC / CC_CELL2 pair alone spans 1.834 to
-        2.372, a 1.29x spread - nearly all of the apparent protocol spread is
-        available from two cells running the same protocol.
+        Leave-one-cell-out since 2026-09-04 (37.24): the per-cell mean-of-six
+        spans 1.998 (BOOST) to 2.751 (BOOST_REST) %p, a 1.38x spread, and
+        CC_CELL2 is the only cell that IMPROVES when its own surface is
+        withheld.  The pre-switch per-cell-surface figures were 1.834 to
+        2.474.  Neither spread separates cell from protocol: one cell per
+        protocol, CC / CC_CELL2 excepted.
       table: analysis/results/tables/soc_percell.csv
     claim_limit: >
       "six protocol-cell combinations", never "generalises across charge

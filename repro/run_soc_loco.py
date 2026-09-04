@@ -38,8 +38,10 @@ sys.path.insert(0, HERE)
 OUT = os.path.join(ANALYSIS, 'results', 'tables', 'soc_loco.csv')
 HEADER = ['surface', 'cell', 'n_runs', 'undisturbed_pct', 'mean_6_pct',
           'worst_of_6_pct']
+N_BOOT, BOOT_SEED = 20000, 12345
 RUNS = None
 POOL = None
+PERCELL = None
 
 
 def rvolt(soh):
@@ -54,7 +56,13 @@ def _one(job):
     pkw = B.PERTURB[pi][1]
     out = []
     for r in RUNS:
-        sd, sc = (r['sd'], r['sc']) if arm == 0 else POOL[r['cell']]
+        # Both arms build their own surfaces.  Reading r['sd'] for the
+        # per-cell arm was correct only while soc_runs.pkl held per-cell
+        # surfaces; once build_soc_runs.py switched to the pool (37.24) that
+        # silently made the two arms identical and the script reported a
+        # difference of exactly 0.000 with a zero-width interval.  A
+        # comparison that cannot tell its own arms apart is worse than none.
+        sd, sc = PERCELL[r['cell']] if arm == 0 else POOL[r['cell']]
         If = r['I'] * (1.0 + pkw.get('igain', 0.0)) + pkw.get('ibias', 0.0)
         s0 = min(max(float(r['soc'][0]) + pkw.get('dsoc', 0.0), 0.02), 0.98)
         e, _ = ekf_run(sd, sc, float(r['soh']), If, r['V'], r['T'], s0,
@@ -65,7 +73,7 @@ def _one(job):
 
 
 def main():
-    global RUNS, POOL
+    global RUNS, POOL, PERCELL
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--procs', type=int, default=7)
     ap.add_argument('--check', action='store_true')
@@ -82,6 +90,16 @@ def main():
     print(f'  building leave-one-cell-out pooled surfaces for {len(cells)} '
           f'cells', flush=True)
     POOL = {c: ecm_pool.surfaces(c) for c in cells}
+    from ecm_surface import ECMSurface
+    PERCELL = {c: (ECMSurface(c, 'discharge'), ECMSurface(c, 'charge'))
+               for c in cells}
+    a_sd = POOL[cells[0]][0]
+    b_sd = PERCELL[cells[0]][0]
+    if a_sd.cell == b_sd.cell:
+        raise SystemExit('the two arms resolved to the same surface; the '
+                         'comparison would be vacuous')
+    print(f'  arms: pooled surface "{a_sd.cell}" vs per-cell '
+          f'"{b_sd.cell}"', flush=True)
 
     jobs = [(p, arm) for arm in (0, 1) for p in range(len(B.PERTURB))]
     with mp.Pool(a.procs) as pool:
@@ -106,6 +124,34 @@ def main():
             print(f'  {name:<22}{c:<20}{und:>9.3f}{np.mean(per):>9.3f}'
                   f'{max(per):>9.3f}')
         print()
+
+    # Paired over the six cells, because the two arms are the same runs and
+    # the unpaired means hide the sign pattern.  Six clusters is few and the
+    # interval says so.
+    cells_l = [c for c in cells]
+    d_mean = np.array([
+        float([r[4] for r in rows if r[0].startswith('leave') and r[1] == c][0])
+        - float([r[4] for r in rows if r[0].startswith('per-cell') and r[1] == c][0])
+        for c in cells_l])
+    d_worst = np.array([
+        float([r[5] for r in rows if r[0].startswith('leave') and r[1] == c][0])
+        - float([r[5] for r in rows if r[0].startswith('per-cell') and r[1] == c][0])
+        for c in cells_l])
+    rng = np.random.default_rng(BOOT_SEED)
+
+    def ci(v):
+        b = v[rng.integers(0, len(v), size=(N_BOOT, len(v)))].mean(axis=1)
+        return float(np.percentile(b, 2.5)), float(np.percentile(b, 97.5))
+
+    for label, v in (('mean_6_pct', d_mean), ('worst_of_6_pct', d_worst)):
+        lo_, hi_ = ci(v)
+        rows.append(['paired difference (LOCO - per-cell)', label, len(v),
+                     '', f'{v.mean():+.3f}', f'[{lo_:+.3f}, {hi_:+.3f}]'])
+        crosses = lo_ < 0 < hi_
+        print(f'  {label:<16} difference {v.mean():+7.3f} %p   95 % '
+              f'[{lo_:+.3f}, {hi_:+.3f}]   '
+              f'{"consistent with zero" if crosses else "excludes zero"}   '
+              f'{int((v > 0).sum())}/{len(v)} cells worse')
 
     pc = float([r[4] for r in rows if r[0].startswith('per-cell')
                 and r[1] == '(mean)'][0])

@@ -1491,6 +1491,18 @@
    "value": 2.325,
    "source": "sec 37.24 — the adopted SOC headline: unseen cell (pooled surface), true SOH",
    "tol": 0.005
+  },
+  {
+   "id": "soc.loco.paired_mean",
+   "table": "soc_loco.csv",
+   "where": {
+    "surface": "paired difference (LOCO - per-cell)",
+    "cell": "mean_6_pct"
+   },
+   "column": "mean_6_pct",
+   "value": 0.184,
+   "source": "sec 37.23 — paired over six cells; 95 % [+0.020, +0.353], excludes zero barely",
+   "tol": 0.005
   }
  ],
  "tables": {
@@ -3692,7 +3704,7 @@
    "producer": "python3 repro/run_soc_loco.py",
    "stage": "soc_loco",
    "required": true,
-   "rows": 14,
+   "rows": 16,
    "columns": [
     "surface",
     "cell",
@@ -3702,18 +3714,16 @@
     "worst_of_6_pct"
    ],
    "numeric": [
-    "n_runs",
-    "undisturbed_pct",
-    "mean_6_pct",
-    "worst_of_6_pct"
+    "n_runs"
    ],
    "units": {
-    "mean_6_pct": "%p RMSE, mean over the six sensor disturbances; the \"leave-one-cell-out\" rows use the pooled surface built from the other five cells"
+    "mean_6_pct": "%p RMSE, mean over the six sensor disturbances; on the \"paired difference\" rows this column is the difference and worst_of_6_pct holds its 95 % cell-cluster interval",
+    "worst_of_6_pct": "largest of the six per-condition means -- which disturbance hurts most, NOT a tail statistic of the error distribution"
    }
   }
  },
  "completeness": {
-  "total_checks": 122,
+  "total_checks": 123,
   "checks_per_table": {
    "safety.csv": 6,
    "ladder.csv": 9,
@@ -3751,7 +3761,7 @@
    "usable_reference.csv": 9,
    "integration_cost.csv": 3,
    "mcu_integrated.csv": 4,
-   "soc_loco.csv": 3,
+   "soc_loco.csv": 4,
    "soc_headline.csv": 1
   },
   "check_ids": [
@@ -3876,7 +3886,8 @@
    "soc.loco.mean",
    "soc.percell.mean.same_run",
    "soc.loco.worst_cell",
-   "soc.headline.loco.oracle"
+   "soc.headline.loco.oracle",
+   "soc.loco.paired_mean"
   ],
   "note": "verify.py fails if this count or this id list does not match the checks it actually ran.  --only narrows what runs but never rewrites this manifest; --update rewrites values only for checks it ran and leaves every other entry untouched."
  }
