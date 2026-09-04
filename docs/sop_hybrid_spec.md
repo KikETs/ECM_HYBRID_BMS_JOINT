@@ -6084,31 +6084,12 @@ The exceedance in this repository's safety tables is not a property of the
 estimator. It is the price of calibrating λ without having seen the cell
 that sets it.
 
-Read the per-cell rows, not the mean. For **five of six** held-out cells the
-deployed λ *equals* the all-cells λ to four decimals, so `vs_fleet` is 100.0
-**by identity rather than by measurement** — the binding cell
-(BOOST_NEGPULSE_1S) is in the training set and fixes the factor, and nothing
-is being estimated.
-
-The sixth row is the binding cell held out. There the remaining five are less
-demanding, λ comes out **looser** than the fleet factor (0.6930 against
-0.6831 on discharge τ = 10 s; 0.5992 against 0.5272 on charge τ = 10 s), and
-that is where every entry above 100 comes from. **It is not free.** All seven
-exceedances in the A8 estimated-SOH arm sit on those four rows — 1, 1, 2 and
-3 across the conditions, worst overshoot 3.03 A — against **zero** under the
-fleet factor on the same rows.
-
-So the honest statement is the opposite of the first draft: holding a cell out
-costs nothing in usable current *precisely because* it costs something in
-exceedance. At matched risk there is no gain to report — capping the deployed
-λ at the fleet factor returns exactly 100.0 % everywhere, which is the
-identity again.
-
-What survives, and it is still worth saying: **the five training cells alone
-determine the same safety factor the whole set would have chosen**, in every
-condition and for every method. The failure mode is specific and it is
-visible — it is the cell that sets the constraint, and holding *that* one out
-leaves the factor too loose.
+§37.20 sets out the retraction in full — which folds are an identity, which
+one is the risk trade, and why the two policies are not comparable on usable
+current alone. The table above is the part that generalises past A8: **every
+method has exceedances under the deployed factor and none under the fleet
+factor**, so this is a property of the calibration procedure rather than of
+any estimator.
 
 **Against a per-cell oracle λ — field calibration is worth 5 to 19 %p.**
 

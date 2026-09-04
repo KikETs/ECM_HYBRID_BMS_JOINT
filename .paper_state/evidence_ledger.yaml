@@ -997,7 +997,14 @@ review_round_six:
       to let any of it be quietly deleted.
   holding_a_cell_out_costs_nothing:
     level: major
-    disposition: FIXED - THE CLAIM WAS WRONG
+    disposition: FIXED - THE CLAIM WAS WRONG (retraction in 37.20)
+    note_on_duplication: >
+      An earlier session had already retracted this in 37.20 and this session
+      wrote a second correction into 37.19 without seeing it, because the two
+      ran concurrently.  Reconciled 2026-09-01: 37.20 owns the retraction,
+      37.19 keeps only the cross-method exceedance table, which is the part
+      that was new - every method has exceedances under the deployed factor
+      and none under the fleet factor.
     detail: >
       The reviewer is right and the measurement confirms it.  vs_fleet_pct
       above 100 does not mean free utility - it means the leave-one-cell-out
@@ -1026,14 +1033,27 @@ review_round_six:
       what was measured; the only real remedy is a second external cell.
   pack_hil_and_integrated_loop_timing:
     level: major/moderate
-    disposition: BLOCKED - no hardware
+    disposition: PACK/HIL BLOCKED - SUMMATION ERROR PARTLY MEASURED (37.21)
     detail: >
-      Pack and HIL need hardware that does not exist here (blocked_work).
-      Integrated control-loop timing needs the NUCLEO board: what exists is
-      per-stage timing on hardware, summed, and it is labelled a derived
-      cycle-budget estimate rather than a WCET in every place it appears, with
-      a qc rule that fails if "WCET" is written without that qualifier.
-      Application validation is a genuine weakness and is stated as one.
+      Pack and HIL need hardware that does not exist here (blocked_work), and
+      that part is unchanged.
+
+      The integrated-loop part is NOT fully blocked, and an earlier entry here
+      said it was.  37.21 measures the summation error where the firmware
+      already allows it: SOP_CMD_FULL runs the trim and the solve inside one
+      DWT window while SOP_CMD_TRIM and SOP_CMD_SOLVE time the same two pieces
+      separately over the same 500 operating points, paired on (SOC, SOH,
+      tau).  That is 80 of the 340 us.  Summing is the larger figure at 88.4 %
+      of points, and the quantity mcu_cycle.csv actually uses - the sum of
+      stage maxima - sits 0.32 % above the integrated maximum, so it is not
+      conservative pointwise.  integration_cost.csv, three checks.
+
+      What remains genuinely blocked: the EKF and feature stages are only ever
+      timed alone, an integrated loop over all four needs firmware that cannot
+      be built on the audit host (no arm-none-eabi toolchain), and cache and
+      pipeline effects over a longer chain are what a two-stage pair cannot
+      show.  339.84 us is still not a WCET.  Application validation is a
+      genuine weakness and is stated as one.
   windows_gate:
     level: minor
     disposition: DOCUMENTED

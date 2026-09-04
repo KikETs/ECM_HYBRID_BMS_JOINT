@@ -104,12 +104,12 @@ capability no single-λ policy can reach. Two reference points make the 69 %
 readable (§37.19):
 
 - against the best λ fitted with **all six cells visible**, the leave-one-cell-out
-  λ scores **100.4 %** — but read that per cell, not as a mean. For five of the
-  six it is 100.0 *by identity*: the binding cell is in the training set and
-  fixes the factor. For the sixth, held out, λ comes out looser and carries all
-  seven exceedances in the arm against zero under the fleet factor. The two
-  policies do not have the same risk, so this is a trade, not a free lunch
-  (§37.19).
+  λ scores **100.0 %** — and that is an identity, not a measurement. For five of
+  the six folds the two factors are the same number: the binding cell is in the
+  training set and fixes it. For the sixth, held out, λ comes out looser and
+  carries all seven exceedances in the arm against zero under the fleet factor.
+  The two policies do not have the same risk, so this is a trade, not a free
+  lunch, and the mean is now taken over risk-matched folds only (§37.20).
 - against a λ fitted on the **evaluated cell itself**, it scores **95.2 %** on
   discharge and **81.8 %** on charge. That is what a per-cell field calibration
   would be worth.
