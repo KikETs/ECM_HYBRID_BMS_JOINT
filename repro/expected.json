@@ -155,8 +155,8 @@
     "method": "[upper bound] HPPC-RLS"
    },
    "column": "usable_pct",
-   "value": 71.1,
-   "source": "sec 32.5 — upper bound if the vehicle could run HPPC"
+   "value": 71.0,
+   "source": "sec 32.5 / 38.1 — upper bound if the vehicle could run HPPC.  Pulse-causal RLS since 2026-09-05; the row-wise version read each pulse's own target and gave 71.1"
   },
   {
    "id": "ladder.chg.A8_beats_A3",
@@ -191,8 +191,8 @@
     "method": "[upper bound] HPPC-RLS"
    },
    "column": "usable_pct",
-   "value": 55.2,
-   "source": "sec 32.6 — best on voltage, fourth on current"
+   "value": 55.1,
+   "source": "sec 32.6 / 38.1 — best on voltage, fourth on current.  Pulse-causal RLS; the row-wise version gave 55.2"
   },
   {
    "id": "pack.disc.10s.exceed.N192",
@@ -355,8 +355,8 @@
     "method": "RLS"
    },
    "column": "rmse_mV",
-   "value": 49.89,
-   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+   "value": 50.02,
+   "source": "sec 32.2 / 32.6 / 38.1 — mean of per-cell RMSE, pulse-causal RLS.  The row-wise version gave 49.89"
   },
   {
    "id": "volt.char.A0",
@@ -405,8 +405,8 @@
     "method": "RLS"
    },
    "column": "rmse_mV",
-   "value": 33.59,
-   "source": "sec 32.2 / 32.6 — mean of per-cell RMSE"
+   "value": 33.69,
+   "source": "sec 32.2 / 32.6 / 38.1 — mean of per-cell RMSE, pulse-causal RLS.  The row-wise version gave 33.59"
   },
   {
    "id": "mcu.feat",

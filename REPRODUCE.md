@@ -127,10 +127,10 @@ Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded again
 | `ladder.disc.shrink` | 62.0 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A8` | 69.1 | `ladder.csv` | sec 32.5 |
 | `ladder.disc.A3` | 70.3 | `ladder.csv` | sec 32.5 |
-| `ladder.disc.rls_bound` | 71.1 | `ladder.csv` | sec 32.5 |
+| `ladder.disc.rls_bound` | 71.0 | `ladder.csv` | sec 32.5 / 38.1 |
 | `ladder.chg.A8_beats_A3` | 59.6 | `ladder.csv` | sec 32.7 |
 | `ladder.chg.A3` | 57.9 | `ladder.csv` | sec 32.7 |
-| `ladder.chg.rls_bound_loses` | 55.2 | `ladder.csv` | sec 32.6 |
+| `ladder.chg.rls_bound_loses` | 55.1 | `ladder.csv` | sec 32.6 / 38.1 |
 | `pack.disc.10s.exceed.N192` | 0.0 | `pack.csv` | sec 31.2 |
 | `pack.disc.10s.exceed.est.N192` | 0.0 | `pack.csv` | sec 31.2 |
 | `pack.chg.10s.worst.N192` | 0.09 | `pack.csv` | sec 31.2 |
@@ -143,11 +143,11 @@ Full rebuild: 1232 minutes (20.5 h) if every stage takes the time recorded again
 | `volt.disc.shrink` | 69.23 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.disc.A8` | 62.78 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.disc.A3` | 58.71 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.disc.RLS` | 49.89 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.disc.RLS` | 50.02 | `voltage.csv` | sec 32.2 / 32.6 / 38.1 |
 | `volt.char.A0` | 49.9 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.char.A8` | 36.7 | `voltage.csv` | sec 32.2 / 32.6 |
 | `volt.char.A3` | 34.09 | `voltage.csv` | sec 32.2 / 32.6 |
-| `volt.char.RLS` | 33.59 | `voltage.csv` | sec 32.2 / 32.6 |
+| `volt.char.RLS` | 33.69 | `voltage.csv` | sec 32.2 / 32.6 / 38.1 |
 | `mcu.feat` | 13.94 | `mcu.csv` | sec 33.1 |
 | `mcu.feat_a8` | 6.79 | `mcu.csv` | sec 33.1 |
 | `mcu.ekf` | 8.16 | `mcu.csv` | sec 33.2 |
