@@ -8,7 +8,7 @@ import csv, hashlib, json, os, shutil, sys
 import numpy as np
 REPO = os.environ['RCSOP_REPO']; A = os.path.join(REPO, 'analysis')
 RA = os.path.join(os.environ['RCSOP_BUNDLE'], 'assets', 'innerpool')
-HERE = os.environ.get('OUTDIR', os.path.dirname(os.path.abspath(__file__))); OUT = os.path.join(HERE, 'innerpool')
+HERE = os.environ.get('OUTDIR', os.environ.get('RCSOP_WORK', os.path.dirname(os.path.abspath(__file__)))); OUT = os.path.join(HERE, 'innerpool')
 sys.path.insert(0, A)
 import ecm_pool
 CELLS = ['BOOST', 'BOOST_NEGPULSE', 'BOOST_NEGPULSE_1S', 'BOOST_REST', 'CC', 'CC_CELL2']

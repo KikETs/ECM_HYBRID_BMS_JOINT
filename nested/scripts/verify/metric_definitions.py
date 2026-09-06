@@ -15,12 +15,12 @@ import pickle
 
 import numpy as np
 import sys
-sys.path.insert(0, os.path.expanduser('~/바탕화면/DL/ETRANS_AUDIT/repo/repro'))
+sys.path.insert(0, os.path.join(os.environ['RCSOP_REPO'], 'repro'))
 from run_safety_strict import fit_lambda, MIN_TRAIN   # noqa: E402  (same bisection as the tables)
 
 V = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FLW = os.environ['RCSOP_WORK']
-SN = os.path.join(FLW, '20_stateinput_nested')
+SN = os.path.join(FLW, 'arms')   # outputs of reproduce.sh score
 TOL = {'discharge': 0.0, 'charge': 0.5}
 EXTRAP_MAX = 1.5
 ARMS = {'oo': 'oracle SOH + oracle SOC', 'eo': 'estimated SOH + oracle SOC',

@@ -1,43 +1,47 @@
-# COMMANDS.md — stage-by-stage reproduction
+# COMMANDS.md — how to regenerate the tables in `final/`
 
-Base: public commit `6cced9b477effde33b472ce383adb3f868a4b53b` of https://github.com/KikETs/ECM_HYBRID_BMS_JOINT (branch audit/etransportation-readiness at the time of this audit). **This bundle itself is not published**; nothing here has been pushed.
-
-## 0. Environment (ENV.txt)
-python 3.12.0, numpy 2.3.4, scipy 1.16.3, torch 2.9.1+cu128 (training stages only), gcc 13 (firmware host diagnostic), one CUDA GPU for the training stages (RTX 5090 was used). Set
+Everything below runs from a checkout of this repository. The two code changes this needs (`analysis/ecm_pool.py` forwards `ecm_csv`/`ocv_csv` to `build()`; `analysis/sop_trim_dataset.py --pool-src`) are already in the tree; `code_patch/repo.patch` is the same change against the commit in `BASE_COMMIT`.
 
 ```bash
-export RCSOP_REPO=/path/to/clean/checkout RCSOP_BUNDLE=/path/to/this/bundle RCSOP_WORK=/path/to/scratch RCSOP_PYTHON=python3
+export RCSOP_REPO=/path/to/checkout RCSOP_BUNDLE=$RCSOP_REPO/nested RCSOP_WORK=/path/to/scratch RCSOP_PYTHON=python3
 ```
+Environment: `ENV.txt` (python 3.12, numpy 2.3, scipy 1.16; torch 2.9 + CUDA only for training).
 
-## 1. Code patch
+## A. Score from the stored predictions (no training, no raw data)
 ```bash
-git clone https://github.com/KikETs/ECM_HYBRID_BMS_JOINT $RCSOP_REPO && cd $RCSOP_REPO && git checkout $(cat $RCSOP_BUNDLE/BASE_COMMIT)
-bash $RCSOP_BUNDLE/reproduce.sh patch          # analysis/ecm_pool.py (forward ecm_csv/ocv_csv to build) + analysis/sop_trim_dataset.py (--pool-src)
+bash $RCSOP_BUNDLE/reproduce.sh check-pools   # 30 inner pools rebuilt from the five-cell CSVs == stored pools, != shipped pools; surfaces respond to the CSV
+bash $RCSOP_BUNDLE/reproduce.sh score         # 4 arms x 2 directions and six methods -> $RCSOP_WORK/{arms,methods}; compared with final/ (27 tables)
 ```
-The patch is the only change to repository files. Every other script lives in `scripts/`.
+Inputs: tracked repository files (`analysis/sop_label_*.csv`, `analysis/uypydj_{ecm,ocv}.csv`, `analysis/ecm_temp_factor.csv`, `analysis/results/soh_pred.npz`, `analysis/runs_trim_{a8,a8_chg,v2,chg_v2,shrink,shrink_chg}`) and `assets/`:
 
-## 2. Score from the bundled checkpoints (no training, no raw data)  — executed in this audit
+| assets/ | content | produced by |
+|---|---|---|
+| `innerpool/no<c>/{uypydj_ecm,uypydj_ocv}.csv`, `pool/*` | five-cell CSVs and the 30 four-cell pools with provenance | `scripts/nested/build_inner_pools.py` |
+| `innertrim/{trim,trim_chg}_no<c>/pred_A8_<j>.npz`, `model_A8_<j>.pt` | inner A8 trims trained on the four-cell-feature datasets | `level2_chain.sh` step 2 |
+| `basetrees/no<c>/analysis/runs_trim_{v2,shrink,lstm,gru,ffrls}{,_chg}/pred_A3_<j>.npz` | inner comparison methods | `level2_chain.sh` step 3 |
+| `outer_trims/runs_trim_{lstm,gru,ffrls}{,_chg}/pred_A3_<cell>.npz` | shipped outer LOCO predictions of the sequence baselines, not tracked elsewhere | `repro/run_sop_seq_baselines.py` |
+| `innersoh/soh_pred_no<c>.npz` | inner ridge SOH predictions (five cells, `analysis/soh_ridge.py`) | 2026-09-05 |
+| `soc_err/*.npz`, `soc_err_runs*.csv` | EKF terminal SOC errors keyed by the record's end cycle: outer (five-cell pool) and inner (four-cell pool) | `scripts/nested/build_soc_err_nested.py` |
+
+The shipped five-cell pools (`analysis/cache/pool`) are not tracked; `ecm_pool.surfaces()` rebuilds them from the tracked CSVs on first use.
+
+## B. Full rebuild (training)
+Prerequisites: `raw/` deposits and the tier 1–3 caches of REPRODUCE.md (`analysis/cache_t`, `analysis/cache/{trim,trim_chg}`, `analysis/cache/soh_charge.npz`), a CUDA GPU.
 ```bash
-bash $RCSOP_BUNDLE/reproduce.sh check-pools    # 30 inner pools rebuilt from assets/innerpool/no<c>/uypydj_{ecm,ocv}.csv == bundled, != shipped, surfaces respond
-bash $RCSOP_BUNDLE/reproduce.sh score          # arms (4 x 2 directions, hull solver) + six methods -> $RCSOP_WORK/{arms,methods}; compared with final/
+bash $RCSOP_BUNDLE/reproduce.sh full          # scripts/nested/level2_chain.sh: datasets -> trims -> methods -> SOC errors -> arms/methods -> check_level2.py -> compare_final.py
+$RCSOP_PYTHON $RCSOP_BUNDLE/scripts/nested/build_inner_pools.py   # optional: rebuild the pools into $RCSOP_WORK/innerpool and compare with assets/innerpool
 ```
-Inputs: repository (tracked): `analysis/sop_label_{measured,charge}.csv`, `analysis/uypydj_{ecm,ocv}.csv`, `analysis/ecm_temp_factor.csv`, `analysis/results/soh_pred.npz`, `analysis/runs_trim_*` (shipped LOCO predictions and checkpoints). Bundle assets: inner pools, inner A8 trims (pred + model), comparison-method inner predictions, inner ridge SOH predictions, SOC-error npz (outer LOCO and inner). The shipped five-cell pools `analysis/cache/pool` are not tracked and are rebuilt from the tracked CSVs on first use (patched `surfaces()`).
+`check_level2.py` verifies by content that every inner asset excludes the outer target (pools differ from the shipped pools, datasets differ from the shipped datasets, prediction/SOH/SOC-error files carry no key for the target).
 
-## 3. Full rebuild (training)  — executed once in this audit on the working copy, not repeated in the clean clone
-Prerequisites (REPRODUCE.md tiers 1–3): raw deposits [19–21] under `raw/` (24 GB), `analysis/cache_t/*` drive-cycle cache, `analysis/cache/{trim,trim_chg}/trim_<cell>.npz`, `analysis/cache/soh_charge.npz`.
-```bash
-# 3a inner pools (CPU, minutes)
-$RCSOP_PYTHON $RCSOP_BUNDLE/scripts/nested/build_inner_pools.py           # writes $RCSOP_WORK/20_calib_fix/innerpool
-# 3b inner trim datasets (CPU, ~75 min with 12 processes): features and NOM against the 4-cell pool
-bash $RCSOP_BUNDLE/scripts/nested/run_inner_datasets.sh
-# 3c inner A8 trims, comparison methods, SOC errors, arms, methods (GPU, ~2 h)
-bash $RCSOP_BUNDLE/scripts/nested/level2_chain.sh
-$RCSOP_PYTHON $RCSOP_BUNDLE/scripts/nested/check_level2.py                # 354 content checks: every inner asset excludes the outer target
-```
-Inner SOH predictions (`assets/innersoh`) were produced by `analysis/soh_ridge.py` on `cache/soh_charge.npz` restricted to five cells (previous audit session, 2026-09-05); they do not depend on the surfaces and were reused.
+## C. Verification scripts (`scripts/verify`) and stored outputs (`verification/`, `results/`)
+| script | output | what it does |
+|---|---|---|
+| `exact_roots.py`, `exact_roots_inner.py` | `verification/exact_roots_outer.csv`, `exact_roots_inner.csv` | segment-wise numeric root enumeration (rank-current segments, 150 samples per segment, brentq on sign changes, |f| dips below 2 mV flagged); a numeric cross-check, not a proof of completeness |
+| `validate_v2.py` | `verification/validate_v2.csv` | solver v2 (`scripts/hull_solver.py`) against the enumeration on every outer row |
+| `build_solver_diagnostics.py` | `results/solver_diagnostics.csv` | per (row, model): enumeration, grid solver v1, v2, reference-start fixed point, firmware host result |
+| `fw_roots.c` | `verification/fw_root_diagnostics.csv` | firmware `sop_solve` on the host: `gcc -O2 -std=gnu11 -I $RCSOP_REPO/mcu fw_roots.c $RCSOP_REPO/mcu/sop_core.c -o fw_roots -lm` |
+| `metric_definitions.py` | `results/metric_summary.csv`, `results/row_level_d.csv` | d = λ|I_pred| − |I_ref|, exceedance, max positive difference, max excess beyond tolerance |
+| `soh_tol_sensitivity.py` | `results/sensitivity_results.csv` | SOH displacement (λ fixed / refitted) and tolerance (decision-only / joint) |
+| `check_pools.py`, `compare_final.py` | — | used by `reproduce.sh` |
 
-## 4. Verification scripts (scripts/verify)
-`metric_definitions.py` (row-level d, both size metrics), `exact_roots.py` (segment-wise root enumeration), `solver_hull_aware.py`, `soh_tol_sensitivity.py`, `fw_roots.c` (link against `mcu/sop_core.c` + `mcu/sop_tables.h`: `gcc -O2 -std=gnu11 -I $RCSOP_REPO/mcu fw_roots.c $RCSOP_REPO/mcu/sop_core.c -o fw_roots -lm`). These read the follow-up outputs (`RCSOP_WORK` = the `rfollow_20260905` layout) and are provided for inspection; their outputs are in the verification directory, not regenerated by `reproduce.sh`.
-
-## Definitions (metric_definitions.md)
-d = λ_c·|I_pred| − |I_ref| per row; exceedance = d > tolerance (0 A discharge, 0.5 A charge); max positive difference = max(0, max d); max excess beyond tolerance = max(0, max(d − tol)). Tables named `worst_overshoot_A` carry the max positive difference.
+The verify scripts read the outputs of a completed `score` run (`$RCSOP_WORK/arms`). `verification/logs/` holds the clean-clone runs of `check-pools` and `score` and the runs that produced the stored CSVs; `verification/manifest.csv` lists the working-copy files with sha256.

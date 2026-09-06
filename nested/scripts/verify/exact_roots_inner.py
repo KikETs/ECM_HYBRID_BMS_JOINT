@@ -5,12 +5,12 @@ arm_rows_replace_level2_hull2.pkl (the rows that determine lambda_c)."""
 import csv, multiprocessing as mp, os, pickle, sys
 import numpy as np
 V=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REPO=os.environ['RCSOP_REPO']; A=os.path.join(REPO,'analysis'); FLW=os.environ['RCSOP_WORK']; X=os.path.join(FLW,'20_calib_fix')
-sys.path.insert(0,A); sys.path.insert(0,FLW); sys.path.insert(0,os.path.join(V,'solver'))
+REPO=os.environ['RCSOP_REPO']; A=os.path.join(REPO,'analysis'); FLW=os.environ['RCSOP_WORK']; X=os.path.join(os.environ['RCSOP_BUNDLE'],'assets')
+sys.path.insert(0,A); sys.path.insert(0,os.path.join(os.environ['RCSOP_BUNDLE'],'scripts')); sys.path.insert(0,os.path.join(os.environ['RCSOP_BUNDLE'],'scripts','verify'))
 import eval_sop_amps as EV, ecm_pool
 from exact_roots import enumerate_roots
 CELLS=['BOOST','BOOST_NEGPULSE','BOOST_NEGPULSE_1S','BOOST_REST','CC','CC_CELL2']
-D=pickle.load(open(os.path.join(FLW,'20_stateinput_nested','arm_rows_replace_level2_hull2.pkl'),'rb'))
+D=pickle.load(open(os.path.join(FLW,'arms','arm_rows_replace_level2_hull2.pkl'),'rb'))
 def run(task):
     c,j,d=task; charge=d=='charge'
     pd_=os.path.join(X,'innerpool',f'no{c}')

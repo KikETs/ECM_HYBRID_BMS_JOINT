@@ -1,0 +1,49 @@
+  288 tasks
+  replace: 288 blocks, 337200 rows -> arm_rows_replace_level2_hull2.pkl
+  -> e2e_nested_full_replace_level2_hull2_hyb.csv (32 rows)
+  -> e2e_nested_paired_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_fixed_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_drift_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_counts_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_percell_replace_level2_hull2_hyb.csv (176 rows)
+  -> e2e_nested_full_replace_level2_hull2_ecm.csv (32 rows)
+  -> e2e_nested_paired_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_fixed_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_drift_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_counts_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_percell_replace_level2_hull2_ecm.csv (176 rows)
+  432 tasks, solver=hull
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/home/user/anaconda3/envs/torch_env/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/user/anaconda3/envs/torch_env/lib/python3.12/multiprocessing/pool.py", line 51, in starmapstar
+    return list(itertools.starmap(args[0], args[1]))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/rverify_20260906/bundle/scripts/nested/score_methods_nested.py", line 83, in rows_for
+    K = EV.trim_k_agg(j, trim_dir(method, level, c, direction), AGG)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/rverify_20260906/clean_clone/repo/analysis/eval_sop_amps.py", line 138, in trim_k_agg
+    z = np.load(_pred_path(runs, cell),
+                ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/rverify_20260906/clean_clone/repo/analysis/eval_sop_amps.py", line 114, in _pred_path
+    raise FileNotFoundError(
+FileNotFoundError: /home/user/바탕화면/DL/ETRANS_AUDIT/rverify_20260906/clean_clone/repo/analysis/runs_trim_lstm 에 pred_A*_BOOST.npz 가 없다 — 트림을 먼저 학습해야 한다
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/rverify_20260906/bundle/scripts/nested/score_methods_nested.py", line 199, in <module>
+    main(sys.argv[1:] or ['a8', 'a3', 'shrink', 'lstm', 'gru', 'ffrls'])
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/rverify_20260906/bundle/scripts/nested/score_methods_nested.py", line 125, in main
+    res = dict(pool.starmap(rows_for, tasks))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/anaconda3/envs/torch_env/lib/python3.12/multiprocessing/pool.py", line 375, in starmap
+    return self._map_async(func, iterable, starmapstar, chunksize).get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/anaconda3/envs/torch_env/lib/python3.12/multiprocessing/pool.py", line 774, in get
+    raise self._value
+FileNotFoundError: /home/user/바탕화면/DL/ETRANS_AUDIT/rverify_20260906/clean_clone/repo/analysis/runs_trim_lstm 에 pred_A*_BOOST.npz 가 없다 — 트림을 먼저 학습해야 한다

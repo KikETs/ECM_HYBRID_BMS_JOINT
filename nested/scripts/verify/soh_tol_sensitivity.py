@@ -34,9 +34,9 @@ V = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.environ['RCSOP_REPO']
 A = os.path.join(REPO, 'analysis')
 FLW = os.environ['RCSOP_WORK']
-X = os.path.join(FLW, '20_calib_fix')
-SN = os.path.join(FLW, '20_stateinput_nested')
-sys.path.insert(0, A); sys.path.insert(0, FLW); sys.path.insert(0, os.path.join(REPO, 'repro'))
+X = os.path.join(os.environ['RCSOP_BUNDLE'], 'assets')   # innerpool / innertrim
+SN = os.path.join(FLW, 'arms')   # outputs of reproduce.sh score
+sys.path.insert(0, A); sys.path.insert(0, os.path.join(os.environ['RCSOP_BUNDLE'], 'scripts')); sys.path.insert(0, os.path.join(REPO, 'repro'))
 import eval_sop_amps as EV                                   # noqa: E402
 import ecm_pool                                              # noqa: E402
 import hull_solver                                           # noqa: E402

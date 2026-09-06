@@ -1,0 +1,44 @@
+=== (a) DIFFER rows: root value not stored because the row failed on the other model; recompute v2 and compare with exact
+   175 recomputed, 0 disagree with exact -> inner rows: 0 disagreements once the root is actually compared
+=== (b) tangent-status rows (v2, 5 mV dip criterion): exact (2 mV) verdict, other model, hypothetical lambda impact
+   inner outer=BOOST cell=BOOST_NEGPULSE_1S discharge cyc=1468 tau=10.0 model=A8 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST cell=CC discharge cyc=1725 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_NEGPULSE cell=CC discharge cyc=1800 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_NEGPULSE_1S cell=BOOST discharge cyc=1762 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_NEGPULSE_1S cell=BOOST_REST discharge cyc=1237 tau=10.0 model=A0 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_NEGPULSE_1S cell=CC discharge cyc=1725 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_NEGPULSE_1S cell=CC_CELL2 discharge cyc=1618 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_REST cell=BOOST_NEGPULSE_1S discharge cyc=1206 tau=10.0 model=A8 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_REST cell=BOOST_NEGPULSE_1S discharge cyc=1656 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_REST cell=BOOST_NEGPULSE_1S discharge cyc=1806 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=BOOST_REST cell=CC_CELL2 discharge cyc=1656 tau=10.0 model=A0 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=CC cell=BOOST_NEGPULSE_1S discharge cyc=1431 tau=10.0 model=A8 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=CC_CELL2 cell=BOOST discharge cyc=1762 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=CC_CELL2 cell=BOOST_NEGPULSE_1S discharge cyc=1468 tau=10.0 model=A8 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   inner outer=CC_CELL2 cell=CC discharge cyc=1725 tau=10.0 model=A0 eligible_by_label=True other_model=ok exact_roots=0 dip_candidates@5mV=[] n/a
+   outer outer=NONE cell=BOOST_NEGPULSE_1S discharge cyc=1243 tau=10.0 model=A8 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   outer outer=NONE cell=BOOST_NEGPULSE_1S discharge cyc=1431 tau=10.0 model=A8 eligible_by_label=True other_model=noroot exact_roots=0 dip_candidates@5mV=[] n/a
+   total tangent-status (row,model) pairs: 17
+=== (c) fine scan (2000 samples per segment) of the 17 tangent-status (row, model) pairs: dip location, |f| minimum, hypothetical binding
+Traceback (most recent call last):
+  File "<stdin>", line 26, in <module>
+AttributeError: module 'hull_solver' has no attribute '_segments'
+=== (c) fine scan (2000 samples per segment) of the 17 tangent-status (row, model) pairs
+   inner outer=BOOST cell=BOOST_NEGPULSE_1S discharge cyc=1468 A8: |f|min=2.62 mV at I=-20.024 A, I_ref=-19.211 A, other=noroot -> excluded regardless (other model has no root)
+   inner outer=BOOST cell=CC discharge cyc=1725 A0: |f|min=1.40 mV at I=-20.094 A, I_ref=-10.721 A, other=ok -> not binding (0.5335 >= lambda 0.5220)
+   inner outer=BOOST_NEGPULSE cell=CC discharge cyc=1800 A0: |f|min=1.86 mV at I=-20.566 A, I_ref=-12.793 A, other=ok -> not binding (0.6220 >= lambda 0.5848)
+   inner outer=BOOST_NEGPULSE_1S cell=BOOST discharge cyc=1762 A0: |f|min=3.55 mV at I=-20.024 A, I_ref=-12.737 A, other=ok -> not binding (0.6361 >= lambda 0.5213)
+   inner outer=BOOST_NEGPULSE_1S cell=BOOST_REST discharge cyc=1237 A0: |f|min=2.75 mV at I=-20.104 A, I_ref=-23.177 A, other=noroot -> excluded regardless (other model has no root)
+   inner outer=BOOST_NEGPULSE_1S cell=CC discharge cyc=1725 A0: |f|min=3.04 mV at I=-20.060 A, I_ref=-10.721 A, other=ok -> not binding (0.5344 >= lambda 0.5213)
+   inner outer=BOOST_NEGPULSE_1S cell=CC_CELL2 discharge cyc=1618 A0: |f|min=1.22 mV at I=-20.531 A, I_ref=-17.447 A, other=ok -> not binding (0.8498 >= lambda 0.5213)
+   inner outer=BOOST_REST cell=BOOST_NEGPULSE_1S discharge cyc=1206 A8: |f|min=2.54 mV at I=-20.104 A, I_ref=-17.991 A, other=noroot -> excluded regardless (other model has no root)
+   inner outer=BOOST_REST cell=BOOST_NEGPULSE_1S discharge cyc=1656 A0: |f|min=1.13 mV at I=-20.104 A, I_ref=-14.697 A, other=ok -> not binding (0.7310 >= lambda 0.5946)
+   inner outer=BOOST_REST cell=BOOST_NEGPULSE_1S discharge cyc=1806 A0: |f|min=0.59 mV at I=-20.104 A, I_ref=-14.199 A, other=ok -> not binding (0.7063 >= lambda 0.5946)
+   inner outer=BOOST_REST cell=CC_CELL2 discharge cyc=1656 A0: |f|min=1.38 mV at I=-20.498 A, I_ref=-24.949 A, other=noroot -> excluded regardless (other model has no root)
+   inner outer=CC cell=BOOST_NEGPULSE_1S discharge cyc=1431 A8: |f|min=2.95 mV at I=-20.060 A, I_ref=-19.380 A, other=noroot -> excluded regardless (other model has no root)
+   inner outer=CC_CELL2 cell=BOOST discharge cyc=1762 A0: |f|min=1.26 mV at I=-20.457 A, I_ref=-12.737 A, other=ok -> not binding (0.6226 >= lambda 0.5352)
+   inner outer=CC_CELL2 cell=BOOST_NEGPULSE_1S discharge cyc=1468 A8: |f|min=2.90 mV at I=-20.531 A, I_ref=-19.211 A, other=noroot -> excluded regardless (other model has no root)
+   inner outer=CC_CELL2 cell=CC discharge cyc=1725 A0: |f|min=4.40 mV at I=-20.533 A, I_ref=-10.721 A, other=ok -> WOULD BIND lambda (0.5221 < 0.5352)
+   outer outer=NONE cell=BOOST_NEGPULSE_1S discharge cyc=1243 A8: |f|min=0.45 mV at I=-20.042 A, I_ref=-23.782 A, other=noroot -> excluded regardless (other model has no root)
+   outer outer=NONE cell=BOOST_NEGPULSE_1S discharge cyc=1431 A8: |f|min=2.76 mV at I=-20.042 A, I_ref=-19.380 A, other=noroot -> excluded regardless (other model has no root)
+  -> 17 rows in solver/tangent_rows.csv

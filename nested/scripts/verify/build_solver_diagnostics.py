@@ -15,7 +15,7 @@ for r in csv.DictReader(open(f'{V}/firmware/fw_root_diagnostics.csv')):
     FW[(r['direction'], r['cell'], r['cycle'], r['tau'], r['model'])] = r
 try:
     import pickle
-    lost = pickle.load(open(os.path.expanduser('~/바탕화면/DL/ETRANS_AUDIT/rfollow_20260905/00_state/lost19.pkl'), 'rb'))
+    lost = pickle.load(open(os.environ['RCSOP_LOST19'], 'rb'))   # optional: the 19 rows of the earlier check
     L19 = {(r['cell'], int(r['cycle']), float(r['tau']), round(r['meas'], 3)) for r in lost}
 except Exception:
     L19 = set()

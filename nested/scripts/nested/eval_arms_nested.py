@@ -16,7 +16,7 @@ Levels
            runs_trim_a8{,_chg}, cache/pool holdout=c, results/soh_pred.npz,
            soc_err_outer_<rule>.npz built here from LOCO surfaces)
     inner  for outer target c, calibration cell j != c evaluated with the
-           assets built without c (raudit 20_calib: innertrim, innerpool,
+           assets built without c (assets: innertrim, innerpool,
            innersoh; soc_err_inner_no<c>_<rule>.npz built here)
 
 Solver: the shipped damped fixed point started at the reference current

@@ -1,77 +1,67 @@
 #!/bin/bash
-# Level 2: every inner asset built without the outer target.
-#   1. wait for the inner trim datasets (features + NOM against the pool of
-#      the four cells other than {c, j})
-#   2. train the inner A8 trims (6 outer x 2 directions) on those datasets
-#   3. train the comparison methods (A3, shrink/direct/rls fill, LSTM/GRU/FFRLS)
-#      on the same datasets, one write-tree per outer target
-#   4. inner rows for the four state-input arms (fp and hull solvers), scoring
-#   5. six-method comparison (fp and hull)
-# The repository is never written: training scripts run inside write-trees
-# whose runs_trim_* directories are real directories, not links.
-set -u
-F=$RCSOP_WORK
-X=$F/20_calib_fix
-R=$RCSOP_REPO
-PY=${RCSOP_PYTHON:-python3}
+# Full rebuild of every inner asset without the outer target, then scoring.
+#   1. inner trim datasets   (CPU, ~75 min / 12 proc)  -> $W/innerdata
+#   2. inner A8 trims         (GPU, ~25 min)            -> $W/innertrim
+#   3. comparison methods     (GPU, ~35 min)            -> $W/basetrees/no<c>/analysis/runs_trim_*
+#   4. SOC-error records      (CPU, minutes)            -> $W/soc_err
+#   5. arms and six methods, hull-aware solver          -> $W/arms, $W/methods, then check_level2 + compare_final
+# Inner pools are read from $RCSOP_BUNDLE/assets/innerpool (rebuild with scripts/nested/build_inner_pools.py).
+# Requirements beyond the repository: analysis/cache_t, analysis/cache/{trim,trim_chg}, a CUDA GPU (steps 2-3).
+# Training scripts run inside write-trees so the repository is never written.
+set -eu
+: "${RCSOP_REPO:?}" "${RCSOP_BUNDLE:?}" "${RCSOP_WORK:?}"
+PY=${RCSOP_PYTHON:-python3}; R=$RCSOP_REPO; B=$RCSOP_BUNDLE; W=$RCSOP_WORK; S=$B/scripts/nested
 CELLS="BOOST BOOST_NEGPULSE BOOST_NEGPULSE_1S BOOST_REST CC CC_CELL2"
 log() { echo "[$(date +%H:%M:%S)] $*"; }
-
-until grep -q "ALLDONE inner datasets" $F/logs/inner_datasets.log 2>/dev/null; do sleep 60; done
-log "datasets done"
-n=$(ls $X/innerdata/*/trim_*.npz | wc -l); log "inner dataset files: $n (expect 60)"
-
-# ---- 2. inner A8 trims
-mkdir -p $X/innertrim $X/logs_trim
-jobs=(); for c in $CELLS; do for sub in trim trim_chg; do jobs+=("$c $sub"); done; done
-printf '%s\n' "${jobs[@]}" | xargs -P 6 -L 1 bash -c '
-  c=$0; sub=$1; X='"$X"'; R='"$R"'; PY='"$PY"'
-  cd $R/analysis && $PY sop_trim.py --rung A8 --data $X/innerdata/${sub}_no$c --out $X/innertrim/${sub}_no$c --save-pred > $X/logs_trim/${sub}_no$c.log 2>&1
+mkdir -p $W/logs
+# ---- 1
+if [ "$(ls $W/innerdata/*/trim_*.npz 2>/dev/null | wc -l)" -ne 60 ]; then bash $S/run_inner_datasets.sh > $W/logs/inner_datasets.log 2>&1; fi
+log "inner datasets: $(ls $W/innerdata/*/trim_*.npz | wc -l) files"
+# ---- 2
+mkdir -p $W/innertrim $W/logs/trim
+export R W PY
+for c in $CELLS; do for sub in trim trim_chg; do echo "$c $sub"; done; done | xargs -P ${GPU_JOBS:-6} -L 1 bash -c '
+  c=$0; sub=$1
+  cd $R/analysis && $PY sop_trim.py --rung A8 --data $W/innerdata/${sub}_no$c --out $W/innertrim/${sub}_no$c --save-pred > $W/logs/trim/${sub}_no$c.log 2>&1
   echo "  trim done $c $sub $(date +%H:%M)"'
-log "inner A8 trims done: $(ls $X/innertrim/*/pred_A8_*.npz | wc -l) preds (expect 60)"
-
-# ---- 3. comparison methods, one write-tree per outer target
-mkdir -p $X/basetrees $X/logs_base
-mktree() {  # write-tree: analysis/* linked, runs_trim_* real dirs, fixed ecm_pool.py
+log "inner A8 trims: $(ls $W/innertrim/*/pred_A8_*.npz | wc -l) preds (expect 60)"
+# ---- 3
+mkdir -p $W/basetrees $W/logs/base
+mktree() {
   T=$1; rm -rf $T; mkdir -p $T/analysis $T/repro
   for f in $R/analysis/*; do ln -sfn "$f" "$T/analysis/$(basename $f)"; done
   for f in $R/repro/*; do ln -sfn "$f" "$T/repro/$(basename $f)"; done
-  ln -sfn $R/docs $T/docs; ln -sfn "$(readlink -f $R/raw)" $T/raw
-  rm -f $T/analysis/ecm_pool.py; cp $X/tree/analysis/ecm_pool.py $T/analysis/ecm_pool.py
+  ln -sfn $R/docs $T/docs; [ -e $R/raw ] && ln -sfn "$(readlink -f $R/raw)" $T/raw
   rm -f $T/analysis/results; cp -a $R/analysis/results $T/analysis/results
   for d in $T/analysis/runs_trim_*; do [ -L "$d" ] && rm -f "$d" && mkdir -p "$d"; done
   rm -f $T/analysis/__pycache__ $T/repro/__pycache__
   if find $T/analysis -maxdepth 1 -name 'runs_trim_*' -type l | grep -q .; then echo "FAIL links remain in $T" >&2; exit 1; fi
 }
 run_one() {
-  c=$1; T=$X/basetrees/no$c; mktree $T
+  c=$1; T=$W/basetrees/no$c; mktree $T
   for pair in "trim :" "trim_chg :_chg"; do
     set -- $pair; sub=$1; sfx=$2; [ "$sfx" = ":" ] && sfx="" || sfx="${sfx#:}"
-    dd=$X/innerdata/${sub}_no$c
+    dd=$W/innerdata/${sub}_no$c
     ( cd $T/analysis && $PY sop_trim.py --rung A3 --data $dd --out $T/analysis/runs_trim_v2${sfx} --save-pred && \
       $PY sop_baseline_fill.py --data $dd --suffix "$sfx" && \
-      $PY ../repro/run_sop_seq_baselines.py --data $dd --suffix "$sfx" ) >> $X/logs_base/no$c.log 2>&1
+      $PY ../repro/run_sop_seq_baselines.py --data $dd --suffix "$sfx" ) >> $W/logs/base/no$c.log 2>&1
   done
-  echo "  methods done no$c ($(ls -d $T/analysis/runs_trim_{v2,direct,shrink,rls,lstm,gru,ffrls}{,_chg} 2>/dev/null | wc -l) run dirs) $(date +%H:%M)"
+  echo "  methods done no$c $(date +%H:%M)"
 }
-export -f mktree run_one; export X R PY
-printf '%s\n' $CELLS | xargs -P 3 -I{} bash -c 'run_one {}'
+export -f mktree run_one
+printf '%s\n' $CELLS | xargs -P ${GPU_JOBS_METHODS:-3} -I{} bash -c 'run_one {}'
 log "comparison methods done"
-
-# ---- 4. arms
-cd $F/20_stateinput_nested
-for S in fp hull; do
-  INNERPOOL=$X/innerpool INNERTRIM=$X/innertrim INNERSOH=$F/raudit_innersoh SOCTAG=_fixpool SOLVER=$S OUTTAG=_level2_$S NPROC=12 \
-    $PY eval_arms_nested.py replace > $F/logs/eval_arms_level2_$S.log 2>&1
-  $PY score_arms_nested.py replace replace_level2_$S hyb >> $F/logs/eval_arms_level2_$S.log 2>&1
-  $PY score_arms_nested.py replace replace_level2_$S ecm >> $F/logs/eval_arms_level2_$S.log 2>&1
-  log "arms level2 $S done"
-done
-# ---- 5. methods
-cd $F/80_methods
-for S in fp hull; do
-  INNERPOOL=$X/innerpool INNERTRIM=$X/innertrim BASETREES=$X/basetrees INNERSOH=$F/raudit_innersoh SOLVER=$S OUT=$F/80_methods/level2_$S NPROC=12 \
-    $PY score_methods_nested.py > $F/logs/methods_level2_$S.log 2>&1
-  log "methods level2 $S done"
-done
+# ---- 4
+mkdir -p $W/soc_err
+INNERPOOL=$B/assets/innerpool OUTTAG=_fixpool OUTDIR=$W/soc_err NPROC=${NPROC:-12} $PY $S/build_soc_err_nested.py replace > $W/logs/soc_err.log 2>&1
+log "SOC errors done"
+# ---- 5
+mkdir -p $W/arms $W/methods; cp $W/soc_err/*.npz $W/arms/
+cd $S
+INNERPOOL=$B/assets/innerpool INNERTRIM=$W/innertrim INNERSOH=$B/assets/innersoh SOCTAG=_fixpool SOLVER=hull OUTTAG=_level2_hull2 NPROC=${NPROC:-12} OUTDIR=$W/arms $PY eval_arms_nested.py replace > $W/logs/eval_arms.log 2>&1
+OUTDIR=$W/arms $PY score_arms_nested.py replace replace_level2_hull2 hyb >> $W/logs/eval_arms.log 2>&1
+OUTDIR=$W/arms $PY score_arms_nested.py replace replace_level2_hull2 ecm >> $W/logs/eval_arms.log 2>&1
+INNERPOOL=$B/assets/innerpool INNERTRIM=$W/innertrim BASETREES=$W/basetrees INNERSOH=$B/assets/innersoh SOLVER=hull OUT=$W/methods NPROC=${NPROC:-12} $PY score_methods_nested.py > $W/logs/methods.log 2>&1
+INNERDATA=$W/innerdata INNERTRIM=$W/innertrim BASETREES=$W/basetrees SOCERR=$W/soc_err $PY $S/check_level2.py
+$PY $B/scripts/verify/compare_final.py
 log "LEVEL2 ALLDONE"
