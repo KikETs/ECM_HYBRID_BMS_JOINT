@@ -335,8 +335,8 @@ def surfaces(holdout, outdir=POOL_DIR, key_mode="rank", extra_csv=None,
     po = os.path.join(outdir, f"ocv_pool_{holdout}.csv")
     srcs = [ecm_csv, ocv_csv] + ([extra_csv] if extra_csv else [])
     if _stale(pe, holdout, outdir, srcs) or _stale(po, holdout, outdir, srcs):
-        build(holdout, outdir, key_mode=key_mode, extra_csv=extra_csv,
-              align=align)
+        build(holdout, outdir, ecm_csv=ecm_csv, ocv_csv=ocv_csv,
+              key_mode=key_mode, extra_csv=extra_csv, align=align)   # FIX: forward the CSVs
         src_cells = sorted({r["cell"] for r in _rows(ecm_csv)})
         members = [c for c in src_cells if c != holdout] \
             if holdout != "ALL" else src_cells

@@ -232,6 +232,9 @@ def main():
     ap.add_argument("--only", default=None)
     ap.add_argument("--direction", default="discharge",
                     choices=["discharge", "charge"])
+    ap.add_argument("--pool-src", default=None,
+                    help="directory holding the (filtered) uypydj_ecm.csv / "
+                         "uypydj_ocv.csv the pool in --pool-dir was built from")
     ap.add_argument("--pool-dir", default=None,
                     help="pooled surface directory; NOM comes from it, so a "
                          "different pool needs its own dataset")
@@ -243,8 +246,13 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     print(f"{'셀':<20} {'라벨':>6} {'특징블록':>8} {'짝지음':>7} {'SOH 범위':>16}")
     for cell in cells:
-        sd, sc = (surfaces(cell, args.pool_dir) if args.pool_dir
-                  else surfaces(cell))          # POOLED, holdout removed
+        if args.pool_dir and args.pool_src:
+            sd, sc = surfaces(cell, args.pool_dir,
+                              ecm_csv=os.path.join(args.pool_src, "uypydj_ecm.csv"),
+                              ocv_csv=os.path.join(args.pool_src, "uypydj_ocv.csv"))
+        else:
+            sd, sc = (surfaces(cell, args.pool_dir) if args.pool_dir
+                      else surfaces(cell))          # POOLED, holdout removed
         labels, drop = build_labels(cell, sc if args.direction == "charge" else sd,
                                     direction=args.direction)
         feats = build_features(cell, sd, sc, args.cache, args.max_runs)

@@ -1,0 +1,33 @@
+model,arm,direction,tau_s,tolerance_A,n_rows,exceed,cells_with_exceed,max_positive_difference_A,max_excess_beyond_tolerance_A,cells_exceeding,prev_table_worst_overshoot_A,prev_table_matches
+A8,oracle SOH + oracle SOC,discharge,10.0,0.0,490,0,0,0.0,0.0,,0.000,max_positive_difference
+A8,oracle SOH + oracle SOC,discharge,2.0,0.0,140,3,1,1.344,1.344,CC,1.344,max_positive_difference
+A8,oracle SOH + oracle SOC,charge,10.0,0.5,2461,0,0,0.464,0.0,,0.464,max_positive_difference
+A8,oracle SOH + oracle SOC,charge,2.0,0.5,2082,0,0,0.44,0.0,,0.440,max_positive_difference
+A8,estimated SOH + oracle SOC,discharge,10.0,0.0,496,0,0,0.0,0.0,,0.000,max_positive_difference
+A8,estimated SOH + oracle SOC,discharge,2.0,0.0,138,1,1,0.214,0.214,CC,0.214,max_positive_difference
+A8,estimated SOH + oracle SOC,charge,10.0,0.5,2459,1,1,1.267,0.767,BOOST_NEGPULSE_1S,1.267,max_positive_difference
+A8,estimated SOH + oracle SOC,charge,2.0,0.5,2080,0,0,0.405,0.0,,0.405,max_positive_difference
+A8,oracle SOH + estimated SOC,discharge,10.0,0.0,475,6,1,5.641,5.641,CC,5.641,max_positive_difference
+A8,oracle SOH + estimated SOC,discharge,2.0,0.0,111,11,1,4.912,4.912,CC,4.912,max_positive_difference
+A8,oracle SOH + estimated SOC,charge,10.0,0.5,2435,2,2,5.251,4.751,BOOST_NEGPULSE_1S CC,5.251,max_positive_difference
+A8,oracle SOH + estimated SOC,charge,2.0,0.5,2057,2,2,7.537,7.037,BOOST_NEGPULSE_1S CC,7.537,max_positive_difference
+A8,estimated SOH + estimated SOC,discharge,10.0,0.0,461,0,0,0.0,0.0,,0.000,max_positive_difference
+A8,estimated SOH + estimated SOC,discharge,2.0,0.0,108,5,1,1.303,1.303,CC,1.303,max_positive_difference
+A8,estimated SOH + estimated SOC,charge,10.0,0.5,2436,0,0,0.209,0.0,,0.209,max_positive_difference
+A8,estimated SOH + estimated SOC,charge,2.0,0.5,2062,0,0,0.018,0.0,,0.018,max_positive_difference
+A0,oracle SOH + oracle SOC,discharge,10.0,0.0,490,2,1,0.449,0.449,CC,,
+A0,oracle SOH + oracle SOC,discharge,2.0,0.0,140,4,1,1.977,1.977,CC,,
+A0,oracle SOH + oracle SOC,charge,10.0,0.5,2461,0,0,0.476,0.0,,,
+A0,oracle SOH + oracle SOC,charge,2.0,0.5,2082,1,1,0.544,0.044,CC,,
+A0,estimated SOH + oracle SOC,discharge,10.0,0.0,496,2,1,0.388,0.388,CC,,
+A0,estimated SOH + oracle SOC,discharge,2.0,0.0,138,1,1,1.201,1.201,CC,,
+A0,estimated SOH + oracle SOC,charge,10.0,0.5,2459,1,1,0.868,0.368,BOOST_NEGPULSE_1S,,
+A0,estimated SOH + oracle SOC,charge,2.0,0.5,2080,1,1,0.516,0.016,CC,,
+A0,oracle SOH + estimated SOC,discharge,10.0,0.0,475,17,1,2.143,2.143,CC,,
+A0,oracle SOH + estimated SOC,discharge,2.0,0.0,111,9,1,4.48,4.48,CC,,
+A0,oracle SOH + estimated SOC,charge,10.0,0.5,2435,3,3,5.067,4.567,BOOST BOOST_NEGPULSE_1S CC,,
+A0,oracle SOH + estimated SOC,charge,2.0,0.5,2057,3,3,9.146,8.646,BOOST BOOST_NEGPULSE_1S CC,,
+A0,estimated SOH + estimated SOC,discharge,10.0,0.0,461,5,1,0.568,0.568,CC,,
+A0,estimated SOH + estimated SOC,discharge,2.0,0.0,108,5,1,1.512,1.512,CC,,
+A0,estimated SOH + estimated SOC,charge,10.0,0.5,2436,0,0,0.471,0.0,,,
+A0,estimated SOH + estimated SOC,charge,2.0,0.5,2062,0,0,0.229,0.0,,,

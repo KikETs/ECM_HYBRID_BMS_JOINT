@@ -1,0 +1,13 @@
+{
+ "holdout": "BOOST_REST",
+ "members": [
+  "BOOST",
+  "BOOST_NEGPULSE_1S",
+  "CC",
+  "CC_CELL2"
+ ],
+ "sources": {
+  "uypydj_ecm.csv": "a563fc18d8605c71fc1457c894ab3028c965ca78ff419f3b5def9390f9df49e7",
+  "uypydj_ocv.csv": "22eca4f8c9bf21daa537c770055aaa55ad002d60d66a12b5c70ab86584e8eb67"
+ }
+}

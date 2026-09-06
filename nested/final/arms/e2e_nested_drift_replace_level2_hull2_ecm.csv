@@ -1,0 +1,17 @@
+condition,direction,tau_s,n_eligible,n_common,n_outside,n_scored,n_unscored,exceed,exceed_rate_pct,per_cell
+oracle SOH + oracle SOC,discharge,10.0,490,428,62,62,0,2,3.23,BOOST:0/15 BOOST_NEGPULSE_1S:0/13 BOOST_REST:0/7 CC:2/23 CC_CELL2:0/4
+estimated SOH + oracle SOC,discharge,10.0,496,428,68,68,0,2,2.94,BOOST:0/17 BOOST_NEGPULSE:0/4 BOOST_NEGPULSE_1S:0/14 BOOST_REST:0/1 CC:2/23 CC_CELL2:0/9
+oracle SOH + estimated SOC,discharge,10.0,475,428,47,47,0,6,12.77,BOOST:0/6 BOOST_NEGPULSE:0/3 BOOST_NEGPULSE_1S:0/2 BOOST_REST:0/15 CC:6/18 CC_CELL2:0/3
+estimated SOH + estimated SOC,discharge,10.0,461,428,33,33,0,4,12.12,BOOST:0/7 BOOST_NEGPULSE:0/6 BOOST_NEGPULSE_1S:0/3 BOOST_REST:0/9 CC:4/5 CC_CELL2:0/3
+oracle SOH + oracle SOC,discharge,2.0,140,101,39,39,0,4,10.26,BOOST:0/11 BOOST_NEGPULSE_1S:0/10 CC:4/14 CC_CELL2:0/4
+estimated SOH + oracle SOC,discharge,2.0,138,101,37,37,0,1,2.70,BOOST:0/11 BOOST_NEGPULSE_1S:0/8 CC:1/12 CC_CELL2:0/6
+oracle SOH + estimated SOC,discharge,2.0,111,101,10,0,10,0,,
+estimated SOH + estimated SOC,discharge,2.0,108,101,7,0,7,0,,
+oracle SOH + oracle SOC,charge,10.0,2461,2431,30,21,9,0,0.00,BOOST:0/11 CC:0/10
+estimated SOH + oracle SOC,charge,10.0,2459,2431,28,19,9,0,0.00,BOOST:0/11 CC:0/8
+oracle SOH + estimated SOC,charge,10.0,2435,2431,4,0,4,0,,
+estimated SOH + estimated SOC,charge,10.0,2436,2431,5,0,5,0,,
+oracle SOH + oracle SOC,charge,2.0,2082,2057,25,16,9,0,0.00,BOOST:0/8 CC:0/8
+estimated SOH + oracle SOC,charge,2.0,2080,2057,23,0,23,0,,
+oracle SOH + estimated SOC,charge,2.0,2057,2057,0,0,0,0,,
+estimated SOH + estimated SOC,charge,2.0,2062,2057,5,0,5,0,,

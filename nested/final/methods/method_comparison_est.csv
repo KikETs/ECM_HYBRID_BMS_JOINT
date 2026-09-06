@@ -1,0 +1,25 @@
+direction,tau_s,method,usable_mean_pct,boot_lo_pct,boot_hi_pct,n_rows,exceed,usable_worst_pct,rank_in_condition,interval_vs_a8,worst_overshoot_A
+discharge,10.0,a3,66.17,63.66,67.99,496,1,59.97,1,overlaps,0.099
+discharge,10.0,a8,65.96,64.11,67.72,496,0,61.88,2,—,0.000
+discharge,10.0,lstm,65.70,63.50,67.53,492,1,60.54,3,overlaps,0.321
+discharge,10.0,gru,65.21,63.98,66.31,492,1,62.71,4,overlaps,0.149
+discharge,10.0,shrink,64.58,61.78,67.05,496,2,59.05,5,overlaps,1.819
+discharge,10.0,ffrls,43.29,38.54,50.29,493,3,36.65,6,"separated, A8 higher",10.271
+discharge,2.0,gru,64.03,60.41,69.48,138,4,60.08,1,overlaps,2.227
+discharge,2.0,lstm,62.91,58.63,69.38,138,3,57.82,2,overlaps,2.080
+discharge,2.0,shrink,61.57,58.78,65.57,138,3,58.15,3,overlaps,1.013
+discharge,2.0,a3,60.76,58.43,64.11,138,1,57.93,4,overlaps,0.699
+discharge,2.0,a8,59.24,56.91,62.75,138,1,56.61,5,—,0.214
+discharge,2.0,ffrls,48.31,40.33,60.35,138,2,40.33,6,overlaps,18.788
+charge,10.0,lstm,58.32,54.25,61.69,2459,3,50.04,1,overlaps,2.286
+charge,10.0,gru,58.20,54.42,61.14,2459,3,50.55,2,overlaps,1.153
+charge,10.0,shrink,57.17,53.38,60.25,2459,1,49.69,3,overlaps,0.859
+charge,10.0,a8,57.04,53.25,60.05,2459,1,49.43,4,—,1.267
+charge,10.0,a3,56.45,51.42,60.04,2459,1,45.23,5,overlaps,1.337
+charge,10.0,ffrls,46.99,44.00,50.72,2459,8,42.43,6,"separated, A8 higher",1.586
+charge,2.0,lstm,58.23,54.47,61.32,2080,3,51.76,1,overlaps,0.992
+charge,2.0,gru,58.08,54.31,61.38,2080,4,51.71,2,overlaps,0.674
+charge,2.0,a8,57.05,53.10,59.99,2080,0,47.76,3,—,0.405
+charge,2.0,a3,55.97,51.35,59.59,2080,0,46.89,4,overlaps,0.417
+charge,2.0,shrink,55.15,51.43,58.25,2080,0,46.11,5,overlaps,0.400
+charge,2.0,ffrls,49.78,46.46,53.54,2080,9,44.06,6,overlaps,5.254

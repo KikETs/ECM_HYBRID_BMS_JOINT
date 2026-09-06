@@ -1,0 +1,5 @@
+direction,tau_s,method,soh_arm,n_cells,n_rows,exceed,usable_mean_pct,usable_median_pct,usable_worst_pct,worst_cell,lambda_min,lambda_median,lambda_max,lambda_pooled_shipped,exceed_ub95_pct,usable_boot_lo_pct,usable_boot_hi_pct,worst_overshoot_A
+discharge,10.0,ffrls,est,6,493,3,43.29,46.82,36.65,BOOST,0.4461,0.4643,0.6464,,1.565,38.54,50.29,10.271020377644469
+discharge,2.0,ffrls,est,4,138,2,48.31,47.64,40.33,BOOST_NEGPULSE_1S,0.3974,0.4153,0.6502,,4.492,40.33,60.35,18.787913136307317
+charge,10.0,ffrls,est,6,2459,8,46.99,45.25,42.43,BOOST,0.4292,0.4797,0.5368,,0.586,44.00,50.72,1.5859726715004072
+charge,2.0,ffrls,est,6,2080,9,49.78,49.27,44.06,CC_CELL2,0.4242,0.4935,0.5925,,0.754,46.46,53.54,5.253635237318775

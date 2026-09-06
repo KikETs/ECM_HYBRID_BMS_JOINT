@@ -1,0 +1,17 @@
+condition,direction,tau_s,raw_label_rows,no_trim_k,no_prior_drive,solver_fail,eligible,common,outside,cells_calibratable_outside,scored_outside,unscored_outside
+oracle SOH + oracle SOC,discharge,10.0,3625,128,0,550,490,428,62,5,62,0
+estimated SOH + oracle SOC,discharge,10.0,3625,128,0,544,496,428,68,6,68,0
+oracle SOH + estimated SOC,discharge,10.0,3625,128,0,567,475,428,47,6,47,0
+estimated SOH + estimated SOC,discharge,10.0,3625,128,0,580,461,428,33,6,33,0
+oracle SOH + oracle SOC,discharge,2.0,3625,128,0,560,140,101,39,4,39,0
+estimated SOH + oracle SOC,discharge,2.0,3625,128,0,563,138,101,37,4,37,0
+oracle SOH + estimated SOC,discharge,2.0,3625,128,0,582,111,101,10,0,0,10
+estimated SOH + estimated SOC,discharge,2.0,3625,128,0,593,108,101,7,0,0,7
+oracle SOH + oracle SOC,charge,10.0,3342,114,0,2,2461,2431,30,2,21,9
+estimated SOH + oracle SOC,charge,10.0,3342,114,0,4,2459,2431,28,2,19,9
+oracle SOH + estimated SOC,charge,10.0,3342,114,0,30,2435,2431,4,0,0,4
+estimated SOH + estimated SOC,charge,10.0,3342,114,0,33,2436,2431,5,0,0,5
+oracle SOH + oracle SOC,charge,2.0,3458,118,0,2,2082,2057,25,2,16,9
+estimated SOH + oracle SOC,charge,2.0,3458,118,0,4,2080,2057,23,0,0,23
+oracle SOH + estimated SOC,charge,2.0,3458,118,0,30,2057,2057,0,0,0,0
+estimated SOH + estimated SOC,charge,2.0,3458,118,0,33,2062,2057,5,0,0,5
