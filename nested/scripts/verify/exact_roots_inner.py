@@ -5,6 +5,16 @@ arm_rows_replace_level2_hull2.pkl (the rows that determine lambda_c)."""
 import csv, multiprocessing as mp, os, pickle, sys
 import numpy as np
 V=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# --- paths (repository layout): modules from $RCSOP_BUNDLE/scripts, stored inputs from
+#     $RCSOP_BUNDLE/verification unless a fresh copy exists in $RCSOP_WORK/verification,
+#     outputs to $RCSOP_WORK/verification
+_B = os.environ['RCSOP_BUNDLE']; _W = os.environ['RCSOP_WORK']
+_OUTV = os.path.join(_W, 'verification'); os.makedirs(_OUTV, exist_ok=True)
+def _inp(name):
+    p = os.path.join(_OUTV, name)
+    return p if os.path.exists(p) else os.path.join(_B, 'verification', name)
+sys.path.insert(0, os.path.join(_B, 'scripts')); sys.path.insert(0, os.path.join(_B, 'scripts', 'verify'))
+
 REPO=os.environ['RCSOP_REPO']; A=os.path.join(REPO,'analysis'); FLW=os.environ['RCSOP_WORK']; X=os.path.join(os.environ['RCSOP_BUNDLE'],'assets')
 sys.path.insert(0,A); sys.path.insert(0,os.path.join(os.environ['RCSOP_BUNDLE'],'scripts')); sys.path.insert(0,os.path.join(os.environ['RCSOP_BUNDLE'],'scripts','verify'))
 import eval_sop_amps as EV, ecm_pool
@@ -33,7 +43,7 @@ if __name__=='__main__':
     tasks=[(c,j,d) for c in CELLS for j in CELLS if j!=c for d in ('discharge','charge')]
     with mp.Pool(12) as pool: res=pool.map(run,tasks)
     rows=[r for rr in res for r in rr]
-    with open(os.path.join(V,'solver','exact_roots_inner.csv'),'w',newline='') as f:
+    with open(os.path.join(_OUTV,'exact_roots_inner.csv'),'w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
     import collections
     print(len(rows),'inner rows')

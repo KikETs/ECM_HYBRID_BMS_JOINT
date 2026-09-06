@@ -1,0 +1,7 @@
+fresh clone (main) verify scripts, 2026-09-06T11:04:07+09:00
+validate_v2.py            : 0 DIFFER on all eligible outer rows (A0/A3, discharge/charge)
+metric_definitions.py     : 32 condition rows, 40982 row-level rows; metric_summary.csv identical to results/metric_summary.csv
+build_solver_diagnostics.py: written from stored inputs
+soh_tol_sensitivity.py    : 224 rows; identical to results/sensitivity_results.csv
+exact_roots.py            : 13562 rows; exact-enumeration columns identical to verification/exact_roots_outer.csv: True;
+                            the stored file's *_grid_* columns record solver v1 (hull_solver_v1_grid120.py); a rerun fills them with solver v2

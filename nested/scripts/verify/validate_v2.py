@@ -2,10 +2,20 @@
 import csv, multiprocessing as mp, os, sys
 import numpy as np
 V=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# --- paths (repository layout): modules from $RCSOP_BUNDLE/scripts, stored inputs from
+#     $RCSOP_BUNDLE/verification unless a fresh copy exists in $RCSOP_WORK/verification,
+#     outputs to $RCSOP_WORK/verification
+_B = os.environ['RCSOP_BUNDLE']; _W = os.environ['RCSOP_WORK']
+_OUTV = os.path.join(_W, 'verification'); os.makedirs(_OUTV, exist_ok=True)
+def _inp(name):
+    p = os.path.join(_OUTV, name)
+    return p if os.path.exists(p) else os.path.join(_B, 'verification', name)
+sys.path.insert(0, os.path.join(_B, 'scripts')); sys.path.insert(0, os.path.join(_B, 'scripts', 'verify'))
+
 REPO=os.environ['RCSOP_REPO']; A=os.path.join(REPO,'analysis'); FLW=os.environ['RCSOP_WORK']
-sys.path.insert(0,A); sys.path.insert(0,FLW)
+sys.path.insert(0,A)
 import eval_sop_amps as EV; from ecm_pool import surfaces; import hull_solver
-EX={(r['direction'],r['cell'],int(r['cycle']),float(r['tau']),round(float(r['meas']),3)):r for r in csv.DictReader(open(f'{V}/solver/exact_roots_outer.csv'))}
+EX={(r['direction'],r['cell'],int(r['cycle']),float(r['tau']),round(float(r['meas']),3)):r for r in csv.DictReader(open(_inp('exact_roots_outer.csv')))}
 def run(task):
     d,c=task; charge=d=='charge'; lab=EV.LABEL_CHG if charge else EV.LABEL
     rows=[r for r in csv.DictReader(open(lab,encoding='utf-8')) if r['cell']==c]
@@ -28,7 +38,7 @@ if __name__=='__main__':
     CELLS=['BOOST','BOOST_NEGPULSE','BOOST_NEGPULSE_1S','BOOST_REST','CC','CC_CELL2']
     with mp.Pool(12) as pool: res=pool.map(run,[(d,c) for d in ('discharge','charge') for c in CELLS])
     rows=[r for rr in res for r in rr]
-    with open(f'{V}/solver/validate_v2.csv','w',newline='') as f:
+    with open(os.path.join(_OUTV,'validate_v2.csv'),'w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
     import collections
     for key in ('A0','A3'):

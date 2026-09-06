@@ -31,6 +31,16 @@ import sys
 import numpy as np
 
 V = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# --- paths (repository layout): modules from $RCSOP_BUNDLE/scripts, stored inputs from
+#     $RCSOP_BUNDLE/verification unless a fresh copy exists in $RCSOP_WORK/verification,
+#     outputs to $RCSOP_WORK/verification
+_B = os.environ['RCSOP_BUNDLE']; _W = os.environ['RCSOP_WORK']
+_OUTV = os.path.join(_W, 'verification'); os.makedirs(_OUTV, exist_ok=True)
+def _inp(name):
+    p = os.path.join(_OUTV, name)
+    return p if os.path.exists(p) else os.path.join(_B, 'verification', name)
+sys.path.insert(0, os.path.join(_B, 'scripts')); sys.path.insert(0, os.path.join(_B, 'scripts', 'verify'))
+
 REPO = os.environ['RCSOP_REPO']
 A = os.path.join(REPO, 'analysis')
 FLW = os.environ['RCSOP_WORK']
@@ -132,7 +142,7 @@ def main():
     print(f'  {len(tasks)} re-solve tasks (hull solver)', flush=True)
     with mp.Pool(int(os.environ.get('NPROC', '12'))) as pool:
         R = dict(pool.map(resolve, tasks))
-    pickle.dump(R, open(os.path.join(V, 'sensitivity', 'resolved_rows.pkl'), 'wb'))
+    pickle.dump(R, open(os.path.join(_OUTV, 'resolved_rows.pkl'), 'wb'))
     out = []
     for key, model in (('hyb', 'A8'), ('ecm', 'A0')):
         for d in ('discharge', 'charge'):
@@ -176,7 +186,7 @@ def main():
                                                       else 'lambda refitted with tol_fit=t and judged at t (joint policy change)'),
                                             rows_added_vs_delta0=0, rows_removed_vs_delta0=0, n_unscored=0,
                                             change_reason='rows unchanged', **s))
-    with open(os.path.join(V, 'sensitivity_results.csv'), 'w', newline='') as f:
+    with open(os.path.join(_OUTV, 'sensitivity_results.csv'), 'w', newline='') as f:
         w = csv.DictWriter(f, fieldnames=list(out[0].keys())); w.writeheader(); w.writerows(out)
     print(len(out), 'rows -> sensitivity_results.csv', flush=True)
 

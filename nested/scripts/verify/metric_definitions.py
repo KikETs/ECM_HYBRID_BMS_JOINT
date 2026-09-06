@@ -19,6 +19,16 @@ sys.path.insert(0, os.path.join(os.environ['RCSOP_REPO'], 'repro'))
 from run_safety_strict import fit_lambda, MIN_TRAIN   # noqa: E402  (same bisection as the tables)
 
 V = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# --- paths (repository layout): modules from $RCSOP_BUNDLE/scripts, stored inputs from
+#     $RCSOP_BUNDLE/verification unless a fresh copy exists in $RCSOP_WORK/verification,
+#     outputs to $RCSOP_WORK/verification
+_B = os.environ['RCSOP_BUNDLE']; _W = os.environ['RCSOP_WORK']
+_OUTV = os.path.join(_W, 'verification'); os.makedirs(_OUTV, exist_ok=True)
+def _inp(name):
+    p = os.path.join(_OUTV, name)
+    return p if os.path.exists(p) else os.path.join(_B, 'verification', name)
+sys.path.insert(0, os.path.join(_B, 'scripts')); sys.path.insert(0, os.path.join(_B, 'scripts', 'verify'))
+
 FLW = os.environ['RCSOP_WORK']
 SN = os.path.join(FLW, 'arms')   # outputs of reproduce.sh score
 TOL = {'discharge': 0.0, 'charge': 0.5}
@@ -82,10 +92,9 @@ for key, model in (('hyb', 'A8'), ('ecm', 'A0')):
                     rec['prev_table_matches'] = ('max_positive_difference' if p and abs(float(p['worst_overshoot_A']) - mpd) < 5e-4
                                                  else ('max_excess' if p and abs(float(p['worst_overshoot_A']) - mex) < 5e-4 else 'NO'))
                 rows_out.append(rec)
-os.makedirs(V + '/metrics', exist_ok=True)
-with open(os.path.join(V, 'metrics', 'metric_summary.csv'), 'w', newline='') as f:
+with open(os.path.join(_OUTV, 'metric_summary.csv'), 'w', newline='') as f:
     w = csv.DictWriter(f, fieldnames=list(rows_out[0].keys())); w.writeheader(); w.writerows(rows_out)
-with open(os.path.join(V, 'metrics', 'row_level_d.csv'), 'w', newline='') as f:
+with open(os.path.join(_OUTV, 'row_level_d.csv'), 'w', newline='') as f:
     w = csv.DictWriter(f, fieldnames=list(per_row[0].keys())); w.writeheader(); w.writerows(per_row)
 for r in rows_out:
     if r['model'] == 'A8' and r['arm'] == ARMS['eo']:
