@@ -2,7 +2,7 @@
 2. A8 is one-dimensional: inputs 1..11 are zeroed before fitting/inference, so k_f and k_s depend on dR_fast only.
    Check: stored model weights, and that k_f, k_s are monotone functions of each other within a fold.
 3. cyclewise max: are the k_f and k_s maxima taken from the same observation?
-7. EPS = 1e-9 A^2 in dR = e_ir / (e_ii + EPS): size relative to e_ii (exc = log10(e_ii + EPS) is stored per row).
+7. EPS = 1e-9 A^2: see e9_eps.py (uses the strict-inner trim datasets).
 """
 import os, sys, glob
 import numpy as np, torch
@@ -11,7 +11,7 @@ from r2common import *
 
 OUT = out_dir('E9')
 A = os.path.join(REPO, 'analysis')
-rows_w, rows_agg, rows_eps = [], [], []
+rows_w, rows_agg = [], []
 for run in ('runs_trim_a8', 'runs_trim_a8_chg'):
     for c in CELLS:
         mp = os.path.join(A, run, f'model_A8_{c}.pt')
@@ -42,10 +42,6 @@ for run in ('runs_trim_a8', 'runs_trim_a8_chg'):
             dk.append(ks[i_s] / ks[i_f] - 1)       # how much larger the separate ks max is than ks at the kf-argmax row
         rows_agg.append(dict(run=run, cell=c, cycles=n, same_row=same, same_pct=100 * same / n,
                              ks_sep_vs_joint_max_pct=100 * float(np.max(dk)), ks_sep_vs_joint_median_pct=100 * float(np.median(dk))))
-        e_ii = 10 ** exc - 1e-9
-        rows_eps.append(dict(run=run, cell=c, n=len(exc), e_ii_min_A2=float(e_ii.min()), e_ii_p01_A2=float(np.quantile(e_ii, .01)),
-                             eps_over_eii_max=float(1e-9 / e_ii.min())))
 write_csv(os.path.join(OUT, 'E9_a8_weights.csv'), rows_w)
 write_csv(os.path.join(OUT, 'E9_cyclewise_max.csv'), rows_agg)
-write_csv(os.path.join(OUT, 'E9_eps.csv'), rows_eps)
 print('E9 done')

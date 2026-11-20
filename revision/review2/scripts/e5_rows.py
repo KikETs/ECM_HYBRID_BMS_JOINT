@@ -2,14 +2,14 @@
 plus a conventional HPPC pulse-resistance lookup baseline.
 
 HPPC baseline: R(SOC, SOH) = measured pulse resistance R_mOhm at the highest-rate rank for the same direction and tau,
-import sys as _sys, os as _os
-_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-from paths import WORK as R2, REPO as REPO_ROOT, R1 as REV1
 from the training cells only (outer: five cells != c; inner: four cells != c, j), linear in (SOC, SOH) with
 nearest-neighbour fill outside the convex hull. I_lim = |V_lim - V_pre| / R. SOH is the same estimated SOH the other
 methods use; SOC is the reference SOC (primary arm).
 Output: out/E5/method_rows.pkl  {(method, level, c, j, direction): [row dicts]}
 """
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from paths import WORK as R2, REPO as REPO_ROOT, R1 as REV1
 import os, sys, csv, pickle, multiprocessing as mp
 import numpy as np
 
