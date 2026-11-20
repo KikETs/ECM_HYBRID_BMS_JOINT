@@ -1,0 +1,16 @@
+{
+  "source_hashes": {
+    "/home/user/바탕화면/DL/Samsung30T/experiments/unseen_cell_sop_20260914/audit_rpcwby_protocol_v45.py": "795f9132ea9f1d564e529987cd9166295c57c02153afca449bfa49917efd9b50",
+    "/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/repo/analysis/rpcwby_sop_test3.py": "a8561d7fcb661eae90159604de8a8121644cdf132a621d12cd24e6867969079f",
+    "/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/repo/raw/RPCWBY/0_SOP_summary.xlsx": "b46a81f917fa600913d3b9b45760a2ecc9d3fae63516fb2be034690667851b1a",
+    "/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/repo/raw/RPCWBY/Arbin Cycler Protocols.zip": "3eafc66580c0366123d11dab8812688a3677bb095b8406ffe1ba65c6f7a2f6c6",
+    "/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/repo/raw/RPCWBY/3_Test_3.zip": "015ce4532097de44fa4cef1955e7ee1d9f761222f389c9f03d612954ddb0011a"
+  },
+  "output_hashes": {
+    "cp_pulses.csv": "f769751dc0038a6202c87c21e083270e0013e7c498815352c59c1d6cccdad688",
+    "protocol.json": "1360b21159fbe848d6af9857018c98aacb7afd0730fbedc35f6e5c7ce8acae3e",
+    "summary.json": "f7002b48437d8965c6efcac4d623900a83cd78c1deaa5ab446f2f19fe7a4f338",
+    "table_links.csv": "cc5aad9322e758229e8a386965d8ee2d667ed2a65bd72a71b53cc05bfc1e759a"
+  },
+  "goal_complete": false
+}

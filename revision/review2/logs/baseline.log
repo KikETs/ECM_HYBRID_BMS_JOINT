@@ -1,0 +1,107 @@
+code changes present
+shipped pools ready
+  noBOOST/holdout=BOOST_NEGPULSE: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1423  |dI| max 2.582 A  OK
+  noBOOST/holdout=BOOST_NEGPULSE_1S: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0421  |dI| max 1.210 A  OK
+  noBOOST/holdout=BOOST_REST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1298  |dI| max 2.197 A  OK
+  noBOOST/holdout=CC: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0450  |dI| max 1.297 A  OK
+  noBOOST/holdout=CC_CELL2: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1276  |dI| max 1.811 A  OK
+  noBOOST_NEGPULSE/holdout=BOOST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0950  |dI| max 4.513 A  OK
+  noBOOST_NEGPULSE/holdout=BOOST_NEGPULSE_1S: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0881  |dI| max 4.057 A  OK
+  noBOOST_NEGPULSE/holdout=BOOST_REST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0389  |dI| max 4.117 A  OK
+  noBOOST_NEGPULSE/holdout=CC: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1248  |dI| max 4.057 A  OK
+  noBOOST_NEGPULSE/holdout=CC_CELL2: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1456  |dI| max 6.774 A  OK
+  noBOOST_NEGPULSE_1S/holdout=BOOST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0427  |dI| max 1.286 A  OK
+  noBOOST_NEGPULSE_1S/holdout=BOOST_NEGPULSE: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1842  |dI| max 3.295 A  OK
+  noBOOST_NEGPULSE_1S/holdout=BOOST_REST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1555  |dI| max 2.547 A  OK
+  noBOOST_NEGPULSE_1S/holdout=CC: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0532  |dI| max 1.403 A  OK
+  noBOOST_NEGPULSE_1S/holdout=CC_CELL2: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1231  |dI| max 2.338 A  OK
+  noBOOST_REST/holdout=BOOST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1772  |dI| max 2.067 A  OK
+  noBOOST_REST/holdout=BOOST_NEGPULSE: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0955  |dI| max 8.401 A  OK
+  noBOOST_REST/holdout=BOOST_NEGPULSE_1S: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0962  |dI| max 1.794 A  OK
+  noBOOST_REST/holdout=CC: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1285  |dI| max 2.253 A  OK
+  noBOOST_REST/holdout=CC_CELL2: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1558  |dI| max 9.507 A  OK
+  noCC/holdout=BOOST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0428  |dI| max 1.397 A  OK
+  noCC/holdout=BOOST_NEGPULSE: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1170  |dI| max 2.145 A  OK
+  noCC/holdout=BOOST_NEGPULSE_1S: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0505  |dI| max 1.426 A  OK
+  noCC/holdout=BOOST_REST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1196  |dI| max 2.111 A  OK
+  noCC/holdout=CC_CELL2: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1753  |dI| max 4.062 A  OK
+  noCC_CELL2/holdout=BOOST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1912  |dI| max 4.111 A  OK
+  noCC_CELL2/holdout=BOOST_NEGPULSE: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.2074  |dI| max 7.999 A  OK
+  noCC_CELL2/holdout=BOOST_NEGPULSE_1S: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1503  |dI| max 2.911 A  OK
+  noCC_CELL2/holdout=BOOST_REST: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.1376  |dI| max 6.449 A  OK
+  noCC_CELL2/holdout=CC: rebuilt==bundled True  !=shipped True  R0 rel diff max 0.0730  |dI| max 3.029 A  OK
+  ALL 30 POOLS OK
+code changes present
+shipped pools ready
+  288 tasks
+  replace: 288 blocks, 337200 rows -> arm_rows_replace_level2_hull2.pkl
+  -> e2e_nested_full_replace_level2_hull2_hyb.csv (32 rows)
+  -> e2e_nested_paired_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_fixed_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_drift_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_counts_replace_level2_hull2_hyb.csv (16 rows)
+  -> e2e_nested_percell_replace_level2_hull2_hyb.csv (176 rows)
+  -> e2e_nested_full_replace_level2_hull2_ecm.csv (32 rows)
+  -> e2e_nested_paired_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_fixed_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_drift_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_counts_replace_level2_hull2_ecm.csv (16 rows)
+  -> e2e_nested_percell_replace_level2_hull2_ecm.csv (176 rows)
+  432 tasks, solver=hull
+  a8     discharge tau=  10 n=  496 exc=0 usable=65.96 [64.11,67.72] worst=61.88
+  a8     discharge tau=   2 n=  138 exc=1 usable=59.24 [56.91,62.75] worst=56.61
+  a8     charge    tau=  10 n= 2459 exc=1 usable=57.04 [53.25,60.05] worst=49.43
+  a8     charge    tau=   2 n= 2080 exc=0 usable=57.05 [53.10,59.99] worst=47.76
+  a0     discharge tau=  10 n=  496 exc=2 usable=60.69 [57.50,62.96] worst=51.65
+  a0     discharge tau=   2 n=  138 exc=1 usable=56.54 [52.79,60.72] worst=49.80
+  a0     charge    tau=  10 n= 2459 exc=1 usable=51.06 [47.42,54.39] worst=44.94
+  a0     charge    tau=   2 n= 2080 exc=1 usable=52.45 [48.45,55.73] worst=45.67
+  a3     discharge tau=  10 n=  496 exc=1 usable=66.17 [63.66,67.99] worst=59.97
+  a3     discharge tau=   2 n=  138 exc=1 usable=60.76 [58.43,64.11] worst=57.93
+  a3     charge    tau=  10 n= 2459 exc=1 usable=56.45 [51.42,60.04] worst=45.23
+  a3     charge    tau=   2 n= 2080 exc=0 usable=55.97 [51.35,59.59] worst=46.89
+  shrink discharge tau=  10 n=  496 exc=2 usable=64.58 [61.78,67.05] worst=59.05
+  shrink discharge tau=   2 n=  138 exc=3 usable=61.57 [58.78,65.57] worst=58.15
+  shrink charge    tau=  10 n= 2459 exc=1 usable=57.17 [53.38,60.25] worst=49.69
+  shrink charge    tau=   2 n= 2080 exc=0 usable=55.15 [51.43,58.25] worst=46.11
+  lstm   discharge tau=  10 n=  492 exc=1 usable=65.70 [63.50,67.53] worst=60.54
+  lstm   discharge tau=   2 n=  138 exc=3 usable=62.91 [58.63,69.38] worst=57.82
+  lstm   charge    tau=  10 n= 2459 exc=3 usable=58.32 [54.25,61.69] worst=50.04
+  lstm   charge    tau=   2 n= 2080 exc=3 usable=58.23 [54.47,61.32] worst=51.76
+  gru    discharge tau=  10 n=  492 exc=1 usable=65.21 [63.98,66.31] worst=62.71
+  gru    discharge tau=   2 n=  138 exc=4 usable=64.03 [60.41,69.48] worst=60.08
+  gru    charge    tau=  10 n= 2459 exc=3 usable=58.20 [54.42,61.14] worst=50.55
+  gru    charge    tau=   2 n= 2080 exc=4 usable=58.08 [54.31,61.38] worst=51.71
+  ffrls  discharge tau=  10 n=  493 exc=3 usable=43.29 [38.54,50.29] worst=36.65
+  ffrls  discharge tau=   2 n=  138 exc=2 usable=48.31 [40.33,60.35] worst=40.33
+  ffrls  charge    tau=  10 n= 2459 exc=8 usable=46.99 [44.00,50.72] worst=42.43
+  ffrls  charge    tau=   2 n= 2080 exc=9 usable=49.78 [46.46,53.54] worst=44.06
+  -> /home/user/바탕화면/DL/ETRANS_AUDIT/review2_20261120/baseline/methods/method_comparison_est.csv
+  same  e2e_nested_paired_replace_level2_hull2_ecm.csv
+  same  e2e_nested_counts_replace_level2_hull2_hyb.csv
+  same  e2e_nested_drift_replace_level2_hull2_ecm.csv
+  same  e2e_nested_fixed_replace_level2_hull2_hyb.csv
+  same  e2e_nested_percell_replace_level2_hull2_hyb.csv
+  same  e2e_nested_paired_replace_level2_hull2_hyb.csv
+  same  e2e_nested_full_replace_level2_hull2_hyb.csv
+  same  e2e_nested_fixed_replace_level2_hull2_ecm.csv
+  same  e2e_nested_full_replace_level2_hull2_ecm.csv
+  same  e2e_nested_counts_replace_level2_hull2_ecm.csv
+  same  e2e_nested_percell_replace_level2_hull2_ecm.csv
+  same  e2e_nested_drift_replace_level2_hull2_hyb.csv
+  same  safety_strict_ffrls_est.csv
+  same  safety_strict_lstm_est.csv
+  same  method_comparison_est.csv
+  same  safety_strict_percell_ffrls_est.csv
+  same  safety_strict_percell_a0_est.csv
+  same  safety_strict_shrink_est.csv
+  same  safety_strict_percell_a8_est.csv
+  same  safety_strict_percell_shrink_est.csv
+  same  safety_strict_gru_est.csv
+  same  safety_strict_percell_gru_est.csv
+  same  safety_strict_a0_est.csv
+  same  safety_strict_percell_a3_est.csv
+  same  safety_strict_a8_est.csv
+  same  safety_strict_a3_est.csv
+  same  safety_strict_percell_lstm_est.csv
+  27 tables compared, 0 differ

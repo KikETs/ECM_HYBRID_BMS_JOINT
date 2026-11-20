@@ -1,0 +1,13 @@
+run,cell,keys,ablate,W_shape,W_col0,W_other_absmax,spearman_logkf_logks
+runs_trim_a8,BOOST,"seeds,cell,rung",None,None,None,,1.0
+runs_trim_a8,BOOST_NEGPULSE,"seeds,cell,rung",None,None,None,,1.0
+runs_trim_a8,BOOST_NEGPULSE_1S,"seeds,cell,rung",None,None,None,,1.0
+runs_trim_a8,BOOST_REST,"seeds,cell,rung",None,None,None,,1.0
+runs_trim_a8,CC,"seeds,cell,rung",None,None,None,,1.0
+runs_trim_a8,CC_CELL2,"seeds,cell,rung",None,None,None,,0.9999999835505193
+runs_trim_a8_chg,BOOST,"seeds,cell,rung",None,None,None,,0.9999999391173268
+runs_trim_a8_chg,BOOST_NEGPULSE,"seeds,cell,rung",None,None,None,,0.9999999754049488
+runs_trim_a8_chg,BOOST_NEGPULSE_1S,"seeds,cell,rung",None,None,None,,0.9999999767748086
+runs_trim_a8_chg,BOOST_REST,"seeds,cell,rung",None,None,None,,1.0
+runs_trim_a8_chg,CC,"seeds,cell,rung",None,None,None,,1.0
+runs_trim_a8_chg,CC_CELL2,"seeds,cell,rung",None,None,None,,0.9999999843349111

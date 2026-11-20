@@ -1,0 +1,13 @@
+run,cell,cycles,same_row,same_pct,ks_sep_vs_joint_max_pct,ks_sep_vs_joint_median_pct
+runs_trim_a8,BOOST,49,49,100.0,0.0,0.0
+runs_trim_a8,BOOST_NEGPULSE,42,42,100.0,0.0,0.0
+runs_trim_a8,BOOST_NEGPULSE_1S,48,48,100.0,0.0,0.0
+runs_trim_a8,BOOST_REST,35,35,100.0,0.0,0.0
+runs_trim_a8,CC,48,48,100.0,0.0,0.0
+runs_trim_a8,CC_CELL2,47,47,100.0,0.0,0.0
+runs_trim_a8_chg,BOOST,49,49,100.0,0.0,0.0
+runs_trim_a8_chg,BOOST_NEGPULSE,42,42,100.0,0.0,0.0
+runs_trim_a8_chg,BOOST_NEGPULSE_1S,48,48,100.0,0.0,0.0
+runs_trim_a8_chg,BOOST_REST,35,35,100.0,0.0,0.0
+runs_trim_a8_chg,CC,48,48,100.0,0.0,0.0
+runs_trim_a8_chg,CC_CELL2,47,47,100.0,0.0,0.0

@@ -1,0 +1,6 @@
+/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/mcu/original_flash.bin: 성공
+all_grid 2340 median/p95/max us 275.108 312.4262 371.384
+all_success 1517 median/p95/max us 286.512 313.08639999999997 342.696
+convergence_cap_exercised 68 median/p95/max us 319.812 354.6784 371.384
+solver statuses {2: 2543, 0: 6766, 4: 61, 1: 4, 5: 2}
+board {'version': 5, 'clock_hz': 250000000, 'req_bytes': 73, 'res_bytes': 32, 'ecm_bytes': 32768, 'ocv_bytes': 4096, 'nfeat': 12}

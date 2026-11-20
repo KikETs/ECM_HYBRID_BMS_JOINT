@@ -1,0 +1,50 @@
+CC 5 14 labels 168 snapshots
+BOOST_NEGPULSE_1S 43 14 labels 169 snapshots
+BOOST 5 5 labels 168 snapshots
+CC_CELL2 6 12 labels 169 snapshots
+BOOST_REST 5 14 labels 168 snapshots
+BOOST_NEGPULSE 5 13 labels 168 snapshots
+BOOST_NEGPULSE_1S 268 15 labels 169 snapshots
+CC 225 14 labels 169 snapshots
+BOOST_REST 187 15 labels 168 snapshots
+CC_CELL2 268 15 labels 169 snapshots
+BOOST 262 15 labels 168 snapshots
+BOOST_NEGPULSE 225 15 labels 168 snapshots
+BOOST_NEGPULSE_1S 531 17 labels 169 snapshots
+CC 487 17 labels 169 snapshots
+BOOST_REST 375 15 labels 169 snapshots
+CC_CELL2 531 17 labels 169 snapshots
+BOOST 525 17 labels 169 snapshots
+BOOST_NEGPULSE 450 16 labels 169 snapshots
+BOOST_NEGPULSE_1S 793 20 labels 168 snapshots
+BOOST_REST 562 18 labels 169 snapshots
+CC 750 19 labels 168 snapshots
+CC_CELL2 793 19 labels 169 snapshots
+BOOST 787 19 labels 168 snapshots
+BOOST_NEGPULSE 712 20 labels 168 snapshots
+BOOST_NEGPULSE_1S 1056 24 labels 168 snapshots
+CC_CELL2 1056 23 labels 168 snapshots
+BOOST_REST 750 23 labels 168 snapshots
+CC 1012 23 labels 169 snapshots
+BOOST_NEGPULSE 975 22 labels 168 snapshots
+BOOST 1050 24 labels 169 snapshots
+BOOST_NEGPULSE_1S 1356 29 labels 168 snapshots
+BOOST_REST 937 22 labels 168 snapshots
+CC_CELL2 1318 26 labels 169 snapshots
+CC 1275 26 labels 168 snapshots
+BOOST 1312 26 labels 168 snapshots
+BOOST_NEGPULSE 1210 25 labels 169 snapshots
+BOOST_NEGPULSE_1S 1618 36 labels 167 snapshots
+BOOST_NEGPULSE_1S 1881 initial OCV outside SOH hull
+CC 1612 36 labels 167 snapshots
+CC 1875 initial OCV outside SOH hull
+BOOST_REST 1162 26 labels 168 snapshots
+BOOST_REST 1350 initial OCV outside SOH hull
+CC_CELL2 1618 32 labels 168 snapshots
+BOOST 1612 37 labels 168 snapshots
+BOOST 1875 initial OCV outside SOH hull
+BOOST_NEGPULSE 1435 28 labels 168 snapshots
+BOOST_NEGPULSE 1735 initial OCV outside SOH hull
+CC_CELL2 1881 37 labels 168 snapshots
+replay statuses {'ok': 721, 'short_history': 18, 'solver_excluded': 161}
+matched comparison rows 44

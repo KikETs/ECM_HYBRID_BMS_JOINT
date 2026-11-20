@@ -23,6 +23,16 @@ float sop_solve(sop_dir_t dir, float soc, float soh, float v_pre,
                 float v_limit, float tau_s, float kf, float ks,
                 uint32_t *iters_out);
 
+typedef enum {
+  SOP_REVIEW_OK = 0, SOP_REVIEW_INPUT = 1, SOP_REVIEW_HULL = 2,
+  SOP_REVIEW_RESISTANCE = 3, SOP_REVIEW_ITERATION_CAP = 4, SOP_REVIEW_RANGE = 5
+} sop_review_status_t;
+sop_review_status_t sop_review_solve(sop_dir_t dir, float soc, float soh,
+                     float v_pre, float v_limit, float tau_s, float kf, float ks,
+                     float *answer, uint32_t *iterations);
+
+float sop_review_stress(sop_dir_t dir, float soc, float soh, float vpre,
+                       float cutoff, float tau, float kf, float ks);
 #endif
 
 /* ---- 샘플마다 도는 것 ------------------------------------------------- */

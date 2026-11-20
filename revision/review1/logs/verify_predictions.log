@@ -1,0 +1,3 @@
+360 prediction assets checked for held-cell identity, shape and finite positive multipliers.
+[('runs_trim_ffrls', 30), ('runs_trim_ffrls_chg', 30), ('runs_trim_gru', 30), ('runs_trim_gru_chg', 30), ('runs_trim_lstm', 30), ('runs_trim_lstm_chg', 30), ('runs_trim_shrink', 30), ('runs_trim_shrink_chg', 30), ('runs_trim_v2', 30), ('runs_trim_v2_chg', 30), ('trim_chg_noBOOST', 5), ('trim_chg_noBOOST_NEGPULSE', 5), ('trim_chg_noBOOST_NEGPULSE_1S', 5), ('trim_chg_noBOOST_REST', 5), ('trim_chg_noCC', 5), ('trim_chg_noCC_CELL2', 5), ('trim_noBOOST', 5), ('trim_noBOOST_NEGPULSE', 5), ('trim_noBOOST_NEGPULSE_1S', 5), ('trim_noBOOST_REST', 5), ('trim_noCC', 5), ('trim_noCC_CELL2', 5)]
+60 feature dataset pairs verified against strict training cell lineage.

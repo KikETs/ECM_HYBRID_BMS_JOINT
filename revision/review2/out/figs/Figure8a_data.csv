@@ -1,0 +1,25 @@
+test,surface,direction,min_margin,exceed
+Test #1,CC,charge,0.596,189
+Test #1,CC,discharge,1.268,0
+Test #1,BOOST_NEGPULSE,charge,0.522,199
+Test #1,BOOST_NEGPULSE,discharge,0.999,1
+Test #1,BOOST,charge,0.522,198
+Test #1,BOOST,discharge,1.201,0
+Test #1,CC_CELL2,charge,0.464,215
+Test #1,CC_CELL2,discharge,1.022,0
+Test #1,BOOST_NEGPULSE_1S,charge,0.556,199
+Test #1,BOOST_NEGPULSE_1S,discharge,1.169,0
+Test #1,BOOST_REST,charge,0.596,157
+Test #1,BOOST_REST,discharge,0.821,25
+Test #2,CC,charge,0.677,57
+Test #2,CC,discharge,1.297,0
+Test #2,BOOST_NEGPULSE_1S,charge,0.677,67
+Test #2,BOOST_NEGPULSE_1S,discharge,1.21,0
+Test #2,BOOST_REST,charge,0.706,38
+Test #2,BOOST_REST,discharge,1.125,0
+Test #2,BOOST,charge,0.677,63
+Test #2,BOOST,discharge,1.302,0
+Test #2,BOOST_NEGPULSE,charge,0.61,47
+Test #2,BOOST_NEGPULSE,discharge,1.186,0
+Test #2,CC_CELL2,charge,0.61,58
+Test #2,CC_CELL2,discharge,1.246,0

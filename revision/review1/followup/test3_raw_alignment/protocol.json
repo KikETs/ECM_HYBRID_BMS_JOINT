@@ -1,0 +1,1547 @@
+{
+  "member": "Arbin Cycler Protocols/JC_SOP_Nature_Sep212024+Sam_30T.sdx",
+  "sha256": "ae50851178e41595608e8b309b56219eb23280723c2269901e7f9bd0b69a6f20",
+  "cp_steps": [
+    {
+      "protocol_step": 65,
+      "direction": "discharge",
+      "soc": 1.0,
+      "control": "-MV_UD2",
+      "label": "SOPDisch25_apply 100% SOP",
+      "limits": {
+        "Schedule_Step65_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step65_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step65_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 66,
+      "direction": "discharge",
+      "soc": 0.95,
+      "control": "-MV_UD3",
+      "label": "SOPDisch25_apply 95% SOP",
+      "limits": {
+        "Schedule_Step66_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step66_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step66_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 67,
+      "direction": "discharge",
+      "soc": 0.9,
+      "control": "-MV_UD4",
+      "label": "SOPDisch25_apply 90% SOP",
+      "limits": {
+        "Schedule_Step67_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step67_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step67_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 68,
+      "direction": "discharge",
+      "soc": 0.8,
+      "control": "-MV_UD5",
+      "label": "SOPDisch25_apply 80% SOP",
+      "limits": {
+        "Schedule_Step68_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step68_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step68_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 69,
+      "direction": "discharge",
+      "soc": 0.7,
+      "control": "-MV_UD6",
+      "label": "SOPDisch25_apply 70% SOP",
+      "limits": {
+        "Schedule_Step69_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step69_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step69_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 70,
+      "direction": "discharge",
+      "soc": 0.6,
+      "control": "-MV_UD7",
+      "label": "SOPDisch25_apply 60% SOP",
+      "limits": {
+        "Schedule_Step70_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step70_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step70_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 71,
+      "direction": "discharge",
+      "soc": 0.5,
+      "control": "-MV_UD8",
+      "label": "SOPDisch25_apply 50% SOP",
+      "limits": {
+        "Schedule_Step71_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step71_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step71_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 72,
+      "direction": "discharge",
+      "soc": 0.4,
+      "control": "-MV_UD9",
+      "label": "SOPDisch25_apply 40% SOP",
+      "limits": {
+        "Schedule_Step72_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step72_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step72_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 73,
+      "direction": "discharge",
+      "soc": 0.3,
+      "control": "-MV_UD10",
+      "label": "SOPDisch25_apply 30% SOP",
+      "limits": {
+        "Schedule_Step73_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step73_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step73_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 74,
+      "direction": "discharge",
+      "soc": 0.2,
+      "control": "-MV_UD11",
+      "label": "SOPDisch25_apply 20% SOP",
+      "limits": {
+        "Schedule_Step74_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step74_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step74_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 75,
+      "direction": "discharge",
+      "soc": 0.15,
+      "control": "-MV_UD12",
+      "label": "SOPDisch25_apply 15% SOP",
+      "limits": {
+        "Schedule_Step75_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step75_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step75_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 76,
+      "direction": "discharge",
+      "soc": 0.1,
+      "control": "-MV_UD13",
+      "label": "SOPDisch25_apply 10% SOP",
+      "limits": {
+        "Schedule_Step76_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step76_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step76_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 77,
+      "direction": "discharge",
+      "soc": 0.05,
+      "control": "-MV_UD14",
+      "label": "SOPDisch25_apply 5% SOP",
+      "limits": {
+        "Schedule_Step77_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step77_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step77_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 78,
+      "direction": "discharge",
+      "soc": 0.02,
+      "control": "-MV_UD15",
+      "label": "SOPDisch25_apply 2% SOP",
+      "limits": {
+        "Schedule_Step78_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step78_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step78_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 79,
+      "direction": "discharge",
+      "soc": 0.0,
+      "control": "-MV_UD1",
+      "label": "SOPDisch25_apply 0% SOP",
+      "limits": {
+        "Schedule_Step79_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step79_Limit1": {
+          "Equation0_szCompareSign": "<",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPDisch25_CalculateSOP"
+        },
+        "Schedule_Step79_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 146,
+      "direction": "charge",
+      "soc": 1.0,
+      "control": "MV_UD2",
+      "label": "SOPChar25_apply 100% SOP",
+      "limits": {
+        "Schedule_Step146_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step146_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step146_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 147,
+      "direction": "charge",
+      "soc": 0.95,
+      "control": "MV_UD3",
+      "label": "SOPChar25_apply 95% SOP",
+      "limits": {
+        "Schedule_Step147_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step147_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step147_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 148,
+      "direction": "charge",
+      "soc": 0.9,
+      "control": "MV_UD4",
+      "label": "SOPChar25_apply 90% SOP",
+      "limits": {
+        "Schedule_Step148_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step148_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step148_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 149,
+      "direction": "charge",
+      "soc": 0.8,
+      "control": "MV_UD5",
+      "label": "SOPChar25_apply 80% SOP",
+      "limits": {
+        "Schedule_Step149_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step149_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step149_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 150,
+      "direction": "charge",
+      "soc": 0.7,
+      "control": "MV_UD6",
+      "label": "SOPChar25_apply 70% SOP",
+      "limits": {
+        "Schedule_Step150_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step150_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step150_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 151,
+      "direction": "charge",
+      "soc": 0.6,
+      "control": "MV_UD7",
+      "label": "SOPChar25_apply 60% SOP",
+      "limits": {
+        "Schedule_Step151_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step151_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step151_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 152,
+      "direction": "charge",
+      "soc": 0.5,
+      "control": "MV_UD8",
+      "label": "SOPChar25_apply 50% SOP",
+      "limits": {
+        "Schedule_Step152_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step152_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step152_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 153,
+      "direction": "charge",
+      "soc": 0.4,
+      "control": "MV_UD9",
+      "label": "SOPChar25_apply 40% SOP",
+      "limits": {
+        "Schedule_Step153_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step153_Limit1": {
+          "Equation0_szCompareSign": "<=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "2.5",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step153_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 154,
+      "direction": "charge",
+      "soc": 0.3,
+      "control": "MV_UD10",
+      "label": "SOPChar25_apply 30% SOP",
+      "limits": {
+        "Schedule_Step154_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step154_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step154_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 155,
+      "direction": "charge",
+      "soc": 0.2,
+      "control": "MV_UD11",
+      "label": "SOPChar25_apply 20% SOP",
+      "limits": {
+        "Schedule_Step155_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step155_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step155_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 156,
+      "direction": "charge",
+      "soc": 0.15,
+      "control": "MV_UD12",
+      "label": "SOPChar25_apply 15% SOP",
+      "limits": {
+        "Schedule_Step156_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step156_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step156_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 157,
+      "direction": "charge",
+      "soc": 0.1,
+      "control": "MV_UD13",
+      "label": "SOPChar25_apply 10% SOP",
+      "limits": {
+        "Schedule_Step157_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step157_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step157_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 158,
+      "direction": "charge",
+      "soc": 0.05,
+      "control": "MV_UD14",
+      "label": "SOPChar25_apply 5% SOP",
+      "limits": {
+        "Schedule_Step158_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step158_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step158_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 159,
+      "direction": "charge",
+      "soc": 0.02,
+      "control": "MV_UD15",
+      "label": "SOPChar25_apply 2% SOP",
+      "limits": {
+        "Schedule_Step159_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step159_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step159_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    },
+    {
+      "protocol_step": 160,
+      "direction": "charge",
+      "soc": 0.0,
+      "control": "MV_UD1",
+      "label": "SOPChar25_apply 0% SOP",
+      "limits": {
+        "Schedule_Step160_Limit0": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Step_Time",
+          "Equation0_szRight": "10",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step160_Limit1": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "PV_CHAN_Voltage",
+          "Equation0_szRight": "4.2",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "0",
+          "m_bStepLimit": "1",
+          "m_szGotoStep": "SOPChar25_CalculateSOP"
+        },
+        "Schedule_Step160_Limit2": {
+          "Equation0_szCompareSign": ">=",
+          "Equation0_szLeft": "DV_Time",
+          "Equation0_szRight": "1",
+          "Equation1_szCompareSign": "",
+          "Equation1_szLeft": "",
+          "Equation1_szRight": "",
+          "Equation2_szCompareSign": "",
+          "Equation2_szLeft": "",
+          "Equation2_szRight": "",
+          "m_bLogDataLimit": "1",
+          "m_bStepLimit": "0",
+          "m_szGotoStep": "Next Step"
+        }
+      }
+    }
+  ],
+  "formulas": {
+    "Schedule_AdvFormula0": {
+      "m_szExpression": "MIN(ABS((MV_UD16-30*ABS((LS_CHAN_Voltage-MV_UD16)/LS_CHAN_Current))*30ÿþ*(1-LN(MAX(0.00000000000000000000000000001,SIGN(MV_UD16-30*ABS((LS_CHAN_Voltage-MV_UD16)/LS_CHAN_Current)-2.55))))), ÿþABS((MV_UD16-2.55)/((LS_CHAN_Voltage-MV_UD16)/LS_CHAN_Current)*2.55))",
+      "m_szLabel": "AF_SOP_dis"
+    },
+    "Schedule_AdvFormula1": {
+      "m_szExpression": "MIN((MV_UD16+15*ABS((LS_CHAN_Voltage-MV_UD16)/LS_CHAN_Current))*15,ÿþABS((4.15-MV_UD16)/((LS_CHAN_Voltage-MV_UD16)/LS_CHAN_Current)*4.15))",
+      "m_szLabel": "AF_SOP_char"
+    }
+  },
+  "note": "Schedule duration is 10 s; actual raw runs include modified 2/30 s and step offsets. Do not assume byte-identical executed schedule."
+}

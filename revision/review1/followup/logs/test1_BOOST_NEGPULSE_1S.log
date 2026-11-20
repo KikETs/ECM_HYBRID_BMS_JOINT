@@ -1,0 +1,77 @@
+  RPCWBY Test#1   372 SOP rows   16 characterisations   6 frozen A8 folds
+  limits 2.55-4.15 V, 30.0 A / -15.0 A, tau = 10 s   (Test#2 protocol)
+  -> ../followup_20261116/external/Test1_BOOST_NEGPULSE_1S.csv  (4332 rows)
+
+  Frozen A8 vs physics-only, RMSE and bias in watts
+  fold                dir           n  A0 RMSE  A8 RMSE  A0 bias  A8 bias  A0 opt%  A8 opt%
+  -----------------------------------------------------------------------------------------
+  BOOST               charge      230    10.31     9.24    +5.40    +4.80     54.8     55.7
+  BOOST               discharge   193     3.97     2.80    +2.55    +0.27     86.5     56.0
+  BOOST_NEGPULSE      charge      230    10.31     7.98    +5.40    +4.16     54.8     54.8
+  BOOST_NEGPULSE      discharge   193     3.97     3.18    +2.55    +0.29     86.5     53.4
+  BOOST_NEGPULSE_1S   charge      230    10.31     9.67    +5.40    +5.08     54.8     56.1
+  BOOST_NEGPULSE_1S   discharge   193     3.97     2.79    +2.55    +0.62     86.5     63.7
+  BOOST_REST          charge      230    10.31     9.31    +5.40    +4.84     54.8     55.7
+  BOOST_REST          discharge   193     3.97     3.17    +2.55    +0.57     86.5     59.1
+  CC                  charge      230    10.31     8.79    +5.40    +4.54     54.8     55.2
+  CC                  discharge   193     3.97     3.07    +2.55    +0.28     86.5     53.9
+  CC_CELL2            charge      230    10.31     8.03    +5.40    +4.14     54.8     54.8
+  CC_CELL2            discharge   193     3.97     2.79    +2.55    +0.01     86.5     49.2
+  -----------------------------------------------------------------------------------------
+  across folds        charge             10.31     8.84                       54.8     55.4   fold spread A8 RMSE 7.98-9.67
+  across folds        discharge           3.97     2.96                       86.5     55.9   fold spread A8 RMSE 2.79-3.18
+
+  1783 of 4332 model calls were out of the pooled surface hull and are excluded.
+  Nothing here was refitted: A8 weights and lambda are the UYPYDJ values, carried across unchanged.
+
+  IN-HULL COVERAGE  -> ../followup_20261116/external/Test1_BOOST_NEGPULSE_1S_coverage.csv
+  axis        value         calls  in hull       %
+  ------------------------------------------------
+  SOC         0.01            150        0     0.0
+  SOC         0.02            228        0     0.0
+  SOC         0.05            282        0     0.0
+  SOC         0.10            312        0     0.0
+  SOC         0.15            312       36    11.5
+  SOC         0.20            312       96    30.8
+  SOC         0.30            312      245    78.5
+  SOC         0.40            312      300    96.2
+  SOC         0.50            312      312   100.0
+  SOC         0.60            312      312   100.0
+  SOC         0.70            312      312   100.0
+  SOC         0.80            312      312   100.0
+  SOC         0.90            312      312   100.0
+  SOC         0.95            312      312   100.0
+  SOC         1.00            240        0     0.0
+  temp_C      10             2064     1277    61.9
+  temp_C      25             2268     1272    56.1
+  SOH         0.78            348      168    48.3
+  SOH         0.79            348      180    51.7
+  SOH         0.80            348      180    51.7
+  SOH         0.81            348      180    51.7
+  SOH         0.82            360      180    50.0
+  SOH         0.86            330      197    59.7
+  SOH         0.88            684      408    59.6
+  SOH         0.89            324      204    63.0
+  SOH         0.90            300      204    68.0
+  SOH         0.91            306      216    70.6
+  SOH         0.93            312      216    69.2
+  SOH         0.94            324      216    66.7
+  direction   charge         2118     1380    65.2
+  direction   discharge      2214     1169    52.8
+
+  SAFETY TRANSFER OF THE FROZEN LAMBDA
+  fold                dir           n   lambda   needed  margin  exceed  usable %  worst W
+  ----------------------------------------------------------------------------------------
+  BOOST               charge      230   0.5860   0.3259   0.556      33     63.30    5.388
+  BOOST               discharge   195   0.6832   0.8020   1.174       0     68.45    0.000
+  BOOST_NEGPULSE      charge      230   0.5860   0.3259   0.556      32     62.30    5.388
+  BOOST_NEGPULSE      discharge   195   0.6832   0.8080   1.183       0     68.38    0.000
+  BOOST_NEGPULSE_1S   charge      230   0.5860   0.3259   0.556      35     63.96    5.388
+  BOOST_NEGPULSE_1S   discharge   194   0.6832   0.8155   1.194       0     68.64    0.000
+  BOOST_REST          charge      230   0.5860   0.3259   0.556      34     63.30    5.388
+  BOOST_REST          discharge   195   0.6832   0.7990   1.169       0     68.48    0.000
+  CC                  charge      230   0.5860   0.3259   0.556      33     62.63    5.388
+  CC                  discharge   195   0.6832   0.8049   1.178       0     68.41    0.000
+  CC_CELL2            charge      230   0.5860   0.3372   0.575      32     62.06    5.388
+  CC_CELL2            discharge   195   0.6832   0.8080   1.183       0     68.31    0.000
+  -> ../followup_20261116/external/Test1_BOOST_NEGPULSE_1S_safety.csv

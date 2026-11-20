@@ -1,0 +1,8 @@
+method,params,state,per_call,note
+A8 (RC-SOP),4 effective (2 weights + 2 biases on dR_fast); 26 stored,"2 EW sums (e_ir, e_ii)",2 MAC + 2 exp/tanh + hull-aware root search on 2RC surface,"board-measured: inversion 53.21 us median, text 70,796 B, ECM table 32,768 B, OCV 4,096 B"
+A0 (nominal 2RC),0,-,root search on 2RC surface,same surface tables as A8
+"A3 (linear, 12 features)",26,12 feature EW states,24 MAC + root search,not built for board
+"LSTM (hid 32, 12 blocks)",5954,12x12 feature buffer or 64 hidden floats,"67,584 MAC + root search","estimate, not built for board"
+"GRU (hid 32, 12 blocks)",4482,12x12 feature buffer or 32 hidden floats,"50,688 MAC + root search","estimate, not built for board"
+FFRLS (block level),1 forgetting factor,2 recursive means + gain,~10 flops per 600 s block + root search,estimate
+HPPC resistance lookup,table: 32 SOC groups x SOH grid x 2 directions x 2 horizons,-,"2-D interpolation + 1 division, no root search","training points per (direction, tau): charge 10.0 s: 3616; charge 2.0 s: 3636; discharge 10.0 s: 3637; discharge 2.0 s: 3637"

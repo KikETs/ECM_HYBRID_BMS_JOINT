@@ -25,6 +25,12 @@ matters more than the headline numbers:
 
 Timing measured on a NUCLEO-H563ZI (Cortex-M33, 250 MHz).
 
+> **Revision 1 (November 2026).** The analyses added for the reviewers of the *Batteries* manuscript are in
+> [`revision/`](revision/README.md). The firmware deployment commands now use the flagged solver `sop_review_solve`
+> (hull and convergence failures return 0 A). The figures and tables below are those of v1.0.0; the revised
+> manuscript restricts its claim to 10 s discharge, because a conventional HPPC pulse-resistance lookup retained more
+> charge current than RC-SOP (`revision/review2/out/E5`).
+
 ## Results
 
 | Arm | Model | Size | Protocol | Result | Worst cell |

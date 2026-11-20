@@ -85,3 +85,7 @@ analysis/runs_nested/
 
 # audit working copies, kept locally (see .paper_state/freeze_log.yaml)
 .preserved/
+
+# --- Revision work directory (rebuilt by nested/reproduce.sh score) ---
+revision/review2/baseline/
+revision/review2/scripts/__pycache__/

@@ -1,0 +1,190 @@
+diff --git a/mcu/fw_sop/Src/main.c b/mcu/fw_sop/Src/main.c
+index e09174b..6b6eab4 100644
+--- a/mcu/fw_sop/Src/main.c
++++ b/mcu/fw_sop/Src/main.c
+@@ -23,6 +23,7 @@
+ /* USER CODE BEGIN Includes */
+ #include <string.h>
+ #include "sop_core.h"
++#include <math.h>
+ #include "sop_tables.h"
+ #include "soh_core.h"
+ #include "soh_simd.h"
+@@ -65,6 +66,7 @@
+  * 네 단계를 한 DWT 창에서 도는 명령이 없었기 때문이다. */
+ #ifdef SOP_BENCH_PACK
+ #define SOP_CMD_CYCLE    0x70U  /* 특징+EKF+트림+반전 = 제어 1 주기 */
++#define SOP_CMD_REVIEW4  0x72U
+ #define SOP_CMD_PACK     0x71U  /* 위를 N 셀에 돌리고 min 축약 */
+ 
+ /* 팩 규모.  dir 바이트의 상위 비트로 색인한다: dir = 방향 | (idx << 1).
+@@ -293,13 +295,21 @@ static void SOP_Handle(uint8_t cmd)
+    * 트림이 창 안에 있어야 한다. */
+   if (cmd != SOP_CMD_TRIM && cmd != SOP_CMD_FULL
+ #ifdef SOP_BENCH_PACK
+-      && cmd != SOP_CMD_CYCLE && cmd != SOP_CMD_PACK
++      && cmd != SOP_CMD_CYCLE && cmd != SOP_CMD_PACK && cmd != SOP_CMD_REVIEW4
+ #endif
+      )
+   {
+     sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
+   }
+ 
++
++#ifdef SOP_BENCH_PACK
++  if (cmd == SOP_CMD_REVIEW4 && (q.dir & 0x80U))
++  {
++    sop_feat_reset(&g_feat);
++    sop_ekf_reset(&g_ekf, q.soc, q.soh);
++  }
++#endif
+   primask = __get_PRIMASK();
+   __disable_irq();
+   __DSB(); __ISB();
+@@ -362,6 +372,45 @@ static void SOP_Handle(uint8_t cmd)
+                       q.tau_s, kf, ks, &it);
+       break;
+     }
++
++    case SOP_CMD_REVIEW4:
++    {
++      float limits[4] = {0.0f};
++      float x12[SOP_NFEAT] = {0.0f};
++      if (!isfinite(q.current_a) || !isfinite(q.v_pre) || !isfinite(q.soh)
++          || q.soh < SOP_SOH_LO || q.soh > SOP_SOH_HI)
++      {
++        unsigned status = isfinite(q.soh) && (q.soh < SOP_SOH_LO || q.soh > SOP_SOH_HI)
++                          ? SOP_REVIEW_HULL : SOP_REVIEW_INPUT;
++        it = status | (status << 3U) | (status << 6U) | (status << 9U);
++      }
++      else
++      {
++        float soc = sop_ekf_step(&g_ekf, 1.0f, q.current_a, q.v_pre, q.soh,
++                                fabsf(q.current_a) <= 1.0f);
++        (void)sop_feat_update_a8(&g_feat, 1.0f, q.current_a, q.v_pre, soc, q.soh, x12);
++        uint32_t max_iterations = 0U;
++        for (unsigned d = 0; d < 2U; ++d)
++        {
++          float kfast, kslow;
++          sop_trim((sop_dir_t)d, x12, &kfast, &kslow);
++          for (unsigned h = 0; h < 2U; ++h)
++          {
++            unsigned index = 2U*d + h;
++            float cutoff = d == SOP_CHARGE ? 4.2f : 2.5f;
++            float horizon = h == 0U ? 2.0f : 10.0f;
++            uint32_t iterations;
++            unsigned status = sop_review_solve((sop_dir_t)d, soc, q.soh, q.v_pre,
++                               cutoff, horizon, kfast, kslow, &limits[index], &iterations);
++            it |= status << (3U * index);
++            if (iterations > max_iterations) max_iterations = iterations;
++          }
++        }
++        it |= max_iterations << 16U;
++      }
++      kf = limits[0]; ks = limits[1]; reff = limits[2]; ist = limits[3];
++      break;
++    }
+     case SOP_CMD_PACK:
+     {
+       /* 직렬 팩의 한 주기: 셀마다 같은 주기를 돌고 min 을 취한다.
+@@ -454,7 +503,7 @@ static void CEMA_Protocol_Loop(void)
+              || command == SOP_CMD_EKF_P || command == SOP_CMD_EKF_F64
+              || command == SOP_CMD_EKF2 || command == SOP_CMD_EKF2_F64
+ #ifdef SOP_BENCH_PACK
+-             || command == SOP_CMD_CYCLE || command == SOP_CMD_PACK
++             || command == SOP_CMD_CYCLE || command == SOP_CMD_PACK || command == SOP_CMD_REVIEW4
+ #endif
+ #ifndef SOP_A8_ONLY
+              || command == SOP_CMD_FEAT
+diff --git a/mcu/sop_core.c b/mcu/sop_core.c
+index 62c9ff8..2cf2832 100644
+--- a/mcu/sop_core.c
++++ b/mcu/sop_core.c
+@@ -1,6 +1,7 @@
+ #include "sop_core.h"
+ #include "sop_tables.h"
+ #include <math.h>
++#include "sop_review_hull.h"
+ 
+ #define SOP_MAX_ITER 24U
+ #define SOP_TOL      1e-3f
+@@ -158,6 +159,60 @@ float sop_solve(sop_dir_t dir, float soc, float soh, float v_pre,
+   return I;
+ }
+ 
++
++static int review_in_hull(sop_dir_t dir, float soc, float soh, float current)
++{
++  const uint8_t *mask = dir == SOP_CHARGE ? sop_hull_chg : sop_hull_dis;
++  const float *ranks = dir == SOP_CHARGE ? sop_rank_i_chg : sop_rank_i_dis;
++  int i0, i1, j0, j1, k0, k1;
++  float fi, fj, fk;
++  frac_index(soc, SOP_SOC_LO, SOP_SOC_HI, SOP_NS, &i0, &i1, &fi);
++  frac_index(soh, SOP_SOH_LO, SOP_SOH_HI, SOP_NH, &j0, &j1, &fj);
++  rank_index(ranks, fabsf(current), &k0, &k1, &fk);
++  unsigned required = (1U << 4) | (1U << k0) | (1U << k1);
++  unsigned valid = mask[i0*SOP_NH+j0] & mask[i0*SOP_NH+j1]
++                 & mask[i1*SOP_NH+j0] & mask[i1*SOP_NH+j1];
++  return (valid & required) == required;
++}
++
++sop_review_status_t sop_review_solve(sop_dir_t dir, float soc, float soh,
++                     float v_pre, float v_limit, float tau_s, float kf, float ks,
++                     float *answer, uint32_t *iterations)
++{
++  *answer = 0.0f;
++  *iterations = 0U;
++  if (!isfinite(soc) || !isfinite(soh) || !isfinite(v_pre) || !isfinite(v_limit)
++      || !isfinite(kf) || !isfinite(ks) || !(kf > 0.0f && ks > 0.0f)
++      || !(tau_s == 2.0f || tau_s == 10.0f)
++      || !(dir == SOP_CHARGE || dir == SOP_DISCHARGE))
++    return SOP_REVIEW_INPUT;
++  if (soc < SOP_SOC_LO || soc > SOP_SOC_HI || soh < SOP_SOH_LO || soh > SOP_SOH_HI)
++    return SOP_REVIEW_HULL;
++  int charge = dir == SOP_CHARGE;
++  float gap = v_limit - v_pre;
++  if (!(charge ? gap > 0.0f : gap < 0.0f)) return SOP_REVIEW_RANGE;
++  float trial = charge ? 5.0f : -12.0f;
++  const float low = charge ? 0.05f : -400.0f;
++  const float high = charge ? 400.0f : -0.1f;
++  while (*iterations < SOP_MAX_ITER)
++  {
++    if (!review_in_hull(dir, soc, soh, trial)) return SOP_REVIEW_HULL;
++    float resistance = sop_r_eff(dir, soc, soh, trial, tau_s, kf, ks);
++    ++*iterations;
++    if (!isfinite(resistance) || !(resistance > 0.0f)) return SOP_REVIEW_RESISTANCE;
++    float next = gap / resistance;
++    if (!isfinite(next) || next < low || next > high) return SOP_REVIEW_RANGE;
++    if (fabsf(next - trial) < SOP_TOL)
++    {
++      if (!review_in_hull(dir, soc, soh, next)) return SOP_REVIEW_HULL;
++      *answer = next;
++      return SOP_REVIEW_OK;
++    }
++    trial = 0.5f * trial + 0.5f * next;
++  }
++  return SOP_REVIEW_ITERATION_CAP;
++}
++
+ /* ---- 표 조회 보조: OCV 와 이력 반폭 ------------------------------------ */
+ static void ocv_lookup(float soc, float soh, float *ocv, float *m_half)
+ {
+diff --git a/mcu/sop_core.h b/mcu/sop_core.h
+index 6211573..0f661d2 100644
+--- a/mcu/sop_core.h
++++ b/mcu/sop_core.h
+@@ -23,6 +23,14 @@ float sop_solve(sop_dir_t dir, float soc, float soh, float v_pre,
+                 float v_limit, float tau_s, float kf, float ks,
+                 uint32_t *iters_out);
+ 
++typedef enum {
++  SOP_REVIEW_OK = 0, SOP_REVIEW_INPUT = 1, SOP_REVIEW_HULL = 2,
++  SOP_REVIEW_RESISTANCE = 3, SOP_REVIEW_ITERATION_CAP = 4, SOP_REVIEW_RANGE = 5
++} sop_review_status_t;
++sop_review_status_t sop_review_solve(sop_dir_t dir, float soc, float soh,
++                     float v_pre, float v_limit, float tau_s, float kf, float ks,
++                     float *answer, uint32_t *iterations);
++
+ #endif
+ 
+ /* ---- 샘플마다 도는 것 ------------------------------------------------- */

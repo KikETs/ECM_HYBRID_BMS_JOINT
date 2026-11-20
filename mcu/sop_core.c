@@ -1,6 +1,7 @@
 #include "sop_core.h"
 #include "sop_tables.h"
 #include <math.h>
+#include "sop_review_hull.h"
 
 #define SOP_MAX_ITER 24U
 #define SOP_TOL      1e-3f
@@ -156,6 +157,85 @@ float sop_solve(sop_dir_t dir, float soc, float soh, float v_pre,
   }
   if (iters_out) { *iters_out = n; }
   return I;
+}
+
+
+static int review_in_hull(sop_dir_t dir, float soc, float soh, float current)
+{
+  const uint8_t *mask = dir == SOP_CHARGE ? sop_hull_chg : sop_hull_dis;
+  const float *ranks = dir == SOP_CHARGE ? sop_rank_i_chg : sop_rank_i_dis;
+  int i0, i1, j0, j1, k0, k1;
+  float fi, fj, fk;
+  frac_index(soc, SOP_SOC_LO, SOP_SOC_HI, SOP_NS, &i0, &i1, &fi);
+  frac_index(soh, SOP_SOH_LO, SOP_SOH_HI, SOP_NH, &j0, &j1, &fj);
+  rank_index(ranks, fabsf(current), &k0, &k1, &fk);
+  unsigned required = (1U << 4) | (1U << k0) | (1U << k1);
+  unsigned valid = mask[i0*SOP_NH+j0] & mask[i0*SOP_NH+j1]
+                 & mask[i1*SOP_NH+j0] & mask[i1*SOP_NH+j1];
+  return (valid & required) == required;
+}
+
+sop_review_status_t sop_review_solve(sop_dir_t dir, float soc, float soh,
+                     float v_pre, float v_limit, float tau_s, float kf, float ks,
+                     float *answer, uint32_t *iterations)
+{
+  *answer = 0.0f;
+  *iterations = 0U;
+  if (!isfinite(soc) || !isfinite(soh) || !isfinite(v_pre) || !isfinite(v_limit)
+      || !isfinite(kf) || !isfinite(ks) || !(kf > 0.0f && ks > 0.0f)
+      || !(tau_s == 2.0f || tau_s == 10.0f)
+      || !(dir == SOP_CHARGE || dir == SOP_DISCHARGE))
+    return SOP_REVIEW_INPUT;
+  if (soc < SOP_SOC_LO || soc > SOP_SOC_HI || soh < SOP_SOH_LO || soh > SOP_SOH_HI)
+    return SOP_REVIEW_HULL;
+  int charge = dir == SOP_CHARGE;
+  float gap = v_limit - v_pre;
+  if (!(charge ? gap > 0.0f : gap < 0.0f)) return SOP_REVIEW_RANGE;
+  float trial = charge ? 5.0f : -12.0f;
+  const float low = charge ? 0.05f : -400.0f;
+  const float high = charge ? 400.0f : -0.1f;
+  while (*iterations < SOP_MAX_ITER)
+  {
+    if (!review_in_hull(dir, soc, soh, trial)) return SOP_REVIEW_HULL;
+    float resistance = sop_r_eff(dir, soc, soh, trial, tau_s, kf, ks);
+    ++*iterations;
+    if (!isfinite(resistance) || !(resistance > 0.0f)) return SOP_REVIEW_RESISTANCE;
+    float next = gap / resistance;
+    if (!isfinite(next) || next < low || next > high) return SOP_REVIEW_RANGE;
+    if (fabsf(next - trial) < SOP_TOL)
+    {
+      if (!review_in_hull(dir, soc, soh, next)) return SOP_REVIEW_HULL;
+      *answer = next;
+      return SOP_REVIEW_OK;
+    }
+    trial = 0.5f * trial + 0.5f * next;
+  }
+  return SOP_REVIEW_ITERATION_CAP;
+}
+
+
+float sop_review_stress(sop_dir_t dir, float soc, float soh, float vpre,
+                        float cutoff, float tau, float kf, float ks)
+{
+    volatile unsigned masks = 0U;
+    volatile float audit_current = 0.0f;
+    float trial = dir == SOP_CHARGE ? 5.0f : -12.0f;
+    for (unsigned n = 0; n < SOP_MAX_ITER; ++n)
+    {
+        masks += (unsigned)review_in_hull(dir,soc,soh,trial);
+        float r = sop_r_eff(dir,soc,soh,trial,tau,kf,ks);
+        if (!isfinite(r) || !(r > 0.0f)) r = 0.01f;
+        float next = (cutoff-vpre)/r;
+        if (!isfinite(next)) next = trial;
+        if (dir == SOP_CHARGE) next = fminf(400.0f,fmaxf(0.05f,next));
+        else next = fminf(-0.1f,fmaxf(-400.0f,next));
+        masks += (unsigned)review_in_hull(dir,soc,soh,next);
+        audit_current = fabsf(next-trial);
+        trial = 0.5f*next+0.5f*trial;
+    }
+    (void)audit_current;
+    (void)masks;
+    return trial;
 }
 
 /* ---- 표 조회 보조: OCV 와 이력 반폭 ------------------------------------ */

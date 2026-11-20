@@ -1,0 +1,4 @@
+('BOOST_REST', 'CC_CELL2') {'discharge': 10920, 'charge': 8328}
+('CC', 'BOOST_NEGPULSE_1S') {'discharge': 11064, 'charge': 8076}
+('BOOST', 'CC') {'discharge': 10752, 'charge': 8400}
+Three complete cached cell folds validated in both current directions.

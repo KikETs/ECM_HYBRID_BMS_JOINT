@@ -1,0 +1,466 @@
+{
+  "runs": [
+    {
+      "member": "Test#3/JC_SOP_30T_10s_0degC_Oct7_Channel_1_Wb_1.csv",
+      "sha256": "08ba05449f993fcfdb45b052b2eaef48787c7429bcda44be6166990ac9d59620",
+      "rows": 139900,
+      "first_date": "10-07-2024 10:29:29.508",
+      "last_date": "10-09-2024 14:52:24.723",
+      "horizon_s": 10,
+      "filename_temp_C": 0,
+      "median_temperature_C": 5.3378,
+      "step_offset": 1,
+      "offset_scores": {
+        "0": 0,
+        "1": 70
+      },
+      "mapped_pulses": 70,
+      "nonincreasing_time_rows": 5
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_10degC_Oct6_Channel_1_Wb_1.csv",
+      "sha256": "46d22d02cc995a5027067e00b9de0aa3a1df6512df879999386e28b4f206c889",
+      "rows": 87680,
+      "first_date": "10-06-2024 10:04:23.781",
+      "last_date": "10-07-2024 10:17:10.900",
+      "horizon_s": 10,
+      "filename_temp_C": 10,
+      "median_temperature_C": 14.647,
+      "step_offset": 1,
+      "offset_scores": {
+        "0": 0,
+        "1": 42
+      },
+      "mapped_pulses": 42,
+      "nonincreasing_time_rows": 7
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_25degC_Sep30_Channel_1_Wb_1.csv",
+      "sha256": "f86bd44d39da4582fdec654782a04acd7eb86484db5a764c443975a1d903bf63",
+      "rows": 55392,
+      "first_date": "09-30-2024 11:16:57.235",
+      "last_date": "10-01-2024 02:31:39.937",
+      "horizon_s": 10,
+      "filename_temp_C": 25,
+      "median_temperature_C": 27.589,
+      "step_offset": 0,
+      "offset_scores": {
+        "0": 42,
+        "1": -3
+      },
+      "mapped_pulses": 42,
+      "nonincreasing_time_rows": 5
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_40degC_Oct4_Channel_1_Wb_1.csv",
+      "sha256": "d66eb74181588316c90948f8c574de910483b755c6fa869da5297a6cd7696584",
+      "rows": 63570,
+      "first_date": "10-04-2024 12:10:36.159",
+      "last_date": "10-05-2024 05:43:39.298",
+      "horizon_s": 10,
+      "filename_temp_C": 40,
+      "median_temperature_C": 35.3,
+      "step_offset": 1,
+      "offset_scores": {
+        "0": 0,
+        "1": 28
+      },
+      "mapped_pulses": 28,
+      "nonincreasing_time_rows": 5
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_n10degC_Oct9_Channel_1_Wb_1.csv",
+      "sha256": "f9cb5a837865e1b40cd16c9168047bc66d48c18e2612eaf037d8d65704f1f4f6",
+      "rows": 110111,
+      "first_date": "10-09-2024 23:51:58.243",
+      "last_date": "10-11-2024 06:18:42.984",
+      "horizon_s": 10,
+      "filename_temp_C": -10,
+      "median_temperature_C": -3.6443,
+      "step_offset": 1,
+      "offset_scores": {
+        "0": 0,
+        "1": 42
+      },
+      "mapped_pulses": 42,
+      "nonincreasing_time_rows": 5
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_n20degC_Oct2_Channel_1_Wb_1.csv",
+      "sha256": "a21b477d093e19ab3bceafe21d14727cef8bba644981db6b6eca2a15efa3d0e8",
+      "rows": 122401,
+      "first_date": "10-02-2024 14:35:40.388",
+      "last_date": "10-04-2024 00:27:13.217",
+      "horizon_s": 10,
+      "filename_temp_C": -20,
+      "median_temperature_C": -14.091,
+      "step_offset": 1,
+      "offset_scores": {
+        "0": 0,
+        "1": 42
+      },
+      "mapped_pulses": 42,
+      "nonincreasing_time_rows": 1
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_2s_Sep29_Channel_1_Wb_1.csv",
+      "sha256": "d990cc10256031af72455291dd2c0a29631d873cfb2daf5d52b24d58a900bd23",
+      "rows": 87854,
+      "first_date": "09-29-2024 11:01:47.846",
+      "last_date": "09-30-2024 11:13:06.408",
+      "horizon_s": 2,
+      "filename_temp_C": null,
+      "median_temperature_C": 26.595,
+      "step_offset": 0,
+      "offset_scores": {
+        "0": 70,
+        "1": -5
+      },
+      "mapped_pulses": 70,
+      "nonincreasing_time_rows": 6
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_30s_25degC_Sep27_Channel_1_Wb_1.csv",
+      "sha256": "b4acab2af9d9ffd84800cf2013042f310b9dc00d077c76ecc805387844ab4f52",
+      "rows": 42003,
+      "first_date": "09-27-2024 15:04:01.798",
+      "last_date": "09-28-2024 02:39:22.909",
+      "horizon_s": 30,
+      "filename_temp_C": 25,
+      "median_temperature_C": 28.225,
+      "step_offset": 0,
+      "offset_scores": {
+        "0": 20,
+        "1": -2
+      },
+      "mapped_pulses": 20,
+      "nonincreasing_time_rows": 5
+    }
+  ],
+  "inventory": [
+    {
+      "member": "Test#3/JC_SOP_30T_10s_0degC_Oct7_Channel_1_Wb_1.csv",
+      "sha256": "08ba05449f993fcfdb45b052b2eaef48787c7429bcda44be6166990ac9d59620",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_10degC_Oct6_Channel_1_Wb_1.csv",
+      "sha256": "46d22d02cc995a5027067e00b9de0aa3a1df6512df879999386e28b4f206c889",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_25degC_Sep30_Channel_1_Wb_1.csv",
+      "sha256": "f86bd44d39da4582fdec654782a04acd7eb86484db5a764c443975a1d903bf63",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_40degC_Oct4_Channel_1_Wb_1.csv",
+      "sha256": "d66eb74181588316c90948f8c574de910483b755c6fa869da5297a6cd7696584",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_n10degC_Oct9_Channel_1_Wb_1.csv",
+      "sha256": "f9cb5a837865e1b40cd16c9168047bc66d48c18e2612eaf037d8d65704f1f4f6",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_10s_n20degC_Oct2_Channel_1_Wb_1.csv",
+      "sha256": "a21b477d093e19ab3bceafe21d14727cef8bba644981db6b6eca2a15efa3d0e8",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_2s_Sep29_Channel_1_Wb_1.csv",
+      "sha256": "d990cc10256031af72455291dd2c0a29631d873cfb2daf5d52b24d58a900bd23",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/JC_SOP_30T_30s_25degC_Sep27_Channel_1_Wb_1.csv",
+      "sha256": "b4acab2af9d9ffd84800cf2013042f310b9dc00d077c76ecc805387844ab4f52",
+      "campaign": "top_level_2024",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_11_0degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "09e75fbd5433ce965c3f8883c5c869ba43f1be0bdd7b229ae3c102100288d045",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_12_10degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "974726ded2c41f69437feda6f14a783cd3e729d043a7fcd3adf00e7cc72ba5a5",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_12_25degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "fedc7622fde8e44fb568b49d41b295d79d85bcbf2dc0cb6e913ff3b9a2be1019",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_13_40degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "966ee71e0d9699ed1b16ba0a1b20e4bb239961070991b1697978cd931ca73aa5",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_14_-10degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "3d598de577c679da8fefa614b76c61df941499adc237c319c3890f977bf6009d",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_14_-20degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "e6ed66f3f2bd72a147bc8a6df5aee765d72f61084bc108c4e8e0a24a993f8eb0",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_15_25degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "e28f281e79732ce9ade1400b49119fff5ae8026700a88966441aa6562cd61ebc",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_15_40degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "bf7e924eb92604c5c9759c9c6b5e6d2a3a1cab693495f53d8b905b45a49f5732",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_16_-10degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "dd309be9428db05920e7a635be27b9989f767acb5ef64855d626416c0e4bde6b",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_16_-20degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "0017759eef4006c56d0346d0a7036f123660a7c2235ebbd0046d35d838de7cfa",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_16_n10degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "dd309be9428db05920e7a635be27b9989f767acb5ef64855d626416c0e4bde6b",
+      "campaign": "old_subfolder",
+      "duplicate_of": "Test#3/Samsung30T_old/SOP_30T_July_16_-10degC_30s_Channel_5_Wb_1.CSV"
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_16_n20degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "0017759eef4006c56d0346d0a7036f123660a7c2235ebbd0046d35d838de7cfa",
+      "campaign": "old_subfolder",
+      "duplicate_of": "Test#3/Samsung30T_old/SOP_30T_July_16_-20degC_30s_Channel_5_Wb_1.CSV"
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_18_10degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "a7d0af9dc40256df193c104c5e36a6fd272025d1864861d21ad0eb524f65b7a5",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_19_0degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "535c50b1c400e5b519cabd80d7a3128f61f2af3f4e5b95e03dc5ba5e990cff17",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_19_25degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "961fe9fc9edcc6e7c0a864a6d251775b1d993aab853cb8c0d30a214f53f64e0e",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_20_-10degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "d6cd93716372fb85375ae2abae98fdc9ec0959e5fc2da12e4e579bd468e29a80",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_20_-20degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "eea52266b10d9f4ae40800c294d918b864c53b16ccd2a77f691600802f38ae1f",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_20_0degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "18515e8e3b4480300d9cfb92f3280d32ee78e511adc434b01eee2c0b99e34bc4",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_20_10degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "6cd888c0700c88139f455e5319fd2fc94d09db970a756d03607fdb17fa76ebad",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_July_21_40degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "32d8933767344b3ee854eb32367a8e4fe3873427e3a15359405ab9d5fef805f1",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_Oct_17_-10degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "edd4f7a23f810818d6acca8d792c6e39c8d5b0fdd1e1110f3230703bc94d7fee",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_Oct_18_-10degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "c69274d689ffbef1bf2921b64bbb5c777bc9bb094a69e3cda3f87c95c54ab6b3",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_Oct_18_-10degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "63cddb8361cb5e63278dc07332f21ff0bae78779ebf8ed4516cdf1c0d7c3fd7a",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_Oct_18_-20degC_30s_Channel_5_Wb_1.CSV",
+      "sha256": "03d6a0bf350fc91d1704d76cfaddcd8443454f864264824e5d28bec247933bf4",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_Sep_26_-20degC_10s_Channel_5_Wb_1.CSV",
+      "sha256": "8e0788bd956c7fa77616289d4067ec6de59b4fd6aa66bdd83eedc42b5fd4504b",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    },
+    {
+      "member": "Test#3/Samsung30T_old/SOP_30T_Sep_26_-20degC_2s_Channel_5_Wb_1.CSV",
+      "sha256": "fa0aaea255bd5a993b2c14c28eae9af796e5c605d1f4f40cbcab22424eb2e36b",
+      "campaign": "old_subfolder",
+      "duplicate_of": null
+    }
+  ],
+  "workbook_headers": {
+    "Test#3": [
+      [
+        "SOP Limits:",
+        "Current (+-0.1A)",
+        "n15 to 30",
+        "Voltage (+-0.04V)",
+        "2.55 to 4.15",
+        "Current limited ",
+        "Voltage Limited",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "2-second",
+        null,
+        null,
+        null,
+        null,
+        "10-second",
+        null,
+        null,
+        null,
+        null,
+        "30-second",
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "SOC",
+        "25°C",
+        null,
+        null,
+        null,
+        "SOC",
+        "40°C - 2.6333Ah",
+        null,
+        null,
+        null,
+        "SOC",
+        "25°C",
+        null,
+        null,
+        null
+      ]
+    ],
+    "Samsung30T_old": [
+      [
+        null,
+        "SOP Limits:",
+        "Current (+-0.05A)",
+        "n5 to 30",
+        "Voltage (+-0.04V)",
+        "3.2 to 4.1",
+        "Current limited ",
+        "Voltage Limited",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "n20degC  2s",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "n20degC 10s",
+        null
+      ],
+      [
+        "SOC",
+        "discharging SOP",
+        "SOP_disch_CCCV",
+        "Current",
+        "Voltage",
+        "Current error",
+        "Voltage error",
+        "charging SOP",
+        "SOP_char_CCCV",
+        "Current",
+        "Voltage",
+        "Current error",
+        "Voltage error",
+        "SOC",
+        "discharging SOP"
+      ]
+    ]
+  },
+  "pulse_count": 356,
+  "table_values": 136,
+  "linkage_counts": {
+    "exact_table_replay": 107,
+    "derived_ratio_not_SOP": 28,
+    "value_mismatch": 1
+  },
+  "new_model_evaluated": false,
+  "goal_complete": false,
+  "cc_current_comparison_valid": false,
+  "input_note": "Raw prefix indices and history duration exported; 74 causal model features not yet reconstructed.",
+  "reference_note": "CP last-occurrence selection uses time order and protocol only; workbook used afterwards for provenance validation."
+}

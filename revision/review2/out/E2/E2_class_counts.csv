@@ -1,0 +1,5 @@
+direction,tau,"A8 root, A0 crossing beyond hull edge (paired exclusion)",A8 tangent (flagged failure),both models: crossing only beyond hull edge,no valid segment (outside hull at all currents),scored,eligible,scored_pct
+charge,2.0,0,0,0,4,2080,2084,99.8
+charge,10.0,0,0,0,4,2459,2463,99.8
+discharge,2.0,0,0,360,4,138,502,27.5
+discharge,10.0,32,2,505,4,496,1039,47.7

@@ -1,0 +1,13 @@
+charge ('BOOST', 'BOOST_NEGPULSE') fit rows 30456 inference rows 15732
+discharge ('BOOST', 'BOOST_NEGPULSE') fit rows 40248 inference rows 21156
+charge ('BOOST', 'BOOST_NEGPULSE_1S') fit rows 30228 inference rows 16536
+discharge ('BOOST', 'BOOST_NEGPULSE_1S') fit rows 40980 inference rows 22128
+Traceback (most recent call last):
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/experiments/train_strict_inner.py", line 57, in <module>
+    result.result()
+  File "/home/user/anaconda3/envs/torch_env/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/user/anaconda3/envs/torch_env/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.

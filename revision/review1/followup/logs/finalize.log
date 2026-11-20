@@ -1,0 +1,11 @@
+Third-cell measured raw pulse inventory {'(0, 10)': 14, '(10, 10)': 14, '(25, 10)': 14, '(40, 10)': 14, '(-10, 10)': 14, '(-20, 10)': 14, '(25, 2)': 14}
+Test3 1990 scored surface/fold/pulse combinations
+Test1/Test2 ('Test1', 'charge', 10) n 4182 exceed 537 -> 110
+Test1/Test2 ('Test1', 'charge', 25) n 4182 exceed 620 -> 268
+Test1/Test2 ('Test1', 'discharge', 10) n 3516 exceed 26 -> 659
+Test1/Test2 ('Test1', 'discharge', 25) n 3498 exceed 0 -> 1249
+Test1/Test2 ('Test2', 'charge', 10) n 4518 exceed 192 -> 0
+Test1/Test2 ('Test2', 'charge', 25) n 4518 exceed 138 -> 0
+Test1/Test2 ('Test2', 'discharge', 10) n 3672 exceed 0 -> 1
+Test1/Test2 ('Test2', 'discharge', 25) n 3642 exceed 0 -> 2
+/home/user/.cache/rc_sop_review1_followup_20261116.tar.gz 99 e5618c700b9a72eecc3738767b9d03946c14d455f73aff1ef47f11298c645cb6

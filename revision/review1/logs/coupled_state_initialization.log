@@ -1,0 +1,54 @@
+BOOST_REST 5 initial rest unavailable
+BOOST_REST 187 initial rest unavailable
+BOOST_REST 375 initial rest unavailable
+BOOST_REST 562 initial rest unavailable
+BOOST_REST 750 initial rest unavailable
+BOOST_REST 937 initial rest unavailable
+BOOST_REST 1162 initial rest unavailable
+BOOST_REST 1350 initial rest unavailable
+CC_CELL2 6 initial rest unavailable
+CC_CELL2 268 initial rest unavailable
+CC_CELL2 531 initial rest unavailable
+CC_CELL2 793 initial rest unavailable
+CC_CELL2 1056 initial rest unavailable
+CC_CELL2 1318 initial rest unavailable
+CC_CELL2 1618 initial rest unavailable
+CC_CELL2 1881 initial rest unavailable
+BOOST_NEGPULSE 5 initial rest unavailable
+BOOST_NEGPULSE 225 initial rest unavailable
+BOOST_NEGPULSE 450 initial rest unavailable
+BOOST_NEGPULSE 712 initial rest unavailable
+BOOST_NEGPULSE 975 initial rest unavailable
+BOOST_NEGPULSE 1210 initial rest unavailable
+BOOST_NEGPULSE 1435 initial rest unavailable
+BOOST_NEGPULSE 1735 initial rest unavailable
+BOOST_NEGPULSE_1S 43 initial rest unavailable
+BOOST_NEGPULSE_1S 268 initial rest unavailable
+BOOST_NEGPULSE_1S 531 initial rest unavailable
+BOOST_NEGPULSE_1S 793 initial rest unavailable
+BOOST_NEGPULSE_1S 1056 initial rest unavailable
+CC 5 initial rest unavailable
+BOOST_NEGPULSE_1S 1356 initial rest unavailable
+BOOST_NEGPULSE_1S 1618 initial rest unavailable
+BOOST_NEGPULSE_1S 1881 initial rest unavailable
+CC 225 initial rest unavailable
+CC 487 initial rest unavailable
+BOOST 5 initial rest unavailable
+CC 750 initial rest unavailable
+BOOST 262 initial rest unavailable
+CC 1012 initial rest unavailable
+CC 1275 initial rest shorter than 5 s
+BOOST 525 initial rest unavailable
+BOOST 787 initial rest unavailable
+CC 1612 initial rest unavailable
+BOOST 1050 initial rest unavailable
+CC 1875 initial rest unavailable
+BOOST 1312 initial rest unavailable
+BOOST 1612 initial rest unavailable
+BOOST 1875 initial rest unavailable
+Traceback (most recent call last):
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/experiments/coupled_state.py", line 184, in <module>
+    main()
+  File "/home/user/바탕화면/DL/ETRANS_AUDIT/review1_20261116/experiments/coupled_state.py", line 152, in main
+    assert data
+AssertionError

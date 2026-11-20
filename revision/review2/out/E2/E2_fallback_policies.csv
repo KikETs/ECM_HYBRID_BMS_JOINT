@@ -1,0 +1,9 @@
+tau,policy,n,exceed,usable_paper_pct,usable_mean_pct,usable_median_pct,fallback_rows,fallback_exceed,fallback_usable_median_pct
+2.0,scored rows only (submitted),138,1,59.24,63.31,59.19,,,
+2.0,zero current (firmware),502,1,0.0,17.41,0.0,364.0,0.0,0.0
+2.0,hull-edge current,502,47,49.19,58.37,52.06,364.0,46.0,45.28
+2.0,lambda x hull-edge current,502,1,36.45,37.81,29.1,364.0,0.0,22.3
+10.0,scored rows only (submitted),496,0,65.96,66.99,65.73,,,
+10.0,zero current (firmware),1039,0,36.34,31.98,0.0,543.0,0.0,0.0
+10.0,hull-edge current,1039,50,64.35,66.44,64.65,543.0,50.0,61.0
+10.0,lambda x hull-edge current,1039,9,58.26,54.91,59.09,543.0,9.0,40.54

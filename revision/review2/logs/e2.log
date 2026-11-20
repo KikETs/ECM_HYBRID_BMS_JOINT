@@ -1,0 +1,82 @@
+percell columns ['condition', 'direction', 'tau_s', 'protocol', 'cell', 'n', 'n_train', 'lambda', 'exceed', 'worst_A', 'usable_pct']
+                 condition  direction  tau_s protocol               cell    n  n_train  lambda  exceed  worst_A  usable_pct
+0  oracle SOH + oracle SOC  discharge   10.0   nested              BOOST  113      377  0.6538       0      0.0       66.72
+1  oracle SOH + oracle SOC  discharge   10.0   nested     BOOST_NEGPULSE   43      352  0.6837       0      0.0       62.24
+2  oracle SOH + oracle SOC  discharge   10.0   nested  BOOST_NEGPULSE_1S  123      367  0.6280       0      0.0       65.68
+duplicate join keys in arm rows: 14
+charge 2.0 A8 rows 2084 unique 2084
+charge 10.0 A8 rows 2463 unique 2463
+discharge 2.0 A8 rows 502 unique 502
+discharge 10.0 A8 rows 1039 unique 1039
+ids with >1 candidate: 136  their SOC spread unresolved if dist large; dist p50/p95/max: [0.186, 1.195, 16.555]
+rows without SOC after join: 0 of 6088
+class           A8 root, A0 crossing beyond hull edge (paired exclusion)  A8 tangent (flagged failure)  both models: crossing only beyond hull edge  no valid segment (outside hull at all currents)  scored  eligible  scored_pct
+direction tau                                                                                                                                                                                                                     
+charge    2.0                                                          0                             0                                            0                                                4    2080      2084        99.8
+          10.0                                                         0                             0                                            0                                                4    2459      2463        99.8
+discharge 2.0                                                          0                             0                                          360                                                4     138       502        27.5
+          10.0                                                        32                             2                                          505                                                4     496      1039        47.7
+                  eligible  not_scored  not_scored_pct
+tau  soc_bin                                          
+2.0  [0.0, 0.15)        85          85           100.0
+     [0.15, 0.3)       195         191            97.9
+     [0.3, 0.5)        197          88            44.7
+     [0.5, 0.7)         23           0             0.0
+     [0.7, 0.9)          2           0             0.0
+10.0 [0.0, 0.15)       127         127           100.0
+     [0.15, 0.3)       413         309            74.8
+     [0.3, 0.5)        369         107            29.0
+     [0.5, 0.7)         81           0             0.0
+     [0.7, 0.9)         36           0             0.0
+     [0.9, 1.01)        13           0             0.0
+                   eligible  not_scored  not_scored_pct
+tau  soh_bin                                           
+2.0  [0.0, 0.8)         260         137            52.7
+     [0.8, 0.85)         87          72            82.8
+     [0.85, 0.9)         69          69           100.0
+     [0.9, 0.95)         55          55           100.0
+     [0.95, 1.01)        31          31           100.0
+10.0 [0.0, 0.8)         483         165            34.2
+     [0.8, 0.85)        178          92            51.7
+     [0.85, 0.9)        167         105            62.9
+     [0.9, 0.95)        139         109            78.4
+     [0.95, 1.01)        72          72           100.0
+                        eligible  not_scored  not_scored_pct
+tau  cell                                                   
+2.0  BOOST                   118          78            66.1
+     BOOST_NEGPULSE           43          43           100.0
+     BOOST_NEGPULSE_1S       124          81            65.3
+     BOOST_REST               25          25           100.0
+     CC                      118          77            65.3
+     CC_CELL2                 74          60            81.1
+10.0 BOOST                   211          96            45.5
+     BOOST_NEGPULSE          132          85            64.4
+     BOOST_NEGPULSE_1S       219          95            43.4
+     BOOST_REST              103          84            81.6
+     CC                      205          95            46.3
+     CC_CELL2                169          88            52.1
+          n  edge_lt_ref  edge_over_ref_median  edge_over_ref_p05  edge_over_ref_p95
+tau                                                                                 
+2.0   360.0        314.0              0.453608           0.246632           1.352356
+10.0  505.0        484.0              0.596262           0.399558           0.968224
+    direction   tau               cell  lambda    n  exceed  usable_pct
+12  discharge  10.0              BOOST  0.6415  115       0       66.01
+13  discharge  10.0     BOOST_NEGPULSE  0.6706   47       0       62.98
+14  discharge  10.0  BOOST_NEGPULSE_1S  0.6194  124       0       63.88
+15  discharge  10.0         BOOST_REST  0.7173   19       0       61.88
+16  discharge  10.0                 CC  0.6921  110       0       68.99
+17  discharge  10.0           CC_CELL2  0.6692   81       0       67.64
+56  discharge   2.0              BOOST  0.4974   40       0       57.24
+57  discharge   2.0  BOOST_NEGPULSE_1S  0.4814   43       0       56.61
+58  discharge   2.0                 CC  0.5154   41       1       62.65
+59  discharge   2.0           CC_CELL2  0.4978   14       0       63.06
+rows with imputed lambda: {2.0: 68, 10.0: 0}
+    tau                        policy     n  exceed  usable_paper_pct  usable_mean_pct  usable_median_pct  fallback_rows  fallback_exceed  fallback_usable_median_pct
+0   2.0  scored rows only (submitted)   138       1             59.24            63.31              59.19            NaN              NaN                         NaN
+1   2.0       zero current (firmware)   502       1              0.00            17.41               0.00          364.0              0.0                        0.00
+2   2.0             hull-edge current   502      47             49.19            58.37              52.06          364.0             46.0                       45.28
+3   2.0    lambda x hull-edge current   502       1             36.45            37.81              29.10          364.0              0.0                       22.30
+4  10.0  scored rows only (submitted)   496       0             65.96            66.99              65.73            NaN              NaN                         NaN
+5  10.0       zero current (firmware)  1039       0             36.34            31.98               0.00          543.0              0.0                        0.00
+6  10.0             hull-edge current  1039      50             64.35            66.44              64.65          543.0             50.0                       61.00
+7  10.0    lambda x hull-edge current  1039       9             58.26            54.91              59.09          543.0              9.0                       40.54

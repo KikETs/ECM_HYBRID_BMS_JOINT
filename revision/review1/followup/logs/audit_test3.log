@@ -1,0 +1,9 @@
+{
+  "pulse_count": 356,
+  "table_values": 136,
+  "linkage_counts": {
+    "exact_table_replay": 107,
+    "derived_ratio_not_SOP": 28,
+    "value_mismatch": 1
+  }
+}

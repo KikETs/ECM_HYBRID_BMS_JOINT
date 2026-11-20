@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include "sop_core.h"
+#include <math.h>
 #include "sop_tables.h"
 #include "soh_core.h"
 #include "soh_simd.h"
@@ -65,6 +66,8 @@
  * 네 단계를 한 DWT 창에서 도는 명령이 없었기 때문이다. */
 #ifdef SOP_BENCH_PACK
 #define SOP_CMD_CYCLE    0x70U  /* 특징+EKF+트림+반전 = 제어 1 주기 */
+#define SOP_CMD_REVIEW4  0x72U
+#define SOP_CMD_WCET     0x73U
 #define SOP_CMD_PACK     0x71U  /* 위를 N 셀에 돌리고 min 축약 */
 
 /* 팩 규모.  dir 바이트의 상위 비트로 색인한다: dir = 방향 | (idx << 1).
@@ -293,13 +296,43 @@ static void SOP_Handle(uint8_t cmd)
    * 트림이 창 안에 있어야 한다. */
   if (cmd != SOP_CMD_TRIM && cmd != SOP_CMD_FULL
 #ifdef SOP_BENCH_PACK
-      && cmd != SOP_CMD_CYCLE && cmd != SOP_CMD_PACK
+      && cmd != SOP_CMD_CYCLE && cmd != SOP_CMD_PACK && cmd != SOP_CMD_REVIEW4 && cmd != SOP_CMD_WCET
 #endif
      )
   {
     sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
   }
 
+
+#ifdef SOP_BENCH_PACK
+
+  if (cmd == SOP_CMD_WCET)
+  {
+    unsigned index = q.dir & 7U;
+    if (index >= SOP_PACK_NSET) index = SOP_PACK_NSET - 1U;
+    n_cells = SOP_PACK_N[index];
+    if (q.dir & 0x40U)
+    {
+      if ((ICACHE->CR & ICACHE_CR_EN) && HAL_ICACHE_Disable() != HAL_OK) Error_Handler();
+    }
+    else
+    {
+      if (!(ICACHE->CR & ICACHE_CR_EN) && HAL_ICACHE_Enable() != HAL_OK) Error_Handler();
+      if ((q.dir & 0x20U) && HAL_ICACHE_Invalidate() != HAL_OK) Error_Handler();
+    }
+    for (unsigned c=0; c<n_cells; ++c)
+    {
+      float d = ((int)(c % 7U) - 3) * 0.001f;
+      sop_feat_reset(&g_pack_feat[c]);
+      sop_ekf_reset(&g_pack_ekf[c],q.soc+d,q.soh);
+    }
+  }
+  if (cmd == SOP_CMD_REVIEW4 && (q.dir & 0x80U))
+  {
+    sop_feat_reset(&g_feat);
+    sop_ekf_reset(&g_ekf, q.soc, q.soh);
+  }
+#endif
   primask = __get_PRIMASK();
   __disable_irq();
   __DSB(); __ISB();
@@ -345,8 +378,10 @@ static void SOP_Handle(uint8_t cmd)
       sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
       break;
     case SOP_CMD_SOLVE:
-      ist = sop_solve((sop_dir_t)q.dir, q.soc, q.soh, q.v_pre, q.v_limit,
-                      q.tau_s, kf, ks, &it);
+      /* Deployment path: flagged solver.  Hull or convergence failure returns
+       * 0 A; the sop_review_status_t code is reported in r_eff. */
+      reff = (float)sop_review_solve((sop_dir_t)q.dir, q.soc, q.soh, q.v_pre,
+                                     q.v_limit, q.tau_s, kf, ks, &ist, &it);
       break;
 #ifdef SOP_BENCH_PACK
     case SOP_CMD_CYCLE:
@@ -360,6 +395,88 @@ static void SOP_Handle(uint8_t cmd)
       sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
       ist = sop_solve((sop_dir_t)q.dir, q.soc, q.soh, q.v_pre, q.v_limit,
                       q.tau_s, kf, ks, &it);
+      break;
+    }
+
+
+    case SOP_CMD_WCET:
+    {
+      float reduced[4] = {400.0f,400.0f,400.0f,400.0f};
+      unsigned peak_iters=0, failures=0;
+      int stress = (q.dir & 0x10U) != 0U;
+      for (unsigned c=0; c<n_cells; ++c)
+      {
+        float voltage=q.v_pre+((int)(c%9U)-4)*0.001f;
+        float soc=sop_ekf_step(&g_pack_ekf[c],1.0f,q.current_a,voltage,
+                               q.soh,fabsf(q.current_a)<=1.0f);
+        float x[SOP_NFEAT]={0.0f};
+        (void)sop_feat_update_a8(&g_pack_feat[c],1.0f,q.current_a,voltage,soc,q.soh,x);
+        for (unsigned d=0; d<2; ++d)
+        {
+          float kfast,kslow;
+          sop_trim((sop_dir_t)d,x,&kfast,&kslow);
+          for (unsigned h=0; h<2; ++h)
+          {
+            float limit=0.0f;
+            float cutoff = d==SOP_CHARGE?4.2f:2.5f;
+            float tau=h==0?2.0f:10.0f;
+            uint32_t n;
+            if (stress)
+            {
+              limit=sop_review_stress((sop_dir_t)d,soc,q.soh,voltage,cutoff,tau,kfast,kslow);
+              n=24;
+            }
+            else
+            {
+              sop_review_status_t status=sop_review_solve((sop_dir_t)d,soc,q.soh,voltage,cutoff,
+                                                        tau,kfast,kslow,&limit,&n);
+              failures += status != SOP_REVIEW_OK;
+            }
+            if (n>peak_iters) peak_iters=n;
+            reduced[d*2+h]=fminf(reduced[d*2+h],fabsf(limit));
+          }
+        }
+      }
+      it=(peak_iters<<16U)|failures;
+      kf=reduced[0]; ks=reduced[1]; reff=reduced[2]; ist=reduced[3];
+      break;
+    }
+    case SOP_CMD_REVIEW4:
+    {
+      float limits[4] = {0.0f};
+      float x12[SOP_NFEAT] = {0.0f};
+      if (!isfinite(q.current_a) || !isfinite(q.v_pre) || !isfinite(q.soh)
+          || q.soh < SOP_SOH_LO || q.soh > SOP_SOH_HI)
+      {
+        unsigned status = isfinite(q.soh) && (q.soh < SOP_SOH_LO || q.soh > SOP_SOH_HI)
+                          ? SOP_REVIEW_HULL : SOP_REVIEW_INPUT;
+        it = status | (status << 3U) | (status << 6U) | (status << 9U);
+      }
+      else
+      {
+        float soc = sop_ekf_step(&g_ekf, 1.0f, q.current_a, q.v_pre, q.soh,
+                                fabsf(q.current_a) <= 1.0f);
+        (void)sop_feat_update_a8(&g_feat, 1.0f, q.current_a, q.v_pre, soc, q.soh, x12);
+        uint32_t max_iterations = 0U;
+        for (unsigned d = 0; d < 2U; ++d)
+        {
+          float kfast, kslow;
+          sop_trim((sop_dir_t)d, x12, &kfast, &kslow);
+          for (unsigned h = 0; h < 2U; ++h)
+          {
+            unsigned index = 2U*d + h;
+            float cutoff = d == SOP_CHARGE ? 4.2f : 2.5f;
+            float horizon = h == 0U ? 2.0f : 10.0f;
+            uint32_t iterations;
+            unsigned status = sop_review_solve((sop_dir_t)d, soc, q.soh, q.v_pre,
+                               cutoff, horizon, kfast, kslow, &limits[index], &iterations);
+            it |= status << (3U * index);
+            if (iterations > max_iterations) max_iterations = iterations;
+          }
+        }
+        it |= max_iterations << 16U;
+      }
+      kf = limits[0]; ks = limits[1]; reff = limits[2]; ist = limits[3];
       break;
     }
     case SOP_CMD_PACK:
@@ -389,8 +506,8 @@ static void SOP_Handle(uint8_t cmd)
     case SOP_CMD_FULL:
     default:
       sop_trim((sop_dir_t)q.dir, q.x12, &kf, &ks);
-      ist = sop_solve((sop_dir_t)q.dir, q.soc, q.soh, q.v_pre, q.v_limit,
-                      q.tau_s, kf, ks, &it);
+      reff = (float)sop_review_solve((sop_dir_t)q.dir, q.soc, q.soh, q.v_pre,
+                                     q.v_limit, q.tau_s, kf, ks, &ist, &it);
       break;
   }
   r.cycles = DWT->CYCCNT;
@@ -454,7 +571,7 @@ static void CEMA_Protocol_Loop(void)
              || command == SOP_CMD_EKF_P || command == SOP_CMD_EKF_F64
              || command == SOP_CMD_EKF2 || command == SOP_CMD_EKF2_F64
 #ifdef SOP_BENCH_PACK
-             || command == SOP_CMD_CYCLE || command == SOP_CMD_PACK
+             || command == SOP_CMD_CYCLE || command == SOP_CMD_PACK || command == SOP_CMD_REVIEW4 || command == SOP_CMD_WCET
 #endif
 #ifndef SOP_A8_ONLY
              || command == SOP_CMD_FEAT

@@ -1,0 +1,6 @@
+discharge 2.0 263 full-duration stable omitted pulses; 0 within 10 mV
+discharge 10.0 245 full-duration stable omitted pulses; 1 within 10 mV
+  actual-to-predicted cutoff current [np.float64(17.432)]
+charge 2.0 128 full-duration stable omitted pulses; 0 within 10 mV
+charge 10.0 123 full-duration stable omitted pulses; 1 within 10 mV
+  actual-to-predicted cutoff current [np.float64(-0.047)]
