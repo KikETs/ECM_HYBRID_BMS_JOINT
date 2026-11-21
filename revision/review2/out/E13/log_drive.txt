@@ -1,0 +1,6 @@
+BOOST_REST rows 638 history runs 32 scored 549
+BOOST_NEGPULSE_1S rows 1024 history runs 44 scored 822
+BOOST_NEGPULSE rows 865 history runs 41 scored 731
+CC rows 1087 history runs 47 scored 839
+BOOST rows 1121 history runs 48 scored 878
+CC_CELL2 rows 1125 history runs 49 scored 931

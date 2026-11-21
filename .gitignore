@@ -89,3 +89,6 @@ analysis/runs_nested/
 # --- Revision work directory (rebuilt by nested/reproduce.sh score) ---
 revision/review2/baseline/
 revision/review2/scripts/__pycache__/
+
+# cached solver rows of the review-2 analyses (regenerated on demand)
+revision/review2/out/*/rows.pkl

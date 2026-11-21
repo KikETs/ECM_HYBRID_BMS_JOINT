@@ -21,7 +21,9 @@ analyses reuse the published datasets (see `DATA.md`) and the fitted assets of v
 | Near-cutoff measured pulses vs all methods (Section 3.2, Table 4, Table S9B) | `review1/followup/scripts/holdout_boundary.py`, `review2/scripts/e5b_boundary.py`, `e5b_extra.py` | `review1/followup/boundary/`, `review2/out/E5b/` |
 | Nested configuration selection on the current assets (Section 2.2, Table S7) | `review2/scripts/e3_nested_selection.py` | `review2/out/E3/` |
 | External cells, charge decomposition (Section 3.5, Figure 8, Table S12) | `review1/followup/scripts/test1_external.py`, `cross_cell_calibration.py`, `test3_cold_hybrid.py`; `review2/scripts/e7_external.py`, `e7_extra.py` | `review1/followup/external/`, `review2/out/E7/` |
-| Estimated-state replay (Section 3.4) | `review1/followup/scripts/replay_preceding_drive.py`, `review1/experiments/coupled_state.py` | `review1/followup/state/`, `review1/coupled_state/` |
+| Estimated-state replay on every eligible HPPC cycle (Section 2.5, Section 3.4, Table S15) | `review2/scripts/e13_replay_rows.py`, `e13_replay_drive.py`, `e13_summary.py` (the review-1 scripts `review1/experiments/coupled_state.py` and `review1/followup/scripts/replay_preceding_drive.py` without the eight-cycle subsampling) | `review2/out/E13/` |
+| Record SOH target vs capacity-anchor SOH and conversion (Section 3.4, Discussion, Table S13) | `review2/scripts/e11_soh_map.py` | `review2/out/E11/` |
+| Cycle-level performance and retained current in amperes (Section 3.1, Discussion, Table S14) | `review2/scripts/e12_cycle_table.py`, `e12_amps.py` | `review2/out/E12/` |
 | Rated-capacity SOC axis (Section 2.1, Table S11) | `review2/scripts/e8_soc_axis.py` | `review2/out/E8/` |
 | One-dimensional map, cyclewise maxima, epsilon (Section 2.4) | `review2/scripts/e9_minor.py`, `e9_eps.py` | `review2/out/E9/` |
 | Firmware timing and derived pack budget (Section 4, Table 7) | `review1/followup/scripts/prepare_wcet.py`, `measure_wcet.py`; `review2/scripts/e10_budget.py` | `review1/followup/wcet/`, `review2/out/E10/` |
