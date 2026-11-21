@@ -1,0 +1,2 @@
+board_version,points,host_ok,host_flagged,status_match,ok_max_abs_diff_A,ok_over_1e3A,flagged_nonzero,max_iters,solve_ok_n,solve_ok_median_us,solve_ok_max_us,solve_flagged_n,solve_flagged_median_us,solve_flagged_max_us,full_ok_n,full_ok_median_us,full_ok_max_us,full_flagged_n,full_flagged_median_us,full_flagged_max_us,full_all_n,full_all_median_us,full_all_max_us,status_counts_board
+5,13440,9897,3543,13440,5.340319824043149e-05,0,0,24,9897,66.52,107.788,3543,2.156,106.744,9897,73.244,114.532,3543,8.844,113.536,13440,70.412,114.532,0:9897 2:3435 4:108

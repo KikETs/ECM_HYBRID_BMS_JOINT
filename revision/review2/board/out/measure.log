@@ -1,0 +1,33 @@
+board {'version': 5, 'clock_hz': 250000000, 'req_bytes': 73, 'res_bytes': 32, 'ecm_bytes': 32768, 'ocv_bytes': 4096, 'nfeat': 12}
+point 0
+point 2000
+point 4000
+point 6000
+point 8000
+point 10000
+point 12000
+board_version 5
+points 13440
+host_ok 9897
+host_flagged 3543
+status_match 13440
+ok_max_abs_diff_A 5.340319824043149e-05
+ok_over_1e3A 0
+flagged_nonzero 0
+max_iters 24
+solve_ok_n 9897
+solve_ok_median_us 66.52
+solve_ok_max_us 107.788
+solve_flagged_n 3543
+solve_flagged_median_us 2.156
+solve_flagged_max_us 106.744
+full_ok_n 9897
+full_ok_median_us 73.244
+full_ok_max_us 114.532
+full_flagged_n 3543
+full_flagged_median_us 8.844
+full_flagged_max_us 113.536
+full_all_n 13440
+full_all_median_us 70.412
+full_all_max_us 114.532
+status_counts_board 0:9897 2:3435 4:108

@@ -92,3 +92,6 @@ revision/review2/scripts/__pycache__/
 
 # cached solver rows of the review-2 analyses (regenerated on demand)
 revision/review2/out/*/rows.pkl
+# flash images of the board check (not distributed)
+revision/review2/board/out/*.bin
+revision/review2/board/out/host_board_ref

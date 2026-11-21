@@ -27,6 +27,7 @@ analyses reuse the published datasets (see `DATA.md`) and the fitted assets of v
 | Rated-capacity SOC axis (Section 2.1, Table S11) | `review2/scripts/e8_soc_axis.py` | `review2/out/E8/` |
 | One-dimensional map, cyclewise maxima, epsilon (Section 2.4) | `review2/scripts/e9_minor.py`, `e9_eps.py` | `review2/out/E9/` |
 | Firmware timing and derived pack budget (Section 4, Table 7) | `review1/followup/scripts/prepare_wcet.py`, `measure_wcet.py`; `review2/scripts/e10_budget.py` | `review1/followup/wcet/`, `review2/out/E10/` |
+| Deployment image on the board: flagged solver vs host build, 13,440 inputs, timing (Section 4) | `review2/board/run_board.sh`, `board_deploy_check.py`, `host_board_ref.c` | `review2/board/out/` |
 | Revised Figures 5 and 8 (journal versions; `make_figs.py` drew the first drafts) | `review2/scripts/make_journal_figs.py` | `review2/out/figs/` |
 
 ## Reproducing `review2`
