@@ -24,7 +24,7 @@ analyses reuse the published datasets (see `DATA.md`) and the fitted assets of v
 | Estimated-state replay on every eligible HPPC cycle (Section 2.5, Section 3.4, Table S15) | `review2/scripts/e13_replay_rows.py`, `e13_replay_drive.py`, `e13_summary.py` (the review-1 scripts `review1/experiments/coupled_state.py` and `review1/followup/scripts/replay_preceding_drive.py` without the eight-cycle subsampling) | `review2/out/E13/` |
 | Record SOH target vs capacity-anchor SOH and conversion (Section 3.4, Discussion, Table S13) | `review2/scripts/e11_soh_map.py` | `review2/out/E11/` |
 | Cycle-level performance and retained current in amperes (Section 3.1, Discussion, Table S14) | `review2/scripts/e12_cycle_table.py`, `e12_amps.py` | `review2/out/E12/` |
-| Rated-capacity SOC axis (Section 2.1, Table S11) | `review2/scripts/e8_soc_axis.py` | `review2/out/E8/` |
+| Rated-capacity SOC axis anchored at full charge (Section 2.1, Section 3.4, Table S11) | `review2/scripts/e8b_soc_axis_full.py` (supersedes `e8_soc_axis.py`, which assumed an empty-anchored axis) | `review2/out/E8b/` |
 | One-dimensional map, cyclewise maxima, epsilon (Section 2.4) | `review2/scripts/e9_minor.py`, `e9_eps.py` | `review2/out/E9/` |
 | Firmware timing and derived pack budget (Section 4, Table 7) | `review1/followup/scripts/prepare_wcet.py`, `measure_wcet.py`; `review2/scripts/e10_budget.py` | `review1/followup/wcet/`, `review2/out/E10/` |
 | Deployment image on the board: flagged solver vs host build, 13,440 inputs, timing (Section 4) | `review2/board/run_board.sh`, `board_deploy_check.py`, `host_board_ref.c` | `review2/board/out/` |

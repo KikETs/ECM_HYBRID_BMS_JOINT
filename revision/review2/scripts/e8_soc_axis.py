@@ -1,4 +1,7 @@
-"""E8 (R2-8, minor 5): the rated-capacity SOC axis.
+"""E8 (SUPERSEDED by e8b_soc_axis_full.py: this script assumed an empty-anchored SOC axis, whereas the pipeline
+anchors SOC at full charge; its out/E8 results are kept only for the record).
+
+E8 (R2-8, minor 5): the rated-capacity SOC axis.
 
 The pipeline's SOC is the rated fraction measured from the empty (cut-off) point, SOC_rated = SOC_aged * s with
 s = CAP / 3.0 Ah (analysis/data30t.py). A BMS that tracks SOC against its own (aged) capacity must convert before
